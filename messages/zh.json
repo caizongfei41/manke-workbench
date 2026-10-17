@@ -903,6 +903,7 @@
   "studio.director.assetImportEmpty": "这个素材还没有图，先「生图」或「上传」一张再导入。",
   "studio.director.useTemplate": "套用模板",
   "studio.director.stitchHint": "按顺序首尾衔接，最后自动拼成一条完整视频",
-  "product.home.slogan1": "漫客工作台，一画一影一曲，AI 自成佳作",
-  "product.home.slogan2": "图生万象，影叙故事，乐赋心声"
+  "product.home.slogan1": "漫客工作台",
+  "product.home.slogan2": "一画一影一曲，AI 自成佳作",
+  "product.home.slogan3": "图生万象，影叙故事，乐赋心声"
 }

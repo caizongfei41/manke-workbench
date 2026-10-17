@@ -903,6 +903,7 @@
   "studio.director.assetImportEmpty": "素材に画像がありません。先に生成かアップロードをしてください。",
   "studio.director.useTemplate": "テンプレート",
   "studio.director.stitchHint": "順に繋がり、最後に 1 本の動画に結合されます",
-  "product.home.slogan1": "漫客工作台 — 一枚の絵、一本の映像、一曲。AI が作品にする。",
-  "product.home.slogan2": "図は万象を生み、影は物語を語り、楽は心を歌う。"
+  "product.home.slogan1": "漫客工作台",
+  "product.home.slogan2": "一枚の絵、一本の映像、一曲。AI が作品にする",
+  "product.home.slogan3": "図は万象を生み、影は物語を語り、楽は心を歌う"
 }

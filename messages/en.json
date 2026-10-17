@@ -903,6 +903,7 @@
   "studio.director.assetImportEmpty": "This asset has no image yet — generate or upload one first.",
   "studio.director.useTemplate": "Use template",
   "studio.director.stitchHint": "Chained head-to-tail and assembled into one video",
-  "product.home.slogan1": "Manke Workbench — one image, one film, one song. AI makes it a work.",
-  "product.home.slogan2": "Images conjure worlds, films tell stories, music gives voice."
+  "product.home.slogan1": "Manke Workbench",
+  "product.home.slogan2": "One image, one film, one song — AI makes it a work",
+  "product.home.slogan3": "Images conjure worlds, films tell stories, music gives voice"
 }
