@@ -1023,6 +1023,26 @@ export function BeatCanvasFrontLayer() {
                     )
                     .catch(() => {});
                 }}
+                onUploadShotImage={(index, file) => {
+                  void uploadLocalProjectAsset({ projectId, file })
+                    .then((asset) =>
+                      updateDraftCard(activeDraftCard.id, (current) => {
+                        const settings = current.directorSettings ?? getDefaultDirectorSettings();
+                        return {
+                          ...current,
+                          directorSettings: {
+                            ...settings,
+                            segments: settings.segments.map((seg, i) =>
+                              i === index
+                                ? { ...seg, imageUrls: [...(seg.imageUrls ?? []), asset.publicUrl] }
+                                : seg
+                            ),
+                          },
+                        };
+                      })
+                    )
+                    .catch(() => {});
+                }}
                 onImportAssetToShots={(asset) => {
                   if (!asset.imageUrl) return;
                   updateDraftCard(activeDraftCard.id, (current) => {

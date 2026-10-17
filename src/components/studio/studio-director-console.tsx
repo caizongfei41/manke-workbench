@@ -45,6 +45,7 @@ export function StudioDirectorConsole({
   onGenerateAssetImage,
   onUploadAssetImage,
   onImportAssetToShots,
+  onUploadShotImage,
 }: {
   settings: DirectorSettings;
   onChange: (next: DirectorSettings) => void;
@@ -59,6 +60,8 @@ export function StudioDirectorConsole({
   onUploadAssetImage?: (assetId: string, file: File) => void;
   /** Attach an asset image to a shot. */
   onImportAssetToShots?: (asset: ScriptAsset) => void;
+  /** Upload an image straight onto one shot. */
+  onUploadShotImage?: (segmentIndex: number, file: File) => void;
 }) {
   const [tab, setTab] = useState<'shots' | 'assets' | 'global' | 'lora'>('shots');
   const [scriptOpen, setScriptOpen] = useState(false);
@@ -66,6 +69,8 @@ export function StudioDirectorConsole({
   const fileRef = useRef<HTMLInputElement | null>(null);
   const assetFileRef = useRef<HTMLInputElement | null>(null);
   const [uploadAsset, setUploadAsset] = useState<ScriptAsset | null>(null);
+  const shotFileRef = useRef<HTMLInputElement | null>(null);
+  const [uploadShotIndex, setUploadShotIndex] = useState<number | null>(null);
 
   const segments = settings.segments;
   const setGlobal = (key: string, value: string | number | boolean) =>
@@ -360,6 +365,20 @@ export function StudioDirectorConsole({
                       ))}
                     </select>
                   ) : null}
+                  {onUploadShotImage ? (
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => {
+                        setUploadShotIndex(index);
+                        requestAnimationFrame(() => shotFileRef.current?.click());
+                      }}
+                      className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                    >
+                      <Upload className="size-3" />
+                      {m['studio.director.assetUpload']()}
+                    </button>
+                  ) : null}
                   {onRequestGenerateImage ? (
                     <HintTip
                       label={m['studio.director.generateImage']()}
@@ -389,6 +408,19 @@ export function StudioDirectorConsole({
             <Plus className="size-3" />
             {m['studio.director.addShot']()}
           </button>
+            <input
+              ref={shotFileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                const target = uploadShotIndex;
+                e.currentTarget.value = '';
+                setUploadShotIndex(null);
+                if (file && target !== null) onUploadShotImage?.(target, file);
+              }}
+            />
         </div>
       ) : null}
 

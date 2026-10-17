@@ -1,4 +1,4 @@
-import type { ScriptAsset } from './script-document';
+import type { AssetKind, ScriptAsset } from './script-document';
 
 /**
  * AICG3D 分段长视频的导演台数据层。
@@ -310,21 +310,90 @@ export const pickChangedDirectorGlobal = (
  * <Picture 1>、<Picture 2>…，顺序一变，同一个角色就会指到别的图上，
  * 一致性立刻崩掉。所以这里不允许调用方随便排序。
  */
-export const resolveSegmentImages = (
+export type SegmentRef = {
+  kind: AssetKind;
+  name: string;
+  description?: string;
+};
+
+const REF_ORDER: Record<string, number> = { character: 0, scene: 1, prop: 2 };
+
+/**
+ * 把分段挂的素材展开成「参考图 URL + 对应身份」。
+ *
+ * 顺序固定为 人物 → 场景 → 道具，再接手动图。顺序不能变：H3 按顺序把素材
+ * 编号成 <Picture 1>、<Picture 2>…，顺序一动，同一个角色就指到别的图上。
+ */
+export const resolveSegmentReferences = (
   segment: Pick<DirectorSegment, 'assetIds' | 'imageUrls'>,
   assets: ScriptAsset[]
-): string[] => {
-  const order: Record<string, number> = { character: 0, scene: 1, prop: 2 };
+): { urls: string[]; refs: SegmentRef[] } => {
   const picked = (segment.assetIds ?? [])
     .map((id) => assets.find((a) => a.id === id))
     .filter((a): a is ScriptAsset => !!a && !!a.imageUrl)
-    .sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9));
-  const urls = [
-    ...picked.map((a) => a.imageUrl as string),
-    ...(segment.imageUrls ?? []),
-  ];
-  return [...new Set(urls)].slice(0, 9);
+    .sort((a, b) => (REF_ORDER[a.kind] ?? 9) - (REF_ORDER[b.kind] ?? 9));
+
+  const urls: string[] = [];
+  const refs: SegmentRef[] = [];
+  const seen = new Set<string>();
+  for (const asset of picked) {
+    const url = asset.imageUrl as string;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    urls.push(url);
+    refs.push({ kind: asset.kind, name: asset.name, description: asset.description });
+  }
+  for (const url of segment.imageUrls ?? []) {
+    if (seen.has(url)) continue;
+    seen.add(url);
+    urls.push(url);
+    refs.push({ kind: 'prop', name: '' });
+  }
+  return { urls: urls.slice(0, 9), refs: refs.slice(0, 9) };
 };
+
+/**
+ * 生成把 <Subject N> 绑到 <Picture N> 的那段话。
+ *
+ * 只把图塞进资源库是不够的：提示词里不提「这是谁」，模型就不会保留身份，
+ * 于是同一个角色在每一段长成不同的脸 —— 这正是前后不一致的原因。
+ * 官方规范要求写死「<Subject 1> 是 <Picture 1> 中的人物，保留面部、发型、服装」。
+ */
+export const buildReferenceBinding = (refs: SegmentRef[]): string => {
+  if (refs.length === 0) return '';
+  const parts: string[] = [];
+  let subject = 0;
+
+  refs.forEach((ref, index) => {
+    const picture = index + 1;
+    if (ref.kind === 'character') {
+      subject += 1;
+      const who = ref.name ? `${ref.name}` : '人物';
+      const look = ref.description?.trim() ? `（${ref.description.trim()}）` : '';
+      parts.push(
+        `<Subject ${subject}> 是 <Picture ${picture}> 中的 ${who}${look}，` +
+          '保留其面部、发型、服装与体型，不要改变身份或换脸。'
+      );
+    } else if (ref.kind === 'scene') {
+      const where = ref.name ? `${ref.name}` : '场景';
+      const look = ref.description?.trim() ? `（${ref.description.trim()}）` : '';
+      parts.push(
+        `<Picture ${picture}> 是场景 ${where}${look}，保持其空间结构、色调与光线。`
+      );
+    } else {
+      const what = ref.name ? `${ref.name}` : '道具';
+      parts.push(`<Picture ${picture}> 是道具 ${what}，保持其外观与材质。`);
+    }
+  });
+
+  return parts.join(' ');
+};
+
+/** 兼容旧调用：只要 URL。 */
+export const resolveSegmentImages = (
+  segment: Pick<DirectorSegment, 'assetIds' | 'imageUrls'>,
+  assets: ScriptAsset[]
+): string[] => resolveSegmentReferences(segment, assets).urls;
 
 /** 只在真的选了 LoRA 时才下发，避免把 9 个 none 全写一遍。 */
 export const pickActiveLoras = (loras: DirectorLora[] | undefined): DirectorLora[] =>

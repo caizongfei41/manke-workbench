@@ -13,7 +13,7 @@
   "product.shell.japanese": "Japanese",
   "product.shell.terms": "Terms",
   "product.shell.privacy": "Privacy",
-  "product.shell.tagline": "Local ComfyUI image & video creation workbench",
+  "product.shell.tagline": "A local ComfyUI studio for images, video and music",
   "services.title": "Services Console",
   "services.subtitle": "Manage the Manke workbench, ComfyUI and the AI expander in one place. All services run headless in the background — no more piles of CMD windows.",
   "services.workbench": "Manke Workbench",
@@ -38,7 +38,7 @@
   "services.entryLabel": "Open the services console",
   "product.home.eyebrow": "LOCAL FIRST · COMFYUI CREATION",
   "product.home.metaTitle": "Manke — Local ComfyUI image & video creation workbench",
-  "product.home.metaDescription": "The local-first ComfyUI workbench for image and video creation. Simplify, create freely.",
+  "product.home.metaDescription": "Manke Workbench — a local-first ComfyUI studio for images, video and music.",
   "product.home.titleLine1": "Beat complexity.",
   "product.home.titleLine2": "Design freely.",
   "product.home.wechatTitle": "Scan to add on WeChat",
@@ -902,5 +902,7 @@
   "studio.director.scriptImportTitle": "Import script",
   "studio.director.assetImportEmpty": "This asset has no image yet — generate or upload one first.",
   "studio.director.useTemplate": "Use template",
-  "studio.director.stitchHint": "Chained head-to-tail and assembled into one video"
+  "studio.director.stitchHint": "Chained head-to-tail and assembled into one video",
+  "product.home.slogan1": "Manke Workbench — one image, one film, one song. AI makes it a work.",
+  "product.home.slogan2": "Images conjure worlds, films tell stories, music gives voice."
 }

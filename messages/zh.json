@@ -13,7 +13,7 @@
   "product.shell.japanese": "日本語",
   "product.shell.terms": "服务条款",
   "product.shell.privacy": "隐私政策",
-  "product.shell.tagline": "本地 ComfyUI 图像与视频创作工作台",
+  "product.shell.tagline": "本地 ComfyUI 图像、视频与音乐创作工作台",
   "services.title": "服务控制台",
   "services.subtitle": "统一管理漫客工作台、ComfyUI 与 AI 扩写服务。所有服务都在本机后台运行，无需再开一堆命令行窗口。",
   "services.workbench": "漫客工作台",
@@ -38,7 +38,7 @@
   "services.entryLabel": "打开服务控制台",
   "product.home.eyebrow": "本地优先 · ComfyUI 创作",
   "product.home.metaTitle": "漫客 — 本地 ComfyUI 图像与视频创作工作台",
-  "product.home.metaDescription": "本地优先的 ComfyUI 图像与视频创作工作台，化繁为简，自由创作。",
+  "product.home.metaDescription": "漫客工作台 — 本地优先的 ComfyUI 图像、视频与音乐创作工作台。图生万象，影叙故事，乐赋心声。",
   "product.home.titleLine1": "化繁为简，",
   "product.home.titleLine2": "自由创作。",
   "product.home.wechatTitle": "扫码添加微信",
@@ -902,5 +902,7 @@
   "studio.director.scriptImportTitle": "导入剧本",
   "studio.director.assetImportEmpty": "这个素材还没有图，先「生图」或「上传」一张再导入。",
   "studio.director.useTemplate": "套用模板",
-  "studio.director.stitchHint": "按顺序首尾衔接，最后自动拼成一条完整视频"
+  "studio.director.stitchHint": "按顺序首尾衔接，最后自动拼成一条完整视频",
+  "product.home.slogan1": "漫客工作台，一画一影一曲，AI 自成佳作",
+  "product.home.slogan2": "图生万象，影叙故事，乐赋心声"
 }

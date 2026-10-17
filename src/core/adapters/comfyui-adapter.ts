@@ -1,5 +1,6 @@
 import { BaseAdapter, type EffectRecord, type GenerationResult } from './base-adapter';
 import { COMFYUI_CLIENT_ID } from '@/core/effects/comfyui-progress';
+import { buildReferenceBinding } from '@/core/effects/aicg3d-director';
 
 const DEFAULT_COMFYUI_BASE_URL = 'http://127.0.0.1:8188';
 const DEFAULT_CONFIG_FILENAME = 'comfyui.config.json';
@@ -1631,8 +1632,22 @@ export class ComfyUiAdapter extends BaseAdapter {
               names.push(await uploadReferenceImage(baseUrl, url));
             }
 
+            // 光有图不够：提示词里必须写明「<Subject N> 是 <Picture N> 中的人物」，
+            // 否则模型不保留身份，同一个角色每段会长成不同的脸。
+            const segRefs = Array.isArray(seg.refs)
+              ? (seg.refs as Array<Record<string, unknown>>)
+              : [];
+            const refBinding = buildReferenceBinding(
+              segRefs
+                .slice(0, names.length)
+                .map((r) => ({
+                  kind: (String(r.kind ?? 'prop') as 'character' | 'scene' | 'prop'),
+                  name: String(r.name ?? ''),
+                  description: typeof r.description === 'string' ? r.description : undefined,
+                }))
+            );
             const segInputs: Record<string, unknown> = {
-              prompt: promptPrefix + String(seg.prompt ?? ''),
+              prompt: promptPrefix + (refBinding ? refBinding + ' ' : '') + String(seg.prompt ?? ''),
               seconds: Math.min(
                 30,
                 Math.max(0.2, typeof seg.seconds === 'number' ? seg.seconds : 3)

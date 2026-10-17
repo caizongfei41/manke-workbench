@@ -1020,3 +1020,25 @@ html[data-theme] body {
     background-color 220ms ease,
     color 220ms ease;
 }
+
+/* Hero slogan rotator: a soft fade so the swap does not read as a glitch. */
+@keyframes beat-slogan-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.beat-slogan-swap {
+  animation: beat-slogan-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beat-slogan-swap {
+    animation: none;
+  }
+}

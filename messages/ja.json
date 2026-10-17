@@ -13,7 +13,7 @@
   "product.shell.japanese": "日本語",
   "product.shell.terms": "利用規約",
   "product.shell.privacy": "プライバシー",
-  "product.shell.tagline": "ローカル ComfyUI 画像・動画制作ワークベンチ",
+  "product.shell.tagline": "ローカル ComfyUI の画像・映像・音楽スタジオ",
   "services.title": "サービスコンソール",
   "services.subtitle": "漫客ワークベンチ・ComfyUI・AI 拡張をひとつの画面で管理。すべてバックグラウンドで起動し、CMD ウィンドウを大量に開く必要はありません。",
   "services.workbench": "漫客ワークベンチ",
@@ -38,7 +38,7 @@
   "services.entryLabel": "サービスコンソールを開く",
   "product.home.eyebrow": "ローカルファースト · ComfyUI 創作",
   "product.home.metaTitle": "漫客 — ローカル ComfyUI 画像・動画制作ワークベンチ",
-  "product.home.metaDescription": "画像・動画制作のためのローカルファースト ComfyUI ワークベンチ。複雑さを打ち破り、自由に創作。",
+  "product.home.metaDescription": "漫客工作台 — ローカル優先の ComfyUI 画像・映像・音楽スタジオ。",
   "product.home.titleLine1": "複雑さを打ち破り、",
   "product.home.titleLine2": "自由にデザイン。",
   "product.home.wechatTitle": "微信で友だち追加",
@@ -902,5 +902,7 @@
   "studio.director.scriptImportTitle": "脚本を読み込む",
   "studio.director.assetImportEmpty": "素材に画像がありません。先に生成かアップロードをしてください。",
   "studio.director.useTemplate": "テンプレート",
-  "studio.director.stitchHint": "順に繋がり、最後に 1 本の動画に結合されます"
+  "studio.director.stitchHint": "順に繋がり、最後に 1 本の動画に結合されます",
+  "product.home.slogan1": "漫客工作台 — 一枚の絵、一本の映像、一曲。AI が作品にする。",
+  "product.home.slogan2": "図は万象を生み、影は物語を語り、楽は心を歌う。"
 }

@@ -45,6 +45,7 @@ import {
   getDefaultDirectorSettings,
   pickActiveLoras,
   pickChangedDirectorGlobal,
+  resolveSegmentReferences,
   type DirectorSettings,
 } from '@/core/effects/aicg3d-director';
 import { fetchRecentAssets } from '@/core/workspace-lib/app/workspace-client-api';
@@ -264,11 +265,12 @@ export function BeatStudioWorkspace({
         !isAnalysis && draft.type === 'video' && directorSettings.segments.length > 0
           ? {
               director_global: pickChangedDirectorGlobal(directorSettings.global),
-              director_segments: directorSettings.segments.map((seg) => ({
-                prompt: seg.prompt,
-                seconds: seg.seconds,
-                imageUrls: seg.imageUrls ?? [],
-              })),
+              director_segments: directorSettings.segments.map((seg) => {
+                // Order is fixed so <Picture N> stays stable; refs ride along so the
+                // adapter can write the <Subject N> binding into the prompt.
+                const { urls, refs } = resolveSegmentReferences(seg, directorSettings.assets);
+                return { prompt: seg.prompt, seconds: seg.seconds, imageUrls: urls, refs };
+              }),
               director_loras: pickActiveLoras(directorSettings.loras),
             }
           : null;
@@ -484,6 +486,23 @@ export function BeatStudioWorkspace({
                   a.id === assetId
                     ? { ...a, imageUrl: asset.publicUrl, source: 'uploaded' as const }
                     : a
+                ),
+              }))
+            )
+            .catch((error: unknown) =>
+              setError(error instanceof Error ? error.message : 'Upload failed')
+            );
+        }}
+        onUploadShotImage={(index, file) => {
+          // Straight onto one shot: upload, then append to that shot's references.
+          void uploadLocalProjectAsset({ projectId, file })
+            .then((asset) =>
+              setDirectorSettings((current) => ({
+                ...current,
+                segments: current.segments.map((seg, i) =>
+                  i === index
+                    ? { ...seg, imageUrls: [...(seg.imageUrls ?? []), asset.publicUrl] }
+                    : seg
                 ),
               }))
             )

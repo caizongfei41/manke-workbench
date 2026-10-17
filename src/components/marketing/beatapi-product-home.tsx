@@ -10,6 +10,7 @@ import { useState, type ReactNode } from 'react';
 import { Link } from '@/core/i18n/navigation';
 import { normalizeLocale } from '@/config/locale';
 import { m } from '@/paraglide/messages.js';
+import { HeroSlogan } from './hero-slogan';
 import { BeatApiProductShell } from './beatapi-product-shell';
 
 function getCopy(locale: string) {
@@ -132,13 +133,7 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
             <span className="size-1.5 rounded-full bg-[var(--beat-accent)]" />
             {copy.eyebrow}
           </p>
-          <h1 className="beat-product-display beat-product-hero-title mx-auto mt-6 w-full max-w-[720px] text-[clamp(2.25rem,6.6vw,4.75rem)] font-semibold leading-[1.04] tracking-[-0.04em] text-[var(--beat-text-1)]">
-            {titleLines.map((line) => (
-              <span key={line} className="block">
-                {line}
-              </span>
-            ))}
-          </h1>
+          <HeroSlogan locale={locale} />
           <PromptComposer copy={copy} />
           </div>
         </section>

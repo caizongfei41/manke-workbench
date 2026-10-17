@@ -64,6 +64,7 @@ export function StudioComposer({
   onGenerateAssetImage,
   onUploadAssetImage,
   onImportAssetToShots,
+  onUploadShotImage,
   isBusy,
   promptCharacterLimit,
   takeCount: _takeCount = 0,
@@ -99,6 +100,7 @@ export function StudioComposer({
   onGenerateAssetImage?: (assetId: string, prompt: string) => void;
   onUploadAssetImage?: (assetId: string, file: File) => void;
   onImportAssetToShots?: (asset: ScriptAsset) => void;
+  onUploadShotImage?: (segmentIndex: number, file: File) => void;
   isBusy: boolean;
   promptCharacterLimit: number;
   takeCount?: number;
@@ -415,6 +417,7 @@ export function StudioComposer({
             onGenerateAssetImage={onGenerateAssetImage}
             onUploadAssetImage={onUploadAssetImage}
             onImportAssetToShots={onImportAssetToShots}
+            onUploadShotImage={onUploadShotImage}
           />
         ) : null}
 

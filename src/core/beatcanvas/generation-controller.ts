@@ -14,6 +14,7 @@ import { buildDraftModelParameters } from '@/core/effects/model-parameters';
 import {
   pickActiveLoras,
   pickChangedDirectorGlobal,
+  resolveSegmentReferences,
 } from '@/core/effects/aicg3d-director';
 import {
   getGenerationPromptConstraints,
@@ -337,11 +338,15 @@ export const buildGenerationEffectInput = async ({
     ...(draftCard.directorSettings && draftCard.directorSettings.segments.length > 0
       ? {
           director_global: pickChangedDirectorGlobal(draftCard.directorSettings.global),
-          director_segments: draftCard.directorSettings.segments.map((seg) => ({
-            prompt: seg.prompt,
-            seconds: seg.seconds,
-            imageUrls: seg.imageUrls ?? [],
-          })),
+          director_segments: draftCard.directorSettings.segments.map((seg) => {
+            // Order is fixed so <Picture N> stays stable; refs ride along so the
+            // adapter can write the <Subject N> binding into the prompt.
+            const { urls, refs } = resolveSegmentReferences(
+            seg,
+            draftCard.directorSettings?.assets ?? []
+          );
+            return { prompt: seg.prompt, seconds: seg.seconds, imageUrls: urls, refs };
+          }),
           director_loras: pickActiveLoras(draftCard.directorSettings.loras),
         }
       : {}),
