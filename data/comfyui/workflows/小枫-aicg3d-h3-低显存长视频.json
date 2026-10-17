@@ -124,8 +124,8 @@
   },
   "107": {
     "inputs": {
-      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera.\n0.0-Ns: the scene unfolds smoothly and keeps consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
-      "seconds": 3,
+      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera moving slowly forward.\n0.0-Ns: the scene unfolds smoothly and stays consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
+      "seconds": 4,
       "seed": 100001,
       "inline_media_state": "{\"images\":[]}",
       "sequence_config": [
@@ -140,8 +140,8 @@
   },
   "108": {
     "inputs": {
-      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera.\n0.0-Ns: the scene unfolds smoothly and keeps consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
-      "seconds": 3,
+      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera moving slowly forward.\n0.0-Ns: the scene unfolds smoothly and stays consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
+      "seconds": 4,
       "seed": 100002,
       "inline_media_state": "{\"images\":[]}",
       "previous_segment": [
@@ -156,8 +156,8 @@
   },
   "109": {
     "inputs": {
-      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera.\n0.0-Ns: the scene unfolds smoothly and keeps consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
-      "seconds": 3,
+      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera moving slowly forward.\n0.0-Ns: the scene unfolds smoothly and stays consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
+      "seconds": 4,
       "seed": 100003,
       "inline_media_state": "{\"images\":[]}",
       "previous_segment": [
@@ -172,6 +172,7 @@
   },
   "_beatdesign": {
     "positive": "107,108,109",
-    "seed": "107"
+    "seed": "107",
+    "resolution": "78"
   }
 }

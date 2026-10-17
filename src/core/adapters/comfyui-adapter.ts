@@ -90,6 +90,12 @@ type ComfyUiWorkflowConfig = {
     name?: string;
     strength?: number;
   };
+  /**
+   * 分辨率档位节点 id：该节点有一个字符串枚举的 `resolution` 输入
+   * （AICG3D 全局设置节点，取值 360P…1080P）。界面质量选项会映射过去；
+   * 质量不在映射表里就保留模板值。
+   */
+  resolution?: string;
 };
 
 type ComfyUiWorkflow = Record<string, unknown> & {
@@ -850,6 +856,37 @@ function compileComfyUiPrompt(
         // WanVideoTextEncode 用 positive_prompt 字段。
         nodeInputs.positive_prompt = prompt;
       }
+    }
+  }
+
+  // 分辨率档位：AICG3D 全局设置节点上的 `resolution` 是字符串枚举
+  // （360P…1080P），不是像素数，所以不能走 size 的宽高注入。界面的质量选项
+  // 映射过去；映射不到就保留模板里的值，不猜。
+  if (meta.resolution) {
+    const resolutionInputs = asRecord(
+      asRecord(nodes[String(meta.resolution).trim()])?.inputs
+    );
+    if (resolutionInputs && typeof resolutionInputs.resolution === 'string') {
+      const quality = (
+        readString(input.wmOutputQuality) ??
+        readString(input.output_quality) ??
+        ''
+      ).toLowerCase();
+      const resolutionByQuality: Record<string, string> = {
+        '360p': '360P',
+        '416p': '416P',
+        '480p': '480P',
+        '540p': '540P',
+        '640p': '640P',
+        '720p': '720P',
+        '768p': '768P',
+        '832p': '832P',
+        '928p': '928P',
+        '1024p': '1024P',
+        '1080p': '1080P',
+      };
+      const mappedResolution = resolutionByQuality[quality];
+      if (mappedResolution) resolutionInputs.resolution = mappedResolution;
     }
   }
 

@@ -49,6 +49,8 @@ export const COMFYUI_MODEL_BINDINGS = [
   ['qwen-image-2-1文生图-seedvr2自动放大', 121],
   ['小枫-qwen3-tts-三合一整合版', 122],
   ['小枫-aicg3d-h3-低显存长视频', 123],
+  ['小枫-aicg3d-h3-长视频', 124],
+  ['小枫-aicg3d-h3-中配长视频', 125],
 ] as const;
 
 export const comfyUiGenerationProvider: GenerationProviderDefinition = {
