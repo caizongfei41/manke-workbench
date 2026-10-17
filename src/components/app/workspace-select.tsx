@@ -1,3 +1,4 @@
+import { HintTip } from '@/components/app/hint-tip';
 import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,6 +12,8 @@ import { cn } from '@/lib/utils';
 export type WorkspaceSelectOption = {
   value: string;
   label: string;
+  /** Optional second line describing what the option does (used for models). */
+  description?: string;
   /** Optional leading mark: model icon, media glyph, ratio preview… */
   leading?: ReactNode;
   /** Optional group key. Options without a group render directly; grouped
@@ -33,11 +36,14 @@ export function WorkspaceSelect({
   options,
   onChange,
   ariaLabel,
+  hint,
   leadingIcon,
   triggerClassName,
 }: {
   value: string;
   options: WorkspaceSelectOption[];
+  /** Hover hint explaining what this dropdown is for. */
+  hint?: { label: string; description?: string };
   onChange: (value: string) => void;
   ariaLabel: string;
   /** Icon shown on the trigger when the selected option has none. */
@@ -116,24 +122,31 @@ export function WorkspaceSelect({
 
   return (
     <div ref={rootRef} className="relative min-w-0">
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        onClick={() => setOpen((next) => !next)}
-        className={cn(
-          composerFieldButtonClassName,
-          'justify-center px-2.5',
-          triggerClassName
-        )}
+      <HintTip
+        label={hint?.label ?? ariaLabel}
+        description={hint?.description}
+        disabled={!hint}
+        className="min-w-0 max-w-full"
       >
-        {selected?.leading ?? leadingIcon}
-        <span className="min-w-0 truncate text-left">{selected?.label}</span>
-        <ChevronDown
-          className={`size-3.5 shrink-0 text-white/40 transition-transform ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label={ariaLabel}
+          aria-expanded={open}
+          onClick={() => setOpen((next) => !next)}
+          className={cn(
+            composerFieldButtonClassName,
+            'justify-center px-2.5',
+            triggerClassName
+          )}
+        >
+          {selected?.leading ?? leadingIcon}
+          <span className="min-w-0 truncate text-left">{selected?.label}</span>
+          <ChevronDown
+            className={`size-3.5 shrink-0 text-white/40 transition-transform ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+      </HintTip>
 
       {open && menuPosition
         ? createPortal(
@@ -164,8 +177,13 @@ export function WorkspaceSelect({
                     className={getComposerOptionRowClassName(isSelected)}
                   >
                     {option.leading}
-                    <span className="min-w-0 flex-1 truncate">
-                      {option.label}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{option.label}</span>
+                      {option.description ? (
+                        <span className="mt-0.5 block text-[10.5px] leading-[15px] text-[var(--beat-text-3)]">
+                          {option.description}
+                        </span>
+                      ) : null}
                     </span>
                     {isSelected ? (
                       <Check className="size-3.5 shrink-0 text-[var(--beat-accent)]" />
@@ -207,8 +225,13 @@ export function WorkspaceSelect({
                             className={getComposerOptionRowClassName(isSelected)}
                           >
                             {option.leading}
-                            <span className="min-w-0 flex-1 truncate">
-                              {option.label}
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate">{option.label}</span>
+                              {option.description ? (
+                                <span className="mt-0.5 block text-[10.5px] leading-[15px] text-[var(--beat-text-3)]">
+                                  {option.description}
+                                </span>
+                              ) : null}
                             </span>
                             {isSelected ? (
                               <Check className="size-3.5 shrink-0 text-[var(--beat-accent)]" />

@@ -62,6 +62,8 @@ export type WorkspaceEffectRegistryAliasDefaults = {
 export type WorkspaceEffectRegistryEntry = {
   id: string;
   name: string;
+  /** 一句话说明这个模型能做什么，界面上作为悬浮注释显示。 */
+  description?: string;
   workspaceType: WorkspaceRegistryType;
   routeSlug: string | null;
   routeAliases?: string[];
@@ -549,6 +551,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-H3-导演-连贯成片',
       name: 'MiniMax H3 导演·连贯成片',
+      description: '一个提示词出连贯长镜头，支持逐段写不同提示词和时长；默认 5 秒。',
       workspaceType: 'ai-video',
       routeSlug: 'minimax-h3-director-film',
       routeOrder: 95,
@@ -567,6 +570,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
       // 选项改（映射到全局设置节点的 resolution 枚举）。
       id: '小枫-aicg3d-h3-长视频',
       name: 'MiniMax H3 长视频 · 画质优先',
+      description: '分段串联出 12 秒长视频，显存档位按显卡自动选择，可选 480P/720P/1080P。',
       workspaceType: 'ai-video',
       routeSlug: 'minimax-h3-aicg3d-1080p',
       routeOrder: 96,
@@ -582,6 +586,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-aicg3d-h3-中配长视频',
       name: 'MiniMax H3 长视频 · 720P 平衡',
+      description: '同上，锁 720P、12G 显存档位，速度与画质平衡。',
       workspaceType: 'ai-video',
       routeSlug: 'minimax-h3-aicg3d-720p',
       routeOrder: 97,
@@ -597,6 +602,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-aicg3d-h3-低显存长视频',
       name: 'MiniMax H3 长视频 · 480P 低显存',
+      description: '同上，锁 480P、8G 显存档位并段间卸载模型，8~12G 显卡可用。',
       workspaceType: 'ai-video',
       routeSlug: 'minimax-h3-aicg3d-480p',
       routeOrder: 98,
@@ -612,6 +618,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: 'qwen-image-2-1图像编辑',
       name: 'Qwen Image 2.1 图像编辑',
+      description: '上传一张图 + 描述改动，按描述重绘；适合换背景、加元素。',
       workspaceType: 'ai-image',
       routeSlug: 'qwen-image-2-1-edit',
       routeOrder: 95,
@@ -627,6 +634,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-qwen-image-2-1-文生图',
       name: 'Qwen Image 2.1 文生图',
+      description: '纯文字生成图片，支持 1K/2K/4K。',
       workspaceType: 'ai-image',
       routeSlug: 'qwen-image-2-1-t2i',
       routeOrder: 98,
@@ -640,6 +648,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: 'qwen-image-2-1文生图-seedvr2自动放大',
       name: 'Qwen Image 2.1 文生图 + SeedVR2 放大',
+      description: '文生图后自动用 SeedVR2 放大，细节更实的 2K 成图。',
       workspaceType: 'ai-image',
       routeSlug: 'qwen-image-2-1-t2i-seedvr2',
       routeOrder: 99,
@@ -653,6 +662,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-dlss5-视频增强',
       name: 'DLSS5 视频增强',
+      description: '视频逐帧增强放大，输出更干净的画面。',
       workspaceType: 'ai-video',
       routeSlug: 'dlss5-video-enhance',
       routeOrder: 101,
@@ -666,6 +676,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-qwen3-tts-三合一整合版',
       name: 'Qwen3 TTS 三合一',
+      description: '文字转语音，可选音色；输出 mp3。',
       workspaceType: 'ai-image',
       routeSlug: 'qwen3-tts-all-in-one',
       routeOrder: 102,
@@ -678,6 +689,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-flux2-klein-三视图工作流',
       name: 'Flux.2 Klein 三视图工作流',
+      description: '一张参考图生成正面/侧面/背面三视图，做角色设定用。',
       workspaceType: 'ai-image',
       routeSlug: 'flux2-klein-three-view',
       routeOrder: 103,
@@ -691,6 +703,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: 'flux-2-klein-文生图',
       name: 'Flux.2 Klein 文生图',
+      description: 'Flux.2 Klein 文生图，风格偏写实，出图快。',
       workspaceType: 'ai-image',
       routeSlug: 'flux2-klein-t2i',
       routeOrder: 104,
@@ -704,6 +717,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: 'flux2-klein-图片编辑-单图',
       name: 'Flux.2 Klein 图片编辑（单图）',
+      description: '单图编辑，保持人物/构图改风格。',
       workspaceType: 'ai-image',
       routeSlug: 'flux2-klein-edit-single',
       routeOrder: 105,
@@ -719,6 +733,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '图片放大-seedvr2',
       name: 'SeedVR2 图片放大',
+      description: '把已有图片无损放大，最高 4 倍。',
       workspaceType: 'ai-image',
       routeSlug: 'seedvr2-upscale',
       routeOrder: 106,
@@ -731,6 +746,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-dlss5-单图增强',
       name: 'DLSS5 单图增强',
+      description: 'DLSS 单图增强，补细节、去噪，适合低清图救急。',
       workspaceType: 'ai-image',
       routeSlug: 'dlss5-image-enhance',
       routeOrder: 107,
@@ -771,6 +787,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-qwen-image-2-1-图像编辑',
       name: 'Qwen Image 2.1 图像编辑（小枫版）',
+      description: '同上，最多挂 3 张参考图。',
       workspaceType: 'ai-image',
       routeSlug: 'xiaofeng-qwen-image-2-1-edit',
       routeOrder: 110,
@@ -786,6 +803,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-qwen-image-2-1-图编辑-4步加速版',
       name: 'Qwen Image 2.1 图编辑 4 步加速',
+      description: '图像编辑的 4 步加速版，速度快约 5 倍，细节略少。',
       workspaceType: 'ai-image',
       routeSlug: 'xiaofeng-qwen-image-2-1-edit-4step',
       routeOrder: 111,
@@ -801,6 +819,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
     {
       id: '小枫-qwen-image-2-1-文生图-4步加速版',
       name: 'Qwen Image 2.1 文生图 4 步加速',
+      description: '文生图的 4 步加速版，约 20 秒出图。',
       workspaceType: 'ai-image',
       routeSlug: 'xiaofeng-qwen-image-2-1-t2i-4step',
       routeOrder: 112,

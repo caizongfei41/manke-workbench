@@ -41,6 +41,8 @@ export type {
 export type WorkspaceModelOption = {
   id: string;
   name: string;
+  /** 一句话说明这个模型能做什么，界面上作为悬浮注释显示。 */
+  description?: string;
   mediaSchema?: WorkspaceMediaSchema;
   mode?: WorkspaceModelMode;
   defaultMode?: WorkspaceModelMode;
@@ -107,6 +109,7 @@ const toWorkspaceModelOption = (
   return {
     id: entry.id,
     name: entry.name,
+    description: entry.description,
     mediaSchema,
     uploadPath: binding.uploadPath,
     imageBucketName: binding.imageBucketName,

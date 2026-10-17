@@ -119,7 +119,7 @@ export function BeatStudioWorkspace({
   const [analysisFile, setAnalysisFile] = useState<File | null>(null);
   const [referenceUrls, setReferenceUrls] = useState<string[]>([]);
   const [error, setError] = useState('');
-  // composer 是浮层，结果列表要用它的实际高度留底部空间（默认值只是首帧兜底）。
+  // The composer floats; the results list reserves its real height (value below is a first-frame fallback).
   const [composerHeight, setComposerHeight] = useState(0);
   const models = draft.type === 'video' ? videoModels : imageModels;
   const selectedModel =
@@ -240,7 +240,7 @@ export function BeatStudioWorkspace({
       <div
         className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-8 sm:px-6"
         style={{
-          // 分段导演台展开时 composer 会变高，写死的留白不够，最后一条结果会被压住。
+          // The composer grows when the segment panel expands; a fixed padding would cover the last result.
           paddingBottom: composerHeight > 0 ? composerHeight + 8 : 220,
         }}
       >

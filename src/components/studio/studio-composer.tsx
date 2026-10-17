@@ -15,6 +15,7 @@ import {
   composerGenerateButtonClassName,
 } from '@/components/app/composer-styles';
 import { AiExpandControl } from '@/components/app/ai-expand-control';
+import { HintTip } from '@/components/app/hint-tip';
 import { WorkspaceSelect } from '@/components/app/workspace-select';
 import { BeatCanvasComposerParameterPicker } from '@/components/beatcanvas/beatcanvas-composer-parameter-picker';
 import { normalizeComposerToken } from '@/components/beatcanvas/beatcanvas-composer-utils';
@@ -34,6 +35,7 @@ import { getModelIconPathByModelId } from '@/core/workspace-lib/model-icons';
 import type { StudioMedia } from '@/core/studio/studio-runtime';
 import type { VideoAnalysisDepth } from '@/core/effects/video-analysis';
 import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
+import { m } from '@/paraglide/messages.js';
 import { cn } from '@/lib/utils';
 
 export function StudioComposer({
@@ -76,9 +78,9 @@ export function StudioComposer({
   onRemoveReference?: (url: string) => void;
   onReferenceFileSelect?: (file: File) => void;
   /**
-   * 上报 composer 的占用高度。composer 绝对定位浮在内容之上，结果列表要用它的
-   * 实际高度留底部空间 —— 固定值不够用：分段导演台展开后 composer 会明显变高，
-   * 最后一条结果就被压住。
+   * Reports the composer height. It floats above the content, so the results list
+   * needs its real height for bottom padding — a fixed value is not enough, since
+   * the composer grows noticeably when the segment panel is expanded.
    */
   onHeightChange?: (height: number) => void;
 }) {
@@ -89,8 +91,8 @@ export function StudioComposer({
   const parameterPickerRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [isParameterOpen, setIsParameterOpen] = useState(false);
-  // 把自身高度报给外层：结果列表据此留底部空间。
-  // onHeightChange 每次渲染都是新函数，用 ref 固定住避免 ResizeObserver 反复重建。
+  // Report own height so the results list can reserve space for it.
+  // onHeightChange is a new function each render; pin it in a ref so the observer is not rebuilt.
   const onHeightChangeRef = useRef(onHeightChange);
   onHeightChangeRef.current = onHeightChange;
   useEffect(() => {
@@ -262,9 +264,15 @@ export function StudioComposer({
         {media === 'video' && selectedModel?.multiSegment ? (
           <div className="mb-2 rounded-[12px] border border-white/[0.08] bg-black/30 p-2.5">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--beat-text-2)]">
-                {t('segmentPanelTitle')}
-              </span>
+              <HintTip
+                label={m['studio.hint.segments.label']()}
+                description={m['studio.hint.segments.desc']()}
+                side="bottom"
+              >
+                <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--beat-text-2)]">
+                  {t('segmentPanelTitle')}
+                </span>
+              </HintTip>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -397,20 +405,25 @@ export function StudioComposer({
             }}
           />
           <div className="absolute right-1.5 top-1.5 z-10">
-            <AiExpandControl
-              prompt={draft.prompt}
-              mediaType={isAnalysis ? 'image' : media === 'video' ? 'video' : 'image'}
-              isBusy={isBusy}
-              onExpanded={(expanded) =>
-                onDraftChange({
-                  ...draft,
-                  prompt: truncatePromptToMaxChars(
-                    expanded,
-                    promptCharacterLimit
-                  ),
-                })
-              }
-            />
+            <HintTip
+              label={m['studio.hint.expand.label']()}
+              description={m['studio.hint.expand.desc']()}
+            >
+              <AiExpandControl
+                prompt={draft.prompt}
+                mediaType={isAnalysis ? 'image' : media === 'video' ? 'video' : 'image'}
+                isBusy={isBusy}
+                onExpanded={(expanded) =>
+                  onDraftChange({
+                    ...draft,
+                    prompt: truncatePromptToMaxChars(
+                      expanded,
+                      promptCharacterLimit
+                    ),
+                  })
+                }
+              />
+            </HintTip>
           </div>
           <textarea
             value={draft.prompt}
@@ -439,6 +452,10 @@ export function StudioComposer({
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             <WorkspaceSelect
               ariaLabel="Media type"
+               hint={{
+                 label: m['studio.hint.media.label'](),
+                 description: m['studio.hint.media.desc'](),
+               }}
               triggerClassName="min-w-[96px]"
               value={media}
               options={[
@@ -496,11 +513,16 @@ export function StudioComposer({
             ) : (
             <WorkspaceSelect
               ariaLabel="Model"
+              hint={{
+                label: m['studio.hint.model.label'](),
+                description: m['studio.hint.model.desc'](),
+              }}
               triggerClassName="w-fit max-w-full"
               value={selectedModel?.id || ''}
               options={models.map((model) => ({
                 value: model.id,
                 label: model.name,
+                description: model.description,
                 group: model.isLocalFree === true ? undefined : 'paid',
                 groupLabel: labels.paidModelsLabel,
                 leading: (
@@ -594,27 +616,33 @@ export function StudioComposer({
             >
               {promptCharacterCount}/{promptCharacterLimit}
             </span>
-            <button
-              type="button"
-              onClick={onGenerate}
-              disabled={
-                isBusy ||
-                (promptRequired && !draft.prompt.trim()) ||
-                (selectedModel?.requiresImageInput && referenceUrls.length === 0) ||
-                (isAnalysis ? !analysisFileName : !selectedModel)
-              }
-              className={cn(
-                composerGenerateButtonClassName,
-                'active:translate-y-px'
-              )}
-              aria-label={primaryButtonLabel}
+            <HintTip
+              label={m['studio.hint.generate.label']()}
+              description={m['studio.hint.generate.desc']()}
+              side="top"
             >
-              {isBusy ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <ArrowUp className="size-3.5" />
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={onGenerate}
+                disabled={
+                  isBusy ||
+                  (promptRequired && !draft.prompt.trim()) ||
+                  (selectedModel?.requiresImageInput && referenceUrls.length === 0) ||
+                  (isAnalysis ? !analysisFileName : !selectedModel)
+                }
+                className={cn(
+                  composerGenerateButtonClassName,
+                  'active:translate-y-px'
+                )}
+                aria-label={primaryButtonLabel}
+              >
+                {isBusy ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <ArrowUp className="size-3.5" />
+                )}
+              </button>
+            </HintTip>
           </div>
         </div>
       </div>
