@@ -22,6 +22,12 @@ export type WorkspaceMediaSlot = {
 };
 
 export type WorkspaceMediaSection = {
+  /**
+   * 最少需要几个。0 表示可选；>0 表示缺了就直接拒绝，不能悄悄用模板里
+   * 预置的素材 —— 翻唱就是这样：不传源曲会拿模板内置的那首歌去翻，用户拿到
+   * 一首完全没听过的歌。
+   */
+  min: number;
   max: number;
   slots: WorkspaceMediaSlot[];
 };
@@ -43,9 +49,9 @@ const createSection = (
   slots: WorkspaceMediaSlot[]
 ): WorkspaceMediaSection => ({
   max,
+  min: 0,
   slots,
 });
-
 const repeatSlots = (
   kind: WorkspaceMediaSlotKind,
   count: number
@@ -304,7 +310,9 @@ export const WORKSPACE_MEDIA_SCHEMAS = {
   '小枫-yue2-歌曲翻唱': {
     image: emptySection,
     video: emptySection,
-    audio: createGenericSection('reference-audio', 1),
+    // Cover needs a source song: the template ships one baked in, so a
+    // missing upload would silently cover that song instead.
+    audio: { ...createGenericSection('reference-audio', 1), min: 1 },
   },
   '小枫-aicg3d-h3-长视频': {
     image: emptySection,

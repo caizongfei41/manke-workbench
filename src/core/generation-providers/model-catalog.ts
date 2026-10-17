@@ -3,7 +3,10 @@ import {
   type WorkspaceEffectRegistryEntry,
 } from '@/core/effects/effect-registry';
 import { getRegisteredEffectById } from '@/core/effects/registered-effects';
-import { getWorkspaceMediaSchema } from '@/core/effects/workspace-media';
+import {
+  getWorkspaceMediaSchema,
+  type WorkspaceMediaSchema,
+} from '@/core/effects/workspace-media';
 import {
   VIDEO_ANALYSIS_MODEL_ID,
 } from '@/core/effects/video-analysis';
@@ -111,5 +114,28 @@ export function validateGenerationModelInput({
   const effect = getRegisteredEffectById(binding.effectId);
   if (!effect) throw new Error(`Model ${modelId} is not registered.`);
   provider.validateInput?.(effect, input);
+
+  // Reference minimums. The media schema says how many references a model needs;
+  // without enforcing it a cover submitted with no audio silently runs against the
+  // song baked into the template, which the user never chose.
+  const mediaSchema: Partial<WorkspaceMediaSchema> =
+    getWorkspaceMediaSchema(modelId) ?? {};
+  const counts = {
+    image: Array.isArray(input.image_urls) ? input.image_urls.length : 0,
+    video: Array.isArray(input.video_urls) ? input.video_urls.length : 0,
+    audio: Array.isArray(input.audio_urls) ? input.audio_urls.length : 0,
+  };
+  for (const key of ['image', 'video', 'audio'] as const) {
+    const section = mediaSchema[key];
+    if (section && section.min > 0 && counts[key] < section.min) {
+      throw new Error(
+        key === 'audio'
+          ? 'This model needs a source audio file.'
+          : key === 'video'
+            ? 'This model needs a reference video.'
+            : 'This model needs a reference image.'
+      );
+    }
+  }
   return { provider, binding, effect };
 }

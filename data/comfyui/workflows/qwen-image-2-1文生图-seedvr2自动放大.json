@@ -159,6 +159,7 @@
   },
   "_beatdesign": {
     "seed": "6",
-    "positive": "4"
+    "positive": "4",
+    "size": "5"
   }
 }
