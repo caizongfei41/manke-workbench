@@ -221,7 +221,7 @@ $logBox.ReadOnly = $true
 $logBox.ScrollBars = 'Vertical'
 $logBox.BackColor = [Drawing.Color]::FromArgb(28, 30, 36)
 $logBox.ForeColor = [Drawing.Color]::FromArgb(200, 206, 214)
-$logBox.Font = New-Object Drawing.Font('Consolas', 8.5)
+$logBox.Font = New-Object Drawing.Font('Microsoft YaHei UI', 9)
 $form.Controls.Add($logBox)
 
 $form.Size = New-Object Drawing.Size(460, ($y + 200))
@@ -335,8 +335,12 @@ $openLogsBtn.Add_Click({
     Add-Log "已打开日志目录：$logs"
 }.GetNewClosure())
 
-# 环境自检：跑 scripts/check-environment.mjs，把结果写进日志框。
-# 输出里的 ANSI 颜色码要剥掉，文本框不认识转义序列。
+# 环境自检：跑 scripts/check-environment.mjs --json，在日志框里重新排版。
+#
+# 走 JSON 而不是文本输出，有两个原因：
+#   1) node 输出 UTF-8，GUI 进程的控制台代码页是 936，直接捕获会乱码 ——
+#      cmd 重定向到文件再按 UTF-8 读，与代码页无关；
+#   2) 文本输出靠空格对齐，日志框字体一变就错位，JSON 由这里排版更稳。
 $checkBtn.Add_Click({
     $this.Enabled = $false
     $original = $this.Text
@@ -345,26 +349,40 @@ $checkBtn.Add_Click({
 
     $script = Join-Path $BD 'scripts\check-environment.mjs'
     if (-not (Test-Path $script)) {
-        Add-Log "✗ 缺少 scripts\check-environment.mjs，无法自检。"
+        Add-Log '✗ 缺少 scripts\check-environment.mjs，无法自检。'
     } else {
         Add-Log '开始环境自检（模型 / 节点包 / 插件 / 配置）…'
+        $tmp = [IO.Path]::GetTempFileName()
         try {
-            $raw = & node $script 2>&1 | Out-String
-            $esc = [string][char]27
-            foreach ($line in ($raw -split "`r?`n")) {
-                # 剥掉 \e[32m 这类颜色码
-                $clean = ($line -replace ($esc + '\[[0-9;]*m'), '').TrimEnd()
-                if ($clean) { Add-Log $clean }
+            & cmd /c "node `"$script`" --json > `"$tmp`" 2>&1"
+            $text = [IO.File]::ReadAllText($tmp, [Text.Encoding]::UTF8)
+            if (-not $text.TrimStart().StartsWith('{')) {
+                Add-Log '✗ 自检没有返回 JSON，原始输出：'
+                foreach ($l in ($text -split "`r?`n")) { if ($l.Trim()) { Add-Log ('   ' + $l.TrimEnd()) } }
+            } else {
+                $data = $text | ConvertFrom-Json
+                $mark = @{ 'pass' = '[OK]  '; 'warn' = '[!]   '; 'fail' = '[X]   ' }
+                foreach ($chk in $data.checks) {
+                    $prefix = $mark[$chk.status]
+                    Add-Log ("$prefix$($chk.label)：$($chk.detail)")
+                    if ($chk.hint -and $chk.status -ne 'pass') {
+                        Add-Log ("        → $($chk.hint)")
+                    }
+                }
+                $s = $data.summary
+                Add-Log ('-' * 40)
+                Add-Log ("通过 $($s.pass)  警告 $($s.warn)  失败 $($s.fail)  →  " + $(if ($data.ok) { '可以开工' } else { '先处理失败项' }))
             }
         } catch {
             Add-Log ('✗ 自检出错：' + $_.Exception.Message)
+        } finally {
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue
         }
     }
 
     $this.Text = $original
     $this.Enabled = $true
 }.GetNewClosure())
-
 # 每 3 秒自动刷新状态
 $timer = New-Object Windows.Forms.Timer
 $timer.Interval = 3000
@@ -374,6 +392,10 @@ $timer.Start()
 $form.Add_Shown({
     Add-Log '就绪。服务不随开机启动，需要时点「全部启动」。'
     Update-Status
+    # 需要启动时自动跑一次自检时设 BD_CHECK_ON_START=1（换新机器时有用）。
+    if ($env:BD_CHECK_ON_START -eq '1') {
+        $checkBtn.PerformClick()
+    }
 })
 
 [void]$form.ShowDialog()
