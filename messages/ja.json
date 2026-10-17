@@ -842,5 +842,8 @@
   "studio.hint.segments.label": "セグメント監督",
   "studio.hint.segments.desc": "各セグメントに説明と秒数を指定します。自動で繋がります。空欄なら上のプロンプトを使用。",
   "studio.hint.language.label": "プロンプト言語",
-  "studio.hint.language.desc": "AI 拡張の出力言語だけに影響します。モデルは両方理解します。"
+  "studio.hint.language.desc": "AI 拡張の出力言語だけに影響します。モデルは両方理解します。",
+  "studio.mediaMusic": "音楽",
+  "studio.audioPromptPlaceholder": "歌詞を貼り付けるか、書きたい内容を説明してください（空欄ならスタイルに任せます）",
+  "studio.audioUpload": "音声をアップロード"
 }

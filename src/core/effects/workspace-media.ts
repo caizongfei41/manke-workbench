@@ -295,6 +295,17 @@ export const WORKSPACE_MEDIA_SCHEMAS = {
     audio: emptySection,
   },
   // 分段串联模板家族：素材在模板内部的素材库里选，界面不再额外上传。
+  // 音乐：创作不需要素材，翻唱必须上传一段源音频作为旋律来源。
+  '小枫-yue2-歌曲创作': {
+    image: emptySection,
+    video: emptySection,
+    audio: emptySection,
+  },
+  '小枫-yue2-歌曲翻唱': {
+    image: emptySection,
+    video: emptySection,
+    audio: createGenericSection('reference-audio', 1),
+  },
   '小枫-aicg3d-h3-长视频': {
     image: emptySection,
     video: emptySection,

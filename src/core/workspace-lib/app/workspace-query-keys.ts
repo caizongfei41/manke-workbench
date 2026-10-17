@@ -12,7 +12,7 @@ export const workspaceProjectsKeys = {
 
 export const workspaceModelsKeys = {
   all: ['workspace-models'] as const,
-  list: (type: 'ai-image' | 'ai-video' | 'all') =>
+  list: (type: 'ai-image' | 'ai-video' | 'ai-audio' | 'all') =>
     [...workspaceModelsKeys.all, 'list', type] as const,
 };
 

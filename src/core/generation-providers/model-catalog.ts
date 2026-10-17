@@ -36,7 +36,7 @@ export type GenerationModelDescriptor = {
   id: string;
   name: string;
   providerId: string;
-  kind: 'image' | 'video' | 'analysis';
+  kind: 'image' | 'video' | 'analysis' | 'audio';
   available: boolean;
   parameterSchema: unknown;
   defaultParameters: Record<string, unknown>;
@@ -76,7 +76,12 @@ export function listGenerationModelDescriptors(): GenerationModelDescriptor[] {
         id: entry.id,
         name: entry.name,
         providerId: provider.id,
-        kind: entry.workspaceType === 'ai-image' ? ('image' as const) : ('video' as const),
+        kind:
+          entry.workspaceType === 'ai-image'
+            ? ('image' as const)
+            : entry.workspaceType === 'ai-audio'
+              ? ('audio' as const)
+              : ('video' as const),
         available: true,
         parameterSchema: effect.inputSchema,
         defaultParameters: defaultsFromEntry(entry),

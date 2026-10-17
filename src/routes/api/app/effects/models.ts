@@ -7,14 +7,14 @@ import {
 } from '@/core/effects/workspace-models';
 
 const isWorkspaceType = (value: string | null): value is WorkspaceType =>
-  value === 'ai-image' || value === 'ai-video';
+  value === 'ai-image' || value === 'ai-video' || value === 'ai-audio';
 
 async function GET({ request }: { request: Request }) {
   const { searchParams } = new URL(request.url);
   const requestedType = searchParams.get('type');
   const types = isWorkspaceType(requestedType)
     ? [requestedType]
-    : (['ai-image', 'ai-video'] as const);
+    : (['ai-image', 'ai-video', 'ai-audio'] as const);
 
   const registryModels = types.flatMap((type) =>
     getWorkspaceModelsByType(type).map((model) => ({

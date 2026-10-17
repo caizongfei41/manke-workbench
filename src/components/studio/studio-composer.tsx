@@ -5,6 +5,7 @@ import {
   ImagePlus,
   Loader2,
   ScanSearch,
+  Music2,
   Sparkles,
   Video,
 } from 'lucide-react';
@@ -43,6 +44,7 @@ export function StudioComposer({
   media,
   imageModels,
   videoModels,
+  audioModels,
   isBusy,
   promptCharacterLimit,
   takeCount: _takeCount = 0,
@@ -63,6 +65,7 @@ export function StudioComposer({
   media: StudioMedia;
   imageModels: WorkspaceModelOption[];
   videoModels: WorkspaceModelOption[];
+  audioModels: WorkspaceModelOption[];
   isBusy: boolean;
   promptCharacterLimit: number;
   takeCount?: number;
@@ -107,7 +110,12 @@ export function StudioComposer({
   }, []);
 
   const isAnalysis = media === 'analysis';
-  const models = media === 'video' ? videoModels : imageModels;
+  const models =
+    media === 'audio'
+      ? audioModels
+      : media === 'video'
+        ? videoModels
+        : imageModels;
   const selectedModel =
     findWorkspaceModelOption(models, draft.modelId) ?? models[0] ?? null;
   const promptRequired = getGenerationPromptConstraints({
@@ -439,6 +447,8 @@ export function StudioComposer({
             placeholder={
               isAnalysis
                 ? t('promptPlaceholder')
+                : media === 'audio'
+                ? m['studio.audioPromptPlaceholder']()
                 : media === 'video'
                 ? labels.videoPromptPlaceholder
                 : labels.imagePromptPlaceholder
@@ -474,6 +484,13 @@ export function StudioComposer({
                   ),
                 },
                 {
+                  value: 'audio',
+                  label: m['studio.mediaMusic'](),
+                  leading: (
+                    <Music2 className="size-3.5 shrink-0 text-[var(--beat-text-2)]" />
+                  ),
+                },
+                {
                   value: 'analysis',
                   label: t('modeLabel'),
                   leading: (
@@ -483,7 +500,13 @@ export function StudioComposer({
               ]}
               onChange={(type) =>
                 onMediaChange(
-                  type === 'analysis' ? 'analysis' : type === 'video' ? 'video' : 'image'
+                  type === 'analysis'
+                    ? 'analysis'
+                    : type === 'video'
+                      ? 'video'
+                      : type === 'audio'
+                        ? 'audio'
+                        : 'image'
                 )
               }
             />

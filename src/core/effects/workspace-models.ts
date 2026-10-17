@@ -175,6 +175,12 @@ const VIDEO_MODELS: WorkspaceModelOption[] =
     return model ? [model] : [];
   });
 
+const AUDIO_MODELS: WorkspaceModelOption[] =
+  getWorkspaceEffectRegistryEntriesByType('ai-audio').flatMap((entry) => {
+    const model = toWorkspaceModelOption('ai-audio', entry);
+    return model ? [model] : [];
+  });
+
 const IMAGE_MODELS: WorkspaceModelOption[] =
   getWorkspaceEffectRegistryEntriesByType('ai-image').flatMap((entry) => {
     const model = toWorkspaceModelOption('ai-image', entry);
@@ -184,6 +190,7 @@ const IMAGE_MODELS: WorkspaceModelOption[] =
 const WORKSPACE_LAUNCH_TARGET: Record<WorkspaceType, string> = {
   'ai-video': 'video',
   'ai-image': 'image',
+  'ai-audio': 'audio',
 };
 
 const WORKSPACE_MODEL_ALIASES = Object.fromEntries(
@@ -214,7 +221,9 @@ const DEFAULT_WORKSPACE_MODEL_ID_BY_TYPE: Partial<
 export const getWorkspaceModelsByType = (
   workspaceType: WorkspaceType
 ): WorkspaceModelOption[] => {
-  return workspaceType === 'ai-image' ? IMAGE_MODELS : VIDEO_MODELS;
+  if (workspaceType === 'ai-image') return IMAGE_MODELS;
+  if (workspaceType === 'ai-audio') return AUDIO_MODELS;
+  return VIDEO_MODELS;
 };
 
 export const getWorkspaceAspectRatioOptions = ({

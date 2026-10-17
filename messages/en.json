@@ -842,5 +842,8 @@
   "studio.hint.segments.label": "Segment director",
   "studio.hint.segments.desc": "Give each segment its own description and seconds; segments chain automatically. Leave blank to reuse the main prompt.",
   "studio.hint.language.label": "Prompt language",
-  "studio.hint.language.desc": "Only affects the AI expand output; models understand both."
+  "studio.hint.language.desc": "Only affects the AI expand output; models understand both.",
+  "studio.mediaMusic": "Music",
+  "studio.audioPromptPlaceholder": "Paste lyrics, or describe what to write (leave blank to let the style decide)",
+  "studio.audioUpload": "Upload audio"
 }

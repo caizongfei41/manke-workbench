@@ -99,6 +99,7 @@ export function BeatStudioWorkspace({
         : 'image';
   const imageModels = useMemo(() => getStudioModels('image'), []);
   const videoModels = useMemo(() => getStudioModels('video'), []);
+  const audioModels = useMemo(() => getStudioModels('audio'), []);
   const [draft, setDraft] = useState(() => {
     const draftMedia = initialMedia === 'video' ? 'video' : 'image';
     const models = draftMedia === 'video' ? videoModels : imageModels;
@@ -276,6 +277,7 @@ export function BeatStudioWorkspace({
         media={media}
         imageModels={imageModels}
         videoModels={videoModels}
+        audioModels={audioModels}
         isBusy={generation.isPending}
         promptCharacterLimit={
           media === 'analysis'

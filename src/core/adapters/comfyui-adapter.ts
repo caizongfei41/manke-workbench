@@ -96,6 +96,8 @@ type ComfyUiWorkflowConfig = {
    * 质量不在映射表里就保留模板值。
    */
   resolution?: string;
+  /** 音乐模板的源音频节点 id（翻唱）：上传的音频写进该节点的 audio 字段。 */
+  audio?: string;
 };
 
 type ComfyUiWorkflow = Record<string, unknown> & {
@@ -128,6 +130,7 @@ type ComfyUiHistoryEntry = {
       images?: ComfyUiImageRef[];
       gifs?: ComfyUiImageRef[];
       videos?: ComfyUiImageRef[];
+      audio?: ComfyUiImageRef[];
     }
   >;
 };
@@ -852,6 +855,9 @@ function compileComfyUiPrompt(
             slot += 1;
           }
         }
+      } else if ('lyrics_text' in nodeInputs) {
+        // 音乐模板：composer 里的文本就是歌词。
+        nodeInputs.lyrics_text = prompt;
       } else if ('positive_prompt' in nodeInputs) {
         // WanVideoTextEncode 用 positive_prompt 字段。
         nodeInputs.positive_prompt = prompt;
@@ -1440,6 +1446,12 @@ const mimeTypeForFilename = (filename: string) => {
   if (lower.endsWith('.mov')) return 'video/quicktime';
   if (lower.endsWith('.webp')) return 'image/webp';
   if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.mp3')) return 'audio/mpeg';
+  if (lower.endsWith('.wav')) return 'audio/wav';
+  if (lower.endsWith('.m4a')) return 'audio/mp4';
+  if (lower.endsWith('.aac')) return 'audio/aac';
+  if (lower.endsWith('.ogg')) return 'audio/ogg';
+  if (lower.endsWith('.flac')) return 'audio/flac';
   return 'image/png';
 };
 
@@ -1461,6 +1473,11 @@ export class ComfyUiAdapter extends BaseAdapter {
       const { baseUrl, workflowDir, pythonPath } = await loadConfig();
       const workflow = await this.loadWorkflow({ workflowDir });
 
+      const audioUrls = Array.isArray(record.audio_urls)
+        ? record.audio_urls.filter(
+            (item): item is string => typeof item === 'string'
+          )
+        : [];
       const imageUrls = Array.isArray(record.image_urls)
         ? record.image_urls.filter(
             (item): item is string => typeof item === 'string'
@@ -1494,6 +1511,17 @@ export class ComfyUiAdapter extends BaseAdapter {
       }
 
       const nodes = compileComfyUiPrompt(workflow, record, refSize);
+
+      // 音乐翻唱：把源音频推进 ComfyUI 的 input/，再把文件名写进切片节点。
+      // 上传端点叫 /upload/image，但它接受任意输入文件，音频也走这里。
+      const audioNodeId = workflow._beatdesign?.audio;
+      if (audioNodeId && audioUrls.length > 0) {
+        const audioNode = asRecord(nodes[audioNodeId]);
+        const audioInputs = asRecord(audioNode?.inputs);
+        if (audioInputs && 'audio' in audioInputs) {
+          audioInputs.audio = await uploadReferenceImage(baseUrl, audioUrls[0]);
+        }
+      }
 
       // Qwen21MultiImageLoader（多参考图图像编辑）：全部图上传并写入 image_files 数组
       // （完全覆盖模板自带的残留参考图，避免"用户图 + 模板图"混用）。
@@ -1713,7 +1741,8 @@ export class ComfyUiAdapter extends BaseAdapter {
         mediaRefs.push(
           ...(node?.images ?? []),
           ...(node?.gifs ?? []),
-          ...(node?.videos ?? [])
+          ...(node?.videos ?? []),
+          ...(node?.audio ?? [])
         );
       }
       if (mediaRefs.length === 0) {
@@ -1765,6 +1794,7 @@ export class ComfyUiAdapter extends BaseAdapter {
                 const bytes = new Uint8Array(await fileResponse.arrayBuffer());
                 const mimeType = mimeTypeForFilename(ref.filename);
                 const isVideo = mimeType.startsWith('video/');
+
                 if (
                   bytes.byteLength === 0 ||
                   bytes.byteLength >
@@ -1788,6 +1818,7 @@ export class ComfyUiAdapter extends BaseAdapter {
         if (!item) continue;
         const { viewUrl, filename, mimeType, bytes } = item;
         const isVideo = mimeType.startsWith('video/');
+        const isAudio = mimeType.startsWith('audio/');
         const persisted = await persistLocalProjectAsset({
           projectId: generation.projectId,
           filename: filename || 'generated-media.png',
@@ -1796,7 +1827,7 @@ export class ComfyUiAdapter extends BaseAdapter {
         });
         await recordUserAsset({
           id: persisted.assetId,
-          type: isVideo ? 'video' : 'image',
+          type: isVideo ? 'video' : isAudio ? 'audio' : 'image',
           source: 'provider',
           storageProvider: LOCAL_PROJECT_ASSET_PROVIDER,
           bucket: LOCAL_PROJECT_ASSET_BUCKET,

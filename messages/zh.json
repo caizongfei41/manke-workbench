@@ -842,5 +842,8 @@
   "studio.hint.segments.label": "分段导演台",
   "studio.hint.segments.desc": "每段写各自的画面描述和秒数，段与段首尾自动衔接。留空则用上方主提示词。",
   "studio.hint.language.label": "提示词语言",
-  "studio.hint.language.desc": "只影响「AI 扩写」输出的语言，模型本身中英文都认。"
+  "studio.hint.language.desc": "只影响「AI 扩写」输出的语言，模型本身中英文都认。",
+  "studio.mediaMusic": "音乐",
+  "studio.audioPromptPlaceholder": "粘贴歌词，或描述你想写什么（留空则按风格自由发挥）",
+  "studio.audioUpload": "上传音频"
 }

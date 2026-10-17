@@ -3,7 +3,7 @@ import {
   resolveProviderUpstreamModel,
 } from '@/core/generation-providers/registry';
 
-export type WorkspaceRegistryType = 'ai-video' | 'ai-image';
+export type WorkspaceRegistryType = 'ai-video' | 'ai-image' | 'ai-audio';
 
 type WorkspaceRegistryModelMode = 'quality' | 'fast' | 'lite';
 type WorkspaceRegistryModelVariant = 'standard' | 'pro';
@@ -547,6 +547,28 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
       },
       modelAliases: ['kling3motioncontrol', 'kling30motioncontrol'],
     },
+    // ===== 本地音乐工作流（YuE2）=====
+    {
+      id: '小枫-yue2-歌曲创作',
+      name: 'YuE2 歌曲创作',
+      description: '写歌词 + 选风格，生成一首带演唱的完整歌曲。约 2~4 分钟。',
+      workspaceType: 'ai-audio',
+      routeSlug: 'yue2-song-create',
+      routeOrder: 80,
+      supportsSeed: true,
+      isLocalFree: true,
+    },
+    {
+      id: '小枫-yue2-歌曲翻唱',
+      name: 'YuE2 歌曲翻唱',
+      description: '上传一首歌当旋律来源，保留原曲旋律换唱腔与风格。必须上传音频。',
+      workspaceType: 'ai-audio',
+      routeSlug: 'yue2-song-cover',
+      routeOrder: 81,
+      supportsSeed: true,
+      isLocalFree: true,
+    },
+
     // ===== 本地 ComfyUI 工作流（同步自用户 workflows 目录）=====
     {
       id: '小枫-H3-导演-连贯成片',

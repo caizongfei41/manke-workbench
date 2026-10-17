@@ -3,15 +3,25 @@ import {
   type WorkspaceModelOption,
 } from '@/core/effects/workspace-models';
 
-export type StudioMedia = 'image' | 'video' | 'analysis';
+export type StudioMedia = 'image' | 'video' | 'analysis' | 'audio';
 
-export const getStudioModels = (media: StudioMedia) =>
-  media === 'analysis'
-    ? []
-    :
-  getWorkspaceModelsByType(media === 'image' ? 'ai-image' : 'ai-video').filter(
+const STUDIO_MEDIA_TO_REGISTRY_TYPE = {
+  image: 'ai-image',
+  video: 'ai-video',
+  audio: 'ai-audio',
+} as const;
+
+export const getStudioModels = (media: StudioMedia) => {
+  if (media === 'analysis') return [];
+  const registryType =
+    STUDIO_MEDIA_TO_REGISTRY_TYPE[
+      media as keyof typeof STUDIO_MEDIA_TO_REGISTRY_TYPE
+    ];
+  if (!registryType) return [];
+  return getWorkspaceModelsByType(registryType).filter(
     (model) => model.available !== false
   );
+};
 
 export function buildStudioEffectInput({
   media,

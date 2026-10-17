@@ -51,6 +51,8 @@ export const COMFYUI_MODEL_BINDINGS = [
   ['小枫-aicg3d-h3-低显存长视频', 123],
   ['小枫-aicg3d-h3-长视频', 124],
   ['小枫-aicg3d-h3-中配长视频', 125],
+  ['小枫-yue2-歌曲创作', 126],
+  ['小枫-yue2-歌曲翻唱', 127],
 ] as const;
 
 export const comfyUiGenerationProvider: GenerationProviderDefinition = {
