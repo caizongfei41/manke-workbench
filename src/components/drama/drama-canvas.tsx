@@ -51,6 +51,8 @@ type Props = {
   onPersist: (dramaJson: string) => void;
 };
 
+type ResolvedRef = { kind: string; name: string; description?: string; imageUrl: string };
+
 const shotStatusLabel = (status: DramaShot['status']) => {
   if (status === 'succeeded') return m['drama.shot.done']();
   if (status === 'running') return m['drama.shot.running']();
@@ -183,43 +185,55 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   };
 
   /** Images for one shot: shared assets first (character → scene → prop), then its own. */
-  const resolveImages = (shot: DramaShot): string[] => {
+  /**
+   * Number of images that will actually be sent for a shot. Assets without an
+   * uploaded image are skipped, so counting ids would overstate what the model
+   * receives — that mismatch is why the label used to say "1 reference" while
+   * the job carried none.
+   */
+  /**
+   * Images for a shot, in the order H3 will number them: shared assets first
+   * (character → scene → prop), then the shot's own uploads.
+   *
+   * Assets without an image are skipped. They used to be counted anyway, and a
+   * cast-typo cast cast to string[] meant nothing was sent at all — both
+   * showed up as "1 reference" while the job carried zero.
+   */
+  const resolveShotRefs = (shot: DramaShot): ResolvedRef[] => {
     const order: Record<string, number> = { character: 0, scene: 1, prop: 2 };
     const picked = shot.publicAssetIds
       .map((id) => doc.publicAssets.find((a) => a.id === id))
       .filter((a): a is ScriptAsset => !!a && !!a.imageUrl)
       .sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9))
       .map((a) => ({
-        kind: a.kind,
+        kind: a.kind as string,
         name: a.name,
         description: a.description,
         imageUrl: a.imageUrl as string,
       }));
     const own = shot.ownImageUrls.map((url) => ({
-      kind: 'prop' as const,
+      kind: 'prop' as string,
       name: '',
       description: undefined,
       imageUrl: url,
     }));
-    const all = [...picked, ...own];
     const seen = new Set<string>();
-    return all.filter((item) => {
+    return [...picked, ...own].filter((item) => {
       if (seen.has(item.imageUrl)) return false;
       seen.add(item.imageUrl);
       return true;
-    }) as unknown as string[];
+    });
   };
 
-  const resolveRefs = (shot: DramaShot) => {
-    const order: Record<string, number> = { character: 0, scene: 1, prop: 2 };
-    const picked = shot.publicAssetIds
-      .map((id) => doc.publicAssets.find((a) => a.id === id))
-      .filter((a): a is ScriptAsset => !!a && !!a.imageUrl)
-      .sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9))
-      .map((a) => ({ kind: a.kind, name: a.name, description: a.description }));
-    const own = shot.ownImageUrls.map(() => ({ kind: 'prop' as const, name: '' }));
-    return [...picked, ...own].slice(0, 9);
-  };
+  const resolveImages = (shot: DramaShot): string[] =>
+    resolveShotRefs(shot).map((r) => r.imageUrl);
+
+  const resolveRefs = (shot: DramaShot) =>
+    resolveShotRefs(shot).map((r) => ({
+      kind: r.kind,
+      name: r.name,
+      description: r.description,
+    }));
 
   const uploadShotImage = (shotId: string, file: File) => {
     void uploadLocalProjectAsset({ projectId, file })
@@ -622,7 +636,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 />
                 <span className="text-[9px] text-[var(--beat-text-3)]">{m['drama.shot.seconds']()}</span>
                 <span className="ml-auto text-[9px] text-[var(--beat-text-3)]">
-                  {m['drama.shot.refs']({ count: shot.publicAssetIds.length + shot.ownImageUrls.length })}
+                  {m['drama.shot.refs']({ count: resolveImages(shot).length })}
                 </span>
               </div>
               <div className="mt-1.5 flex flex-wrap gap-1">
@@ -660,6 +674,45 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 >
                   {m['drama.shot.upload']()}
                 </button>
+              </div>
+
+              {/* Per-shot assets: images that belong to this shot only. */}
+              <div className="mt-1.5 rounded-[8px] border border-ink/[0.07] bg-ink/[0.02] p-1.5">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[9px] text-[var(--beat-text-3)]">
+                    {m['drama.shot.assets']()}
+                  </span>
+                  <span className="text-[9px] tabular-nums text-[var(--beat-text-3)]">
+                    {shot.ownImageUrls.length}
+                  </span>
+                </div>
+                {shot.ownImageUrls.length === 0 ? (
+                  <p className="text-[9px] text-[var(--beat-text-3)]/75">
+                    {m['drama.shot.assetsEmpty']()}
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {shot.ownImageUrls.map((url) => (
+                      <ImageHoverPreview key={url} src={url} previewWidth={260} previewHeight={260}>
+                        <span className="group/own relative block size-8 overflow-hidden rounded-[5px] border border-ink/[0.12]">
+                          <img src={url} alt="" className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShot(shot.id, {
+                                ownImageUrls: shot.ownImageUrls.filter((u) => u !== url),
+                              })
+                            }
+                            aria-label={m['drama.shot.assetRemove']()}
+                            className="absolute inset-0 grid place-items-center bg-black/60 text-[11px] text-white opacity-0 transition group-hover/own:opacity-100"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      </ImageHoverPreview>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="mt-2 flex items-center gap-1.5">
                 <button

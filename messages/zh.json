@@ -947,5 +947,8 @@
   "drama.save.conflict": "版本冲突，已刷新版本号，请再改一次",
   "drama.save.failed": "保存失败",
   "BeatAPI.project.startCanvasBasic": "基本画布",
-  "BeatAPI.project.startDrama": "AI 短剧模式"
+  "BeatAPI.project.startDrama": "AI 短剧模式",
+  "drama.shot.assets": "分镜资产图",
+  "drama.shot.assetsEmpty": "这一段还没有自己的图",
+  "drama.shot.assetRemove": "移除这张图"
 }

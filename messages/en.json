@@ -947,5 +947,8 @@
   "drama.save.conflict": "Version conflict — refreshed the version, try again",
   "drama.save.failed": "Save failed",
   "BeatAPI.project.startCanvasBasic": "Basic canvas",
-  "BeatAPI.project.startDrama": "AI short drama"
+  "BeatAPI.project.startDrama": "AI short drama",
+  "drama.shot.assets": "Shot assets",
+  "drama.shot.assetsEmpty": "No images for this shot yet",
+  "drama.shot.assetRemove": "Remove this image"
 }

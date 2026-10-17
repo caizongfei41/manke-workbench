@@ -947,5 +947,8 @@
   "drama.save.conflict": "バージョン競合。更新したので再試行してください",
   "drama.save.failed": "保存に失敗",
   "BeatAPI.project.startCanvasBasic": "基本キャンバス",
-  "BeatAPI.project.startDrama": "AI ショートドラマ"
+  "BeatAPI.project.startDrama": "AI ショートドラマ",
+  "drama.shot.assets": "ショット素材",
+  "drama.shot.assetsEmpty": "このショット専用の画像はまだありません",
+  "drama.shot.assetRemove": "この画像を削除"
 }
