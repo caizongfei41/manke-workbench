@@ -1,3 +1,5 @@
+import type { ScriptAsset } from './script-document';
+
 /**
  * AICG3D 分段长视频的导演台数据层。
  *
@@ -221,6 +223,8 @@ export type DirectorSettings = {
   global: Record<string, string | number | boolean>;
   loras: DirectorLora[];
   segments: DirectorSegment[];
+  /** 从剧本里分析出的人物/场景/道具，每项可以生成或上传参考图。 */
+  assets: ScriptAsset[];
 };
 
 export const getDefaultDirectorGlobal = (): Record<string, string | number | boolean> =>
@@ -230,6 +234,7 @@ export const getDefaultDirectorSettings = (): DirectorSettings => ({
   global: getDefaultDirectorGlobal(),
   loras: [{ file: 'none', strength: 1 }],
   segments: [],
+  assets: [],
 });
 
 /**

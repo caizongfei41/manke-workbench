@@ -891,5 +891,15 @@
   "studio.director.on": "オン",
   "studio.director.off": "オフ",
   "studio.director.loraHint": "最大 9 個の LoRA、強度は -4 〜 4。複数は加算されます。",
-  "studio.director.loraLabel": "スロット {index}"
+  "studio.director.loraLabel": "スロット {index}",
+  "studio.director.tabAssets": "素材",
+  "studio.director.assetGenerate": "生成",
+  "studio.director.assetUpload": "アップロード",
+  "studio.director.assetImport": "ショットへ",
+  "studio.director.assetImportHint": "この画像を参照画像としてショットに割り当てます",
+  "studio.director.noAssets": "素材がありません。脚本を読み込むと人物・場景・小道具を抽出します。",
+  "studio.director.analyzing": "脚本を解析中…",
+  "studio.director.scriptImportTitle": "脚本を読み込む",
+  "studio.director.assetImportEmpty": "素材に画像がありません。先に生成かアップロードをしてください。",
+  "studio.director.useTemplate": "テンプレート"
 }

@@ -11,6 +11,7 @@ import type {
   WorkspaceOutputQuality,
   WorkspaceQualityOption,
 } from '@/core/effects/workspace-models';
+import type { DirectorSettings } from '@/core/effects/aicg3d-director';
 import type {
   CanvasCard,
   CanvasGenerationMode,
@@ -185,6 +186,7 @@ export type BeatCanvasFrontLayerValue = {
     height: number | null
   ) => void;
   onDraftQualityChange: (draftId: string, quality: WorkspaceQualityOption) => void;
+  onDraftDirectorChange: (draftId: string, settings: DirectorSettings) => void;
   onDraftDurationChange: (draftId: string, duration: WorkspaceDuration) => void;
   onDraftCharacterOrientationChange: (
     draftId: string,

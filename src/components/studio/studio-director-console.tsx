@@ -13,6 +13,13 @@ import {
   type DirectorSegment,
   type DirectorSettings,
 } from '@/core/effects/aicg3d-director';
+import { ImageHoverPreview } from '@/components/app/image-hover-preview';
+import {
+  ASSET_KIND_LABELS,
+  SCRIPT_TEMPLATE,
+  parseScriptDocument,
+  type ScriptAsset,
+} from '@/core/effects/script-document';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 
@@ -35,6 +42,9 @@ export function StudioDirectorConsole({
   disabled = false,
   assetUrls = [],
   onRequestGenerateImage,
+  onGenerateAssetImage,
+  onUploadAssetImage,
+  onImportAssetToShots,
 }: {
   settings: DirectorSettings;
   onChange: (next: DirectorSettings) => void;
@@ -43,11 +53,19 @@ export function StudioDirectorConsole({
   assetUrls?: string[];
   /** Called when the user wants to generate a reference for a shot. */
   onRequestGenerateImage?: (segmentIndex: number, prompt: string) => void;
+  /** Generate a reference image for an asset. */
+  onGenerateAssetImage?: (assetId: string, prompt: string) => void;
+  /** Upload a reference image for an asset. */
+  onUploadAssetImage?: (assetId: string, file: File) => void;
+  /** Attach an asset image to a shot. */
+  onImportAssetToShots?: (asset: ScriptAsset) => void;
 }) {
-  const [tab, setTab] = useState<'shots' | 'global' | 'lora'>('shots');
+  const [tab, setTab] = useState<'shots' | 'assets' | 'global' | 'lora'>('shots');
   const [scriptOpen, setScriptOpen] = useState(false);
   const [script, setScript] = useState('');
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const assetFileRef = useRef<HTMLInputElement | null>(null);
+  const [uploadAsset, setUploadAsset] = useState<ScriptAsset | null>(null);
 
   const segments = settings.segments;
   const setGlobal = (key: string, value: string | number | boolean) =>
@@ -73,6 +91,14 @@ export function StudioDirectorConsole({
     if (shots.length === 0) return;
     onChange({ ...settings, segments: shots });
     setScriptOpen(false);
+    const doc = parseScriptDocument(script);
+    if (doc.segments.length === 0 && doc.assets.length === 0) return;
+    onChange({
+      ...settings,
+      segments: doc.segments.length > 0 ? doc.segments : settings.segments,
+      assets: doc.assets,
+    });
+    setScriptOpen(false);
   };
 
   const setLora = (index: number, patch: Partial<DirectorLora>) => {
@@ -81,6 +107,9 @@ export function StudioDirectorConsole({
     next[index] = { ...next[index], ...patch };
     onChange({ ...settings, loras: next });
   };
+
+  const buildAssetPrompt = (asset: ScriptAsset) =>
+    [asset.description, asset.name].filter(Boolean).join(', ');
 
   const totalSeconds = segments.reduce((sum, seg) => sum + (Number(seg.seconds) || 0), 0);
 
@@ -150,6 +179,14 @@ export function StudioDirectorConsole({
               <Upload className="size-3" />
               {m['studio.director.uploadScript']()}
             </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => setScript(SCRIPT_TEMPLATE)}
+              className="rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+            >
+              {m['studio.director.useTemplate']()}
+            </button>
             <input
               ref={fileRef}
               type="file"
@@ -171,6 +208,7 @@ export function StudioDirectorConsole({
         {(
           [
             ['shots', m['studio.director.tabShots'](), `${segments.length}`],
+            ['assets', m['studio.director.tabAssets'](), `${settings.assets?.length ?? 0}`],
             ['global', m['studio.director.tabGlobal'](), ''],
             ['lora', m['studio.director.tabLora'](), ''],
           ] as const
@@ -243,6 +281,7 @@ export function StudioDirectorConsole({
                 />
                 <div className="flex flex-wrap items-center gap-1.5">
                   {(seg.imageUrls ?? []).map((url) => (
+                    <ImageHoverPreview key={url} src={url} previewWidth={280} previewHeight={280}>
                     <span
                       key={url}
                       className="relative size-8 overflow-hidden rounded-[6px] border border-ink/[0.1]"
@@ -261,6 +300,7 @@ export function StudioDirectorConsole({
                         ×
                       </button>
                     </span>
+                    </ImageHoverPreview>
                   ))}
                   {assetUrls.length > 0 ? (
                     <select
@@ -312,6 +352,90 @@ export function StudioDirectorConsole({
             <Plus className="size-3" />
             {m['studio.director.addShot']()}
           </button>
+        </div>
+      ) : null}
+
+      {tab === 'assets' ? (
+        <div className="flex flex-col gap-2 px-3 py-2.5">
+          {(['character', 'scene', 'prop'] as const).map((kind) => {
+            const items = settings.assets.filter((a) => a.kind === kind);
+            if (items.length === 0) return null;
+            return (
+              <div key={kind} className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--beat-text-3)]">
+                  {ASSET_KIND_LABELS[kind]}
+                </span>
+                {items.map((asset) => (
+                  <div
+                    key={asset.id}
+                    className="flex items-center gap-2 rounded-[10px] border border-ink/[0.07] bg-ink/[0.02] p-1.5"
+                  >
+                    <ImageHoverPreview src={asset.imageUrl} alt={asset.name}>
+                      <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-[7px] border border-ink/[0.1] bg-ink/[0.05]">
+                        {asset.imageUrl ? (
+                          <img src={asset.imageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImageIcon className="size-3.5 text-[var(--beat-text-3)]" />
+                        )}
+                      </span>
+                    </ImageHoverPreview>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-[11.5px] text-[var(--beat-text-1)]">{asset.name}</span>
+                      {asset.description ? (
+                        <span className="truncate text-[10px] text-[var(--beat-text-3)]">{asset.description}</span>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => onGenerateAssetImage?.(asset.id, buildAssetPrompt(asset))}
+                      className="shrink-0 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)]/40 hover:text-ink disabled:opacity-40"
+                    >
+                      {m['studio.director.assetGenerate']()}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => {
+                        setUploadAsset(asset);
+                        requestAnimationFrame(() => assetFileRef.current?.click());
+                      }}
+                      className="shrink-0 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                    >
+                      {m['studio.director.assetUpload']()}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => onImportAssetToShots?.(asset)}
+                      title={m['studio.director.assetImportHint']()}
+                      className="shrink-0 rounded-full bg-[var(--beat-accent)]/15 px-2 py-1 text-[10.5px] text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/25 disabled:opacity-40"
+                    >
+                      {m['studio.director.assetImport']()}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          {settings.assets.length === 0 ? (
+            <p className="py-3 text-center text-[11px] text-[var(--beat-text-3)]">
+              {m['studio.director.noAssets']()}
+            </p>
+          ) : null}
+          <input
+            ref={assetFileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              const target = uploadAsset;
+              e.currentTarget.value = '';
+              setUploadAsset(null);
+              if (file && target) onUploadAssetImage?.(target.id, file);
+            }}
+          />
         </div>
       ) : null}
 

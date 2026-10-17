@@ -12,6 +12,10 @@ import {
 import { resolveOutputMedia } from '@/core/effects/output-media';
 import { buildDraftModelParameters } from '@/core/effects/model-parameters';
 import {
+  pickActiveLoras,
+  pickChangedDirectorGlobal,
+} from '@/core/effects/aicg3d-director';
+import {
   getGenerationPromptConstraints,
   getGenerationPromptMaxChars,
   validateGenerationPrompt,
@@ -328,6 +332,19 @@ export const buildGenerationEffectInput = async ({
 
   const input: Record<string, unknown> = {
     prompt: promptValidation.trimmedPrompt,
+    // Segment director: only sent when the card actually has shots, otherwise the
+    // template repeats one prompt across every segment.
+    ...(draftCard.directorSettings && draftCard.directorSettings.segments.length > 0
+      ? {
+          director_global: pickChangedDirectorGlobal(draftCard.directorSettings.global),
+          director_segments: draftCard.directorSettings.segments.map((seg) => ({
+            prompt: seg.prompt,
+            seconds: seg.seconds,
+            imageUrls: seg.imageUrls ?? [],
+          })),
+          director_loras: pickActiveLoras(draftCard.directorSettings.loras),
+        }
+      : {}),
     ...buildDraftModelParameters({ ...draftCard, modelId: model.id }, metadata.inputSchema),
   };
   const hasVideoReference = referenceCards.some(

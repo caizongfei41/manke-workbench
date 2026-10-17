@@ -50,6 +50,7 @@ import {
 import { fetchRecentAssets } from '@/core/workspace-lib/app/workspace-client-api';
 import { getEffectsMetadata } from '@/core/effects/client-api';
 import { buildDraftModelParameters } from '@/core/effects/model-parameters';
+import { m } from '@/paraglide/messages.js';
 import { invalidateWorkspaceAfterGeneration } from '@/core/workspace-lib/app/workspace-query-invalidation';
 import { projectGenerationsKeys } from '@/core/workspace-lib/app/workspace-query-keys';
 import { apiJsonGet, apiJsonPost } from '@/lib/api-client';
@@ -150,6 +151,11 @@ export function BeatStudioWorkspace({
   );
   const [audioRefs, setAudioRefs] = useState<string[]>([]);
   // AICG3D segment director: global params + per-shot control + LoRA slots.
+  // Set while an asset image is being generated, so the result can be attached back.
+  const [pendingAssetId, setPendingAssetId] = useState<string | null>(null);
+  // Stash the draft before jumping to image mode, so the director panel can be
+  // restored once the asset image lands.
+  const assetReturnRef = useRef<{ media: StudioMedia; draft: typeof draft } | null>(null);
   const [directorSettings, setDirectorSettings] = useState<DirectorSettings>(
     () => getDefaultDirectorSettings()
   );
@@ -179,6 +185,35 @@ export function BeatStudioWorkspace({
   const projectImageUrls = (generationsQuery.data?.items ?? [])
     .filter((item) => item.mediaType === 'image' && item.resultUrl)
     .map((item) => item.resultUrl as string);
+
+  // When an asset asked for an image, attach the first finished image generation
+  // to it and clear the pending flag. Runs whenever the feed updates.
+  useEffect(() => {
+    if (!pendingAssetId) return;
+    const finished = (generationsQuery.data?.items ?? []).find(
+      (item) =>
+        item.status === 'succeeded' &&
+        item.mediaType === 'image' &&
+        !!item.resultUrl
+    );
+    if (!finished?.resultUrl) return;
+    setDirectorSettings((current) => ({
+      ...current,
+      assets: current.assets.map((a) =>
+        a.id === pendingAssetId
+          ? { ...a, imageUrl: finished.resultUrl as string, source: 'generated' as const }
+          : a
+      ),
+    }));
+    setPendingAssetId(null);
+    // Return to where the user was so the updated asset is visible again.
+    const back = assetReturnRef.current;
+    if (back) {
+      assetReturnRef.current = null;
+      setMedia(back.media);
+      setDraft(back.draft);
+    }
+  }, [pendingAssetId, generationsQuery.data]);
 
   const feedItems = (generationsQuery.data?.items ?? []).filter(
     (item) => item.status !== 'failed'
@@ -421,6 +456,63 @@ export function BeatStudioWorkspace({
           } else {
             setDraft((current) => ({ ...current, prompt: shotPrompt }));
           }
+        }}
+        onGenerateAssetImage={(assetId, assetPrompt) => {
+          // Asset image: switch to image mode with the asset description; the result gets
+          // attached back to the asset once the generation finishes.
+          const firstImageModel = imageModels[0] ?? null;
+          assetReturnRef.current = { media, draft };
+          setMedia('image');
+          setPendingAssetId(assetId);
+          if (firstImageModel) {
+            setDraft((current) =>
+              applyStudioDraftModel({
+                draft: { ...current, type: 'image', prompt: assetPrompt },
+                model: firstImageModel,
+              })
+            );
+          } else {
+            setDraft((current) => ({ ...current, prompt: assetPrompt }));
+          }
+        }}
+        onUploadAssetImage={(assetId, file) => {
+          void uploadLocalProjectAsset({ projectId, file })
+            .then((asset) =>
+              setDirectorSettings((current) => ({
+                ...current,
+                assets: current.assets.map((a) =>
+                  a.id === assetId
+                    ? { ...a, imageUrl: asset.publicUrl, source: 'uploaded' as const }
+                    : a
+                ),
+              }))
+            )
+            .catch((error: unknown) =>
+              setError(error instanceof Error ? error.message : 'Upload failed')
+            );
+        }}
+        onImportAssetToShots={(asset) => {
+          if (!asset.imageUrl) {
+            setError(m['studio.director.assetImportEmpty']());
+            return;
+          }
+          setDirectorSettings((current) => {
+            // Attach to the first shot without a reference, else to the last shot.
+            const target = current.segments.findIndex(
+              (seg) => (seg.imageUrls?.length ?? 0) === 0
+            );
+            const index =
+              target >= 0 ? target : Math.max(0, current.segments.length - 1);
+            if (current.segments.length === 0) return current;
+            return {
+              ...current,
+              segments: current.segments.map((seg, i) =>
+                i === index
+                  ? { ...seg, imageUrls: [...(seg.imageUrls ?? []), asset.imageUrl!] }
+                  : seg
+              ),
+            };
+          });
         }}
         onMediaChange={(nextMedia) => {
           setMedia(nextMedia);

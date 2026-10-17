@@ -9,6 +9,7 @@ import type {
   WorkspaceOutputQuality,
   WorkspaceQualityOption,
 } from '@/core/effects/workspace-models';
+import type { DirectorSettings } from '@/core/effects/aicg3d-director';
 import type { VideoAnalysisDepth } from '@/core/effects/video-analysis';
 
 export type CanvasCardMediaType = 'image' | 'video' | 'audio';
@@ -52,6 +53,8 @@ type CanvasCardBase = {
   customHeight?: number | null;
   duration: WorkspaceDuration;
   language?: WorkspaceLanguage;
+  /** AICG3D segment director state (global params, shots, assets, LoRAs). */
+  directorSettings?: DirectorSettings;
   mode: WorkspaceModelMode;
   variant: WorkspaceModelVariant;
   quality: WorkspaceQualityOption;

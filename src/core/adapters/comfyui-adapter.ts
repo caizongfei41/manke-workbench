@@ -1646,6 +1646,28 @@ export class ComfyUiAdapter extends BaseAdapter {
         }
       }
 
+      // 用户定义的分镜比模板少时，把多余的模板分段摘掉并重新挂链接。
+      // 否则多出来的那段会带着模板里的示例提示词一起出片。
+      if (
+        Array.isArray(sequenceSegmentIds) &&
+        directorSegments.length > 0 &&
+        directorSegments.length < sequenceSegmentIds.length
+      ) {
+        const keep = sequenceSegmentIds.slice(0, directorSegments.length);
+        const drop = sequenceSegmentIds.slice(directorSegments.length);
+        for (const id of drop) delete nodes[id];
+        const lastId = keep[keep.length - 1];
+        // Combine 的 final_segment 必须改指最后一段，否则指向已删除的节点。
+        for (const node of Object.values(nodes)) {
+          const comboInputs = asRecord(asRecord(node)?.inputs);
+          if (!comboInputs || !('final_segment' in comboInputs)) continue;
+          const current = comboInputs.final_segment;
+          if (Array.isArray(current) && drop.includes(String(current[0]))) {
+            comboInputs.final_segment = [lastId, 0];
+          }
+        }
+      }
+
       // LoRA 槽位：写到 H3Loader 的 lora_1..9 + lora_N_strength。
       const loraLoaderId = workflow._beatdesign?.lora_loader;
       const directorLoras = Array.isArray(record.director_loras)

@@ -891,5 +891,15 @@
   "studio.director.on": "开",
   "studio.director.off": "关",
   "studio.director.loraHint": "最多挂 9 个 LoRA，强度范围 -4 ~ 4。挂多个会依次叠加。",
-  "studio.director.loraLabel": "槽 {index}"
+  "studio.director.loraLabel": "槽 {index}",
+  "studio.director.tabAssets": "素材",
+  "studio.director.assetGenerate": "生图",
+  "studio.director.assetUpload": "上传",
+  "studio.director.assetImport": "导入分镜",
+  "studio.director.assetImportHint": "把这张图作为参考图挂到分镜上（优先挂到还没有图的段）",
+  "studio.director.noAssets": "还没有素材。导入剧本后会自动分析人物、场景和道具。",
+  "studio.director.analyzing": "正在分析剧本…",
+  "studio.director.scriptImportTitle": "导入剧本",
+  "studio.director.assetImportEmpty": "这个素材还没有图，先「生图」或「上传」一张再导入。",
+  "studio.director.useTemplate": "套用模板"
 }

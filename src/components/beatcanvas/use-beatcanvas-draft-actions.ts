@@ -1,3 +1,4 @@
+import type { DirectorSettings } from '@/core/effects/aicg3d-director';
 import type {
   WorkspaceAspectRatio,
   WorkspaceBackgroundSource,
@@ -331,6 +332,12 @@ export function useBeatCanvasDraftActions({
     [updateEditableDraft]
   );
 
+  const handleDraftDirectorChange = useCallback(
+    (draftId: string, settings: DirectorSettings) =>
+      updateEditableDraft(draftId, () => ({ directorSettings: settings }))(settings),
+    [updateEditableDraft]
+  );
+
   const handleDraftLanguageChange = useCallback(
     (draftId: string, language: WorkspaceLanguage) =>
       updateEditableDraft(draftId, (value: WorkspaceLanguage) => ({
@@ -366,6 +373,7 @@ export function useBeatCanvasDraftActions({
     handleDraftCharacterOrientationChange,
     handleDraftCustomResolutionChange,
     handleDraftDurationChange,
+    handleDraftDirectorChange,
     handleDraftLanguageChange,
     handleDraftModeChange,
     handleDraftModelChange,

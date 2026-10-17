@@ -891,5 +891,15 @@
   "studio.director.on": "On",
   "studio.director.off": "Off",
   "studio.director.loraHint": "Up to 9 LoRAs, strength -4 to 4. Multiple LoRAs stack.",
-  "studio.director.loraLabel": "Slot {index}"
+  "studio.director.loraLabel": "Slot {index}",
+  "studio.director.tabAssets": "Assets",
+  "studio.director.assetGenerate": "Generate",
+  "studio.director.assetUpload": "Upload",
+  "studio.director.assetImport": "To shots",
+  "studio.director.assetImportHint": "Attach this image as a reference to a shot that has none yet",
+  "studio.director.noAssets": "No assets yet. Importing a script fills in characters, scenes and props.",
+  "studio.director.analyzing": "Analyzing script…",
+  "studio.director.scriptImportTitle": "Import script",
+  "studio.director.assetImportEmpty": "This asset has no image yet — generate or upload one first.",
+  "studio.director.useTemplate": "Use template"
 }

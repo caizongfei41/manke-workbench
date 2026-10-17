@@ -45,12 +45,15 @@ export function BeatCanvasComposerShell({
   promptPlaceholder,
   presentation,
   promptAccessory,
+  panel,
   promptReferences = [],
   position,
   takeCount: _takeCount = 0,
 }: {
   activeDraftCard: CanvasGenerationCard;
   children: ReactNode;
+  /** Full-width panel above the prompt row (the segment director uses it). */
+  panel?: ReactNode;
   composerRef: RefObject<HTMLElement | null>;
   isDraftBusy: boolean;
   isPromptComposing: boolean;
@@ -150,6 +153,11 @@ export function BeatCanvasComposerShell({
       onKeyUpCapture={stopComposerKeyboardEvent}
     >
       {/* ── Header row ── */}
+      {panel ? (
+        <div data-composer-panel className="px-3.5 pt-3">
+          {panel}
+        </div>
+      ) : null}
       <div
         className={cn(
           'flex items-center justify-between gap-3',

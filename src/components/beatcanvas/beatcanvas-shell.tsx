@@ -449,6 +449,7 @@ export function BeatCanvasShell({
     handleDraftCharacterOrientationChange,
     handleDraftCustomResolutionChange,
     handleDraftDurationChange,
+    handleDraftDirectorChange,
     handleDraftLanguageChange,
     handleDraftModeChange,
     handleDraftModelChange,
@@ -778,6 +779,7 @@ export function BeatCanvasShell({
       onDraftVariantChange: handleDraftVariantChange,
       onDraftQualityChange: handleDraftQualityChange,
       onDraftDurationChange: handleDraftDurationChange,
+      onDraftDirectorChange: handleDraftDirectorChange,
       onDraftLanguageChange: handleDraftLanguageChange,
       onOpenReferencePicker: (draftId, intent) =>
         openUploadPicker({ draftId, intent, mode: 'reference' }),

@@ -21,6 +21,7 @@ import { WorkspaceSelect } from '@/components/app/workspace-select';
 import { StudioMusicPanel } from '@/components/studio/studio-music-panel';
 import { StudioDirectorConsole } from '@/components/studio/studio-director-console';
 import type { DirectorSettings } from '@/core/effects/aicg3d-director';
+import type { ScriptAsset } from '@/core/effects/script-document';
 import type { MusicLyricsExample } from '@/core/effects/music-style';
 import { BeatCanvasComposerParameterPicker } from '@/components/beatcanvas/beatcanvas-composer-parameter-picker';
 import { normalizeComposerToken } from '@/components/beatcanvas/beatcanvas-composer-utils';
@@ -60,6 +61,9 @@ export function StudioComposer({
   onDirectorChange,
   projectImageUrls,
   onRequestShotImage,
+  onGenerateAssetImage,
+  onUploadAssetImage,
+  onImportAssetToShots,
   isBusy,
   promptCharacterLimit,
   takeCount: _takeCount = 0,
@@ -92,6 +96,9 @@ export function StudioComposer({
   onDirectorChange?: (next: DirectorSettings) => void;
   projectImageUrls?: string[];
   onRequestShotImage?: (index: number, prompt: string) => void;
+  onGenerateAssetImage?: (assetId: string, prompt: string) => void;
+  onUploadAssetImage?: (assetId: string, file: File) => void;
+  onImportAssetToShots?: (asset: ScriptAsset) => void;
   isBusy: boolean;
   promptCharacterLimit: number;
   takeCount?: number;
@@ -405,6 +412,9 @@ export function StudioComposer({
             disabled={isBusy}
             assetUrls={projectImageUrls ?? []}
             onRequestGenerateImage={onRequestShotImage}
+            onGenerateAssetImage={onGenerateAssetImage}
+            onUploadAssetImage={onUploadAssetImage}
+            onImportAssetToShots={onImportAssetToShots}
           />
         ) : null}
 

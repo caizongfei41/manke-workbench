@@ -52,6 +52,8 @@ import { BeatCanvasAnalysisDepthPicker } from './beatcanvas-analysis-depth-picke
 import { BeatCanvasComposerParameterPicker } from './beatcanvas-composer-parameter-picker';
 import { BeatCanvasComposerReferencePicker } from './beatcanvas-composer-reference-picker';
 import { BeatCanvasComposerShell } from './beatcanvas-composer-shell';
+import { StudioDirectorConsole } from '@/components/studio/studio-director-console';
+import { getDefaultDirectorSettings } from '@/core/effects/aicg3d-director';
 import { BeatCanvasComposerTypePicker } from './beatcanvas-composer-type-picker';
 import { BeatCanvasComposerVersionPicker } from './beatcanvas-composer-version-picker';
 import { AiExpandControl } from '@/components/app/ai-expand-control';
@@ -104,6 +106,7 @@ export function BeatCanvasFrontLayer() {
     onDraftCharacterOrientationChange,
     onDraftCustomResolutionChange,
     onDraftDurationChange,
+    onDraftDirectorChange,
     onDraftLanguageChange,
     onDraftModeChange,
     onDraftModelChange,
@@ -408,6 +411,11 @@ export function BeatCanvasFrontLayer() {
     : activeDraftCard?.type === 'image'
       ? imageModels
       : videoModels;
+  // Image URLs already on the canvas, offered as shot references.
+  const canvasImageUrls = Object.values(cards)
+    .filter((card) => card.type === 'image' && !!card.url)
+    .map((card) => card.url as string);
+
   const selectedModel =
     findWorkspaceModelOption(modelOptions, activeDraftCard?.modelId) ??
     modelOptions[0] ??
@@ -981,6 +989,16 @@ export function BeatCanvasFrontLayer() {
 
       {activeDraftCard ? (
         <BeatCanvasComposerShell
+          panel={
+            activeDraftCard.type === 'video' && selectedModel?.segmentUi === 'sequence' ? (
+              <StudioDirectorConsole
+                settings={activeDraftCard.directorSettings ?? getDefaultDirectorSettings()}
+                onChange={(next) => onDraftDirectorChange(activeDraftCard.id, next)}
+                disabled={isDraftBusy}
+                assetUrls={canvasImageUrls}
+              />
+            ) : null
+          }
           activeDraftCard={activeDraftCard}
           composerRef={composerRef}
           isDraftBusy={isDraftBusy}
