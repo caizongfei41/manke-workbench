@@ -106,6 +106,67 @@ git push -u origin main
   这一点已经做了（漫客工作台 / Manke Workbench），只在描述来源时提及 BeatDesign/BeatAPI。
 - 不要在仓库描述、README 标题或 Logo 里暗示与 BeatAPI 的隶属或背书关系。
 
+## 网络：这台机器上 github.com 是不通的
+
+发布时实测到的网络状况（这是本机既有环境，不是仓库问题）：
+
+| 主机 | 端口 | 可达性 |
+| --- | --- | --- |
+| `api.github.com` | 443 | ✓ 通（`gh` 全部命令可用） |
+| `codeload.github.com` | 443 | ✓ 通（下载 tarball 可用） |
+| `github.com` | 443 | ✗ **不通**（git 的 HTTPS 传输走这里） |
+| `ssh.github.com` | 443 | ✓ 通（SSH 传输走这里） |
+
+因此 git 的 HTTPS 推送不可靠 —— 首次推送是在一个短暂的窗口期成功的。
+
+### 可靠方案：SSH over 443
+
+`~/.ssh/config` 里已经配好：
+
+```
+Host github.com
+    HostName ssh.github.com
+    Port 443
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+```
+
+**唯一缺的一步**：把这台机器的公钥登记到 GitHub 账号。
+
+公钥内容（`~/.ssh/id_ed25519.pub`）：
+
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAhUZ+rBJwKXPBwSKKJBFXnq4ts+jXk47GqVe20OoG+x dsh@WIN-20210729NQG
+```
+
+两种加法：
+
+1. **网页**：https://github.com/settings/ssh/new → Title 随便填 → 粘贴上面的公钥 → Add SSH key
+2. **命令行**（需要一次 `write:public_key` 授权）：
+   ```powershell
+   gh auth refresh -h github.com -s write:public_key
+   gh api user/keys -f title="workbench-pc" -f key="$(Get-Content ~/.ssh/id_ed25519.pub -Raw)"
+   ```
+
+加完之后验证并推送：
+
+```powershell
+git ls-remote origin        # 应该列出 refs/heads/main
+git push
+```
+
+### 关于 ghproxy
+
+这台机器的 git 配了全局重写：
+
+```
+url.https://ghproxy.net/https://github.com/.insteadOf = https://github.com/
+```
+
+它让**拉取**公开仓库可以走镜像，但**推送**不行 —— ghproxy 上没有你的凭据。
+所以本仓库的 remote 用的是 SSH 形式 `git@github.com:...`，不受这条重写影响，
+也不影响你其他仓库继续用镜像。
+
 ## 后续维护提示
 
 - 版本号要同时改 5 处，`pnpm test` 会检查它们是否一致：
