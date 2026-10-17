@@ -18,7 +18,7 @@
 }
 
 .beatcanvas-react-flow .react-flow__background-pattern.dots circle {
-  filter: drop-shadow(0 0 0.35px rgba(255, 255, 255, 0.18));
+  filter: drop-shadow(0 0 0.35px var(--beatcanvas-grid-dot, rgba(255, 255, 255, 0.18)));
 }
 
 .beatcanvas-react-flow .react-flow__renderer {

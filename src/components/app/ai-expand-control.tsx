@@ -63,7 +63,7 @@ export function AiExpandControl({
   return (
     <div className={cn('flex items-center gap-1.5', className)}>
       {mediaType === 'image' ? (
-        <div className="flex items-center rounded-full border border-white/[0.1] bg-white/[0.04] p-0.5 text-[11px] leading-none">
+        <div className="flex items-center rounded-full border border-ink/[0.1] bg-ink/[0.04] p-0.5 text-[11px] leading-none">
           <button
             type="button"
             onClick={() => setLanguage('zh')}
@@ -71,7 +71,7 @@ export function AiExpandControl({
               'rounded-full px-1.5 py-1 transition',
               language === 'zh'
                 ? 'bg-[var(--beat-accent)]/20 text-white'
-                : 'text-[var(--beat-text-2)] hover:text-white'
+                : 'text-[var(--beat-text-2)] hover:text-ink'
             )}
           >
             {t('aiExpandZh')}
@@ -83,7 +83,7 @@ export function AiExpandControl({
               'rounded-full px-1.5 py-1 transition',
               language === 'en'
                 ? 'bg-[var(--beat-accent)]/20 text-white'
-                : 'text-[var(--beat-text-2)] hover:text-white'
+                : 'text-[var(--beat-text-2)] hover:text-ink'
             )}
           >
             {t('aiExpandEn')}
@@ -94,7 +94,7 @@ export function AiExpandControl({
         type="button"
         onClick={handleExpand}
         disabled={!canExpand}
-        className="flex items-center gap-1 rounded-full border border-white/[0.1] bg-white/[0.04] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-white/[0.08] disabled:opacity-40"
+        className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] disabled:opacity-40"
       >
         {isEnhancing ? (
           <Loader2 className="size-3 animate-spin" />

@@ -469,7 +469,7 @@ export function GenerationCardNode({
               <button
                 type="button"
                 aria-label={`${shapeCopy.viewResult}: ${displayLabel}`}
-                className="nodrag nopan nowheel absolute left-1/2 top-1/2 z-[3] grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/65 text-xl text-white opacity-80 shadow-lg transition-[opacity,transform,background-color] hover:scale-105 hover:bg-black/80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)] group-hover:opacity-100"
+                className="nodrag nopan nowheel absolute left-1/2 top-1/2 z-[3] grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-ink/15 bg-black/65 text-xl text-ink opacity-80 shadow-lg transition-[opacity,transform,background-color] hover:scale-105 hover:bg-black/80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)] group-hover:opacity-100"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.preventDefault();

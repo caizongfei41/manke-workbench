@@ -98,7 +98,7 @@ export function CreateProjectRoutePage({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[var(--beat-bg)] px-6 py-16 text-[var(--beat-text-1)]">
-      <section className="w-full max-w-[520px] rounded-[var(--beat-radius)] border border-white/[0.13] bg-[linear-gradient(145deg,#1b1b1e_0%,#151517_100%)] px-8 py-9 text-center shadow-[0_30px_100px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <section className="w-full max-w-[520px] rounded-[var(--beat-radius)] border border-ink/[0.13] bg-[image:var(--beat-card)] px-8 py-9 text-center shadow-[0_30px_100px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.035)]">
         {error ? (
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
             <AlertCircleIcon className="size-6" />
@@ -144,7 +144,7 @@ export function CreateProjectRoutePage({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 rounded-[16px] border-white/[0.16] bg-transparent px-5 text-white hover:bg-white/[0.06]"
+                  className="h-11 rounded-[16px] border-ink/[0.16] bg-transparent px-5 text-ink hover:bg-ink/[0.06]"
                   onClick={() => void createProject('canvas')}
                 >
                   {copy.startCanvas}

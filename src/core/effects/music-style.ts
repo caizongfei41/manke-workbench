@@ -361,6 +361,17 @@ export const MUSIC_STYLE_FIELDS: readonly MusicStyleField[] = [
     hint: '再加一层自由描述，会拼在风格提示词最后。',
   },
   {
+    key: 'seed',
+    label: '随机种子',
+    type: 'number',
+    group: 'extra',
+    default: 0,
+    min: 0,
+    max: 9007199254740991,
+    step: 1,
+    hint: '同参数下换种子会出不同的编曲和唱法。0 表示每次用模板固定值。',
+  },
+  {
     key: 'max_duration',
     label: '最长时长（秒）',
     type: 'number',
@@ -380,6 +391,56 @@ export const MUSIC_STYLE_GROUP_LABELS: Record<MusicStyleGroup, string> = {
   extra: '高级',
 };
 
+/** 每个分组一句话说明，显示在标签页右侧。 */
+export const MUSIC_GROUP_BLURB: Record<MusicStyleGroup, string> = {
+  core: '定基调：风格、语言、情绪、速度',
+  voice: '谁在唱、用什么音色和唱法',
+  arrange: '乐器编制、编曲密度、制作质感',
+  extra: '自由补充与时长上限',
+};
+
+const CUSTOM_RECIPE = '自定义 / Custom';
+
+/**
+ * 配方会覆盖哪些字段。
+ *
+ * XB_YuE2StylePrompt 的 _apply_recipe() 在「配方 != 自定义」时用预设值覆盖同名
+ * 参数，而且是后端覆盖，前端显示的值会被无声丢弃 —— 用户以为自己选了男声，
+ * 实际按预设唱成女声。这里复刻同一份覆盖清单，界面据此把被压掉的控件标出来。
+ *
+ * 不在清单里的字段（音乐特征 / 自定义补充 / max_duration / seed）任何时候都生效。
+ */
+export const MUSIC_RECIPE_OVERRIDDEN_KEYS: ReadonlySet<string> = new Set([
+  '演唱语言',
+  '音乐风格',
+  '风格融合',
+  '人声编制',
+  '人声音色',
+  '人声唱法',
+  '人声效果',
+  '速度',
+  'BPM数值',
+  '情绪氛围',
+  '主奏乐器',
+  '辅助乐器',
+  '编曲密度',
+  '制作质感',
+]);
+
+/** 当前是否选中了会覆盖参数的配方。 */
+export const isRecipeActive = (
+  value: Record<string, string | number> | undefined
+): boolean => {
+  const recipe = value?.['配方'];
+  return typeof recipe === 'string' && recipe !== CUSTOM_RECIPE;
+};
+
+/** 某个字段此刻是否被配方压掉（界面显示为只读/置灰）。 */
+export const isFieldLockedByRecipe = (
+  value: Record<string, string | number> | undefined,
+  key: string
+): boolean => isRecipeActive(value) && MUSIC_RECIPE_OVERRIDDEN_KEYS.has(key);
+
 /** 每个参数都用节点默认值起手，避免一进音乐模式就有一堆「不指定」。 */
 export const getDefaultMusicStyle = (): Record<string, string | number> =>
   Object.fromEntries(
@@ -387,12 +448,89 @@ export const getDefaultMusicStyle = (): Record<string, string | number> =>
   );
 
 /**
- * 歌词结构模板。
+ * 歌词模板（工作流自带的《下辈子再做你的新娘》）。
  *
  * YuE2 靠 [Verse] / [Chorus] 这些标记切段落，不写标记它会把整段词当成一句念完。
- * 点「插入歌词模板」时把这段塞进输入框，用户只改内容就行。
+ * 点「插入歌词模板」把这首塞进输入框，用户按同样结构改词就行；`###` 开头的标题行
+ * 是被节点保留的曲名分隔，别删。
  */
-export const MUSIC_LYRICS_TEMPLATE = `[Intro]
+export const MUSIC_LYRICS_TEMPLATE = `### 《下辈子再做你的新娘》
+
+[Intro]
+呜 呜 呜
+
+[Verse]
+指尖揉散 你肩上风霜
+钟摆滴答 催促相聚时光
+你望着我
+轻轻问能否地久天长
+
+[Interlude]
+
+[Verse]
+可是哥啊 听我一句劝
+别再来这地方
+
+你掌心岁月磨出的老茧
+让我心伤
+
+若是心底还闷得慌
+想找个人说说话
+
+就点最简的单
+我照样把你 当作至亲一般
+
+[Pre-Chorus]
+别把血汗钱 耗在短暂相逢
+前路还有安稳 值得你去等
+
+[Chorus]
+把钱好好攒着吧
+找个清清白白的好姑娘
+平平淡淡 才是好时光
+我给不起 承诺和远方
+
+今生这条路 早已落尘
+只能陪你相遇一场
+
+等轮回一转 换个人间
+那时我一身清白 等你来我身旁
+只要你还认得我 只要你还记得我
+
+[Pre-Chorus]
+要把好时光 用在真心良人
+前途还有月光 值得你相逢
+
+[Chorus]
+把心好好收着吧
+那个清清白白的好姑娘
+安安稳稳 才是好模样
+我给不起 承诺和远方
+
+今生这条路 早已落尘
+相遇已是恩泽一场
+
+等轮回一转 换个人间
+那时我一身清白 等你来我身旁
+只要你还认得我 只要你还记得我
+
+[Bridge]
+今生无缘 何需誓言
+倾尽温柔 仍藏遗憾
+相遇深情 深种心田
+只盼来生 坦荡相见
+
+[Outro]
+只要你还认得我
+下辈子
+我要做你的新娘
+
+只要你还记得我
+下辈子
+我就是你的新娘`;
+
+/** 空结构骨架，给想从零写词的情况。 */
+export const MUSIC_LYRICS_SKELETON = `[Intro]
 
 [Verse 1]
 
@@ -424,3 +562,185 @@ export const pickChangedMusicStyle = (
 export const MUSIC_STYLE_KEYS = new Set(
   MUSIC_STYLE_FIELDS.map((field) => field.key)
 );
+
+/**
+ * 歌词示例。
+ *
+ * 空骨架说明了结构，但没说清「每段写多少字、怎么断句」。给几首完整示例，用户照着
+ * 改比从零写快得多。都是原创歌词，直接可用。
+ */
+export type MusicLyricsExample = {
+  id: string;
+  label: string;
+  /** 配套的风格建议，插入示例时顺手把风格切过去。 */
+  styleHint?: { 音乐风格: string; 情绪氛围: string; 人声编制: string };
+  text: string;
+};
+
+export const MUSIC_LYRICS_EXAMPLES: readonly MusicLyricsExample[] = [
+  {
+    id: 'template',
+    label: '下辈子再做你的新娘',
+    styleHint: {
+      音乐风格: '华语流行 / Mandopop',
+      情绪氛围: '忧郁感伤 / Melancholic',
+      人声编制: '女声独唱 / Female Lead',
+    },
+    text: MUSIC_LYRICS_TEMPLATE,
+  },
+  {
+    id: 'skeleton',
+    label: '空结构骨架',
+    text: MUSIC_LYRICS_SKELETON,
+  },
+  {
+    id: 'mandopop',
+    label: '华语抒情',
+    styleHint: {
+      音乐风格: '华语流行 / Mandopop',
+      情绪氛围: '忧郁感伤 / Melancholic',
+      人声编制: '女声独唱 / Female Lead',
+    },
+    text: `[Intro]
+钢琴独奏
+
+[Verse 1]
+窗外的雨 落在旧台阶
+你留下的伞 还挂在门后
+我数着秒针 走过整个下午
+想着那天 你没说出口的话
+
+[Pre-Chorus]
+是不是所有告别
+都藏在平常的问候里
+
+[Chorus]
+我把思念折成纸船
+放进夜里最深的河
+让它飘到你说过的远方
+替我告诉你 我还在等
+
+[Verse 2]
+街角的花 开了又谢
+我们走过的路 换了招牌
+只有那家小店 还放着老歌
+唱着我们没唱完的段落
+
+[Chorus]
+我把思念折成纸船
+放进夜里最深的河
+让它飘到你说过的远方
+替我告诉你 我还在等
+
+[Bridge]
+如果时间能倒回那一站
+我一定把话说得更慢
+让你听清 每一句都是真的
+
+[Outro]
+窗外的雨 停了`,
+  },
+  {
+    id: 'rock',
+    label: '摇滚热血',
+    styleHint: {
+      音乐风格: '摇滚 / Rock',
+      情绪氛围: '燃爆热血 / Energetic Anthem',
+      人声编制: '男声独唱 / Male Lead',
+    },
+    text: `[Intro]
+失真吉他 riff
+
+[Verse 1]
+闹钟砸碎凌晨六点
+人群推着我往前走
+他们把梦装进口袋
+标好价钱 说这就够了
+
+[Pre-Chorus]
+可我听见胸口的声音
+比整个城市更响
+
+[Chorus]
+我不认这条写好的路
+也不认谁替我定输赢
+就算只剩一盏灯
+我也要把它点成太阳
+
+[Verse 2]
+摔过多少次才算数
+伤口是地图 不是终点
+他们笑我太吵太倔
+那就再吵一点
+
+[Chorus]
+我不认这条写好的路
+也不认谁替我定输赢
+就算只剩一盏灯
+我也要把它点成太阳
+
+[Bridge]
+喊到嗓子沙哑
+也要喊出自己的名字
+
+[Outro]
+吉他 solo 渐弱`,
+  },
+  {
+    id: 'folk',
+    label: '民谣叙事',
+    styleHint: {
+      音乐风格: '民谣 / Folk',
+      情绪氛围: '孤独深夜 / Late-night Lonely',
+      人声编制: '男声独唱 / Male Lead',
+    },
+    text: `[Intro]
+木吉他分解和弦
+
+[Verse 1]
+十八岁那年 我坐上绿皮车
+口袋里装着 母亲煮的鸡蛋
+她说外面的世界 很大很冷
+记得冷了 就给自己添件衣裳
+
+[Verse 2]
+我在南方的工地 搬了三年砖
+在夜市里 卖过两个月的唱
+房东收走房租 也收走我的梦
+我就到天台上 把它们捡回来
+
+[Chorus]
+列车一直往前开
+我也一直往前开
+身后的站台 越来越远
+可我总听见 有人在喊我
+
+[Bridge]
+如果有一天 我回到那条街
+我会告诉十八岁的自己
+你走的路 没有走错
+
+[Outro]
+木吉他 渐弱`,
+  },
+];
+
+/**
+ * 一行摘要，显示在面板顶上。
+ *
+ * 只挑用户最可能想确认的三项，跳过「不指定 / 跟随风格」，否则摘要永远是一串默认值。
+ */
+export const summarizeMusicStyle = (
+  value: Record<string, string | number> | undefined
+): string => {
+  if (!value) return '';
+  const short = (raw: unknown) =>
+    typeof raw === 'string' ? raw.split(' / ')[0].trim() : '';
+  const skip = new Set(['不指定', '跟随风格', '自定义', '']);
+  const parts = [
+    short(value['音乐风格']),
+    short(value['人声编制']),
+    short(value['情绪氛围']),
+  ].filter((item) => !skip.has(item));
+  return parts.join(' · ');
+};

@@ -156,12 +156,12 @@ export function AssetCardNode({
           <div className="flex size-full flex-col justify-between px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-[12px] font-semibold text-white">{title}</p>
-                <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-white/38">
+                <p className="truncate text-[12px] font-semibold text-ink">{title}</p>
+                <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-ink/38">
                   {audioRole?.replace('_', ' ') || 'audio'}
                 </p>
               </div>
-              <span className="font-mono text-[10px] tabular-nums text-white/45">
+              <span className="font-mono text-[10px] tabular-nums text-ink/45">
                 {typeof durationSec === 'number' ? `${durationSec.toFixed(2)}s` : '—'}
               </span>
             </div>
@@ -205,22 +205,22 @@ export function AssetCardNode({
                   onError={() => setMediaStatus('error')}
                 />
               ) : (
-                <div className="grid size-full place-items-center text-[11px] uppercase tracking-[0.18em] text-white/28">
+                <div className="grid size-full place-items-center text-[11px] uppercase tracking-[0.18em] text-ink/28">
                   Timeline
                 </div>
               )}
-              <span className="absolute left-3 top-3 rounded-md border border-white/10 bg-black/55 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/65">
+              <span className="absolute left-3 top-3 rounded-md border border-ink/10 bg-black/55 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-ink/65">
                 Timeline
               </span>
             </div>
-            <div className="border-t border-white/10 px-3 py-2.5">
+            <div className="border-t border-ink/10 px-3 py-2.5">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-[12px] font-semibold text-white">{title}</p>
-                <span className="font-mono text-[10px] tabular-nums text-white/40">
+                <p className="truncate text-[12px] font-semibold text-ink">{title}</p>
+                <span className="font-mono text-[10px] tabular-nums text-ink/40">
                   {typeof durationSec === 'number' ? `${durationSec.toFixed(1)}s` : '0.0s'}
                 </span>
               </div>
-              <div className="mt-2 flex h-2 gap-1 rounded-sm bg-white/[0.04] p-px">
+              <div className="mt-2 flex h-2 gap-1 rounded-sm bg-ink/[0.04] p-px">
                 {Array.from({ length: Math.max(1, Math.min(8, clipCount ?? 1)) }, (_, index) => (
                   <span key={index} className="flex-1 rounded-[2px] bg-[var(--beat-graph)]/55" />
                 ))}
@@ -267,7 +267,7 @@ export function AssetCardNode({
                 aria-label={`${shapeCopy.viewResult}: ${
                   title || shapeCopy.video
                 }`}
-                className="nodrag nopan nowheel absolute left-1/2 top-1/2 grid size-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/65 text-lg text-white opacity-80 shadow-lg transition-[opacity,transform,background-color] hover:scale-105 hover:bg-black/80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)] group-hover:opacity-100"
+                className="nodrag nopan nowheel absolute left-1/2 top-1/2 grid size-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-ink/15 bg-black/65 text-lg text-ink opacity-80 shadow-lg transition-[opacity,transform,background-color] hover:scale-105 hover:bg-black/80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)] group-hover:opacity-100"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={handlePreviewMedia}
               >
@@ -316,7 +316,7 @@ export function AssetCardNode({
         )}
         {thumbnailUrl && mediaStatus === 'loading' ? (
           <div
-            className="pointer-events-none absolute inset-0 grid place-items-center bg-black/25 px-3 text-center text-[11px] text-white/80"
+            className="pointer-events-none absolute inset-0 grid place-items-center bg-black/25 px-3 text-center text-[11px] text-ink/80"
             role="status"
           >
             {shapeCopy.previewLoading}

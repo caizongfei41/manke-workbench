@@ -41,7 +41,7 @@ function PlugGlyph({ className }: { className?: string }) {
 }
 
 const inputClassName =
-  'h-11 w-full rounded-[12px] border border-white/[0.12] bg-white/[0.04] px-3.5 font-mono text-[13px] text-white outline-none transition placeholder:text-white/30 focus:border-[#38bdf8]/55 focus:ring-[3px] focus:ring-[#38bdf8]/15';
+  'h-11 w-full rounded-[12px] border border-ink/[0.12] bg-ink/[0.04] px-3.5 font-mono text-[13px] text-ink outline-none transition placeholder:text-ink/30 focus:border-[#38bdf8]/55 focus:ring-[3px] focus:ring-[#38bdf8]/15';
 
 const saveButtonClassName =
   'h-11 w-full rounded-[12px] bg-[#38bdf8] text-[14px] font-semibold text-[#1d1d1f] shadow-[0_8px_24px_rgba(56,189,248,0.24)] transition hover:bg-[#4cc2ff] disabled:cursor-not-allowed disabled:opacity-60';
@@ -114,7 +114,7 @@ function ApiConfigForm({
   return (
     <div className="space-y-4 px-5 py-5">
       <div className="flex items-center gap-2">
-        <p className="text-[13px] font-medium text-white">{providerLabel}</p>
+        <p className="text-[13px] font-medium text-ink">{providerLabel}</p>
         {isDefault ? (
           <span className="rounded-full border border-[#38bdf8]/30 bg-[#38bdf8]/10 px-2 py-0.5 text-[11px] font-semibold tracking-[0.04em] text-[#7dd3fc]">
             {t('defaultBadge')}
@@ -125,13 +125,13 @@ function ApiConfigForm({
       <div>
         <label
           htmlFor="beatapi-key"
-          className="mb-2 block text-[12px] font-medium text-white/45"
+          className="mb-2 block text-[12px] font-medium text-ink/45"
         >
           {t('keyLabel')}
         </label>
         {!loaded ? (
           <div
-            className="h-11 animate-pulse rounded-[12px] border border-white/[0.08] bg-white/[0.04] motion-reduce:animate-none"
+            className="h-11 animate-pulse rounded-[12px] border border-ink/[0.08] bg-ink/[0.04] motion-reduce:animate-none"
             aria-label={t('loadingConnection')}
           />
         ) : (
@@ -264,7 +264,7 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
 
   return (
     <div className="space-y-4 px-5 py-5">
-      <div className="grid grid-cols-2 gap-1 rounded-[12px] border border-white/[0.08] bg-black/20 p-1">
+      <div className="grid grid-cols-2 gap-1 rounded-[12px] border border-ink/[0.08] bg-[var(--beat-panel)] p-1">
         <button
           type="button"
           disabled={!state?.managedEligible}
@@ -273,9 +273,9 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
           }}
           className={`inline-flex h-10 items-center justify-center gap-2 rounded-[10px] text-[13px] font-semibold transition ${
             mode === 'beatapi'
-              ? 'bg-white/[0.08] text-white'
-              : 'text-white/40 hover:text-white/70'
-          } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:text-white/40`}
+              ? 'bg-ink/[0.08] text-ink'
+              : 'text-ink/40 hover:text-ink/70'
+          } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:text-ink/40`}
         >
           <Cloud
             className={`size-3.5 ${mode === 'beatapi' ? 'text-[#7dd3fc]' : ''}`}
@@ -287,8 +287,8 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
           onClick={() => setMode('s3')}
           className={`inline-flex h-10 items-center justify-center gap-2 rounded-[10px] text-[13px] font-semibold transition ${
             mode === 's3'
-              ? 'bg-white/[0.08] text-white'
-              : 'text-white/40 hover:text-white/70'
+              ? 'bg-ink/[0.08] text-ink'
+              : 'text-ink/40 hover:text-ink/70'
           }`}
         >
           <Database
@@ -299,7 +299,7 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
       </div>
 
       {mode === 'beatapi' ? (
-        <p className="text-[12px] leading-5 text-white/40">{t('managedHint')}</p>
+        <p className="text-[12px] leading-5 text-ink/40">{t('managedHint')}</p>
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-[110px_1fr] gap-3">
@@ -360,7 +360,7 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
               className={inputClassName}
             />
           </div>
-          <label className="flex items-center gap-2 text-[12px] text-white/45">
+          <label className="flex items-center gap-2 text-[12px] text-ink/45">
             <input
               type="checkbox"
               checked={forcePathStyle}
@@ -426,10 +426,10 @@ export function WorkspaceApiConfigDialog({
         title={
           providerConfigured ? t('triggerConfiguredLabel') : t('triggerLabel')
         }
-        className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full border bg-white/[0.035] transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]/45 ${
+        className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full border bg-ink/[0.035] transition hover:bg-ink/[0.06] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]/45 ${
           providerConfigured
             ? 'border-[#38bdf8]/35 text-[#7dd3fc]'
-            : 'border-white/[0.09] text-[#a0a1a8] hover:border-white/[0.18]'
+            : 'border-ink/[0.09] text-[#a0a1a8] hover:border-ink/[0.18]'
         }`}
       >
         <PlugGlyph className="size-[18px]" />
@@ -441,24 +441,24 @@ export function WorkspaceApiConfigDialog({
         ) : null}
       </DialogTrigger>
 
-      <DialogContent className="beat-product-shell max-h-[88vh] overflow-y-auto rounded-[24px] border border-white/10 bg-[#111214] p-0 text-[#f5f5f7] shadow-[0_34px_110px_rgba(0,0,0,0.62)] ring-0 sm:max-w-[480px] [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:text-white/45 [&_[data-slot=dialog-close]]:hover:bg-white/[0.07] [&_[data-slot=dialog-close]]:hover:text-white">
-        <div className="border-b border-white/[0.08] px-5 pb-4 pt-5">
+      <DialogContent className="beat-product-shell max-h-[88vh] overflow-y-auto rounded-[24px] border border-ink/10 bg-[var(--beat-surface)] p-0 text-[#f5f5f7] shadow-[0_34px_110px_rgba(0,0,0,0.62)] ring-0 sm:max-w-[480px] [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:text-ink/45 [&_[data-slot=dialog-close]]:hover:bg-ink/[0.07] [&_[data-slot=dialog-close]]:hover:text-white">
+        <div className="border-b border-ink/[0.08] px-5 pb-4 pt-5">
           <div className="flex items-start gap-3 pr-8">
             <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-[#38bdf8]/25 bg-[#38bdf8]/10 text-[#7dd3fc]">
               <PlugGlyph className="size-4" />
             </span>
             <DialogHeader className="gap-1 text-left">
-              <DialogTitle className="beat-product-display text-[17px] font-semibold tracking-[-0.02em] text-white">
+              <DialogTitle className="beat-product-display text-[17px] font-semibold tracking-[-0.02em] text-ink">
                 {t('title')}
               </DialogTitle>
-              <DialogDescription className="text-[12px] leading-5 text-white/45">
+              <DialogDescription className="text-[12px] leading-5 text-ink/45">
                 {section === 'provider' ? t('description') : t('storage.intro')}
               </DialogDescription>
             </DialogHeader>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 border-b border-white/[0.08] bg-black/10 p-1">
+        <div className="grid grid-cols-2 border-b border-ink/[0.08] bg-[var(--beat-panel)] p-1">
           {(['provider', 'storage'] as const).map((item) => (
             <button
               key={item}
@@ -466,8 +466,8 @@ export function WorkspaceApiConfigDialog({
               onClick={() => setSection(item)}
               className={`h-9 rounded-[10px] text-[13px] font-semibold transition ${
                 section === item
-                  ? 'bg-white/[0.08] text-white'
-                  : 'text-white/40 hover:text-white/70'
+                  ? 'bg-ink/[0.08] text-ink'
+                  : 'text-ink/40 hover:text-ink/70'
               }`}
             >
               {item === 'provider' ? t('providerTab') : t('storageTab')}

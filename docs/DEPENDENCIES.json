@@ -1,21 +1,24 @@
 {
-  "generated": "2026-10-17T05:23:03.822Z",
-  "templateCount": 19,
+  "generated": "2026-10-17T10:14:14.972Z",
+  "templateCount": 21,
   "customNodeClasses": [
     "AICG3D_H3Loader",
     "AICG3D_H3MediaLoader",
     "AICG3D_H3SequenceCombine",
     "AICG3D_H3SequenceGlobal",
     "AICG3D_H3SequenceSegment",
+    "AudioEncoderLoader",
     "BasicScheduler",
     "BlockSparseAttention",
     "CFGGuider",
     "ComfySwitchNode",
+    "ConditioningZeroOut",
     "CreateVideo",
     "DLSS5FrameEnhancer",
     "DepthAnything_V2",
     "DownloadAndLoadDepthAnythingV2Model",
     "EmptyFlux2LatentImage",
+    "EmptyYuE2LatentAudio",
     "ImageConcatMulti",
     "ImageScaleToTotalPixels",
     "JoinImageWithAlpha",
@@ -24,6 +27,7 @@
     "MiniMaxH3DirectorFaceRefine",
     "MiniMaxH3DirectorRefine",
     "ModelAttentionBackend",
+    "PreviewAny",
     "Qwen3TTSCustomVoice",
     "Qwen3TTSModelLoader",
     "QwenImage21BlockCacheT8",
@@ -32,6 +36,7 @@
     "ReferenceLatent",
     "ResolutionSelector",
     "SamplerCustomAdvanced",
+    "SaveAudioAdvanced",
     "SaveAudioMP3",
     "SaveImageAdvanced",
     "SaveVideo",
@@ -39,10 +44,20 @@
     "SeedVR2LoadVAEModel",
     "SeedVR2TorchCompileSettings",
     "SeedVR2VideoUpscaler",
+    "SheetSage2AudioToABC",
     "TextEncodeQwenImage21",
     "UnetLoaderGGUF",
+    "VAEDecodeAudio",
     "VHS_LoadVideo",
     "VHS_VideoCombine",
+    "XB_AudioSlicerV1",
+    "XB_SageAttentionAccelerator",
+    "XB_YuE2CoverPrep",
+    "XB_YuE2Lyrics",
+    "XB_YuE2ScoreWorkbench",
+    "XB_YuE2StylePrompt",
+    "YuE2GenerateABC",
+    "YuE2GenerateMusic",
     "easy cleanGpuUsed"
   ],
   "missingClasses": [],
@@ -124,6 +139,17 @@
         "VHS_LoadVideo",
         "VHS_VideoCombine"
       ]
+    },
+    {
+      "name": "XB_ToolBox",
+      "classes": [
+        "XB_AudioSlicerV1",
+        "XB_SageAttentionAccelerator",
+        "XB_YuE2CoverPrep",
+        "XB_YuE2Lyrics",
+        "XB_YuE2ScoreWorkbench",
+        "XB_YuE2StylePrompt"
+      ]
     }
   ],
   "files": [
@@ -153,6 +179,13 @@
       "basename": "91cc60179b7e9830e32d96bb89ba517a.jpg",
       "templates": [
         "小枫-qwen-image-2-1-图像编辑.json"
+      ]
+    },
+    {
+      "name": "古巨基 - 情深深雨濛濛.mp3",
+      "basename": "古巨基 - 情深深雨濛濛.mp3",
+      "templates": [
+        "小枫-yue2-歌曲翻唱.json"
       ]
     },
     {
@@ -355,6 +388,14 @@
         "小枫-qwen-image-2-1-图编辑-4步加速版.json",
         "小枫-qwen-image-2-1-文生图-4步加速版.json",
         "小枫-qwen-image-2-1-文生图.json"
+      ]
+    },
+    {
+      "name": "YuE2\\yue2_3b_bf16.safetensors",
+      "basename": "yue2_3b_bf16.safetensors",
+      "templates": [
+        "小枫-yue2-歌曲创作.json",
+        "小枫-yue2-歌曲翻唱.json"
       ]
     }
   ]

@@ -54,18 +54,18 @@ export function BeatCanvasComposerTypePicker({
         className={cn(composerFieldButtonClassName, 'w-fit')}
       >
         {selectedType === 'image' ? (
-          <ImageIcon className="size-3.5 shrink-0 text-white/70" />
+          <ImageIcon className="size-3.5 shrink-0 text-ink/70" />
         ) : selectedType === 'analysis' ? (
-          <ScanSearch className="size-3.5 shrink-0 text-white/70" />
+          <ScanSearch className="size-3.5 shrink-0 text-ink/70" />
         ) : (
-          <Video className="size-3.5 shrink-0 text-white/70" />
+          <Video className="size-3.5 shrink-0 text-ink/70" />
         )}
-        <span className="whitespace-nowrap text-[12px] font-semibold text-white">
+        <span className="whitespace-nowrap text-[12px] font-semibold text-ink">
           {selectedLabel}
         </span>
         <ChevronDown
           className={cn(
-            'pointer-events-none size-3.5 shrink-0 text-white/45 transition-transform duration-200',
+            'pointer-events-none size-3.5 shrink-0 text-ink/45 transition-transform duration-200',
             isOpen ? 'rotate-180' : ''
           )}
         />
@@ -105,11 +105,11 @@ export function BeatCanvasComposerTypePicker({
                   className={getComposerOptionRowClassName(isSelected)}
                 >
                   {taskType === 'image' ? (
-                    <ImageIcon className="size-3.5 shrink-0 text-white/60" />
+                    <ImageIcon className="size-3.5 shrink-0 text-ink/60" />
                   ) : taskType === 'analysis' ? (
-                    <ScanSearch className="size-3.5 shrink-0 text-white/60" />
+                    <ScanSearch className="size-3.5 shrink-0 text-ink/60" />
                   ) : (
-                    <Video className="size-3.5 shrink-0 text-white/60" />
+                    <Video className="size-3.5 shrink-0 text-ink/60" />
                   )}
                   <span className="flex-1 text-[12px] font-medium text-[var(--beat-text-1)]">
                     {label}

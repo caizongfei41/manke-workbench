@@ -238,7 +238,7 @@ export function BeatCanvasComposerShell({
               />
 
               {activeMention && mentionOptions.length > 0 ? (
-                <div className="beat-pop-in absolute left-2 top-full z-50 mt-1.5 w-[min(340px,calc(100vw-72px))] overflow-hidden rounded-xl border border-white/10 bg-[var(--beat-surface-2)] p-1.5 shadow-[0_22px_54px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="beat-pop-in absolute left-2 top-full z-50 mt-1.5 w-[min(340px,calc(100vw-72px))] overflow-hidden rounded-xl border border-ink/10 bg-[var(--beat-surface-2)] p-1.5 shadow-[0_22px_54px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.04)]">
                   {mentionOptions.slice(0, 8).map((mention, index) => {
                     const reference = promptReferences.find(
                       (item) => item.cardId === mention.cardId
@@ -254,8 +254,8 @@ export function BeatCanvasComposerShell({
                         className={cn(
                           'flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition',
                           index === selectedMentionIndex
-                            ? 'bg-white/[0.09] text-white'
-                            : 'text-[var(--beat-text-2)] hover:bg-white/[0.06] hover:text-white'
+                            ? 'bg-ink/[0.09] text-ink'
+                            : 'text-[var(--beat-text-2)] hover:bg-ink/[0.06] hover:text-ink'
                         )}
                       >
                         <span className="relative inline-flex size-8 shrink-0 overflow-hidden rounded-md bg-black/45">
@@ -288,7 +288,7 @@ export function BeatCanvasComposerShell({
                             {mention.name}
                           </span>
                         </span>
-                        <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-white/30">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink/30">
                           {mention.type}
                         </span>
                       </button>
@@ -312,7 +312,7 @@ export function BeatCanvasComposerShell({
             </span>
             <button
               type="button"
-              className="inline-flex size-7 items-center justify-center rounded-lg text-[var(--beat-text-3)] transition hover:bg-white/10 hover:text-white"
+              className="inline-flex size-7 items-center justify-center rounded-lg text-[var(--beat-text-3)] transition hover:bg-ink/10 hover:text-ink"
               onClick={() => onActiveComposerCardIdChange(null)}
               aria-label={labels.closeComposerLabel}
             >

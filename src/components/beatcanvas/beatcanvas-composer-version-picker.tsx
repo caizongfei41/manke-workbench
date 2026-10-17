@@ -47,7 +47,7 @@ export function BeatCanvasComposerVersionPicker({
           onOpenChange(!isOpen);
         }}
         onPointerDownCapture={stopComposerEvent}
-        className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-semibold text-[var(--beat-text-3)] transition hover:bg-white/[0.06] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-semibold text-[var(--beat-text-3)] transition hover:bg-ink/[0.06] hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
         aria-label={labels.historyLabel}
         aria-expanded={isOpen}
       >
@@ -81,8 +81,8 @@ export function BeatCanvasComposerVersionPicker({
                   className={cn(
                     'flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left transition-colors duration-150',
                     isActive
-                      ? 'bg-white/[0.08]'
-                      : 'hover:bg-white/[0.05]',
+                      ? 'bg-ink/[0.08]'
+                      : 'hover:bg-ink/[0.05]',
                     !output.url && !output.resultText && 'opacity-60'
                   )}
                 >
@@ -94,7 +94,7 @@ export function BeatCanvasComposerVersionPicker({
                       className="size-10 shrink-0 rounded-md object-cover"
                     />
                   ) : (
-                    <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-[11px] font-semibold text-[var(--beat-text-3)]">
+                    <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-ink/[0.06] text-[11px] font-semibold text-[var(--beat-text-3)]">
                       {outputs.length - index}
                     </span>
                   )}

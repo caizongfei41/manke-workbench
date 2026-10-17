@@ -118,10 +118,10 @@ export function BeatCanvasComposerReferencePicker({
                 onPointerDownCapture={stopComposerEvent}
                 title={`${card.alias ?? ''} · ${card.name}`}
                 className={cn(
-                  'group/reference inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border bg-white/[0.035] pl-1 pr-1.5 text-[11px] font-semibold text-[var(--beat-text-1)] transition',
+                  'group/reference inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border bg-ink/[0.035] pl-1 pr-1.5 text-[11px] font-semibold text-[var(--beat-text-1)] transition',
                   draggedReferenceId === card.id
                     ? 'border-[var(--beat-graph)] opacity-55'
-                    : 'border-white/[0.09] hover:border-white/[0.18] hover:bg-white/[0.07]'
+                    : 'border-ink/[0.09] hover:border-ink/[0.18] hover:bg-ink/[0.07]'
                 )}
               >
                 <span className="relative inline-flex size-5 shrink-0 overflow-hidden rounded-[5px] bg-black/50">
@@ -141,18 +141,18 @@ export function BeatCanvasComposerReferencePicker({
                       className="size-full object-cover"
                     />
                   ) : card.type === 'video' ? (
-                    <Video className="m-auto size-3 text-white/70" />
+                    <Video className="m-auto size-3 text-ink/70" />
                   ) : (
-                    <ImagePlus className="m-auto size-3 text-white/70" />
+                    <ImagePlus className="m-auto size-3 text-ink/70" />
                   )}
                   {card.type === 'video' ? (
-                    <Video className="pointer-events-none absolute bottom-0 right-0 size-2.5 rounded-sm bg-black/65 p-0.5 text-white" />
+                    <Video className="pointer-events-none absolute bottom-0 right-0 size-2.5 rounded-sm bg-black/65 p-0.5 text-ink" />
                   ) : null}
                 </span>
                 <span className="whitespace-nowrap font-mono tracking-[-0.02em] text-[var(--beat-graph)]">
                   {card.alias}
                 </span>
-                <GripVertical className="size-3 text-white/20 transition group-hover/reference:text-white/45" />
+                <GripVertical className="size-3 text-ink/20 transition group-hover/reference:text-ink/45" />
               </button>
             ))}
           </div>
@@ -166,9 +166,9 @@ export function BeatCanvasComposerReferencePicker({
           }}
           onPointerDownCapture={stopComposerEvent}
           className={cn(
-            'relative inline-flex shrink-0 items-center justify-center text-[var(--beat-text-3)] transition-all duration-200 hover:bg-white/[0.06] hover:text-white disabled:cursor-not-allowed disabled:opacity-60',
+            'relative inline-flex shrink-0 items-center justify-center text-[var(--beat-text-3)] transition-all duration-200 hover:bg-ink/[0.06] hover:text-ink disabled:cursor-not-allowed disabled:opacity-60',
             isRow
-              ? 'h-7 w-7 rounded-lg border border-dashed border-white/[0.12] bg-white/[0.025]'
+              ? 'h-7 w-7 rounded-lg border border-dashed border-ink/[0.12] bg-ink/[0.025]'
               : 'h-8 w-8 rounded-lg'
           )}
           aria-label={primaryLabel}
@@ -180,7 +180,7 @@ export function BeatCanvasComposerReferencePicker({
             <ImagePlus className="size-4" />
           )}
           {!isRow && attachedCount > 0 ? (
-            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--beat-graph)] px-1 text-[9px] font-bold leading-none text-white">
+            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--beat-graph)] px-1 text-[9px] font-bold leading-none text-ink">
               {attachedCount}
             </span>
           ) : null}
@@ -248,7 +248,7 @@ export function BeatCanvasComposerReferencePicker({
                 {currentReferenceCards.map((card) => (
                   <div
                     key={card.id}
-                    className="flex w-full items-center justify-between gap-2 rounded-[8px] px-2 py-1.5 transition-colors duration-150 hover:bg-white/[0.06]"
+                    className="flex w-full items-center justify-between gap-2 rounded-[8px] px-2 py-1.5 transition-colors duration-150 hover:bg-ink/[0.06]"
                   >
                     <span className="flex min-w-0 items-center gap-2.5 text-[var(--beat-text-1)]">
                       {card.thumbnailUrl && card.type === 'video' ? (
@@ -261,7 +261,7 @@ export function BeatCanvasComposerReferencePicker({
                             preload="metadata"
                             className="size-full object-cover"
                           />
-                          <Video className="pointer-events-none absolute inset-0 m-auto size-3.5 text-white drop-shadow" />
+                          <Video className="pointer-events-none absolute inset-0 m-auto size-3.5 text-ink drop-shadow" />
                         </span>
                       ) : card.thumbnailUrl ? (
                         <img
@@ -271,7 +271,7 @@ export function BeatCanvasComposerReferencePicker({
                           className="size-8 shrink-0 rounded-md object-cover"
                         />
                       ) : (
-                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-[var(--beat-text-2)]">
+                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-ink/[0.06] text-[var(--beat-text-2)]">
                           {card.type === 'video' ? (
                             <Video className="size-3.5" />
                           ) : (
@@ -294,7 +294,7 @@ export function BeatCanvasComposerReferencePicker({
                       onClick={() => {
                         onRemoveCanvasReference(activeDraftId, card.id);
                       }}
-                      className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-[var(--beat-text-3)] transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-[var(--beat-text-3)] transition hover:bg-ink/10 hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
                       aria-label={labels.removeReferenceLabel}
                     >
                       <X className="size-3.5" />
@@ -323,7 +323,7 @@ export function BeatCanvasComposerReferencePicker({
                         onAttachCanvasReference(activeDraftId, card.id);
                       }}
                       title={card.name}
-                      className="relative aspect-square overflow-hidden rounded-lg border border-white/[0.08] transition hover:border-[var(--beat-graph)] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="relative aspect-square overflow-hidden rounded-lg border border-ink/[0.08] transition hover:border-[var(--beat-graph)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {card.thumbnailUrl && card.type === 'video' ? (
                         <span className="relative inline-flex size-full bg-black">
@@ -335,7 +335,7 @@ export function BeatCanvasComposerReferencePicker({
                             preload="metadata"
                             className="size-full object-cover"
                           />
-                          <Video className="pointer-events-none absolute inset-0 m-auto size-4 text-white drop-shadow" />
+                          <Video className="pointer-events-none absolute inset-0 m-auto size-4 text-ink drop-shadow" />
                         </span>
                       ) : card.thumbnailUrl ? (
                         <img

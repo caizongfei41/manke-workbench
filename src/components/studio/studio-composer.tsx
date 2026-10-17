@@ -19,6 +19,7 @@ import { AiExpandControl } from '@/components/app/ai-expand-control';
 import { HintTip } from '@/components/app/hint-tip';
 import { WorkspaceSelect } from '@/components/app/workspace-select';
 import { StudioMusicPanel } from '@/components/studio/studio-music-panel';
+import type { MusicLyricsExample } from '@/core/effects/music-style';
 import { BeatCanvasComposerParameterPicker } from '@/components/beatcanvas/beatcanvas-composer-parameter-picker';
 import { normalizeComposerToken } from '@/components/beatcanvas/beatcanvas-composer-utils';
 import { useCanvasComposerLabels } from '@/components/beatcanvas/use-canvas-composer-labels';
@@ -49,6 +50,7 @@ export function StudioComposer({
   musicStyle,
   onMusicStyleChange,
   onInsertLyricsTemplate,
+  onInsertLyricsExample,
   audioRefs,
   onAudioFileSelect,
   onRemoveAudio,
@@ -76,6 +78,7 @@ export function StudioComposer({
   musicStyle?: Record<string, string | number>;
   onMusicStyleChange?: (next: Record<string, string | number>) => void;
   onInsertLyricsTemplate?: () => void;
+  onInsertLyricsExample?: (example: MusicLyricsExample) => void;
   audioRefs?: string[];
   onAudioFileSelect?: (file: File) => void;
   onRemoveAudio?: (url: string) => void;
@@ -260,7 +263,7 @@ export function StudioComposer({
   return (
     <div
       ref={rootRef}
-      className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#09090a] via-[#09090a]/96 to-transparent px-3 pb-3 pt-12 sm:px-6 sm:pb-5 sm:pt-14"
+      className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[var(--beat-bg)] via-[var(--beat-bg)]/96 to-transparent px-3 pb-3 pt-12 sm:px-6 sm:pb-5 sm:pt-14"
     >
       <div
         className={cn(
@@ -276,7 +279,7 @@ export function StudioComposer({
                 key={url}
                 type="button"
                 onClick={() => onRemoveReference?.(url)}
-                className="size-9 overflow-hidden rounded-[10px] border border-white/[0.1]"
+                className="size-9 overflow-hidden rounded-[10px] border border-ink/[0.1]"
               >
                 <img src={url} alt="" className="h-full w-full object-cover" />
               </button>
@@ -284,7 +287,7 @@ export function StudioComposer({
           </div>
         ) : null}
         {media === 'video' && selectedModel?.multiSegment ? (
-          <div className="mb-2 rounded-[12px] border border-white/[0.08] bg-black/30 p-2.5">
+          <div className="mb-2 rounded-[12px] border border-ink/[0.08] bg-[var(--beat-panel)] p-2.5">
             <div className="mb-2 flex items-center justify-between">
               <HintTip
                 label={m['studio.hint.segments.label']()}
@@ -308,7 +311,7 @@ export function StudioComposer({
                       ],
                     })
                   }
-                  className="rounded-full border border-white/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-white/[0.06] disabled:opacity-40"
+                  className="rounded-full border border-ink/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] disabled:opacity-40"
                 >
                   {t('segmentAdd')}
                 </button>
@@ -321,7 +324,7 @@ export function StudioComposer({
                       segments: (draft.segments ?? []).slice(0, -1),
                     })
                   }
-                  className="rounded-full border border-white/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-white/[0.06] disabled:opacity-40"
+                  className="rounded-full border border-ink/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] disabled:opacity-40"
                 >
                   {t('segmentRemove')}
                 </button>
@@ -344,7 +347,7 @@ export function StudioComposer({
                   }}
                   placeholder={t('segmentPromptPlaceholder')}
                   disabled={isBusy}
-                  className="min-w-0 flex-1 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-2.5 py-1.5 text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-white/30 focus:border-white/20"
+                  className="min-w-0 flex-1 rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 py-1.5 text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/30 focus:border-ink/20"
                 />
                 <input
                   type="number"
@@ -375,7 +378,7 @@ export function StudioComposer({
                     )
                   )}
                   disabled={isBusy}
-                  className="w-14 shrink-0 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-1.5 py-1.5 text-center text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-white/30 focus:border-white/20"
+                  className="w-14 shrink-0 rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-1.5 text-center text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/30 focus:border-ink/20"
                 />
                 <span className="w-4 shrink-0 text-[10px] text-[var(--beat-text-3)]">
                   {t('segmentSeconds')}
@@ -390,6 +393,8 @@ export function StudioComposer({
             value={musicStyle ?? {}}
             onChange={(next) => onMusicStyleChange?.(next)}
             onInsertLyricsTemplate={() => onInsertLyricsTemplate?.()}
+            onInsertLyricsExample={(example) => onInsertLyricsExample?.(example)}
+            active={media === 'audio'}
             disabled={isBusy}
           />
         ) : null}
@@ -400,7 +405,7 @@ export function StudioComposer({
               type="button"
               disabled={isBusy}
               onClick={() => audioFileInputRef.current?.click()}
-              className="flex items-center gap-1.5 rounded-full border border-dashed border-white/[0.13] bg-white/[0.03] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-white/25 hover:text-white disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-full border border-dashed border-ink/[0.13] bg-ink/[0.03] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
             >
               <Music2 className="size-3.5" />
               {m['studio.music.uploadAudio']()}
@@ -411,7 +416,7 @@ export function StudioComposer({
                 type="button"
                 onClick={() => onRemoveAudio?.(url)}
                 title={m['studio.music.removeAudio']()}
-                className="max-w-[200px] truncate rounded-full border border-white/[0.1] bg-white/[0.05] px-2.5 py-1 text-[11px] text-[var(--beat-text-1)]"
+                className="max-w-[200px] truncate rounded-full border border-ink/[0.1] bg-ink/[0.05] px-2.5 py-1 text-[11px] text-[var(--beat-text-1)]"
               >
                 {decodeURIComponent(url.split('/').pop() ?? url).slice(0, 40)}
               </button>
@@ -441,7 +446,7 @@ export function StudioComposer({
                 imageFileInputRef.current?.click();
               }
             }}
-            className="absolute left-0 top-0 z-10 flex size-9 rotate-[-5deg] items-center justify-center rounded-[10px] border border-dashed border-white/[0.13] bg-white/[0.03] text-[var(--beat-text-2)] shadow-[0_8px_20px_rgba(0,0,0,0.24)] transition hover:border-white/25 hover:bg-white/[0.06]"
+            className="absolute left-0 top-0 z-10 flex size-9 rotate-[-5deg] items-center justify-center rounded-[10px] border border-dashed border-ink/[0.13] bg-ink/[0.03] text-[var(--beat-text-2)] shadow-[0_8px_20px_rgba(0,0,0,0.24)] transition hover:border-ink/25 hover:bg-ink/[0.06]"
           >
             {isAnalysis ? (
               <Video className="size-3.5" />
@@ -513,7 +518,7 @@ export function StudioComposer({
                 : labels.imagePromptPlaceholder
             }
             disabled={isBusy}
-            className="h-[80px] min-h-[80px] w-full resize-none bg-transparent py-2 pl-[52px] pr-3 text-[14px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-white/35 sm:h-[92px] sm:min-h-[92px] sm:pl-[56px] sm:pr-16 sm:text-[15px]"
+            className="h-[80px] min-h-[80px] w-full resize-none bg-transparent py-2 pl-[52px] pr-3 text-[14px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-ink/35 sm:h-[92px] sm:min-h-[92px] sm:pl-[56px] sm:pr-16 sm:text-[15px]"
           />
         </div>
 
@@ -585,7 +590,7 @@ export function StudioComposer({
                   <button
                     type="button"
                     onClick={onClearAnalysisFile}
-                    className="max-w-[220px] truncate rounded-full border border-white/[0.09] bg-white/[0.035] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)]"
+                    className="max-w-[220px] truncate rounded-full border border-ink/[0.09] bg-ink/[0.035] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)]"
                     title={t('removeVideo')}
                   >
                     {analysisFileName}

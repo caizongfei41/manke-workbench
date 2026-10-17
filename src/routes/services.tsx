@@ -58,7 +58,7 @@ function ServiceCard({
     : m['services.statusStopped']();
 
   return (
-    <div className="flex flex-col rounded-[var(--beat-radius)] border border-white/[0.08] bg-white/[0.03] p-5">
+    <div className="flex flex-col rounded-[var(--beat-radius)] border border-ink/[0.08] bg-ink/[0.03] p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="relative inline-flex size-2.5">
@@ -77,7 +77,7 @@ function ServiceCard({
           className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
             svc.up
               ? 'bg-emerald-400/10 text-emerald-300'
-              : 'bg-white/[0.06] text-[var(--beat-text-3)]'
+              : 'bg-ink/[0.06] text-[var(--beat-text-3)]'
           }`}
         >
           {pending === 'starting' && !svc.up
@@ -97,7 +97,7 @@ function ServiceCard({
               onClick={() => onAct(svc.id, svc.up ? 'stop' : 'start')}
               className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition disabled:opacity-40 ${
                 svc.up
-                  ? 'border border-white/[0.12] bg-white/[0.05] text-[var(--beat-text-2)] hover:bg-white/[0.1]'
+                  ? 'border border-ink/[0.12] bg-ink/[0.05] text-[var(--beat-text-2)] hover:bg-ink/[0.1]'
                   : 'bg-[var(--beat-accent)] text-[var(--beat-accent-ink)] hover:brightness-110'
               }`}
             >
@@ -127,7 +127,7 @@ function ServiceCard({
           href={svc.url}
           target="_blank"
           rel="noreferrer"
-          className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 text-xs font-medium text-[var(--beat-text-2)] transition hover:bg-white/[0.08] hover:text-white"
+          className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-3 text-xs font-medium text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
         >
           {m['services.open']()}
           <ExternalLink className="size-3" />
@@ -235,12 +235,12 @@ function ServicesRouteComponent() {
 
   return (
     <div className="beat-product-shell flex min-h-screen flex-col bg-[var(--beat-bg)] text-[var(--beat-text-1)]">
-      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-[var(--beat-surface)]/96 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-ink/[0.07] bg-[var(--beat-surface)]/96 backdrop-blur-xl">
         <div className="flex h-14 items-center gap-3 px-4 lg:px-5">
           <Link
             href="/"
             aria-label={m['common.pages.back_to_home']()}
-            className="inline-flex size-9 items-center justify-center rounded-xl text-[var(--beat-text-1)] transition hover:bg-white/[0.06]"
+            className="inline-flex size-9 items-center justify-center rounded-xl text-[var(--beat-text-1)] transition hover:bg-ink/[0.06]"
           >
             <ArrowLeft className="size-4" />
           </Link>
@@ -250,7 +250,7 @@ function ServicesRouteComponent() {
           <button
             type="button"
             onClick={() => void refresh()}
-            className="ml-auto inline-flex size-9 items-center justify-center rounded-xl border border-white/[0.09] bg-white/[0.035] text-[var(--beat-text-2)] transition hover:bg-white/[0.075] hover:text-white"
+            className="ml-auto inline-flex size-9 items-center justify-center rounded-xl border border-ink/[0.09] bg-ink/[0.035] text-[var(--beat-text-2)] transition hover:bg-ink/[0.075] hover:text-ink"
             aria-label={m['services.refresh']()}
           >
             <RefreshCw className="size-4" />
@@ -279,14 +279,14 @@ function ServicesRouteComponent() {
             />
           ))}
           {services.length === 0 ? (
-            <div className="rounded-[var(--beat-radius)] border border-white/[0.08] bg-white/[0.03] p-5 text-sm text-[var(--beat-text-3)]">
+            <div className="rounded-[var(--beat-radius)] border border-ink/[0.08] bg-ink/[0.03] p-5 text-sm text-[var(--beat-text-3)]">
               Loading…
             </div>
           ) : null}
         </div>
 
         {data?.comfyUiRoot ? (
-          <div className="mt-4 rounded-[var(--beat-radius)] border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-xs leading-5 text-[var(--beat-text-3)]">
+          <div className="mt-4 rounded-[var(--beat-radius)] border border-ink/[0.07] bg-ink/[0.02] px-4 py-3 text-xs leading-5 text-[var(--beat-text-3)]">
             ComfyUI {m['services.comfyRoot']()}：{data.comfyUiRoot}
             <br />
             {m['services.python']()}：{data.comfyUiPython}
@@ -300,7 +300,7 @@ function ServicesRouteComponent() {
             <TerminalSquare className="size-4" />
             {m['services.logTitle']()}
           </div>
-          <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-all rounded-[var(--beat-radius)] border border-white/[0.08] bg-black/30 p-4 text-xs leading-5 text-zinc-400">
+          <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-all rounded-[var(--beat-radius)] border border-ink/[0.08] bg-[var(--beat-panel)] p-4 text-xs leading-5 text-zinc-400">
             {log || m['services.logEmpty']()}
           </pre>
         </div>

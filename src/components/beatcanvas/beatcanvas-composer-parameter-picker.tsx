@@ -150,22 +150,22 @@ export function BeatCanvasComposerParameterPicker({
         <span
           className={cn(
             'flex min-w-0 items-center gap-2 overflow-hidden',
-            isBatchTone ? 'text-white' : 'text-white'
+            isBatchTone ? 'text-ink' : 'text-ink'
           )}
         >
           {visibleParameterSummaryTokens.map((token, index) => (
             <span key={`${token}-${index}`} className="contents">
               {!isBatchTone && index > 0 ? (
-                <span className="shrink-0 text-white/35">·</span>
+                <span className="shrink-0 text-ink/35">·</span>
               ) : null}
               {isBatchTone && index > 0 ? (
-                <span className="shrink-0 text-white/45">·</span>
+                <span className="shrink-0 text-ink/45">·</span>
               ) : null}
               <span
                 className={cn(
                   'min-w-0',
                   isBatchTone
-                    ? 'text-[18px] font-semibold tracking-[-0.04em] text-white'
+                    ? 'text-[18px] font-semibold tracking-[-0.04em] text-ink'
                     : 'text-[12px] font-medium',
                   index === visibleParameterSummaryTokens.length - 1
                     ? 'truncate'
@@ -180,7 +180,7 @@ export function BeatCanvasComposerParameterPicker({
         <ChevronDown
           className={cn(
             'pointer-events-none size-3.5 shrink-0 transition-transform duration-200',
-            isBatchTone ? 'text-[var(--beat-text-2)]' : 'text-white/45',
+            isBatchTone ? 'text-[var(--beat-text-2)]' : 'text-ink/45',
             isOpen ? 'rotate-180' : ''
           )}
         />
@@ -271,9 +271,9 @@ export function BeatCanvasComposerParameterPicker({
                           activeDraftCard.customHeight ?? null
                         );
                       }}
-                      className="w-full min-w-0 rounded-md border border-white/15 bg-black/30 px-2 py-1 text-[12px] text-white outline-none placeholder:text-white/35"
+                      className="w-full min-w-0 rounded-md border border-ink/15 bg-[var(--beat-panel)] px-2 py-1 text-[12px] text-ink outline-none placeholder:text-ink/35"
                     />
-                    <span className="shrink-0 text-white/40">×</span>
+                    <span className="shrink-0 text-ink/40">×</span>
                     <input
                       type="number"
                       min={64}
@@ -290,7 +290,7 @@ export function BeatCanvasComposerParameterPicker({
                           Number.isFinite(value) ? value : null
                         );
                       }}
-                      className="w-full min-w-0 rounded-md border border-white/15 bg-black/30 px-2 py-1 text-[12px] text-white outline-none placeholder:text-white/35"
+                      className="w-full min-w-0 rounded-md border border-ink/15 bg-[var(--beat-panel)] px-2 py-1 text-[12px] text-ink outline-none placeholder:text-ink/35"
                     />
                   </div>
                 ) : null}

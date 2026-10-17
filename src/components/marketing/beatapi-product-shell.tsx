@@ -5,6 +5,7 @@ import {
 import { useState, type ReactNode } from 'react';
 
 import { LanguageSwitcher } from '@/components/app/language-switcher';
+import { ThemeToggle } from '@/components/app/theme-toggle';
 import { normalizeLocale } from '@/config/locale';
 import { Link } from '@/core/i18n/navigation';
 import { appConfig } from '@/config';
@@ -56,7 +57,7 @@ export function Brand({ href = '/' }: { href?: string }) {
     <Link
       href={href}
       aria-label={`${appConfig.app_name} home`}
-      className="beat-product-display inline-flex min-w-0 items-center gap-2.5 text-[15px] font-semibold tracking-[-0.02em] text-[#f6f6f4] sm:text-base"
+      className="beat-product-display inline-flex min-w-0 items-center gap-2.5 text-[15px] font-semibold tracking-[-0.02em] text-[var(--beat-text-1)] sm:text-base"
     >
       <img
         src={appConfig.app_logo}
@@ -86,8 +87,8 @@ function CapsuleNav({
             href={item.href}
             className={
               isActive
-                ? 'text-white'
-                : 'text-white/45 transition-colors hover:text-white'
+                ? 'text-ink'
+                : 'text-ink/45 transition-colors hover:text-ink'
             }
           >
             {item.label}
@@ -115,10 +116,10 @@ export function BeatApiProductShell({
   return (
     <div
       lang={currentLocale}
-      className="beat-product-shell min-h-[100dvh] bg-[var(--beat-bg)] pt-4 text-[#f4f4f5] selection:bg-[#38bdf8]/35 sm:pt-5"
+      className="beat-product-shell min-h-[100dvh] bg-[var(--beat-bg)] pt-4 text-[var(--beat-text-1)] selection:bg-[var(--beat-accent)]/35 sm:pt-5"
     >
       <header className="sticky top-3 z-40 px-4 sm:top-4 sm:px-6">
-        <div className="mx-auto flex h-[60px] w-full min-w-0 max-w-[1280px] items-center gap-3 rounded-full border border-white/[0.08] bg-[#131416]/90 px-3.5 shadow-[0_18px_60px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:px-5">
+        <div className="mx-auto flex h-[60px] w-full min-w-0 max-w-[1280px] items-center gap-3 rounded-full border border-ink/[0.08] bg-[var(--beat-surface)]/90 px-3.5 shadow-[0_18px_60px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:px-5">
           <Brand />
 
           <CapsuleNav active={active} items={navItems} />
@@ -126,6 +127,9 @@ export function BeatApiProductShell({
           <div className="ml-auto flex items-center gap-2">
             <div className="hidden md:block">
               <LanguageSwitcher />
+            </div>
+            <div className="hidden md:block">
+              <ThemeToggle />
             </div>
 
             <button
@@ -135,7 +139,7 @@ export function BeatApiProductShell({
               }
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
-              className="grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.035] text-white transition hover:border-white/20 md:hidden"
+              className="grid size-10 place-items-center rounded-full border border-ink/10 bg-ink/[0.035] text-ink transition hover:border-ink/20 md:hidden"
             >
               {menuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
             </button>
@@ -143,19 +147,19 @@ export function BeatApiProductShell({
         </div>
 
         {menuOpen ? (
-          <div className="absolute inset-x-4 top-[calc(100%+8px)] rounded-[18px] border border-white/10 bg-[#111113]/95 p-2 shadow-2xl backdrop-blur-xl md:hidden">
+          <div className="absolute inset-x-4 top-[calc(100%+8px)] rounded-[18px] border border-ink/10 bg-[var(--beat-surface)]/95 p-2 shadow-2xl backdrop-blur-xl md:hidden">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className="block rounded-[12px] px-4 py-3 text-sm font-medium text-[#d4d4d8] hover:bg-white/[0.06] hover:text-white"
+                className="block rounded-[12px] px-4 py-3 text-sm font-medium text-[var(--beat-text-1)] hover:bg-ink/[0.06] hover:text-ink"
               >
                 {item.label}
               </Link>
             ))}
-            <div className="mt-2 flex items-center justify-between border-t border-white/10 px-2 pt-3">
-              <span className="text-[11px] font-medium text-[#77777e]">
+            <div className="mt-2 flex items-center justify-between border-t border-ink/10 px-2 pt-3">
+              <span className="text-[11px] font-medium text-[var(--beat-text-3)]">
                 {copy.switchLanguage}
               </span>
               <LanguageSwitcher />
@@ -166,9 +170,9 @@ export function BeatApiProductShell({
 
       {children}
 
-      <footer className="px-5 pb-8 pt-16 text-center text-[11px] font-[500] text-[#626269]">
+      <footer className="px-5 pb-8 pt-16 text-center text-[11px] font-[500] text-[var(--beat-text-3)]">
         <div className="flex flex-wrap items-center justify-center gap-x-3">
-          <span className="inline-flex items-center gap-2 text-[#8f8f96]">
+          <span className="inline-flex items-center gap-2 text-[var(--beat-text-2)]">
             <img
               src={appConfig.app_logo}
               alt=""

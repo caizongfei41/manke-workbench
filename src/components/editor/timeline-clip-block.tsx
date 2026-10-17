@@ -41,8 +41,8 @@ export function TimelineClipBlock({
           : clip.sourceType === 'audio'
             ? 'cursor-grab border-[var(--beat-graph)]/30 bg-[var(--beat-graph)]/12 hover:border-[var(--beat-graph)]/50 hover:bg-[var(--beat-graph)]/18 active:cursor-grabbing'
             : clip.sourceType === 'caption'
-              ? 'cursor-grab border-white/16 bg-[#1d2430] hover:border-white/28 hover:bg-[#232b38] active:cursor-grabbing'
-            : 'cursor-grab border-white/12 bg-[#202124] hover:border-white/24 hover:bg-[#242529] active:cursor-grabbing'
+              ? 'cursor-grab border-ink/16 bg-[var(--beat-surface)] hover:border-ink/28 hover:bg-[var(--beat-surface)] active:cursor-grabbing'
+            : 'cursor-grab border-ink/12 bg-[var(--beat-surface)] hover:border-ink/24 hover:bg-[var(--beat-control)] active:cursor-grabbing'
       }`}
       style={{ left: `${left}%`, width: `${Math.max(width, 1.2)}%` }}
       title={
@@ -89,10 +89,10 @@ export function TimelineClipBlock({
         ) : null}
         <span className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/38 to-black/10" />
         <span className="relative flex h-full min-w-0 flex-col justify-between px-2.5 py-2">
-          <span className="block truncate text-[11px] font-[560] tracking-[-0.01em] text-white/95">
+          <span className="block truncate text-[11px] font-[560] tracking-[-0.01em] text-ink/95">
             {clip.sourceType === 'caption' ? clip.text || clip.name : clip.name}
           </span>
-          <span className="flex items-center gap-1.5 text-[10px] font-[500] tabular-nums text-white/62">
+          <span className="flex items-center gap-1.5 text-[10px] font-[500] tabular-nums text-ink/62">
             {clip.sourceType === 'image' ? (
               <ImageIcon className="size-3" />
             ) : clip.sourceType === 'video' ? (

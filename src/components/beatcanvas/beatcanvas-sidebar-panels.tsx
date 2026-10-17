@@ -96,7 +96,7 @@ export function HistoryPanel({
               key={audio.id}
               type="button"
               onClick={() => onSelectAsset({ ...audio, mediaType: 'audio' })}
-              className="group flex aspect-square flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] text-white/50 transition hover:border-[var(--beat-graph)] hover:text-white"
+              className="group flex aspect-square flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-ink/[0.08] bg-ink/[0.04] text-ink/50 transition hover:border-[var(--beat-graph)] hover:text-ink"
               title={audio.filename || t('sidebar.recentAudioAlt')}
             >
               <AudioLines className="size-5 text-[var(--beat-graph)]" />
@@ -141,7 +141,7 @@ function AssetThumbnail({
     <button
       type="button"
       onClick={onClick}
-      className="group relative aspect-square overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] transition-all duration-200 hover:scale-[1.04] hover:border-[var(--beat-graph)] hover:shadow-[0_6px_18px_rgba(0,0,0,0.35)] active:scale-[0.98]"
+      className="group relative aspect-square overflow-hidden rounded-lg border border-ink/[0.08] bg-ink/[0.04] transition-all duration-200 hover:scale-[1.04] hover:border-[var(--beat-graph)] hover:shadow-[0_6px_18px_rgba(0,0,0,0.35)] active:scale-[0.98]"
     >
       {isVideo ? (
         <video

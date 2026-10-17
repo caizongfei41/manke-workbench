@@ -67,6 +67,18 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang={getLocale()} suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/*
+          Resolve the theme before the first paint. Without this the document
+          renders with the default (dark) palette and visibly flashes when the
+          stored preference is applied on hydration. Runs inline and blocks, so
+          it must stay tiny and dependency-free.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var k='manke-theme';var s=localStorage.getItem(k)||'system';var d=s==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):s;document.documentElement.dataset.theme=d;document.documentElement.style.colorScheme=d;}catch(e){document.documentElement.dataset.theme='dark';}})();",
+          }}
+        />
       </head>
       <body className="font-sans antialiased">
         {children}

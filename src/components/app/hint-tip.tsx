@@ -103,7 +103,7 @@ export function HintTip({
                     ? 'translate(-50%, -100%)'
                     : 'translate(-50%, 0)',
               }}
-              className="pointer-events-none z-[9999] w-max max-w-[280px] rounded-[10px] border border-white/12 bg-[#15161a] px-3 py-2 text-left shadow-[0_18px_48px_rgba(0,0,0,0.6)]"
+              className="pointer-events-none z-[9999] w-max max-w-[280px] rounded-[10px] border border-ink/12 bg-[var(--beat-surface-2)] px-3 py-2 text-left shadow-[0_18px_48px_rgba(0,0,0,0.6)]"
             >
               <span className="block text-[12px] font-medium leading-5 text-[var(--beat-text-1)]">
                 {label}

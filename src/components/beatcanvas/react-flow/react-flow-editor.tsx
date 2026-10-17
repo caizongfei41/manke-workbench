@@ -1,3 +1,4 @@
+import { useTheme } from '@/components/app/theme-toggle';
 import {
   Background,
   BackgroundVariant,
@@ -113,6 +114,10 @@ function BeatCanvasReactFlowCanvas({
   const nodesRef = useRef<BeatCanvasFlowNode[]>([]);
   const edgesRef = useRef<BeatCanvasFlowEdge[]>([]);
   const viewportRef = useRef<Viewport>(DEFAULT_VIEWPORT);
+  // React Flow paints its own dot grid on a canvas layer, so CSS tokens do not
+  // reach it — the colorMode prop decides. Follow the document theme.
+  const { resolved: themeResolved } = useTheme();
+  const flowColorMode = themeResolved;
   const zoomStepsRef = useRef(DEFAULT_ZOOM_STEPS);
   const mountedRef = useRef(false);
   const lastDeleteCheckpointAtRef = useRef(0);
@@ -837,7 +842,7 @@ function BeatCanvasReactFlowCanvas({
           deleteKeyCode={['Backspace', 'Delete']}
           elevateNodesOnSelect
           proOptions={{ hideAttribution: true }}
-          colorMode="dark"
+          colorMode={flowColorMode}
         >
           <Background
             id="beatdesign-minor-dots"

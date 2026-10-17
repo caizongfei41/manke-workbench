@@ -48,7 +48,7 @@ export function ConfirmDialog({
         showCloseButton={false}
         className={
           variant === 'beat'
-            ? 'rounded-[22px] border border-white/10 bg-[#111214] p-6 text-[#f6f6f4] ring-0 shadow-[0_34px_110px_rgba(0,0,0,0.62)] sm:max-w-[420px] [&_[data-slot=dialog-close]]:text-white/45'
+            ? 'rounded-[22px] border border-ink/10 bg-[var(--beat-surface)] p-6 text-[var(--beat-text-1)] ring-0 shadow-[0_34px_110px_rgba(0,0,0,0.62)] sm:max-w-[420px] [&_[data-slot=dialog-close]]:text-ink/45'
             : 'sm:max-w-[420px]'
         }
       >
@@ -56,7 +56,7 @@ export function ConfirmDialog({
           <DialogTitle
             className={
               variant === 'beat'
-                ? 'beat-product-display text-[17px] font-semibold tracking-[-0.02em] text-white'
+                ? 'beat-product-display text-[17px] font-semibold tracking-[-0.02em] text-ink'
                 : 'text-[15px] font-semibold text-foreground'
             }
           >
@@ -66,7 +66,7 @@ export function ConfirmDialog({
             <DialogDescription
               className={
                 variant === 'beat'
-                  ? 'text-[13px] leading-6 text-white/48'
+                  ? 'text-[13px] leading-6 text-ink/48'
                   : 'text-[13px] leading-6'
               }
             >
@@ -89,7 +89,7 @@ export function ConfirmDialog({
             onClick={() => onOpenChange(false)}
             className={
               variant === 'beat'
-                ? 'h-10 rounded-[var(--beat-radius-sm)] border-white/12 bg-transparent px-4 text-[13px] font-medium text-white/70 hover:bg-white/[0.06] hover:text-white'
+                ? 'h-10 rounded-[var(--beat-radius-sm)] border-ink/12 bg-transparent px-4 text-[13px] font-medium text-ink/70 hover:bg-ink/[0.06] hover:text-ink'
                 : 'h-10 px-4'
             }
           >

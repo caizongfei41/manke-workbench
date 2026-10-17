@@ -63,8 +63,8 @@ export function LanguageSwitcher({
         onClick={() => setOpen((value) => !value)}
         className={
           workspace
-            ? 'inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/[0.09] bg-white/[0.035] px-2.5 text-xs font-medium text-[var(--beat-text-2)] transition hover:border-white/[0.16] hover:bg-white/[0.075] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)]/70'
-            : 'inline-flex h-8 items-center gap-1 rounded-full px-2 text-[13px] font-medium text-white/45 transition hover:bg-white/[0.06] hover:text-white'
+            ? 'inline-flex h-9 items-center gap-1.5 rounded-xl border border-ink/[0.09] bg-ink/[0.035] px-2.5 text-xs font-medium text-[var(--beat-text-2)] transition hover:border-ink/[0.16] hover:bg-ink/[0.075] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)]/70'
+            : 'inline-flex h-8 items-center gap-1 rounded-full px-2 text-[13px] font-medium text-ink/45 transition hover:bg-ink/[0.06] hover:text-ink'
         }
       >
         <Globe2 className="size-3.5" aria-hidden="true" />
@@ -79,7 +79,7 @@ export function LanguageSwitcher({
         <div
           role="menu"
           aria-label={switchLanguageLabel}
-          className="absolute right-0 top-full z-50 mt-2 min-w-[140px] overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#151517] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
+          className="absolute right-0 top-full z-50 mt-2 min-w-[140px] overflow-hidden rounded-[12px] border border-ink/[0.08] bg-[var(--beat-surface)] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
         >
           {supportedLocales.map((option) => (
             <button
@@ -88,10 +88,10 @@ export function LanguageSwitcher({
               role="menuitemradio"
               aria-checked={option === locale}
               onClick={() => switchLanguage(option)}
-              className={`flex w-full items-center justify-between rounded-[8px] px-2.5 py-2 text-left text-[13px] transition hover:bg-white/[0.06] ${
+              className={`flex w-full items-center justify-between rounded-[8px] px-2.5 py-2 text-left text-[13px] transition hover:bg-ink/[0.06] ${
                 option === locale
-                  ? 'text-white'
-                  : 'text-[var(--beat-text-2)] hover:text-white'
+                  ? 'text-ink'
+                  : 'text-[var(--beat-text-2)] hover:text-ink'
               }`}
             >
               {localeNames[option]}

@@ -115,9 +115,9 @@ export function StudioStartHere({
                   onPickIdea?.(idea.prompt);
                 }}
                 className={cn(
-                  'group absolute inset-0 overflow-hidden border-[6px] border-[#6b6b72]/85 bg-[#141416] object-cover shadow-[0_18px_48px_rgba(0,0,0,0.4)] transition-[transform,border-color,filter,box-shadow,opacity] duration-300 ease-out hover:z-20 hover:scale-[1.045] hover:border-white/65 hover:brightness-100 hover:opacity-100 focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]',
+                  'group absolute inset-0 overflow-hidden border-[6px] border-[#6b6b72]/85 bg-[var(--beat-surface)] object-cover shadow-[0_18px_48px_rgba(0,0,0,0.4)] transition-[transform,border-color,filter,box-shadow,opacity] duration-300 ease-out hover:z-20 hover:scale-[1.045] hover:border-ink/65 hover:brightness-100 hover:opacity-100 focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]',
                   isSelected &&
-                    'z-20 scale-[1.06] border-white/85 brightness-[1.14] shadow-[0_24px_62px_rgba(0,0,0,0.58),0_0_0_2px_rgba(255,255,255,0.12)]',
+                    'z-20 scale-[1.06] border-ink/85 brightness-[1.14] shadow-[0_24px_62px_rgba(0,0,0,0.58),0_0_0_2px_rgba(255,255,255,0.12)]',
                   hasSelection && !isSelected && 'brightness-[0.72] opacity-70'
                 )}
               >
@@ -136,29 +136,29 @@ export function StudioStartHere({
       </div>
 
       {/* Names under the stack: four thumbnails alone do not say what they are. */}
-      <ul className="mx-auto mt-4 flex max-w-[560px] flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] text-white/45">
+      <ul className="mx-auto mt-4 flex max-w-[560px] flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] text-ink/45">
         {STUDIO_START_HERE_IDEAS.map((idea) => (
           <li key={`label-${idea.src}`} className="flex items-center gap-1.5">
             <span
               className={cn(
                 'size-1.5 rounded-full',
-                selectedSrc === idea.src ? 'bg-[#38bdf8]' : 'bg-white/25'
+                selectedSrc === idea.src ? 'bg-[#38bdf8]' : 'bg-ink/25'
               )}
             />
-            <span className={cn(selectedSrc === idea.src && 'text-white/80')}>
+            <span className={cn(selectedSrc === idea.src && 'text-ink/80')}>
               {IDEA_NAMES[idea.key]()}
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[11px] text-white/30">
+      <p className="mt-2 text-[11px] text-ink/30">
         {m['studio.startHere.caption']()}
       </p>
 
-      <h1 className="mt-6 text-[1.7rem] font-semibold leading-none tracking-[-0.035em] text-white sm:text-[2.15rem]">
+      <h1 className="mt-6 text-[1.7rem] font-semibold leading-none tracking-[-0.035em] text-ink sm:text-[2.15rem]">
         Create Here
       </h1>
-      <p className="mx-auto mt-3 max-w-[390px] text-[13px] leading-6 text-white/35 sm:text-sm">
+      <p className="mx-auto mt-3 max-w-[390px] text-[13px] leading-6 text-ink/35 sm:text-sm">
         Imagine the scene. Shape the mood. Bring it to life.
       </p>
     </div>

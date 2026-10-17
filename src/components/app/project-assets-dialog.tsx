@@ -97,7 +97,7 @@ function AssetTile({
       onDragEnd={(event) => {
         if (event.dataTransfer.dropEffect === 'copy') onAdded();
       }}
-      className={`group relative overflow-hidden rounded-[14px] bg-white/[0.025] transition hover:-translate-y-0.5 ${
+      className={`group relative overflow-hidden rounded-[14px] bg-ink/[0.025] transition hover:-translate-y-0.5 ${
         mediaType === 'audio' ? 'h-[112px] w-[360px]' : 'h-[200px] w-fit'
       } ${
         canAddToCanvas ? 'cursor-grab active:cursor-grabbing' : ''
@@ -105,10 +105,10 @@ function AssetTile({
       title={asset.filename || addLabel}
     >
       {mediaType === 'audio' ? (
-        <div className="flex size-full flex-col justify-between border border-white/[0.08] px-4 py-3">
+        <div className="flex size-full flex-col justify-between border border-ink/[0.08] px-4 py-3">
           <div className="flex items-center gap-2">
             <AudioLines className="size-4 text-[var(--beat-graph)]" />
-            <p className="min-w-0 flex-1 truncate text-xs font-medium text-white/80">
+            <p className="min-w-0 flex-1 truncate text-xs font-medium text-ink/80">
               {asset.filename || asset.id}
             </p>
           </div>
@@ -136,7 +136,7 @@ function AssetTile({
         />
       )}
       {mediaType === 'video' ? (
-        <span className="pointer-events-none absolute bottom-2 left-2 grid size-7 place-items-center rounded-full border border-white/15 bg-black/65 text-white backdrop-blur">
+        <span className="pointer-events-none absolute bottom-2 left-2 grid size-7 place-items-center rounded-full border border-ink/15 bg-black/65 text-ink backdrop-blur">
           <Video className="size-3.5" />
         </span>
       ) : null}
@@ -152,7 +152,7 @@ function AssetTile({
             <button
               type="button"
               onClick={addToCanvas}
-              className="inline-flex h-7 items-center gap-1 rounded-full border border-white/15 bg-white/12 px-2.5 text-[10px] font-semibold text-white shadow-lg backdrop-blur-md"
+              className="inline-flex h-7 items-center gap-1 rounded-full border border-ink/15 bg-ink/12 px-2.5 text-[10px] font-semibold text-ink shadow-lg backdrop-blur-md"
               aria-label={`${addLabel}: ${asset.filename || asset.id}`}
             >
               <Plus className="size-3" />
@@ -171,7 +171,7 @@ function AssetTile({
                   .catch((error: Error) => toast.error(error.message))
                   .finally(() => setIsAddingToTimeline(false));
               }}
-              className="inline-flex h-7 items-center gap-1 rounded-full border border-white/15 bg-white/12 px-2.5 text-[10px] font-semibold text-white shadow-lg backdrop-blur-md disabled:cursor-wait disabled:opacity-55"
+              className="inline-flex h-7 items-center gap-1 rounded-full border border-ink/15 bg-ink/12 px-2.5 text-[10px] font-semibold text-ink shadow-lg backdrop-blur-md disabled:cursor-wait disabled:opacity-55"
               aria-label={`${addTimelineLabel}: ${asset.filename || asset.id}`}
             >
               {isAddingToTimeline ? (
@@ -201,7 +201,7 @@ function AssetTile({
           target="_blank"
           rel="noreferrer"
           onClick={(event) => event.stopPropagation()}
-          className="absolute right-2 top-2 z-10 grid size-7 place-items-center rounded-full border border-white/15 bg-black/65 text-white/75 opacity-0 backdrop-blur transition hover:text-white group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-2 top-2 z-10 grid size-7 place-items-center rounded-full border border-ink/15 bg-black/65 text-ink/75 opacity-0 backdrop-blur transition hover:text-ink group-hover:opacity-100 group-focus-within:opacity-100"
           aria-label={`${openLabel}: ${asset.filename || asset.id}`}
           title={openLabel}
         >
@@ -243,7 +243,7 @@ export function ProjectAssetsLibrary({
   return (
     <>
       {assetsQuery.isLoading ? (
-        <div className="flex min-h-52 items-center justify-center gap-2 text-[13px] text-white/45">
+        <div className="flex min-h-52 items-center justify-center gap-2 text-[13px] text-ink/45">
           <Loader2 className="size-4 animate-spin" />
           {t('loading')}
         </div>
@@ -257,10 +257,10 @@ export function ProjectAssetsLibrary({
 
       {!assetsQuery.isLoading && !assetsQuery.isError && total === 0 ? (
         <div className="flex min-h-52 flex-col items-center justify-center text-center">
-          <span className="grid size-12 place-items-center rounded-[15px] border border-white/[0.08] bg-white/[0.035] text-white/28">
+          <span className="grid size-12 place-items-center rounded-[15px] border border-ink/[0.08] bg-ink/[0.035] text-ink/28">
             <Images className="size-5" />
           </span>
-          <p className="mt-4 max-w-[420px] text-[14px] font-medium text-white/72">
+          <p className="mt-4 max-w-[420px] text-[14px] font-medium text-ink/72">
             {t('empty')}
           </p>
           {/* Without these the empty library is a dead end: it says "upload or
@@ -275,7 +275,7 @@ export function ProjectAssetsLibrary({
             </Link>
             <Link
               href={`/editor/${projectId}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--beat-radius-sm)] border border-white/[0.12] px-4 text-[12px] font-medium text-[var(--beat-text-2)] transition hover:border-white/25 hover:text-white"
+              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--beat-radius-sm)] border border-ink/[0.12] px-4 text-[12px] font-medium text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
             >
               {t('emptyGoEditor')}
             </Link>
@@ -377,7 +377,7 @@ export function ProjectAssetsDialog({
       <DialogTrigger
         aria-label={t('triggerLabel')}
         title={t('triggerLabel')}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-white/[0.09] bg-white/[0.035] px-2.5 text-[#a0a1a8] transition hover:border-white/[0.18] hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]/45 sm:px-3"
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-ink/[0.09] bg-ink/[0.035] px-2.5 text-[#a0a1a8] transition hover:border-ink/[0.18] hover:bg-ink/[0.06] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]/45 sm:px-3"
       >
         <Images className="size-[16px]" />
         <span className="hidden text-xs font-medium sm:inline">
@@ -387,16 +387,16 @@ export function ProjectAssetsDialog({
 
       <DialogContent
         showOverlay={false}
-        className="max-h-[82vh] overflow-hidden rounded-[28px] border border-white/10 bg-[#111214] p-0 text-[#f5f5f7] shadow-[0_34px_110px_rgba(0,0,0,0.62)] ring-0 sm:max-w-[760px] [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:text-white/45 [&_[data-slot=dialog-close]]:hover:bg-white/[0.07] [&_[data-slot=dialog-close]]:hover:text-white"
+        className="max-h-[82vh] overflow-hidden rounded-[28px] border border-ink/10 bg-[var(--beat-surface)] p-0 text-[#f5f5f7] shadow-[0_34px_110px_rgba(0,0,0,0.62)] ring-0 sm:max-w-[760px] [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:text-ink/45 [&_[data-slot=dialog-close]]:hover:bg-ink/[0.07] [&_[data-slot=dialog-close]]:hover:text-white"
       >
-        <DialogHeader className="border-b border-white/[0.08] px-6 pb-5 pt-6 text-left">
+        <DialogHeader className="border-b border-ink/[0.08] px-6 pb-5 pt-6 text-left">
           <span className="mb-2 grid size-10 place-items-center rounded-[13px] border border-[#38bdf8]/25 bg-[#38bdf8]/10 text-[#7dd3fc]">
             <FolderOpen className="size-[18px]" />
           </span>
-          <DialogTitle className="text-[21px] font-semibold tracking-[-0.03em] text-white">
+          <DialogTitle className="text-[21px] font-semibold tracking-[-0.03em] text-ink">
             {t('title')}
           </DialogTitle>
-          <DialogDescription className="max-w-xl text-[13px] leading-5 text-white/48">
+          <DialogDescription className="max-w-xl text-[13px] leading-5 text-ink/48">
             {t('description')}
           </DialogDescription>
           {canAddToCanvas ? (

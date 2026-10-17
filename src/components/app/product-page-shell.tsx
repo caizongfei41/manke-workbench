@@ -4,6 +4,7 @@ import { Images, LayoutPanelTop, Scissors, Server, Workflow } from 'lucide-react
 
 import { WorkspaceApiConfigDialog } from '@/components/app/workspace-api-config-dialog';
 import { LanguageSwitcher } from '@/components/app/language-switcher';
+import { ThemeToggle } from '@/components/app/theme-toggle';
 import { GitHubIcon } from '@/components/icons/github';
 import { Link } from '@/core/i18n/navigation';
 import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
@@ -99,7 +100,7 @@ export function ProductPageShell({
         }
       }}
       aria-label={t('header.workspaceNameLabel')}
-      className="h-9 w-full min-w-0 truncate rounded-md border-0 bg-transparent px-0 text-[15px] font-semibold text-[var(--beat-text-1)] outline-none placeholder:text-white/35 focus:ring-0"
+      className="h-9 w-full min-w-0 truncate rounded-md border-0 bg-transparent px-0 text-[15px] font-semibold text-[var(--beat-text-1)] outline-none placeholder:text-ink/35 focus:ring-0"
     />
   ) : (
     <span className="block truncate text-[15px] font-semibold text-[var(--beat-text-1)]">
@@ -109,19 +110,19 @@ export function ProductPageShell({
   const workspaceTabClassName = (isActive: boolean) =>
     `inline-flex h-7 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium transition sm:px-3 ${
       isActive
-        ? 'bg-white/[0.10] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
-        : 'text-[var(--beat-text-2)] hover:bg-white/[0.045] hover:text-white'
+        ? 'bg-ink/[0.10] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+        : 'text-[var(--beat-text-2)] hover:bg-ink/[0.045] hover:text-ink'
     }`;
 
   return (
     <div className="beat-product-shell flex h-screen min-h-screen flex-col overflow-hidden bg-[var(--beat-bg)] text-[var(--beat-text-1)]">
-      <header className="pointer-events-auto sticky top-0 z-40 shrink-0 border-b border-white/[0.07] bg-[var(--beat-surface)]/96 text-[var(--beat-text-1)] backdrop-blur-xl">
+      <header className="pointer-events-auto sticky top-0 z-40 shrink-0 border-b border-ink/[0.07] bg-[var(--beat-surface)]/96 text-[var(--beat-text-1)] backdrop-blur-xl">
           <div className="flex h-14 items-center gap-3 px-4 lg:px-5">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <Link
                 href="/"
                 aria-label={t('header.backHome')}
-                className="inline-flex size-9 items-center justify-center rounded-xl text-[var(--beat-text-1)] transition hover:bg-white/[0.06]"
+                className="inline-flex size-9 items-center justify-center rounded-xl text-[var(--beat-text-1)] transition hover:bg-ink/[0.06]"
               >
                 <img
                   src={appConfig.app_logo}
@@ -138,7 +139,7 @@ export function ProductPageShell({
             <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
               {projectId && workspaceMode ? (
                 <nav
-                  className="flex items-center rounded-full border border-white/[0.09] bg-white/[0.035] p-1"
+                  className="flex items-center rounded-full border border-ink/[0.09] bg-ink/[0.035] p-1"
                   aria-label={t('header.workspaceView')}
                 >
                   <Link
@@ -179,6 +180,7 @@ export function ProductPageShell({
                   </Link>
                 </nav>
               ) : null}
+              <ThemeToggle />
               <LanguageSwitcher variant="workspace" />
               <ServicesStatusEntry />
               <WorkspaceApiConfigDialog
@@ -190,7 +192,7 @@ export function ProductPageShell({
                 rel="noreferrer"
                 aria-label={t('header.githubRepository')}
                 title={t('header.githubRepository')}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.09] bg-white/[0.035] text-[var(--beat-text-2)] transition hover:border-white/[0.16] hover:bg-white/[0.075] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)]/70"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-ink/[0.09] bg-ink/[0.035] text-[var(--beat-text-2)] transition hover:border-ink/[0.16] hover:bg-ink/[0.075] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)]/70"
               >
                 <GitHubIcon className="size-[17px]" aria-hidden="true" />
               </a>
@@ -249,7 +251,7 @@ function ServicesStatusEntry() {
       href="/services"
       aria-label={t('header.servicesLabel')}
       title={t('header.servicesLabel')}
-      className="inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-white/[0.09] bg-white/[0.035] text-[var(--beat-text-2)] transition hover:border-white/[0.16] hover:bg-white/[0.075] hover:text-white"
+      className="inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-ink/[0.09] bg-ink/[0.035] text-[var(--beat-text-2)] transition hover:border-ink/[0.16] hover:bg-ink/[0.075] hover:text-ink"
     >
       <span className="relative inline-flex">
         <Server className="size-[17px]" aria-hidden="true" />

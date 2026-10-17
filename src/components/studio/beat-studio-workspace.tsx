@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { StudioComposer } from '@/components/studio/studio-composer';
@@ -99,15 +99,27 @@ export function BeatStudioWorkspace({
   const initialMedia: StudioMedia =
     initialTarget === 'analysis'
       ? 'analysis'
-      : initialTarget === 'video'
+      : initialTarget === 'audio'
+        ? 'audio'
+        : initialTarget === 'video'
         ? 'video'
         : 'image';
   const imageModels = useMemo(() => getStudioModels('image'), []);
   const videoModels = useMemo(() => getStudioModels('video'), []);
   const audioModels = useMemo(() => getStudioModels('audio'), []);
   const [draft, setDraft] = useState(() => {
-    const draftMedia = initialMedia === 'video' ? 'video' : 'image';
-    const models = draftMedia === 'video' ? videoModels : imageModels;
+    const draftMedia: CanvasCardMediaType =
+      initialMedia === 'audio'
+        ? 'audio'
+        : initialMedia === 'video'
+          ? 'video'
+          : 'image';
+    const models =
+      draftMedia === 'audio'
+        ? audioModels
+        : draftMedia === 'video'
+          ? videoModels
+          : imageModels;
     const model =
       findWorkspaceModelOption(models, initialModelId) ??
       getDefaultSelectableWorkspaceModel(
@@ -131,7 +143,15 @@ export function BeatStudioWorkspace({
     () => getDefaultMusicStyle()
   );
   const [audioRefs, setAudioRefs] = useState<string[]>([]);
-  const models = draft.type === 'video' ? videoModels : imageModels;
+  // Tracks whether the current prompt came from a lyric template/example, so
+  // switching away from music can clear it instead of leaving it behind.
+  const lyricsAutoInsertedRef = useRef(false);
+  const models =
+    draft.type === 'audio'
+      ? audioModels
+      : draft.type === 'video'
+        ? videoModels
+        : imageModels;
   const selectedModel =
     findWorkspaceModelOption(models, draft.modelId) ?? models[0] ?? null;
 
@@ -255,8 +275,8 @@ export function BeatStudioWorkspace({
 
   return (
     <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--beat-bg)] text-[var(--beat-text-1)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_112%,rgba(56,189,248,0.12),transparent_34%),linear-gradient(180deg,#08090a_0%,#0b0b0d_48%,#08090a_100%)]" />
-      <div className="pointer-events-none absolute inset-x-[8%] top-0 h-[62%] opacity-25 [background-image:radial-gradient(rgba(255,255,255,0.16)_0.75px,transparent_0.75px)] [background-size:18px_18px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[image:var(--beat-wash)]" />
+      <div className="pointer-events-none absolute inset-x-[8%] top-0 h-[62%] opacity-25 [background-image:radial-gradient(var(--beat-dot)_0.75px,transparent_0.75px)] [background-size:18px_18px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
 
       <div
         className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-8 sm:px-6"
@@ -298,7 +318,28 @@ export function BeatStudioWorkspace({
         imageModels={imageModels}
         videoModels={videoModels}
         audioModels={audioModels}
-        musicStyle={musicStyle}         onMusicStyleChange={setMusicStyle}         onInsertLyricsTemplate={() =>           setDraft((current) => ({ ...current, prompt: MUSIC_LYRICS_TEMPLATE }))         }         audioRefs={audioRefs}         onAudioFileSelect={(file) => {           void uploadLocalProjectAsset({ projectId, file })             .then((asset) => setAudioRefs((prev) => [...prev, asset.publicUrl]))             .catch((error: unknown) =>               setError(error instanceof Error ? error.message : 'Failed to upload audio')             );         }}         onRemoveAudio={(url) =>           setAudioRefs((prev) => prev.filter((item) => item !== url))         }
+        musicStyle={musicStyle}
+        onMusicStyleChange={setMusicStyle}
+        onInsertLyricsTemplate={() => {
+          lyricsAutoInsertedRef.current = true;
+          setDraft((current) => ({ ...current, prompt: MUSIC_LYRICS_TEMPLATE }));
+        }}
+        onInsertLyricsExample={(example) => {
+          lyricsAutoInsertedRef.current = true;
+          setDraft((current) => ({ ...current, prompt: example.text }));
+          setMusicStyle((current) => ({ ...current, ...example.styleHint }));
+        }}
+        audioRefs={audioRefs}
+        onAudioFileSelect={(file) => {
+          void uploadLocalProjectAsset({ projectId, file })
+            .then((asset) => setAudioRefs((prev) => [...prev, asset.publicUrl]))
+            .catch((error: unknown) =>
+              setError(error instanceof Error ? error.message : 'Failed to upload audio')
+            );
+        }}
+        onRemoveAudio={(url) =>
+          setAudioRefs((prev) => prev.filter((item) => item !== url))
+        }
         isBusy={generation.isPending}
         promptCharacterLimit={
           media === 'analysis'
@@ -311,7 +352,11 @@ export function BeatStudioWorkspace({
         onDraftChange={(next) => {
           if (next.type !== draft.type || next.modelId !== draft.modelId) {
             const nextModels =
-              next.type === 'video' ? videoModels : imageModels;
+              next.type === 'audio'
+                ? audioModels
+                : next.type === 'video'
+                  ? videoModels
+                  : imageModels;
             const nextModel =
               findWorkspaceModelOption(nextModels, next.modelId) ??
               nextModels[0] ??
@@ -331,14 +376,28 @@ export function BeatStudioWorkspace({
         onMediaChange={(nextMedia) => {
           setMedia(nextMedia);
           setReferenceUrls([]);
+          // Leaving music mode: drop lyrics that were auto-inserted, otherwise the
+          // template text stays in the image / video prompt box.
+          if (nextMedia !== 'audio') {
+            setAudioRefs([]);
+            if (lyricsAutoInsertedRef.current) {
+              setDraft((current) => ({ ...current, prompt: '' }));
+              lyricsAutoInsertedRef.current = false;
+            }
+          }
           if (nextMedia === 'analysis') return;
-          const nextType = nextMedia === 'video' ? 'video' : 'image';
-          const nextModels = nextType === 'video' ? videoModels : imageModels;
+          // nextMedia is already the card type: image / video / audio.
+          const nextModels =
+            nextMedia === 'audio'
+              ? audioModels
+              : nextMedia === 'video'
+                ? videoModels
+                : imageModels;
           const nextModel = nextModels[0] ?? null;
           if (nextModel) {
             setDraft((current) =>
               applyStudioDraftModel({
-                draft: { ...current, type: nextType },
+                draft: { ...current, type: nextMedia },
                 model: nextModel,
               })
             );

@@ -14,7 +14,7 @@ import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
 import { cn } from '@/lib/utils';
 
 const chipClassName =
-  'inline-flex h-6 items-center rounded-full border border-white/[0.09] bg-white/[0.035] px-2 text-[11px] font-medium text-[var(--beat-text-1)]';
+  'inline-flex h-6 items-center rounded-full border border-ink/[0.09] bg-ink/[0.035] px-2 text-[11px] font-medium text-[var(--beat-text-1)]';
 
 function StudioHistoryItem({
   item,
@@ -121,7 +121,7 @@ function StudioHistoryItem({
                       </span>
                     ) : null}
                   </div>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.08]">
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-ink/[0.08]">
                     <div
                       className="h-full rounded-full bg-[var(--beat-text-1)]/70 transition-[width] duration-500 ease-out"
                       style={{ width: `${barPercent}%` }}
@@ -196,14 +196,14 @@ export function StudioGenerationFeed({
             <DialogTitle className="sr-only">
               {selected.modelName || t('result')}
             </DialogTitle>
-            <DialogClose className="absolute right-2 top-2 z-30 inline-flex size-10 items-center justify-center rounded-full border border-white/[0.09] bg-black/45 text-white/88 backdrop-blur-xl">
+            <DialogClose className="absolute right-2 top-2 z-30 inline-flex size-10 items-center justify-center rounded-full border border-ink/[0.09] bg-black/45 text-ink/88 backdrop-blur-xl">
               <X className="size-5" />
               <span className="sr-only">{t('closePreview')}</span>
             </DialogClose>
             <div className="grid h-full min-h-0 xl:grid-cols-[minmax(0,1.12fr)_420px]">
               <div className="relative flex items-center justify-center overflow-hidden bg-black/40 px-6 py-6">
                 {selected.mediaType === 'analysis' ? (
-                  <div className="h-full w-full overflow-y-auto rounded-[var(--beat-radius-sm)] border border-white/[0.08] bg-white/[0.025] p-6 sm:p-8">
+                  <div className="h-full w-full overflow-y-auto rounded-[var(--beat-radius-sm)] border border-ink/[0.08] bg-ink/[0.025] p-6 sm:p-8">
                     <p className="mb-4 text-xs font-medium uppercase tracking-[0.14em] text-[var(--beat-text-3)]">
                       {t('analysisResult')}
                     </p>
@@ -225,8 +225,8 @@ export function StudioGenerationFeed({
                   />
                 ) : null}
               </div>
-              <div className="flex min-h-0 flex-col border-t border-white/[0.08] xl:border-l xl:border-t-0">
-                <div className="flex flex-wrap items-center gap-1.5 border-b border-white/[0.08] px-6 py-5">
+              <div className="flex min-h-0 flex-col border-t border-ink/[0.08] xl:border-l xl:border-t-0">
+                <div className="flex flex-wrap items-center gap-1.5 border-b border-ink/[0.08] px-6 py-5">
                   <span className={chipClassName}>
                     {selected.mediaType === 'analysis'
                       ? t('analysis')
@@ -246,7 +246,7 @@ export function StudioGenerationFeed({
                   ) : null}
                 </div>
                 <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
-                  <div className="flex h-[min(260px,34vh)] min-h-[180px] flex-col rounded-[var(--beat-radius-sm)] border border-white/[0.09] bg-white/[0.03] p-4">
+                  <div className="flex h-[min(260px,34vh)] min-h-[180px] flex-col rounded-[var(--beat-radius-sm)] border border-ink/[0.09] bg-ink/[0.03] p-4">
                     <p className="shrink-0 text-[13px] text-[var(--beat-text-3)]">
                       {t('prompt')}
                     </p>
@@ -256,8 +256,8 @@ export function StudioGenerationFeed({
                       </p>
                     </div>
                   </div>
-                  <div className="rounded-[var(--beat-radius-sm)] border border-white/[0.09] bg-white/[0.03] px-4 py-1">
-                    <div className="flex items-start justify-between gap-6 border-b border-white/[0.08] py-3">
+                  <div className="rounded-[var(--beat-radius-sm)] border border-ink/[0.09] bg-ink/[0.03] px-4 py-1">
+                    <div className="flex items-start justify-between gap-6 border-b border-ink/[0.08] py-3">
                       <span className="text-sm text-[var(--beat-text-3)]">
                         {t('model')}
                       </span>
@@ -276,7 +276,7 @@ export function StudioGenerationFeed({
                   </div>
                   {selected.referenceImages.length > 0 ||
                   selected.referenceVideos.length > 0 ? (
-                    <div className="rounded-[var(--beat-radius-sm)] border border-white/[0.09] bg-white/[0.03] p-4">
+                    <div className="rounded-[var(--beat-radius-sm)] border border-ink/[0.09] bg-ink/[0.03] p-4">
                       <p className="text-[13px] text-[var(--beat-text-3)]">
                         {t('references')}
                       </p>

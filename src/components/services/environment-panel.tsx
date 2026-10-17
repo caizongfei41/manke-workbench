@@ -75,7 +75,7 @@ export function EnvironmentPanel() {
   const ready = Boolean(data?.ok);
 
   return (
-    <section className="mt-6 rounded-[var(--beat-radius)] border border-white/[0.08] bg-white/[0.02] p-5">
+    <section className="mt-6 rounded-[var(--beat-radius)] border border-ink/[0.08] bg-ink/[0.02] p-5">
       <div className="flex flex-wrap items-center gap-3">
         <ShieldCheck className="size-4 text-[var(--beat-text-2)]" />
         <h2 className="text-sm font-semibold">{m['services.envTitle']()}</h2>
@@ -100,7 +100,7 @@ export function EnvironmentPanel() {
           type="button"
           onClick={() => void run()}
           disabled={loading}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-white/[0.09] bg-white/[0.035] px-3 py-1.5 text-xs text-[var(--beat-text-2)] transition hover:bg-white/[0.075] hover:text-white disabled:opacity-50"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-ink/[0.09] bg-ink/[0.035] px-3 py-1.5 text-xs text-[var(--beat-text-2)] transition hover:bg-ink/[0.075] hover:text-ink disabled:opacity-50"
         >
           {loading ? (
             <Loader2 className="size-3.5 animate-spin" />

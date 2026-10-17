@@ -2,10 +2,10 @@
 
 > 由 `scripts/audit-template-deps.mjs` 生成。模板或环境变化后重新跑一次即可更新。
 
-- 模板：**19** 个
-- 核心之外的自定义节点类：**42** 个
-- 需要的自定义节点包：**11** 个
-- 模型 / 资源文件：**26** 个
+- 模板：**21** 个
+- 核心之外的自定义节点类：**57** 个
+- 需要的自定义节点包：**12** 个
+- 模型 / 资源文件：**28** 个
 
 ## 一、需要安装的 ComfyUI 自定义节点包
 
@@ -24,10 +24,12 @@
 | `ComfyUI-VideoHelperSuite` | `VHS_LoadVideo`, `VHS_VideoCombine` |
 | `ComfyUI_MiniMaxH3_Director` | `MiniMaxH3Director`, `MiniMaxH3DirectorFaceRefine`, `MiniMaxH3DirectorRefine` |
 | `Comfyui-Qwen-Image-2.1-BlockCache-T8` | `QwenImage21BlockCacheT8` |
+| `XB_ToolBox` | `XB_AudioSlicerV1`, `XB_SageAttentionAccelerator`, `XB_YuE2CoverPrep`, `XB_YuE2Lyrics`, `XB_YuE2ScoreWorkbench`, `XB_YuE2StylePrompt` |
 
 ### 随 ComfyUI 自带（无需单独安装）
 
-- (comfy_extras)：`BasicScheduler`, `BlockSparseAttention`, `CFGGuider`, `ComfySwitchNode`, `CreateVideo`, `EmptyFlux2LatentImage`, `ImageScaleToTotalPixels`, `JoinImageWithAlpha`, `KSamplerSelect`, `ModelAttentionBackend`, `QwenImage21Cache`, `RandomNoise`, `ReferenceLatent`, `ResolutionSelector`, `SamplerCustomAdvanced`, `SaveAudioMP3`, `SaveImageAdvanced`, `SaveVideo`, `TextEncodeQwenImage21`
+- (comfy_extras)：`AudioEncoderLoader`, `BasicScheduler`, `BlockSparseAttention`, `CFGGuider`, `ComfySwitchNode`, `CreateVideo`, `EmptyFlux2LatentImage`, `EmptyYuE2LatentAudio`, `ImageScaleToTotalPixels`, `JoinImageWithAlpha`, `KSamplerSelect`, `ModelAttentionBackend`, `PreviewAny`, `QwenImage21Cache`, `RandomNoise`, `ReferenceLatent`, `ResolutionSelector`, `SamplerCustomAdvanced`, `SaveAudioAdvanced`, `SaveAudioMP3`, `SaveImageAdvanced`, `SaveVideo`, `SheetSage2AudioToABC`, `TextEncodeQwenImage21`, `VAEDecodeAudio`, `YuE2GenerateABC`, `YuE2GenerateMusic`
+- (core)：`ConditioningZeroOut`
 
 ## 二、需要存在的模型 / 资源文件
 
@@ -47,6 +49,7 @@
 | `MiniMax\Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 1 | models/checkpoints 或 diffusion_models |
 | `Minimax H3真实电影质感V0.1.safetensors` | 1 | models/checkpoints 或 diffusion_models |
 | `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` | 1 | models（TTS 权重目录） |
+| `YuE2\yue2_3b_bf16.safetensors` | 2 | models/checkpoints 或 diffusion_models |
 | `minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors` | 3 | models/LORAS |
 | `minimax_h3_audio_vae_fp32.safetensors` | 6 | models/VAE |
 | `minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors` | 1 | models/LORAS |
@@ -61,6 +64,7 @@
 | `qwen3vl_32b_minimax_h3_int8_convrot.safetensors` | 6 | models/checkpoints 或 diffusion_models |
 | `qwen3vl_8b_int8_convrot.safetensors` | 6 | models/checkpoints 或 diffusion_models |
 | `qwen_image_2.1_vae_bf16.safetensors` | 6 | models/VAE |
+| `古巨基 - 情深深雨濛濛.mp3` | 1 | models/checkpoints 或 diffusion_models |
 
 ## 三、按模板拆分
 
@@ -176,4 +180,16 @@
 - 节点 3 个（自定义 3）
 - 依赖节点包：`(comfy_extras)`、`ComfyUI-QWEN3_TTS`
 - 资源文件：`Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice`
+
+### 小枫-yue2-歌曲创作.json
+
+- 节点 13 个（自定义 11）
+- 依赖节点包：`(comfy_extras)`、`(core)`、`XB_ToolBox`
+- 资源文件：`YuE2\yue2_3b_bf16.safetensors`
+
+### 小枫-yue2-歌曲翻唱.json
+
+- 节点 14 个（自定义 12）
+- 依赖节点包：`(comfy_extras)`、`(core)`、`XB_ToolBox`
+- 资源文件：`YuE2\yue2_3b_bf16.safetensors`、`古巨基 - 情深深雨濛濛.mp3`
 

@@ -407,7 +407,7 @@ export function CardConnectorOverlay() {
       {createMenu && (
         <div
           ref={menuRef}
-          className="pointer-events-auto absolute overflow-hidden rounded-[var(--beat-radius-sm)] border border-white/10 bg-[var(--beat-surface-2)]/95 p-1.5 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+          className="pointer-events-auto absolute overflow-hidden rounded-[var(--beat-radius-sm)] border border-ink/10 bg-[var(--beat-surface-2)]/95 p-1.5 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl"
           style={{
             left: menuLeft,
             top: menuTop,
@@ -428,7 +428,7 @@ export function CardConnectorOverlay() {
             <button
               type="button"
               aria-label={labels.createVideoGenerationCardLabel}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[12px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-white/[0.06]"
+              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[12px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-ink/[0.06]"
               onClick={() => handleCreateFromMenu('video')}
             >
               <Video aria-hidden="true" size={15} strokeWidth={2} />
@@ -437,7 +437,7 @@ export function CardConnectorOverlay() {
             <button
               type="button"
               aria-label={labels.uploadImageLabel}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[12px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-white/[0.06]"
+              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[12px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-ink/[0.06]"
               onClick={() => {
                 onUploadImage();
                 setCreateMenu(null);

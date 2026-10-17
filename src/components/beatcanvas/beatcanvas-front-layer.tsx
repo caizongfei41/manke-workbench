@@ -836,8 +836,8 @@ export function BeatCanvasFrontLayer() {
             className={cn(
               'inline-flex size-8 items-center justify-center rounded-xl transition duration-150',
               activeCanvasTool === 'select'
-                ? 'bg-white/[0.10] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
-                : 'text-[var(--beat-text-2)] hover:bg-white/[0.06] hover:text-white'
+                ? 'bg-ink/[0.10] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                : 'text-[var(--beat-text-2)] hover:bg-ink/[0.06] hover:text-ink'
             )}
             onClick={() => {
               setActiveCanvasTool('select');
@@ -853,8 +853,8 @@ export function BeatCanvasFrontLayer() {
             className={cn(
               'inline-flex size-8 items-center justify-center rounded-xl transition duration-150',
               activeCanvasTool === 'pan'
-                ? 'bg-white/[0.10] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
-                : 'text-[var(--beat-text-2)] hover:bg-white/[0.06] hover:text-white'
+                ? 'bg-ink/[0.10] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                : 'text-[var(--beat-text-2)] hover:bg-ink/[0.06] hover:text-ink'
             )}
             onClick={() => {
               setActiveCanvasTool('pan');
@@ -865,10 +865,10 @@ export function BeatCanvasFrontLayer() {
           >
             <Hand className="size-3.5" />
           </button>
-          <div className="mx-1 h-5 w-px bg-white/10" />
+          <div className="mx-1 h-5 w-px bg-ink/10" />
           <button
             type="button"
-            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-white/[0.06] hover:text-white"
+            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-ink/[0.06] hover:text-ink"
             onClick={() => {
               if (typeof editor.zoomOut === 'function') {
                 editor.zoomOut(undefined, { animation: { duration: 180 } });
@@ -880,7 +880,7 @@ export function BeatCanvasFrontLayer() {
           </button>
           <button
             type="button"
-            className="inline-flex h-8 min-w-[54px] items-center justify-center rounded-xl bg-white/[0.05] px-2 text-[12px] font-medium tabular-nums text-[var(--beat-text-2)] transition duration-150 hover:text-white"
+            className="inline-flex h-8 min-w-[54px] items-center justify-center rounded-xl bg-ink/[0.05] px-2 text-[12px] font-medium tabular-nums text-[var(--beat-text-2)] transition duration-150 hover:text-ink"
             onClick={() => {
               if (typeof editor.resetZoom === 'function') {
                 editor.resetZoom(undefined, { animation: { duration: 180 } });
@@ -891,7 +891,7 @@ export function BeatCanvasFrontLayer() {
           </button>
           <button
             type="button"
-            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-white/[0.06] hover:text-white"
+            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-ink/[0.06] hover:text-ink"
             onClick={() => {
               if (typeof editor.zoomIn === 'function') {
                 editor.zoomIn(undefined, { animation: { duration: 180 } });
@@ -903,7 +903,7 @@ export function BeatCanvasFrontLayer() {
           </button>
           <button
             type="button"
-            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-white/[0.06] hover:text-white"
+            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-ink/[0.06] hover:text-ink"
             onClick={() => editor.fitView({ animation: { duration: 220 } })}
             aria-label={labels.fitViewLabel}
           >
@@ -912,7 +912,7 @@ export function BeatCanvasFrontLayer() {
           <button
             type="button"
             className={cn(
-              'inline-flex size-8 items-center justify-center rounded-xl transition duration-150 hover:bg-white/[0.06] hover:text-white',
+              'inline-flex size-8 items-center justify-center rounded-xl transition duration-150 hover:bg-ink/[0.06] hover:text-ink',
               edgesVisible
                 ? 'text-[var(--beat-text-2)]'
                 : 'bg-[var(--beat-graph-soft)] text-[var(--beat-graph)]'
@@ -932,7 +932,7 @@ export function BeatCanvasFrontLayer() {
           <button
             type="button"
             className={cn(
-              'inline-flex size-8 items-center justify-center rounded-xl transition duration-150 hover:bg-white/[0.06] hover:text-white',
+              'inline-flex size-8 items-center justify-center rounded-xl transition duration-150 hover:bg-ink/[0.06] hover:text-ink',
               isSnapToGridActive
                 ? 'bg-[var(--beat-graph-soft)] text-[var(--beat-graph)]'
                 : 'text-[var(--beat-text-2)]'
@@ -947,12 +947,12 @@ export function BeatCanvasFrontLayer() {
           >
             <Magnet className="size-3.5" />
           </button>
-          <div className="mx-1 h-5 w-px bg-white/10" />
+          <div className="mx-1 h-5 w-px bg-ink/10" />
           <button
             type="button"
             disabled={!canUndoCanvas}
             onClick={onUndoCanvas}
-            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-white/[0.06] hover:text-white disabled:pointer-events-none disabled:text-white/25"
+            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-ink/[0.06] hover:text-ink disabled:pointer-events-none disabled:text-ink/25"
             aria-label={labels.undoLabel}
           >
             <Undo2 className="size-3.5" />
@@ -961,7 +961,7 @@ export function BeatCanvasFrontLayer() {
             type="button"
             disabled={!canRedoCanvas}
             onClick={onRedoCanvas}
-            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-white/[0.06] hover:text-white disabled:pointer-events-none disabled:text-white/25"
+            className="inline-flex size-8 items-center justify-center rounded-xl text-[var(--beat-text-2)] transition duration-150 hover:bg-ink/[0.06] hover:text-ink disabled:pointer-events-none disabled:text-ink/25"
             aria-label={labels.redoLabel}
           >
             <Redo2 className="size-3.5" />

@@ -60,12 +60,12 @@ export function BeatCanvasAnalysisDepthPicker({
         ) : (
           <ScanSearch className="size-3.5 shrink-0 text-[var(--beat-graph)]" />
         )}
-        <span className="line-clamp-1 text-[12px] font-semibold text-white">
+        <span className="line-clamp-1 text-[12px] font-semibold text-ink">
           {label}
         </span>
         <ChevronDown
           className={cn(
-            'size-3.5 shrink-0 text-white/45 transition-transform duration-200',
+            'size-3.5 shrink-0 text-ink/45 transition-transform duration-200',
             isOpen && 'rotate-180'
           )}
         />
@@ -108,7 +108,7 @@ export function BeatCanvasAnalysisDepthPicker({
                       <img src={optionIcon} alt="" className="max-h-3.5 max-w-3.5 object-contain" />
                     </span>
                   ) : (
-                    <ScanSearch className="size-3.5 shrink-0 text-white/60" />
+                    <ScanSearch className="size-3.5 shrink-0 text-ink/60" />
                   )}
                   <span className="flex-1 text-left text-[12px] font-medium text-[var(--beat-text-1)]">
                     {optionLabel}

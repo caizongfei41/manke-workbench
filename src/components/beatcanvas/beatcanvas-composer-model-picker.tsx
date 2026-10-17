@@ -92,7 +92,7 @@ export function BeatCanvasComposerModelPicker({
             />
           </span>
         ) : (
-          <Sparkles className="size-3.5 shrink-0 text-white/50" />
+          <Sparkles className="size-3.5 shrink-0 text-ink/50" />
         )}
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[12px] font-medium text-[var(--beat-text-1)]">
@@ -160,8 +160,8 @@ export function BeatCanvasComposerModelPicker({
               className={cn(
                 'block line-clamp-1 min-w-0',
                 isBatchTone
-                  ? 'text-[18px] font-semibold tracking-[-0.04em] text-white'
-                  : 'text-[12px] font-semibold text-white'
+                  ? 'text-[18px] font-semibold tracking-[-0.04em] text-ink'
+                  : 'text-[12px] font-semibold text-ink'
               )}
             >
               {selectedModelLabel}
@@ -171,7 +171,7 @@ export function BeatCanvasComposerModelPicker({
         <ChevronDown
           className={cn(
             'pointer-events-none size-3.5 shrink-0 transition-transform duration-200',
-            isBatchTone ? 'text-[var(--beat-text-2)]' : 'text-white/45',
+            isBatchTone ? 'text-[var(--beat-text-2)]' : 'text-ink/45',
             isOpen ? 'rotate-180' : ''
           )}
         />
@@ -197,7 +197,7 @@ export function BeatCanvasComposerModelPicker({
                     event.stopPropagation();
                     setPaidOpenOverride(!paidOpen);
                   }}
-                  className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[11px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-white/5"
+                  className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[11px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-ink/5"
                 >
                   <ChevronDown
                     className={cn(
@@ -208,7 +208,7 @@ export function BeatCanvasComposerModelPicker({
                   <span className="min-w-0 flex-1 truncate">
                     {labels.paidModelsLabel}
                   </span>
-                  <span className="shrink-0 rounded-[4px] bg-white/10 px-1.5 py-0.5 text-[10px] tabular-nums text-[var(--beat-text-2)]">
+                  <span className="shrink-0 rounded-[4px] bg-ink/10 px-1.5 py-0.5 text-[10px] tabular-nums text-[var(--beat-text-2)]">
                     {paidModels.length}
                   </span>
                 </button>

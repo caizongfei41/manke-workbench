@@ -143,7 +143,7 @@ export function WorkspaceSelect({
           {selected?.leading ?? leadingIcon}
           <span className="min-w-0 truncate text-left">{selected?.label}</span>
           <ChevronDown
-            className={`size-3.5 shrink-0 text-white/40 transition-transform ${open ? 'rotate-180' : ''}`}
+            className={`size-3.5 shrink-0 text-ink/40 transition-transform ${open ? 'rotate-180' : ''}`}
           />
         </button>
       </HintTip>
@@ -158,7 +158,7 @@ export function WorkspaceSelect({
                 bottom: menuPosition.bottom,
                 minWidth: menuPosition.minWidth,
               }}
-              className="beat-pop-in z-[70] max-h-[264px] origin-bottom overflow-y-auto rounded-[var(--beat-radius-sm)] border border-white/10 bg-[var(--beat-surface-2)] p-1.5 text-[var(--beat-text-1)] shadow-[0_24px_64px_rgba(0,0,0,0.55),0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.03)]"
+              className="beat-pop-in z-[70] max-h-[264px] origin-bottom overflow-y-auto rounded-[var(--beat-radius-sm)] border border-ink/10 bg-[var(--beat-surface-2)] p-1.5 text-[var(--beat-text-1)] shadow-[0_24px_64px_rgba(0,0,0,0.55),0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.03)]"
               role="listbox"
               aria-label={ariaLabel}
             >
@@ -197,7 +197,7 @@ export function WorkspaceSelect({
                   <button
                     type="button"
                     onClick={() => setGroupOpenOverride(!groupOpen)}
-                    className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[11px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-white/5"
+                    className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[11px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-ink/5"
                   >
                     <ChevronDown
                       className={`size-3 shrink-0 transition-transform duration-200 ${groupOpen ? 'rotate-0' : '-rotate-90'}`}
@@ -205,7 +205,7 @@ export function WorkspaceSelect({
                     <span className="min-w-0 flex-1 truncate">
                       {groupedOptions[0]?.groupLabel ?? 'Group'}
                     </span>
-                    <span className="shrink-0 rounded-[4px] bg-white/10 px-1.5 py-0.5 text-[10px] tabular-nums text-[var(--beat-text-2)]">
+                    <span className="shrink-0 rounded-[4px] bg-ink/10 px-1.5 py-0.5 text-[10px] tabular-nums text-[var(--beat-text-2)]">
                       {groupedOptions.length}
                     </span>
                   </button>
