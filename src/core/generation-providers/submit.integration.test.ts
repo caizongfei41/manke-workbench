@@ -1,0 +1,66 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { after, test } from 'node:test';
+
+const directory = await mkdtemp(join(tmpdir(), 'beatdesign-generation-test-'));
+process.env.BEATDESIGN_DATA_DIR = directory;
+// Invoke drizzle-kit through its local bin instead of the `pnpm` on PATH:
+// pnpm is shimmed per platform and is not directly spawnable on Windows.
+execFileSync(
+  process.execPath,
+  [join('node_modules', 'drizzle-kit', 'bin.cjs'), 'push', '--force'],
+  { env: process.env, stdio: 'pipe' }
+);
+// The suite keeps its own SQLite connections open for the lifetime of the
+// process, and Windows refuses to unlink a locked file. The temporary directory
+// is disposable, so a failed cleanup must not fail the suite: retry briefly,
+// then leave it to the OS temp cleaner.
+after(async () => {
+  try {
+    await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  } catch (error) {
+    console.warn(
+      `[test] could not remove ${directory} (${(error as NodeJS.ErrnoException).code}); leaving it for the OS temp cleaner.`
+    );
+  }
+});
+
+const { createProject } = await import('@/core/projects/projects');
+const { createAssetFirstGenerationIntent, preflightAssetFirstGeneration, submitAssetFirstGeneration } = await import('./submit');
+const { getActiveGenerationProvider } = await import('./registry');
+const { BaseAdapter } = await import('@/core/adapters/base-adapter');
+const provider = getActiveGenerationProvider();
+const originalConfigured = provider.assertConfigured;
+const originalAdapter = provider.createAdapter;
+const inputs: unknown[] = [];
+provider.assertConfigured = async () => {};
+class FixtureAdapter extends BaseAdapter {
+  async createGeneration(input: unknown) {
+    inputs.push(input);
+    return { status: 'failed' as const, error: 'Fixture completed without a remote request.' };
+  }
+}
+provider.createAdapter = (effect) => new FixtureAdapter(effect);
+after(() => { provider.assertConfigured = originalConfigured; provider.createAdapter = originalAdapter; });
+
+test('UI and MCP generation requests compile identically through the shared service', async () => {
+  const project = await createProject({ name: 'Parity test' });
+  const generation = { version: 2, projectId: project.id, modelId: 'nano-banana-pro', mode: 'image', prompt: 'A green sculpture', references: [], parameters: { aspect_ratio: '1:1', wmOutputQuality: '2k' } };
+  const intent = await createAssetFirstGenerationIntent(generation);
+  await submitAssetFirstGeneration({ generation, generationIntentId: intent, origin: 'ui' });
+  await submitAssetFirstGeneration({ generation, origin: 'mcp' });
+  assert.equal(inputs.length, 2);
+  assert.deepEqual(inputs[0], inputs[1]);
+});
+
+test('missing assets and invalid parameters fail before any provider execution or upload', async () => {
+  const project = await createProject({ name: 'Validation test' });
+  const generation = { version: 2, projectId: project.id, modelId: 'nano-banana-pro', mode: 'image', prompt: 'A green sculpture', references: [], parameters: {} };
+  const calls = inputs.length;
+  await assert.rejects(() => preflightAssetFirstGeneration({ ...generation, references: [{ assetId: 'missing', role: 'reference' }] }), /does not belong/);
+  await assert.rejects(() => preflightAssetFirstGeneration({ ...generation, parameters: { invented_parameter: 'invalid' } }), /Unsupported model parameters/);
+  assert.equal(inputs.length, calls);
+});

@@ -1,0 +1,56 @@
+Manke Workbench (漫客工作台)
+Copyright 2026 the Manke Workbench contributors
+
+---
+
+This product is a fork of BeatDesign
+(https://github.com/BeatAPI/BeatDesign), Copyright 2026 BeatAPI,
+licensed under the Apache License, Version 2.0.
+
+The full Apache License 2.0 text is in the LICENSE file at the root of this
+repository. The original copyright notice is retained there (see the appendix at
+the end of LICENSE).
+
+Per section 4(b) of that license, the following significant changes were made to
+the original work before it was redistributed under this name:
+
+1. Local generation provider.
+   Added a ComfyUI-backed generation provider (`src/core/generation-providers/`)
+   so the workspace runs entirely against a local ComfyUI instance, with no
+   remote account or API key. `ACTIVE_GENERATION_PROVIDER_ID` defaults to it.
+
+2. Local model catalogue.
+   Added `src/core/effects/effect-registry.ts` entries and matching workflow
+   templates under `data/comfyui/workflows/` for local image, video and TTS
+   models. Cloud-hosted bindings were removed from the provider catalogue.
+
+3. Per-step generation progress.
+   Added `src/core/effects/comfyui-progress.ts`, which listens on ComfyUI's
+   WebSocket and surfaces step counts through the status and generation-list
+   APIs; the studio feed renders a progress bar from it.
+
+4. Windows service management.
+   Added `launcher/` (a PowerShell launcher and a GUI start/stop console) plus
+   documentation for running the app and ComfyUI as scheduled tasks.
+
+5. Chinese and Japanese UI.
+   Added `messages/zh.json` and `messages/ja.json`, and switched the product
+   name and visual identity to 漫客工作台 / Manke Workbench as required by the
+   upstream trademark policy (see docs/TRADEMARKS.md).
+
+6. Smaller behaviour changes.
+   Empty-state actions on the assets page, starting-idea thumbnails that seed the
+   prompt, a faster status poll with an explicit transitional state on the
+   services page, and a `Cache-Control: no-cache` header for HTML documents so a
+   stale page cannot reference asset hashes from an older build.
+
+---
+
+Trademarks
+----------
+
+"BeatDesign" and "BeatAPI" are trademarks of BeatAPI. They are used here only to
+describe the origin of this work, as permitted by docs/TRADEMARKS.md. This fork
+is not endorsed by, sponsored by, or affiliated with BeatAPI.
+
+All third-party model and company names remain the property of their owners.

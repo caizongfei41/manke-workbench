@@ -1,0 +1,7 @@
+{
+  "identifier": "manke-workbench",
+  "name": "漫客工作台",
+  "version": "0.3.0",
+  "description": "本地优先的 ComfyUI 图像与视频创作工作台（BeatDesign 分支）。",
+  "homepage": "https://github.com/<your-account>/manke-workbench"
+}

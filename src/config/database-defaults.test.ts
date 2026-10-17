@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import test from 'node:test';
+
+test('Drizzle and the runtime use the same default local SQLite database', () => {
+  const runtimeConfig = readFileSync(
+    new URL('./index.ts', import.meta.url),
+    'utf8'
+  );
+  const dataRoot = readFileSync(
+    new URL('./data-root.ts', import.meta.url),
+    'utf8'
+  );
+  const drizzleConfig = readFileSync(
+    new URL('../../drizzle.config.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(runtimeConfig, /file:data\/local\.db/);
+  assert.match(dataRoot, /'file:data\/local\.db'/);
+  assert.match(dataRoot, /BEATDESIGN_DATA_DIR/);
+  assert.match(drizzleConfig, /file:data\/local\.db/);
+  assert.doesNotMatch(runtimeConfig, /DATABASE_PROVIDER|process\.env/);
+  assert.doesNotMatch(dataRoot, /DATABASE_PROVIDER/);
+  assert.doesNotMatch(drizzleConfig, /DATABASE_PROVIDER/);
+  assert.match(drizzleConfig, /BEATDESIGN_DATA_DIR/);
+});

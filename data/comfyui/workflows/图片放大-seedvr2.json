@@ -1,0 +1,110 @@
+{
+  "10": {
+    "class_type": "SeedVR2VideoUpscaler",
+    "inputs": {
+      "image": [
+        "17",
+        0
+      ],
+      "dit": [
+        "14",
+        0
+      ],
+      "vae": [
+        "13",
+        0
+      ],
+      "seed": 42,
+      "resolution": 4096,
+      "max_resolution": 4096,
+      "batch_size": 1,
+      "uniform_batch_size": false,
+      "color_correction": "lab",
+      "temporal_overlap": 0,
+      "prepend_frames": 0,
+      "input_noise_scale": 0,
+      "latent_noise_scale": 0,
+      "offload_device": "cpu",
+      "enable_debug": false
+    }
+  },
+  "13": {
+    "class_type": "SeedVR2LoadVAEModel",
+    "inputs": {
+      "torch_compile_args": [
+        "19",
+        0
+      ],
+      "model": "ema_vae_fp16.safetensors",
+      "device": "cuda:0",
+      "encode_tiled": true,
+      "encode_tile_size": 1024,
+      "encode_tile_overlap": 128,
+      "decode_tiled": true,
+      "decode_tile_size": 1024,
+      "decode_tile_overlap": 128,
+      "tile_debug": "false",
+      "offload_device": "cpu",
+      "cache_model": false
+    }
+  },
+  "14": {
+    "class_type": "SeedVR2LoadDiTModel",
+    "inputs": {
+      "torch_compile_args": [
+        "19",
+        0
+      ],
+      "model": "seedvr2_ema_3b_fp8_e4m3fn.safetensors",
+      "device": "cuda:0",
+      "blocks_to_swap": 36,
+      "swap_io_components": false,
+      "offload_device": "cpu",
+      "cache_model": false,
+      "attention_mode": "sdpa"
+    }
+  },
+  "15": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "10",
+        0
+      ],
+      "filename_prefix": "SeedVR2"
+    }
+  },
+  "16": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "352474e31ab5d0bf4e5da57a32b957f4.jpg"
+    }
+  },
+  "17": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "16",
+        0
+      ],
+      "alpha": [
+        "16",
+        1
+      ]
+    }
+  },
+  "19": {
+    "class_type": "SeedVR2TorchCompileSettings",
+    "inputs": {
+      "backend": "inductor",
+      "mode": "default",
+      "fullgraph": false,
+      "dynamic": false,
+      "dynamo_cache_size_limit": 64,
+      "dynamo_recompile_limit": 128
+    }
+  },
+  "_beatdesign": {
+    "image": "16"
+  }
+}

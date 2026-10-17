@@ -1,0 +1,30 @@
+import { createFileRoute } from '@tanstack/react-router';
+
+import { BeatApiProductHome } from '@/components/marketing/beatapi-product-home';
+import { appConfig } from '@/config';
+import { normalizeLocale } from '@/config/locale';
+import { getLocale } from '@/core/workspace-lib/shims/next-intl-server';
+import { m } from '@/paraglide/messages.js';
+
+export const Route = createFileRoute('/')({
+  loader: () => ({ locale: getLocale() }),
+  head: ({ loaderData }) => {
+    const locale = normalizeLocale(loaderData?.locale);
+    return {
+      meta: [
+        { title: m['product.home.metaTitle']({}, { locale }) },
+        {
+          name: 'description',
+          content: m['product.home.metaDescription']({}, { locale }),
+        },
+        { property: 'og:url', content: appConfig.app_url },
+      ],
+    };
+  },
+  component: HomeRouteComponent,
+});
+
+function HomeRouteComponent() {
+  const { locale } = Route.useLoaderData();
+  return <BeatApiProductHome locale={locale} />;
+}

@@ -1,0 +1,216 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import {
+  normalizeProjectSnapshotDocument,
+  hasProjectSnapshotVersionConflict,
+  isDestructiveEmptyProjectSnapshot,
+  ProjectSnapshotValidationError,
+} from './project-snapshot';
+
+test('requires the current base version before changing a saved snapshot', () => {
+  assert.equal(
+    hasProjectSnapshotVersionConflict({
+      currentVersion: 4,
+      baseVersion: 4,
+      documentChanged: true,
+    }),
+    false
+  );
+  assert.equal(
+    hasProjectSnapshotVersionConflict({
+      currentVersion: 4,
+      baseVersion: 3,
+      documentChanged: true,
+    }),
+    true
+  );
+  assert.equal(
+    hasProjectSnapshotVersionConflict({
+      currentVersion: 4,
+      baseVersion: undefined,
+      documentChanged: true,
+    }),
+    true
+  );
+  assert.equal(
+    hasProjectSnapshotVersionConflict({
+      currentVersion: 4,
+      baseVersion: 3,
+      documentChanged: false,
+    }),
+    false
+  );
+});
+
+test('detects only non-empty to empty snapshot replacement as destructive', () => {
+  const empty = normalizeProjectSnapshotDocument({ version: 3, cards: [], frames: {} });
+  const populated = normalizeProjectSnapshotDocument({
+    version: 3,
+    cards: [
+      {
+        id: 'asset-1',
+        assetId: 'asset-1',
+        kind: 'asset',
+        type: 'image',
+        name: 'Reference',
+        url: '/api/app/projects/project-1/assets/asset-1',
+        prompt: '',
+        referenceCardIds: [],
+        workflowTemplateId: null,
+        status: 'succeeded',
+        error: null,
+        modelId: '',
+        aspectRatio: '1:1',
+        outputQuality: '1k',
+        duration: '5s',
+        mode: 'quality',
+        variant: 'standard',
+        quality: 'standard',
+        sourceGenerationId: null,
+      },
+    ],
+    frames: {},
+  });
+
+  assert.equal(
+    isDestructiveEmptyProjectSnapshot({ previous: populated, next: empty }),
+    true
+  );
+  assert.equal(
+    isDestructiveEmptyProjectSnapshot({ previous: populated, next: populated }),
+    false
+  );
+  assert.equal(
+    isDestructiveEmptyProjectSnapshot({ previous: empty, next: empty }),
+    false
+  );
+});
+
+test('rejects snapshots with an excessive number of cards', () => {
+  assert.throws(
+    () =>
+      normalizeProjectSnapshotDocument({
+        cards: Array.from({ length: 201 }, (_, index) => ({
+          id: `card-${index}`,
+          kind: 'asset',
+          type: 'image',
+          name: `Card ${index}`,
+        })),
+        frames: {},
+      }),
+    ProjectSnapshotValidationError
+  );
+});
+
+test('drops invalid card kinds and orphan frames', () => {
+  assert.deepEqual(
+    normalizeProjectSnapshotDocument({
+      cards: [
+        { id: 'bad', kind: 'script', type: 'image', name: 'Bad' },
+        { id: 'good', kind: 'asset', type: 'image', name: 'Good' },
+      ],
+      frames: {
+        good: { x: 0, y: 0, w: 100, h: 100 },
+        orphan: { x: 0, y: 0, w: 100, h: 100 },
+      },
+    }).frames,
+    { good: { x: 0, y: 0, w: 100, h: 100 } }
+  );
+});
+
+test('keeps a valid canvas camera and drops an invalid one', () => {
+  assert.deepEqual(
+    normalizeProjectSnapshotDocument({
+      cards: [],
+      frames: {},
+      camera: { x: 320, y: -180, z: 0.75 },
+    }).camera,
+    { x: 320, y: -180, z: 0.75 }
+  );
+
+  assert.equal(
+    normalizeProjectSnapshotDocument({
+      cards: [],
+      frames: {},
+      camera: { x: 0, y: 0, z: 0 },
+    }).camera,
+    undefined
+  );
+});
+
+test('persists Canvas video analysis mode, depth, and text output', () => {
+  const normalized = normalizeProjectSnapshotDocument({
+    version: 3,
+    cards: [
+      {
+        id: 'analysis-1',
+        kind: 'generation',
+        type: 'video',
+        generationMode: 'analysis',
+        analysisDepth: 'deep',
+        name: 'Analyze',
+        url: null,
+        resultText: '00:00 The subject enters frame.',
+        prompt: 'Return timestamps.',
+        referenceCardIds: ['video-1'],
+        workflowTemplateId: null,
+        status: 'idle',
+        error: null,
+        modelId: 'video-analysis',
+        aspectRatio: '16:9',
+        outputQuality: '720p',
+        duration: '5s',
+        mode: 'quality',
+        variant: 'standard',
+        quality: 'standard',
+        sourceGenerationId: null,
+      },
+    ],
+    frames: {},
+  });
+
+  assert.equal(normalized.cards[0]?.generationMode, 'analysis');
+  assert.equal(normalized.cards[0]?.analysisDepth, 'deep');
+  assert.equal(
+    normalized.cards[0]?.resultText,
+    '00:00 The subject enters frame.'
+  );
+});
+
+test('persists Audio Asset and Timeline nodes across Canvas reloads', () => {
+  const normalized = normalizeProjectSnapshotDocument({
+    version: 3,
+    cards: [
+      {
+        id: 'audio-1',
+        kind: 'asset',
+        type: 'audio',
+        name: 'Background music',
+        url: '/api/app/projects/project-1/assets/audio-1',
+        audioRole: 'music',
+        durationSec: 5,
+      },
+      {
+        id: 'timeline:one',
+        kind: 'asset',
+        type: 'timeline',
+        name: 'Timeline 1',
+        url: null,
+        timelineId: 'one',
+        durationSec: 4,
+        clipCount: 2,
+      },
+    ],
+    frames: {
+      'audio-1': { x: 0, y: 0, w: 320, h: 104 },
+      'timeline:one': { x: 380, y: 0, w: 360, h: 220 },
+    },
+  });
+
+  assert.equal(normalized.cards[0]?.type, 'audio');
+  assert.equal(normalized.cards[0]?.audioRole, 'music');
+  assert.equal(normalized.cards[1]?.type, 'timeline');
+  assert.equal(normalized.cards[1]?.clipCount, 2);
+  assert.ok(normalized.frames['timeline:one']);
+});

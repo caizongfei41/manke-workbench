@@ -1,0 +1,164 @@
+{
+  "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "qwen-image-2.1-Q6_K.gguf"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "prompt": "Professional pet photography, a Golden Retriever sitting on wooden flooring by a window, body angled right, head turned to look directly into the camera with a gentle, smiling expression. **Soft afternoon diffused light floods in from the large window on the left, rim-lighting its golden fur along the back and ears, with a crisp circular catchlight in its eyes.** Light shines through the coat creating a translucent golden halo; individual whiskers are distinct. Background: blurred beige curtains and a potted plant, shallow depth of field. A soft shadow of the dog falls on the floor. 85mm portrait lens, f/1.8, tack-sharp focus on the eyes, rich fur detail, warm healing tone, 4K, photorealistic, 16:9 horizontal, dog placed at the right third with negative space on the left.",
+      "negative_prompt": "",
+      "resolution": 512,
+      "images": []
+    }
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+    }
+  },
+  "6": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "4",
+        1
+      ],
+      "latent_image": [
+        "5",
+        0
+      ],
+      "seed": 1028845450751913,
+      "steps": 30,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "7": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "6",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    }
+  },
+  "8": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "7",
+        0
+      ],
+      "filename_prefix": "qwen_image_2_1"
+    }
+  },
+  "23": {
+    "class_type": "SeedVR2LoadDiTModel",
+    "inputs": {
+      "model": "seedvr2_ema_3b_fp8_e4m3fn.safetensors",
+      "device": "cuda:0",
+      "blocks_to_swap": 0,
+      "swap_io_components": false,
+      "offload_device": "cpu",
+      "cache_model": false,
+      "attention_mode": "sdpa"
+    }
+  },
+  "24": {
+    "class_type": "SeedVR2LoadVAEModel",
+    "inputs": {
+      "model": "ema_vae_fp16.safetensors",
+      "device": "cuda:0",
+      "encode_tiled": true,
+      "encode_tile_size": 512,
+      "encode_tile_overlap": 128,
+      "decode_tiled": true,
+      "decode_tile_size": 512,
+      "decode_tile_overlap": 128,
+      "tile_debug": "false",
+      "offload_device": "cpu",
+      "cache_model": false
+    }
+  },
+  "25": {
+    "class_type": "SeedVR2VideoUpscaler",
+    "inputs": {
+      "image": [
+        "7",
+        0
+      ],
+      "dit": [
+        "23",
+        0
+      ],
+      "vae": [
+        "24",
+        0
+      ],
+      "resolution": 2048,
+      "max_resolution": 2048,
+      "batch_size": 1,
+      "seed": 42,
+      "uniform_batch_size": false,
+      "color_correction": "lab",
+      "temporal_overlap": 0,
+      "prepend_frames": 0,
+      "input_noise_scale": 0,
+      "latent_noise_scale": 0,
+      "offload_device": "cpu",
+      "enable_debug": false
+    }
+  },
+  "26": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "25",
+        0
+      ],
+      "filename_prefix": "seedvr2_upscaled"
+    }
+  },
+  "_beatdesign": {
+    "seed": "6",
+    "positive": "4"
+  }
+}

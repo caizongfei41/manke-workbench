@@ -1,0 +1,119 @@
+{
+  "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "qwen-image-2.1-Q8_0.gguf"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "Cinematic close-up portrait, a young woman standing on a grassland at dusk; the frame focuses on her head, shoulders and upper body, with the subject occupying the visual center slightly right of frame. **The low setting sun blasts from behind as strong backlight, rimming her hair and shoulders with a bright golden halo, a few stray strands rendered translucent by the light; her face is softly filled by warm sky bounce light, with natural highlights on the bridge of the nose and cheekbones, shadow transitions smooth with no blocked-up blacks.** She looks up toward the camera with a serene expression; her skin has a healthy honey tone with visible fine peach fuzz. Light beige hair lifted by the breeze, a few strands resting against her cheek.\nThe background is **completely blurred golden grassland and pink-purple distant mountains**, dissolving into soft golden-orange and pink-purple bokeh that serves only as atmosphere. Occasional foreground grass blades drift across the lens as soft blur streaks.\n85mm full-frame portrait lens, f/1.8, extremely shallow depth of field, tack-sharp focus on both eyes with crisp circular catchlights, natural realistic skin texture, Kodak Portra 400 film palette, cinematic color grading, photorealistic, 8K, 16:9 widescreen, subject at the right third with breathing room on the left."
+    }
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "low quality, blurry, distorted, deformed, ugly, bad anatomy, extra limbs, watermark, text"
+    }
+  },
+  "6": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": [
+        "11",
+        0
+      ],
+      "height": [
+        "11",
+        1
+      ],
+      "batch_size": 1
+    }
+  },
+  "7": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "latent_image": [
+        "6",
+        0
+      ],
+      "seed": 95042601177619,
+      "steps": 25,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "7",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    }
+  },
+  "11": {
+    "class_type": "ResolutionSelector",
+    "inputs": {
+      "aspect_ratio": "16:9 (Widescreen)",
+      "megapixels": 2,
+      "multiple": 32
+    }
+  },
+  "24": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "8",
+        0
+      ],
+      "filename_prefix": "qwen_image_2_1"
+    }
+  },
+  "_beatdesign": {
+    "positive": "4",
+    "size": "6",
+    "seed": "7"
+  }
+}

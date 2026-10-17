@@ -1,0 +1,240 @@
+# BeatDesign MCP
+
+BeatDesign exposes local stdio and Streamable HTTP MCP servers. They use the same project,
+Asset, Command Kernel, provider, and SQLite services as the browser UI; it is
+not a second backend.
+
+## Start
+
+```bash
+pnpm install
+pnpm db:push
+
+# For generic stdio MCP hosts:
+pnpm --silent mcp
+
+# For QwenWork / Doubao Work connectors (use this instead of stdio):
+pnpm --silent mcp:http
+
+# For the Claude Code plugin or repository-local WorkBuddy development:
+pnpm dev:agent
+```
+
+For a generic MCP host, register:
+
+```json
+{
+  "mcpServers": {
+    "beatdesign": {
+      "command": "/absolute/path/to/Beat Design/node_modules/.bin/tsx",
+      "args": ["/absolute/path/to/Beat Design/scripts/mcp-server.ts"]
+    }
+  }
+}
+```
+
+The entry script is working-directory independent: when a host spawns it from
+another directory it restarts itself from the repository root first, so the
+`@/*` aliases, the SQLite database, and `data/project-assets` always resolve
+against this clone. Hosts that cannot set a cwd and prefer pnpm can use
+`pnpm --silent -C "/absolute/path/to/Beat Design" mcp` instead. On Windows the
+binary is `node_modules/.bin/tsx.cmd`.
+
+Per-agent packages and config templates (Claude Code, ZCode, OpenCode, Cursor, Windsurf, VS
+Code, Cline, Roo Code, Qwen Code, QwenWork, Gemini CLI, Hermes, Kiro, Trae,
+WorkBuddy, Doubao Work) live in
+[`integrations/`](../integrations/README.md).
+
+OpenCode has two configuration generations. The installed 1.x desktop builds use
+the flat `mcp.beatdesign` shape in
+[`opencode.example.json`](../integrations/opencode/opencode.example.json); OpenCode
+V2 uses `mcp.servers.beatdesign` and `disabled: false` from
+[`opencode.v2.example.json`](../integrations/opencode/opencode.v2.example.json).
+Use the template matching the OpenCode version instead of merging both entries.
+
+QwenWork and Doubao Work use the HTTP endpoint at
+`http://127.0.0.1:3031/mcp`. Start `pnpm --silent mcp:http` before creating the
+connector. The HTTP server stays on loopback by default; set
+`BEATDESIGN_MCP_TOKEN` and send an `Authorization: Bearer ...` header when the
+connector configuration supports headers.
+
+The Codex plugin source is under `integrations/codex/beatdesign`. When Codex
+copies that plugin outside this repository, pass `BEATDESIGN_ROOT` with the
+absolute repository path. Claude Code has a dedicated repository marketplace
+and plugin under `integrations/claude-code/beatdesign`; WorkBuddy has an MCP +
+Skill Connector under `integrations/workbuddy/beatdesign`. Repository-local
+review may use the loopback HTTP endpoint started by `pnpm dev:agent`. The
+public WorkBuddy package instead uses a managed Node.js runtime and a versioned
+stdio npm package that starts the production browser workspace automatically.
+
+Validate the WorkBuddy source with `pnpm integration:check:workbuddy` and create
+the review ZIP with `pnpm integration:package:workbuddy`. The generated archive
+is a local artifact, not evidence of marketplace submission, approval, or
+publication. Follow `integrations/workbuddy/REVIEW_CHECKLIST.md` before upload.
+Build the installable runtime tarball with
+`pnpm integration:pack:workbuddy-runtime`; npm publication remains a separate
+release state.
+
+## Mental model
+
+BeatDesign is a visual workspace plus one selected Agent control transport sharing one local database:
+
+1. `pnpm dev` is the visual workbench in the browser.
+2. `pnpm mcp` is the Agent control plane over stdio for coding Agents.
+3. `pnpm mcp:http` is the optional Streamable HTTP control plane for QwenWork and Doubao Work.
+4. `pnpm dev:agent` starts the visual workbench and HTTP control plane together
+   for repository-local connector development.
+5. The public WorkBuddy runtime package starts the production workbench and
+   stdio MCP together using WorkBuddy's managed Node.js runtime.
+
+The MCP server returns structured browser handoffs. In Codex, the bundled Skill
+uses the in-app Browser to open or reuse the exact Canvas or Editor tab and
+leaves it visible while the Agent works. Other hosts can use the clean
+`workspaceUrl` returned by the same tools.
+
+Host packages are optional installation layers. Claude Code, OpenCode, Cursor,
+and any other MCP stdio host can still start `pnpm --silent mcp` directly.
+Claude Code's plugin, QwenWork, and Doubao Work can use the local HTTP command.
+The public WorkBuddy Connector uses the packaged stdio runtime. Marketplace
+review is not required for repository-local use.
+
+Repo-root `.mcp.json` is the Claude Code / generic direct-stdio config. See
+`integrations/README.md` for the Codex, Claude Code, WorkBuddy, and OpenCode
+installation shapes.
+
+## Tool groups
+
+There are **29** tools:
+
+- Skill (2): list the bundled official Skill catalog and read one complete
+  versioned Skill definition.
+- Project (5): list, get, create, target the current MCP session, and open a
+  workspace review surface.
+- Asset (4): list, get by project membership, import a local file, and extract a
+  video frame.
+- Canvas (5): get, browser view/focus, search, incremental apply, and
+  continue-from-tail-frame.
+- Generation (5): list model capabilities, read one model, submit an
+  asset-first request, refresh status, and list history.
+- Editor (8): get, incremental edit, SRT import, authoritative MP4 render,
+  semantic snapshot, diagnostics, deep-link view, and command history.
+
+The same bundled Skill catalog is also available through the read-only MCP
+Resource `beatdesign://skills`. Individual Skill instructions use the resource
+template `beatdesign://skills/{skillId}`. The two Skill tools are compatibility
+fallbacks for Agent hosts that do not surface MCP Resources. Until an official
+creative Skill passes prompt evaluation and a visible MCP workflow test, the
+catalog intentionally returns an empty `skills` array and no Showcase entry is
+published.
+
+MCP writes use `origin=mcp` assigned inside the server. `canvas.apply` and
+`editor.apply` accept stable IDs, revisions, and idempotency keys. The server
+does not expose full Canvas or Timeline replacement.
+
+Call `bdesign_project_target` once after choosing a project. Project-scoped
+tools can then omit `projectId` for the lifetime of that MCP session.
+`bdesign_project_open`, `bdesign_canvas_view`, and `bdesign_editor_view` return
+clean direct links plus `browserHandoff`, `openStrategy`, and `liveProject`
+metadata. Canvas links accept a stable card ID and focus that card after the
+project is restored.
+
+External incremental Canvas and Editor commands automatically replay up to two
+times when their final CAS write loses a short revision race. Every replay
+loads the newest authoritative document and reapplies the stable-ID operation;
+it never retries a full-document replacement. Recovered results include
+`conflictRecovery`; persistent conflicts include a bounded `retry` instruction
+with the latest known revision.
+
+`bdesign_canvas_continue_from_tail` uses the same bounded conflict recovery. A
+stable command ID also stabilizes its derived frame Asset and continuation node,
+so an uncertain or concurrent retry does not duplicate them. If the Canvas write
+still fails, a frame created by that attempt is removed before the failure is
+returned. The tool creates the local continuation setup only; its returned
+`next` generation request remains a separate, potentially paid action.
+
+Generation tools accept a logical `modelId`, generic `parameters`, and Asset
+references. Call `bdesign_generation_models` or
+`bdesign_generation_model_get` before choosing parameters. Before calling
+`bdesign_generation_submit`, create and review a Canvas `generation` card, then
+pass its ID as `sourceCardId`. The tool rejects missing, busy, or mismatched
+nodes. It persists a visible pending `output` card before contacting the
+provider, then writes the provider task ID and status back to that card. A
+Canvas write failure therefore cannot leave a new paid request without a place
+to appear. Successful outputs are still project Assets and remain reusable in
+Canvas and Editor. BeatDesign does not duplicate API-key validity, balance,
+billing, or rate-limit policy. BeatAPI (or a fork's selected provider) remains
+authoritative, and its response or error details are returned to the MCP caller.
+
+`bdesign_canvas_apply` and `bdesign_editor_edit` advertise every supported
+incremental operation as a concrete JSON Schema. Agents can discover required
+IDs, time fields, media roles, card parameters, Takes, and render fields from
+the MCP tool contract instead of guessing an opaque operation object.
+
+Editor agents add a project-owned image overlay with `add_overlay`, then adjust
+its normalized position, width, opacity, rotation, and fades with
+`update_overlay`. Use `replace_overlay_asset` with another project-owned image
+Asset to swap the artwork while preserving the clip's timing and transform.
+Overlay clips live on their own visual track, may overlap the
+base video, and remain subject to the same revision checks, Asset boundary, and
+durable timeline persistence as UI edits. The UI also lets users drag an active
+overlay directly in the preview frame. Captions are composited after overlays.
+Use `update_caption` to tune one caption cue's normalized font size, maximum
+width, and bottom position without changing later cues; `set_caption_style`
+continues to select the shared visual preset.
+
+Use `bdesign_editor_render` to render the authoritative saved timeline to a
+project-owned MP4 Asset. The render includes visible video and image clips,
+image overlays, caption burn-in, and mixed audio. The tool requires `ffmpeg`
+and `ffprobe` on `PATH`, or explicit `BEATDESIGN_FFMPEG` and
+`BEATDESIGN_FFPROBE` paths. If the timeline changes while a render is running,
+the revision-checked commit rejects the stale output and removes that attempt's
+temporary Asset.
+
+For a newly connected Canvas node, append a `place_card` operation after its
+`upsert_card`. By default it places the target once to the right of the frames
+listed in `sourceCardIds`, or to the right of the card's `referenceCardIds` when
+that field is omitted. This is an explicit initial-layout action, not a live
+auto-layout system: later drag positions and large manually arranged graphs stay
+saved until a caller explicitly places the card again. BeatDesign does not infer
+first or last frames from attachment order. Image references remain generic,
+while explicit workflows such as tail-frame continuation may insert canonical
+prompt directives like `Use @Image1 as the first frame.`. The BeatAPI adapter
+translates only those explicit `@ImageN` directives into provider frame fields.
+
+## Current boundaries
+
+- `bdesign_editor_snapshot` resolves active clips and source times; it does not
+  rasterize a pixel frame yet.
+- `bdesign_asset_extract_frame` and `bdesign_canvas_continue_from_tail` decode
+  the local video file. MCP/Node frame extraction and timeline rendering use
+  `ffmpeg` on PATH (or `BEATDESIGN_FFMPEG`); timeline rendering also uses
+  `ffprobe` (or `BEATDESIGN_FFPROBE`). These are not required system installs
+  for the browser UI.
+- SRT import validates the whole subtitle document before replacing the current
+  caption track. Malformed input leaves the saved timeline unchanged.
+- Browser-native MP4 export remains available without system FFmpeg.
+  `bdesign_editor_render` provides the corresponding MCP/Node export path and
+  writes the result back as a project Asset.
+- `bdesign_asset_import` copies a local image, video, or audio file into the
+  project Asset library from an absolute path. It does not place the Asset on
+  Canvas or Editor; use `bdesign_canvas_apply` or `bdesign_editor_edit` after.
+- `bdesign_asset_import` is the local-file bridge. Generation still accepts
+  project Asset IDs rather than arbitrary file paths; the shared generation
+  path performs any provider upload that is required after submission.
+- Command history is a bounded retry receipt log, not a permanent audit trail.
+- Live UI event push is not implemented. Canvas and Editor poll project
+  revisions every two seconds while idle and check again on focus/visibility,
+  so MCP writes become visible without a full event bus.
+
+## Skill and MCP
+
+- `skills/official/` is the future single source of truth for portable,
+  versioned creative Skills bundled with BeatDesign. The loader validates the
+  manifest schema, directory identity, minimum BeatDesign version, and required
+  MCP tools; it reads instructions as data and never executes Skill scripts.
+- The host Skills are the workflow layer: they tell the Agent when to select a
+  project, which MCP tools to combine, where user authorization is required, and
+  which Canvas or Editor view must remain open for review.
+- MCP is the structured execution layer used by Codex, Claude Code, Cursor, and
+  other compatible Agents. Its schemas, project boundary, command receipts, and
+  browser handoffs are the supported external control contract.
