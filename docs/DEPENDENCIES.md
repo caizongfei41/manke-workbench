@@ -2,10 +2,10 @@
 
 > 由 `scripts/audit-template-deps.mjs` 生成。模板或环境变化后重新跑一次即可更新。
 
-- 模板：**16** 个
-- 核心之外的自定义节点类：**36** 个
-- 需要的自定义节点包：**10** 个
-- 模型 / 资源文件：**21** 个
+- 模板：**19** 个
+- 核心之外的自定义节点类：**42** 个
+- 需要的自定义节点包：**11** 个
+- 模型 / 资源文件：**26** 个
 
 ## 一、需要安装的 ComfyUI 自定义节点包
 
@@ -13,6 +13,7 @@
 
 | 节点包目录 | 提供的节点类 |
 | --- | --- |
+| `ComfyUI-AICG3D-Integrated` | `AICG3D_H3Loader`, `AICG3D_H3MediaLoader`, `AICG3D_H3SequenceCombine`, `AICG3D_H3SequenceGlobal`, `AICG3D_H3SequenceSegment` |
 | `ComfyUI-DepthAnythingV2` | `DepthAnything_V2`, `DownloadAndLoadDepthAnythingV2Model` |
 | `ComfyUI-Easy-Use` | `easy cleanGpuUsed` |
 | `ComfyUI-GGUF` | `UnetLoaderGGUF` |
@@ -26,7 +27,7 @@
 
 ### 随 ComfyUI 自带（无需单独安装）
 
-- (comfy_extras)：`BasicScheduler`, `CFGGuider`, `ComfySwitchNode`, `CreateVideo`, `EmptyFlux2LatentImage`, `ImageScaleToTotalPixels`, `JoinImageWithAlpha`, `KSamplerSelect`, `ModelAttentionBackend`, `QwenImage21Cache`, `RandomNoise`, `ReferenceLatent`, `ResolutionSelector`, `SamplerCustomAdvanced`, `SaveAudioMP3`, `SaveImageAdvanced`, `SaveVideo`, `TextEncodeQwenImage21`
+- (comfy_extras)：`BasicScheduler`, `BlockSparseAttention`, `CFGGuider`, `ComfySwitchNode`, `CreateVideo`, `EmptyFlux2LatentImage`, `ImageScaleToTotalPixels`, `JoinImageWithAlpha`, `KSamplerSelect`, `ModelAttentionBackend`, `QwenImage21Cache`, `RandomNoise`, `ReferenceLatent`, `ResolutionSelector`, `SamplerCustomAdvanced`, `SaveAudioMP3`, `SaveImageAdvanced`, `SaveVideo`, `TextEncodeQwenImage21`
 
 ## 二、需要存在的模型 / 资源文件
 
@@ -41,18 +42,23 @@
 | `Flux\Flux.2-Klein\flux-2-klein-base-9b-fp8.safetensors` | 3 | models/checkpoints 或 diffusion_models |
 | `Flux\flux2-vae.safetensors` | 3 | models/VAE |
 | `H3_Combat_V2.safetensors` | 1 | models/LORAS |
+| `MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors` | 2 | models/LORAS |
+| `MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors` | 2 | models/checkpoints 或 diffusion_models |
 | `MiniMax\Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 1 | models/checkpoints 或 diffusion_models |
 | `Minimax H3真实电影质感V0.1.safetensors` | 1 | models/checkpoints 或 diffusion_models |
 | `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` | 1 | models（TTS 权重目录） |
-| `minimax_h3_audio_vae_fp32.safetensors` | 3 | models/VAE |
+| `minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors` | 3 | models/LORAS |
+| `minimax_h3_audio_vae_fp32.safetensors` | 6 | models/VAE |
 | `minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors` | 1 | models/LORAS |
+| `minimax_h3_fl2va_pruned_w4a8_mixed.safetensors` | 1 | models/checkpoints 或 diffusion_models |
 | `minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors` | 2 | models/LORAS |
 | `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | 2 | models/checkpoints 或 diffusion_models |
-| `minimax_h3_video_vae_fp16.safetensors` | 3 | models/VAE |
+| `minimax_h3_video_vae_fp16.safetensors` | 4 | models/VAE |
+| `minimax_h3_video_vae_int8_convrot.safetensors` | 2 | models/VAE |
 | `qwen-image-2.1-Q6_K.gguf` | 3 | models/UNET 或 models/diffusion_models |
 | `qwen-image-2.1-Q8_0.gguf` | 3 | models/UNET 或 models/diffusion_models |
 | `qwen-image-2.1-lightning-4step-int8_convrot.safetensors` | 2 | models/LORAS |
-| `qwen3vl_32b_minimax_h3_int8_convrot.safetensors` | 3 | models/checkpoints 或 diffusion_models |
+| `qwen3vl_32b_minimax_h3_int8_convrot.safetensors` | 6 | models/checkpoints 或 diffusion_models |
 | `qwen3vl_8b_int8_convrot.safetensors` | 6 | models/checkpoints 或 diffusion_models |
 | `qwen_image_2.1_vae_bf16.safetensors` | 6 | models/VAE |
 
@@ -87,6 +93,24 @@
 - 节点 7 个（自定义 5）
 - 依赖节点包：`(comfy_extras)`、`ComfyUI-SeedVR2_VideoUpscaler`
 - 资源文件：`352474e31ab5d0bf4e5da57a32b957f4.jpg`
+
+### 小枫-aicg3d-h3-中配长视频.json
+
+- 节点 7 个（自定义 7）
+- 依赖节点包：`(comfy_extras)`、`ComfyUI-AICG3D-Integrated`
+- 资源文件：`MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors`、`MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors`、`qwen3vl_32b_minimax_h3_int8_convrot.safetensors`、`minimax_h3_video_vae_int8_convrot.safetensors`、`minimax_h3_audio_vae_fp32.safetensors`、`minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors`
+
+### 小枫-aicg3d-h3-低显存长视频.json
+
+- 节点 7 个（自定义 7）
+- 依赖节点包：`(comfy_extras)`、`ComfyUI-AICG3D-Integrated`
+- 资源文件：`minimax_h3_fl2va_pruned_w4a8_mixed.safetensors`、`qwen3vl_32b_minimax_h3_int8_convrot.safetensors`、`minimax_h3_video_vae_int8_convrot.safetensors`、`minimax_h3_audio_vae_fp32.safetensors`、`minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors`
+
+### 小枫-aicg3d-h3-长视频.json
+
+- 节点 7 个（自定义 7）
+- 依赖节点包：`(comfy_extras)`、`ComfyUI-AICG3D-Integrated`
+- 资源文件：`MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors`、`MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors`、`qwen3vl_32b_minimax_h3_int8_convrot.safetensors`、`minimax_h3_video_vae_fp16.safetensors`、`minimax_h3_audio_vae_fp32.safetensors`、`minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors`
 
 ### 小枫-dlss5-单图增强.json
 

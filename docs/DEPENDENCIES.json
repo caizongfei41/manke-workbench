@@ -1,0 +1,361 @@
+{
+  "generated": "2026-10-17T05:23:03.822Z",
+  "templateCount": 19,
+  "customNodeClasses": [
+    "AICG3D_H3Loader",
+    "AICG3D_H3MediaLoader",
+    "AICG3D_H3SequenceCombine",
+    "AICG3D_H3SequenceGlobal",
+    "AICG3D_H3SequenceSegment",
+    "BasicScheduler",
+    "BlockSparseAttention",
+    "CFGGuider",
+    "ComfySwitchNode",
+    "CreateVideo",
+    "DLSS5FrameEnhancer",
+    "DepthAnything_V2",
+    "DownloadAndLoadDepthAnythingV2Model",
+    "EmptyFlux2LatentImage",
+    "ImageConcatMulti",
+    "ImageScaleToTotalPixels",
+    "JoinImageWithAlpha",
+    "KSamplerSelect",
+    "MiniMaxH3Director",
+    "MiniMaxH3DirectorFaceRefine",
+    "MiniMaxH3DirectorRefine",
+    "ModelAttentionBackend",
+    "Qwen3TTSCustomVoice",
+    "Qwen3TTSModelLoader",
+    "QwenImage21BlockCacheT8",
+    "QwenImage21Cache",
+    "RandomNoise",
+    "ReferenceLatent",
+    "ResolutionSelector",
+    "SamplerCustomAdvanced",
+    "SaveAudioMP3",
+    "SaveImageAdvanced",
+    "SaveVideo",
+    "SeedVR2LoadDiTModel",
+    "SeedVR2LoadVAEModel",
+    "SeedVR2TorchCompileSettings",
+    "SeedVR2VideoUpscaler",
+    "TextEncodeQwenImage21",
+    "UnetLoaderGGUF",
+    "VHS_LoadVideo",
+    "VHS_VideoCombine",
+    "easy cleanGpuUsed"
+  ],
+  "missingClasses": [],
+  "nodePackages": [
+    {
+      "name": "ComfyUI_MiniMaxH3_Director",
+      "classes": [
+        "MiniMaxH3Director",
+        "MiniMaxH3DirectorFaceRefine",
+        "MiniMaxH3DirectorRefine"
+      ]
+    },
+    {
+      "name": "ComfyUI-AICG3D-Integrated",
+      "classes": [
+        "AICG3D_H3Loader",
+        "AICG3D_H3MediaLoader",
+        "AICG3D_H3SequenceCombine",
+        "AICG3D_H3SequenceGlobal",
+        "AICG3D_H3SequenceSegment"
+      ]
+    },
+    {
+      "name": "ComfyUI-DepthAnythingV2",
+      "classes": [
+        "DepthAnything_V2",
+        "DownloadAndLoadDepthAnythingV2Model"
+      ]
+    },
+    {
+      "name": "ComfyUI-Easy-Use",
+      "classes": [
+        "easy cleanGpuUsed"
+      ]
+    },
+    {
+      "name": "ComfyUI-GGUF",
+      "classes": [
+        "UnetLoaderGGUF"
+      ]
+    },
+    {
+      "name": "ComfyUI-KJNodes",
+      "classes": [
+        "ImageConcatMulti"
+      ]
+    },
+    {
+      "name": "Comfyui-Qwen-Image-2.1-BlockCache-T8",
+      "classes": [
+        "QwenImage21BlockCacheT8"
+      ]
+    },
+    {
+      "name": "ComfyUI-QWEN3_TTS",
+      "classes": [
+        "Qwen3TTSCustomVoice",
+        "Qwen3TTSModelLoader"
+      ]
+    },
+    {
+      "name": "ComfyUI-ReActor",
+      "classes": [
+        "DLSS5FrameEnhancer"
+      ]
+    },
+    {
+      "name": "ComfyUI-SeedVR2_VideoUpscaler",
+      "classes": [
+        "SeedVR2LoadDiTModel",
+        "SeedVR2LoadVAEModel",
+        "SeedVR2TorchCompileSettings",
+        "SeedVR2VideoUpscaler"
+      ]
+    },
+    {
+      "name": "ComfyUI-VideoHelperSuite",
+      "classes": [
+        "VHS_LoadVideo",
+        "VHS_VideoCombine"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "name": "352474e31ab5d0bf4e5da57a32b957f4.jpg",
+      "basename": "352474e31ab5d0bf4e5da57a32b957f4.jpg",
+      "templates": [
+        "flux2-klein-图片编辑-单图.json",
+        "qwen-image-2-1图像编辑.json",
+        "图片放大-seedvr2.json",
+        "小枫-dlss5-单图增强.json",
+        "小枫-flux2-klein-三视图工作流.json",
+        "小枫-qwen-image-2-1-图像编辑.json",
+        "小枫-qwen-image-2-1-图编辑-4步加速版.json"
+      ]
+    },
+    {
+      "name": "4x-UltraSharp.pth",
+      "basename": "4x-UltraSharp.pth",
+      "templates": [
+        "小枫-h3导演台-人脸修复.json",
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "91cc60179b7e9830e32d96bb89ba517a.jpg",
+      "basename": "91cc60179b7e9830e32d96bb89ba517a.jpg",
+      "templates": [
+        "小枫-qwen-image-2-1-图像编辑.json"
+      ]
+    },
+    {
+      "name": "Flux.2-Klein\\qwen_3_8b_fp8mixed.safetensors",
+      "basename": "qwen_3_8b_fp8mixed.safetensors",
+      "templates": [
+        "flux-2-klein-文生图.json",
+        "flux2-klein-图片编辑-单图.json",
+        "小枫-flux2-klein-三视图工作流.json"
+      ]
+    },
+    {
+      "name": "Flux\\Flux.2-Klein\\flux-2-klein-base-9b-fp8.safetensors",
+      "basename": "flux-2-klein-base-9b-fp8.safetensors",
+      "templates": [
+        "flux-2-klein-文生图.json",
+        "flux2-klein-图片编辑-单图.json",
+        "小枫-flux2-klein-三视图工作流.json"
+      ]
+    },
+    {
+      "name": "Flux\\flux2-vae.safetensors",
+      "basename": "flux2-vae.safetensors",
+      "templates": [
+        "flux-2-klein-文生图.json",
+        "flux2-klein-图片编辑-单图.json",
+        "小枫-flux2-klein-三视图工作流.json"
+      ]
+    },
+    {
+      "name": "H3_Combat_V2.safetensors",
+      "basename": "H3_Combat_V2.safetensors",
+      "templates": [
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "Minimax H3真实电影质感V0.1.safetensors",
+      "basename": "Minimax H3真实电影质感V0.1.safetensors",
+      "templates": [
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "minimax_h3_audio_vae_fp32.safetensors",
+      "basename": "minimax_h3_audio_vae_fp32.safetensors",
+      "templates": [
+        "小枫-H3-导演-连贯成片.json",
+        "小枫-aicg3d-h3-中配长视频.json",
+        "小枫-aicg3d-h3-低显存长视频.json",
+        "小枫-aicg3d-h3-长视频.json",
+        "小枫-h3导演台-人脸修复.json",
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "basename": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "templates": [
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "minimax_h3_fl2va_pruned_w4a8_mixed.safetensors",
+      "basename": "minimax_h3_fl2va_pruned_w4a8_mixed.safetensors",
+      "templates": [
+        "小枫-aicg3d-h3-低显存长视频.json"
+      ]
+    },
+    {
+      "name": "minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+      "basename": "minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+      "templates": [
+        "小枫-H3-导演-连贯成片.json",
+        "小枫-h3导演台-人脸修复.json"
+      ]
+    },
+    {
+      "name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+      "basename": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+      "templates": [
+        "小枫-H3-导演-连贯成片.json",
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "minimax_h3_video_vae_fp16.safetensors",
+      "basename": "minimax_h3_video_vae_fp16.safetensors",
+      "templates": [
+        "小枫-H3-导演-连贯成片.json",
+        "小枫-aicg3d-h3-长视频.json",
+        "小枫-h3导演台-人脸修复.json",
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "minimax_h3_video_vae_int8_convrot.safetensors",
+      "basename": "minimax_h3_video_vae_int8_convrot.safetensors",
+      "templates": [
+        "小枫-aicg3d-h3-中配长视频.json",
+        "小枫-aicg3d-h3-低显存长视频.json"
+      ]
+    },
+    {
+      "name": "MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
+      "basename": "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
+      "templates": [
+        "小枫-aicg3d-h3-中配长视频.json",
+        "小枫-aicg3d-h3-长视频.json"
+      ]
+    },
+    {
+      "name": "MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors",
+      "basename": "minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors",
+      "templates": [
+        "小枫-aicg3d-h3-中配长视频.json",
+        "小枫-aicg3d-h3-长视频.json"
+      ]
+    },
+    {
+      "name": "minimax\\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",
+      "basename": "minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",
+      "templates": [
+        "小枫-aicg3d-h3-中配长视频.json",
+        "小枫-aicg3d-h3-低显存长视频.json",
+        "小枫-aicg3d-h3-长视频.json"
+      ]
+    },
+    {
+      "name": "MiniMax\\Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
+      "basename": "Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
+      "templates": [
+        "小枫-h3导演台-人脸修复.json"
+      ]
+    },
+    {
+      "name": "qwen_image_2.1_vae_bf16.safetensors",
+      "basename": "qwen_image_2.1_vae_bf16.safetensors",
+      "templates": [
+        "qwen-image-2-1图像编辑.json",
+        "qwen-image-2-1文生图-seedvr2自动放大.json",
+        "小枫-qwen-image-2-1-图像编辑.json",
+        "小枫-qwen-image-2-1-图编辑-4步加速版.json",
+        "小枫-qwen-image-2-1-文生图-4步加速版.json",
+        "小枫-qwen-image-2-1-文生图.json"
+      ]
+    },
+    {
+      "name": "qwen-image-2.1-lightning-4step-int8_convrot.safetensors",
+      "basename": "qwen-image-2.1-lightning-4step-int8_convrot.safetensors",
+      "templates": [
+        "小枫-qwen-image-2-1-图编辑-4步加速版.json",
+        "小枫-qwen-image-2-1-文生图-4步加速版.json"
+      ]
+    },
+    {
+      "name": "qwen-image-2.1-Q6_K.gguf",
+      "basename": "qwen-image-2.1-Q6_K.gguf",
+      "templates": [
+        "qwen-image-2-1文生图-seedvr2自动放大.json",
+        "小枫-qwen-image-2-1-图编辑-4步加速版.json",
+        "小枫-qwen-image-2-1-文生图-4步加速版.json"
+      ]
+    },
+    {
+      "name": "qwen-image-2.1-Q8_0.gguf",
+      "basename": "qwen-image-2.1-Q8_0.gguf",
+      "templates": [
+        "qwen-image-2-1图像编辑.json",
+        "小枫-qwen-image-2-1-图像编辑.json",
+        "小枫-qwen-image-2-1-文生图.json"
+      ]
+    },
+    {
+      "name": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "basename": "Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "templates": [
+        "小枫-qwen3-tts-三合一整合版.json"
+      ]
+    },
+    {
+      "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "basename": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "templates": [
+        "小枫-H3-导演-连贯成片.json",
+        "小枫-aicg3d-h3-中配长视频.json",
+        "小枫-aicg3d-h3-低显存长视频.json",
+        "小枫-aicg3d-h3-长视频.json",
+        "小枫-h3导演台-人脸修复.json",
+        "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "qwen3vl_8b_int8_convrot.safetensors",
+      "basename": "qwen3vl_8b_int8_convrot.safetensors",
+      "templates": [
+        "qwen-image-2-1图像编辑.json",
+        "qwen-image-2-1文生图-seedvr2自动放大.json",
+        "小枫-qwen-image-2-1-图像编辑.json",
+        "小枫-qwen-image-2-1-图编辑-4步加速版.json",
+        "小枫-qwen-image-2-1-文生图-4步加速版.json",
+        "小枫-qwen-image-2-1-文生图.json"
+      ]
+    }
+  ]
+}

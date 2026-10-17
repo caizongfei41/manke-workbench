@@ -37,6 +37,10 @@ const FILE_KEYS = [
   'clip_vision_name', 'style_model_name', 'lora_name', 'upscale_model',
   'control_net_name', 'model_name', 'dit_model', 'vae_model', 'gguf_name',
   'image', 'audio', 'file',
+  // AICG3D_H3Loader：模型不是按 *Loader 节点名放的，而是这个聚合节点上的槽位。
+  'fl2va_model', 'ref2va_model', 'text_encoder', 'video_vae', 'audio_vae',
+  'lora_1', 'lora_2', 'lora_3', 'lora_4', 'lora_5', 'lora_6', 'lora_7',
+  'lora_8', 'lora_9',
 ];
 const EXCLUDE_VALUES = /^(none|auto|null|)$/i;
 
@@ -207,6 +211,36 @@ for (const t of byTemplate) {
 }
 
 writeFileSync(OUT, L.join('\n') + '\n', 'utf8');
+
+// 机器可读版本：打包 / 迁移脚本读这份，别再把文件清单硬编码进脚本 ——
+// 模板新增 AICG3D 节点那轮，硬编码清单就漏了 5 个模型。
+const JSON_OUT = OUT.replace(/\.md$/, '.json');
+writeFileSync(
+  JSON_OUT,
+  JSON.stringify(
+    {
+      generated: new Date().toISOString(),
+      templateCount: templates.length,
+      customNodeClasses: customClasses,
+      missingClasses: missing,
+      nodePackages: [...byPackage.entries()]
+        .filter(([p]) => !p.startsWith('('))
+        .map(([name, classes]) => ({ name, classes: [...classes].sort() }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      files: [...fileUsage.entries()]
+        .map(([name, tpls]) => ({
+          name,
+          // 模板里可能带子目录（Flux\flux2-vae.safetensors），取最后一段是磁盘文件名
+          basename: name.replace(/\\/g, '/').split('/').pop(),
+          templates: [...tpls].sort(),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    },
+    null,
+    2
+  ),
+  'utf8'
+);
 
 console.log(`模板 ${templates.length} 个，自定义节点类 ${customClasses.length} 个`);
 console.log('\n需要的节点包:');
