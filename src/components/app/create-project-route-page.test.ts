@@ -10,7 +10,9 @@ const source = readFileSync(
 test('visiting Studio or Canvas does not create a project automatically', () => {
   assert.doesNotMatch(source, /useEffect/);
   assert.match(source, /createProject\('studio'\)/);
-  assert.match(source, /createProject\('canvas'\)/);
+  // The canvas button now picks a flavour, so both entry points must exist.
+  assert.match(source, /createProject\('canvas', 'basic'\)/);
+  assert.match(source, /createProject\('canvas', 'drama'\)/);
   assert.match(source, /appConfig\.app_logo/);
   assert.match(source, /'\/api\/app\/projects'/);
 });

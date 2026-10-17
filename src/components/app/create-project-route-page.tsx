@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { appConfig } from '@/config';
 import { normalizeLocale } from '@/config/locale';
 import type { WorkspaceMode } from '@/config/workspace-modes';
+import { putDramaSnapshot } from '@/core/drama/save-drama-snapshot';
 import { buildPostCreateProjectDetailPath } from '@/core/projects/project-entry';
 import { apiJsonPost } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
@@ -63,7 +64,10 @@ export function CreateProjectRoutePage({
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function createProject(workspaceMode: WorkspaceMode) {
+  async function createProject(
+    workspaceMode: WorkspaceMode,
+    canvasKind?: 'basic' | 'drama'
+  ) {
     if (creating) return;
     setCreating(true);
     setError(null);
@@ -76,6 +80,22 @@ export function CreateProjectRoutePage({
 
       if (!payload?.id) {
         throw new Error(payload?.error || copy.errorTitle);
+      }
+
+      if (workspaceMode === 'canvas' && canvasKind === 'drama') {
+        // Record the canvas flavour before navigating, so the project reopens
+        // into the same pipeline from the project list.
+        await putDramaSnapshot({
+          projectId: payload.id,
+          drama: JSON.stringify({
+            version: 1,
+            script: '',
+            publicAssets: [],
+            shots: [],
+            finalVideoUrl: null,
+            finalStatus: 'idle',
+          }),
+        }).catch(() => null);
       }
 
       window.location.replace(
@@ -141,14 +161,21 @@ export function CreateProjectRoutePage({
                 >
                   {copy.startStudio}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 rounded-[16px] border-ink/[0.16] bg-transparent px-5 text-ink hover:bg-ink/[0.06]"
-                  onClick={() => void createProject('canvas')}
-                >
-                  {copy.startCanvas}
-                </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 rounded-[16px] border-ink/[0.16] bg-transparent px-4 text-ink hover:bg-ink/[0.06]"
+                    onClick={() => void createProject('canvas', 'basic')}
+                  >
+                    {m['BeatAPI.project.startCanvasBasic']()}
+                  </Button>
+                  <Button
+                    type="button"
+                    className="h-11 rounded-[16px] bg-[var(--beat-accent)] px-4 text-[var(--beat-accent-ink)] hover:bg-[var(--beat-accent-hover)]"
+                    onClick={() => void createProject('canvas', 'drama')}
+                  >
+                    {m['BeatAPI.project.startDrama']()}
+                  </Button>
               </>
             )}
           </div>

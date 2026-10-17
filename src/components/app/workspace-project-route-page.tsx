@@ -2,6 +2,7 @@ import { ProductPageShell } from '@/components/app/product-page-shell';
 import { ProjectAssetsWorkspace } from '@/components/app/project-assets-workspace';
 import { BeatStudioWorkspace } from '@/components/studio/beat-studio-workspace';
 import { BeatCanvasShell } from '@/components/beatcanvas/beatcanvas-shell';
+import { DramaCanvasRoute } from '@/components/drama/drama-canvas-route';
 import { VideoEditorWorkspace } from '@/components/editor/video-editor-workspace';
 import type { loadWorkspaceProjectRoute } from '@/core/projects/workspace-project-route-loader';
 
@@ -35,6 +36,13 @@ export function WorkspaceProjectRoutePage({
           key={data.project.id}
           projectId={data.project.id}
           projectName={data.project.name}
+        />
+      ) : data.snapshot?.canvasKind === 'drama' ? (
+        <DramaCanvasRoute
+          key={data.project.id}
+          projectId={data.project.id}
+          snapshot={data.snapshot}
+          snapshotVersion={data.snapshotVersion}
         />
       ) : (
         <BeatCanvasShell

@@ -51,8 +51,19 @@ export type ProjectSnapshotActiveTemplateWorkflow = {
   enteredAt: string;
 };
 
+/** Which canvas the project opens: the freeform board or the drama pipeline. */
+export type ProjectCanvasKind = 'basic' | 'drama';
+
 export type ProjectSnapshotDocument = {
   version: 3;
+  /** Omitted means `basic`, so existing snapshots keep opening the same way. */
+  canvasKind?: ProjectCanvasKind;
+  /**
+   * Drama pipeline state, stored as a JSON string. The drama canvas owns the
+   * shape; keeping it opaque here avoids widening the serializable snapshot type
+   * for a branch most projects never use.
+   */
+  drama?: string;
   cards: CanvasCard[];
   frames: Record<string, ProjectSnapshotShapeFrame>;
   camera?: ProjectSnapshotCamera;
@@ -373,8 +384,21 @@ export const normalizeProjectSnapshotDocument = (
   };
   const camera = normalizeCamera(value.camera);
 
+  const canvasKind =
+    value.canvasKind === 'drama' || value.canvasKind === 'basic'
+      ? value.canvasKind
+      : undefined;
+  // Drama state is owned by its canvas; only bound its size here so a bad
+  // payload cannot bloat the snapshot.
+  const drama =
+    typeof value.drama === 'string' && value.drama.length < 1_000_000
+      ? value.drama
+      : undefined;
+
   return {
     version: 3,
+    ...(canvasKind ? { canvasKind } : {}),
+    ...(drama ? { drama } : {}),
     cards,
     frames,
     ...(camera ? { camera } : {}),
