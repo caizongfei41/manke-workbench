@@ -417,32 +417,37 @@ function Set-RowState($Row, [string]$State) {
 }
 
 # 全程不阻塞：端口探测 ≤120ms，HTTP 结果从上一个 tick 的 task 里取。
+#
+# 状态必须由「上次已知结果」($health[key].Ok) 驱动，不能由「这一 tick 有没有
+# 拿到新结果」驱动。Poll-Health 取到结果后会清空 task，若按「没结果就显示
+# 启动中」来写，界面会在 运行中 ↔ 启动中 之间每个 tick 跳一次。
 function Update-Status {
     if ($script:closing) { return }
     foreach ($key in $rows.Keys) {
         $row = $rows[$key]
         $svc = $row.Svc
+        $st = $health[$key]
         $open = Test-PortOpen $svc.Port
         $row.PortOpen = $open
 
         if (-not $open) {
-            # 服务没起来：丢掉在飞的请求，避免它超时后污染下一次判断
-            $health[$key].Task = $null
-            $health[$key].Ok = $false
+            # 服务没起来：丢掉在飞的请求，并把已知状态复位 —— 否则下次起来时
+            # 会沿用上一轮的「运行中」直接显示绿灯
+            $st.Task = $null
+            $st.Ok = $false
             Set-RowState $row 'stopped'
             continue
         }
 
+        # 有新结果就更新已知状态；没有就沿用上一次的
         $result = Poll-Health $key
-        if ($result -eq $null) {
-            # 还没有结果：先显示启动中，并发起一次
-            Set-RowState $row 'starting'
-            Start-Health $key $svc.Url
-        } elseif ($result) {
-            Set-RowState $row 'running'
-        } else {
-            Set-RowState $row 'starting'
-        }
+        if ($result -ne $null) { $st.Ok = $result }
+
+        if ($st.Ok) { Set-RowState $row 'running' }
+        else { Set-RowState $row 'starting' }
+
+        # 没有在飞的探测就补一个，结果下个 tick 取
+        if (-not $st.Task) { Start-Health $key $svc.Url }
     }
 }
 
