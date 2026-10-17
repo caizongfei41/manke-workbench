@@ -805,5 +805,13 @@
   },
   "Common": {
     "loading": "読み込み中"
-  }
+  },
+  "services.envTitle": "環境チェック",
+  "services.envSubtitle": "テンプレートが依存するノードパッケージ、モデルファイル、ビルド成果物を確認します。",
+  "services.envRecheck": "再チェック",
+  "services.envChecking": "チェック中…",
+  "services.envSummary": "{pass} 件成功 · 警告 {warn} · 失敗 {fail}",
+  "services.envReady": "環境は準備できています",
+  "services.envNotReady": "未通過の項目があります",
+  "services.envIdle": "「再チェック」を押してください"
 }

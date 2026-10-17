@@ -805,5 +805,13 @@
   },
   "Common": {
     "loading": "加载中"
-  }
+  },
+  "services.envTitle": "环境自检",
+  "services.envSubtitle": "检查模板依赖的节点包、模型文件、构建产物是否就位。",
+  "services.envRecheck": "重新检查",
+  "services.envChecking": "检查中…",
+  "services.envSummary": "通过 {pass} · 警告 {warn} · 失败 {fail}",
+  "services.envReady": "环境就绪，可以开工",
+  "services.envNotReady": "有未通过项，按提示处理",
+  "services.envIdle": "点「重新检查」开始"
 }

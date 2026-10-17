@@ -805,5 +805,13 @@
   },
   "Common": {
     "loading": "Loading"
-  }
+  },
+  "services.envTitle": "Environment check",
+  "services.envSubtitle": "Verifies the node packages, model files and build output the bundled templates depend on.",
+  "services.envRecheck": "Re-check",
+  "services.envChecking": "Checking…",
+  "services.envSummary": "{pass} passed · {warn} warnings · {fail} failed",
+  "services.envReady": "Environment ready",
+  "services.envNotReady": "Some checks failed — follow the hints",
+  "services.envIdle": "Press Re-check to start"
 }

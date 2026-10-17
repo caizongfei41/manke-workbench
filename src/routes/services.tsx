@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 import { Link } from '@/core/i18n/navigation';
+import { EnvironmentPanel } from '@/components/services/environment-panel';
 import { apiJsonGet, apiJsonPost } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
 
@@ -291,6 +292,8 @@ function ServicesRouteComponent() {
             {m['services.python']()}：{data.comfyUiPython}
           </div>
         ) : null}
+
+        <EnvironmentPanel />
 
         <div className="mt-6">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium text-[var(--beat-text-2)]">

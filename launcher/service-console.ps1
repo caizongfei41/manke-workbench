@@ -194,6 +194,23 @@ $openBtn.Size = New-Object Drawing.Size(112, 32)
 $openBtn.FlatStyle = 'System'
 $form.Controls.Add($openBtn)
 
+# 第二行：环境自检。查的是「模板依赖的东西在不在」—— 节点包、模型文件、
+# 构建产物、ComfyUI 可达性，清单来自 docs/DEPENDENCIES.json。
+$y += 40
+$checkBtn = New-Object Windows.Forms.Button
+$checkBtn.Text = '检查模型 / 节点 / 插件'
+$checkBtn.Location = New-Object Drawing.Point(18, $y)
+$checkBtn.Size = New-Object Drawing.Size(186, 32)
+$checkBtn.FlatStyle = 'System'
+$form.Controls.Add($checkBtn)
+
+$openLogsBtn = New-Object Windows.Forms.Button
+$openLogsBtn.Text = '打开日志目录'
+$openLogsBtn.Location = New-Object Drawing.Point(212, $y)
+$openLogsBtn.Size = New-Object Drawing.Size(110, 32)
+$openLogsBtn.FlatStyle = 'System'
+$form.Controls.Add($openLogsBtn)
+
 # 日志
 $y += 44
 $logBox = New-Object Windows.Forms.TextBox
@@ -309,6 +326,43 @@ $refreshBtn.Add_Click({ Update-Status; Add-Log '状态已刷新。' }.GetNewClos
 $openBtn.Add_Click({
     Start-Process 'http://127.0.0.1:3020'
     Add-Log '已在浏览器打开 http://127.0.0.1:3020'
+}.GetNewClosure())
+
+$openLogsBtn.Add_Click({
+    $logs = Join-Path $BD 'data\logs'
+    if (-not (Test-Path $logs)) { New-Item -ItemType Directory -Force -Path $logs | Out-Null }
+    Start-Process explorer.exe $logs
+    Add-Log "已打开日志目录：$logs"
+}.GetNewClosure())
+
+# 环境自检：跑 scripts/check-environment.mjs，把结果写进日志框。
+# 输出里的 ANSI 颜色码要剥掉，文本框不认识转义序列。
+$checkBtn.Add_Click({
+    $this.Enabled = $false
+    $original = $this.Text
+    $this.Text = '检查中…'
+    $form.Refresh()
+
+    $script = Join-Path $BD 'scripts\check-environment.mjs'
+    if (-not (Test-Path $script)) {
+        Add-Log "✗ 缺少 scripts\check-environment.mjs，无法自检。"
+    } else {
+        Add-Log '开始环境自检（模型 / 节点包 / 插件 / 配置）…'
+        try {
+            $raw = & node $script 2>&1 | Out-String
+            $esc = [string][char]27
+            foreach ($line in ($raw -split "`r?`n")) {
+                # 剥掉 \e[32m 这类颜色码
+                $clean = ($line -replace ($esc + '\[[0-9;]*m'), '').TrimEnd()
+                if ($clean) { Add-Log $clean }
+            }
+        } catch {
+            Add-Log ('✗ 自检出错：' + $_.Exception.Message)
+        }
+    }
+
+    $this.Text = $original
+    $this.Enabled = $true
 }.GetNewClosure())
 
 # 每 3 秒自动刷新状态
