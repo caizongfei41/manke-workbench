@@ -769,8 +769,17 @@ function compileComfyUiPrompt(
   /** 已被 Director 分支整体注入过的节点 id，后续通用分支跳过。 */
   const directorInjected = new Set<string>();
 
-  if (meta.positive) {
-    const positiveNode = asRecord(nodes[meta.positive]);
+  // `positive` 通常是一个节点 id，但多段串联的模板（AICG3D 无限分段）需要把
+  // 同一个提示词写进每一段，所以允许写成逗号分隔的 id 列表。
+  const positiveNodeIds = meta.positive
+    ? String(meta.positive)
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    : [];
+
+  for (const positiveNodeKey of positiveNodeIds) {
+    const positiveNode = asRecord(nodes[positiveNodeKey]);
     const nodeInputs = asRecord(positiveNode?.inputs);
     if (positiveNode && nodeInputs) {
       if ('timeline_data' in nodeInputs) {
@@ -793,7 +802,7 @@ function compileComfyUiPrompt(
             : undefined,
           refImages.length
         );
-        directorInjected.add(meta.positive);
+        directorInjected.add(positiveNodeKey);
       } else if ('global_prompt' in nodeInputs) {
         nodeInputs.global_prompt = prompt;
       } else if ('text' in nodeInputs) {
@@ -842,7 +851,9 @@ function compileComfyUiPrompt(
         nodeInputs.positive_prompt = prompt;
       }
     }
-  } else {
+  }
+
+  if (positiveNodeIds.length === 0) {
     // 启发式：注入到第一个含 text 字段的文本编码节点。
     const positiveNode = Object.entries(nodes).find(
       ([, value]) =>
@@ -936,7 +947,8 @@ function compileComfyUiPrompt(
       // 896×1184）会与采样 latent（768×1024）不一致，导致分辨率语义混乱。
       //   跟随参考图 -> 0（保留参考图原尺寸，32 对齐后与 latent 完全一致）
       //   明确比例   -> 目标面积几何平均（32 对齐），视觉槽贴近采样尺寸
-      const positiveNodeId = readString(meta.positive);
+      // 多段模板里 positive 可能是逗号列表，取第一个用于分辨率回填。
+      const positiveNodeId = readString(meta.positive)?.split(',')[0]?.trim();
       const positiveInputs = positiveNodeId
         ? asRecord(asRecord(nodes[positiveNodeId])?.inputs)
         : null;

@@ -294,6 +294,12 @@ export const WORKSPACE_MEDIA_SCHEMAS = {
     video: emptySection,
     audio: emptySection,
   },
+  // 分段串联模板：素材在模板内部的素材库里选，界面不再额外上传。
+  '小枫-aicg3d-h3-低显存长视频': {
+    image: emptySection,
+    video: emptySection,
+    audio: emptySection,
+  },
 
   'qwen-image-2-1图像编辑': {
     image: createGenericSection('reference-image', 1),

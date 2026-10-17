@@ -562,6 +562,24 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
       isLocalFree: true,
     },
     {
+      // AICG3D 分段串联：一次提交跑完所有分段，段间卸载模型，显存需求随
+      // 显存档位和分辨率变化。分辨率与分段时长由模板的「全局设置」节点决定，
+      // 界面上的质量选择只作为提示，不参与注入。
+      id: '小枫-aicg3d-h3-低显存长视频',
+      name: 'MiniMax H3 低显存长视频',
+      workspaceType: 'ai-video',
+      routeSlug: 'minimax-h3-aicg3d-lowvram',
+      routeOrder: 94,
+      defaultDuration: '9s',
+      supportedDurations: durationRange(1, 15),
+      supportedAspectRatios: ['16:9', '9:16', '1:1'],
+      defaultOutputQuality: '480p',
+      supportedOutputQualities: ['480p', '720p'],
+      supportsSeed: true,
+      multiSegment: true,
+      isLocalFree: true,
+    },
+    {
       id: 'qwen-image-2-1图像编辑',
       name: 'Qwen Image 2.1 图像编辑',
       workspaceType: 'ai-image',

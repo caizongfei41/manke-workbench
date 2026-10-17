@@ -1,0 +1,177 @@
+{
+  "60": {
+    "inputs": {
+      "filename_prefix": "video/Manke_AICG3D",
+      "final_segment": [
+        "109",
+        0
+      ]
+    },
+    "class_type": "AICG3D_H3SequenceCombine",
+    "_meta": {
+      "title": "MiniMax H3 Aicg 最终合成视频"
+    }
+  },
+  "77": {
+    "inputs": {
+      "media_state": "{\"images\":[]}"
+    },
+    "class_type": "AICG3D_H3MediaLoader",
+    "_meta": {
+      "title": "MiniMax H3 Aicg资源库"
+    }
+  },
+  "78": {
+    "inputs": {
+      "resolution": "480P",
+      "aspect_ratio": "16:9",
+      "fps": 24,
+      "handoff_frames": 22,
+      "handoff_mode": "尾帧续写（latent）",
+      "ref_image_size": "match",
+      "sampler_name": "res_multistep",
+      "scheduler": "simple",
+      "steps": 4,
+      "denoise": 1,
+      "vram_policy": "卸载模型",
+      "sample_preview": "关",
+      "preview_interval": 1,
+      "prompt_optimizer_settings": false,
+      "audio_mode": "生成音频",
+      "vram_tier": "8G",
+      "exposure_lock": "跨段曝光锁定",
+      "keep_full": true,
+      "h3_bundle": [
+        "106",
+        0
+      ],
+      "model": [
+        "80",
+        0
+      ]
+    },
+    "class_type": "AICG3D_H3SequenceGlobal",
+    "_meta": {
+      "title": "MiniMax H3 Aicg 无限段落顺序生成（全局设置）"
+    }
+  },
+  "80": {
+    "inputs": {
+      "selection": "sol-attn",
+      "selection.tau": 1.3,
+      "start_percent": 0.2,
+      "end_percent": 1,
+      "dense_blocks": "",
+      "min_tokens": 12288,
+      "extra_tokens": 256,
+      "sink_conditioning": "exact_kv_and_rows",
+      "verbose": true,
+      "model": [
+        "82",
+        0
+      ]
+    },
+    "class_type": "BlockSparseAttention",
+    "_meta": {
+      "title": "块稀疏注意力"
+    }
+  },
+  "82": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "106",
+        1
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "ModelAttentionBackend"
+    }
+  },
+  "106": {
+    "inputs": {
+      "fl2va_model": "minimax_h3_fl2va_pruned_w4a8_mixed.safetensors",
+      "ref2va_model": "minimax_h3_fl2va_pruned_w4a8_mixed.safetensors",
+      "text_encoder": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "video_vae": "minimax_h3_video_vae_int8_convrot.safetensors",
+      "audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+      "lora_1": "minimax\\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",
+      "lora_1_strength": 1,
+      "lora_2": "none",
+      "lora_2_strength": 1,
+      "lora_3": "none",
+      "lora_3_strength": 1,
+      "lora_4": "none",
+      "lora_4_strength": 1,
+      "non_h3_policy": "自动回落",
+      "lora_5": "none",
+      "lora_5_strength": 1,
+      "lora_6": "none",
+      "lora_6_strength": 1,
+      "lora_7": "none",
+      "lora_7_strength": 1,
+      "lora_8": "none",
+      "lora_8_strength": 1,
+      "lora_9": "none",
+      "lora_9_strength": 1,
+      "注意力加速(Sage)": "SageAttention"
+    },
+    "class_type": "AICG3D_H3Loader",
+    "_meta": {
+      "title": "MiniMax H3 Aicg 加载器"
+    }
+  },
+  "107": {
+    "inputs": {
+      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera.\n0.0-Ns: the scene unfolds smoothly and keeps consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
+      "seconds": 3,
+      "seed": 100001,
+      "inline_media_state": "{\"images\":[]}",
+      "sequence_config": [
+        "78",
+        0
+      ]
+    },
+    "class_type": "AICG3D_H3SequenceSegment",
+    "_meta": {
+      "title": "MiniMax H3 Aicg 视频段落"
+    }
+  },
+  "108": {
+    "inputs": {
+      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera.\n0.0-Ns: the scene unfolds smoothly and keeps consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
+      "seconds": 3,
+      "seed": 100002,
+      "inline_media_state": "{\"images\":[]}",
+      "previous_segment": [
+        "107",
+        0
+      ]
+    },
+    "class_type": "AICG3D_H3SequenceSegment",
+    "_meta": {
+      "title": "MiniMax H3 Aicg 视频段落"
+    }
+  },
+  "109": {
+    "inputs": {
+      "prompt": "integrated_multimodal_description: [Shot 1] A continuous cinematic shot, natural light, steady camera.\n0.0-Ns: the scene unfolds smoothly and keeps consistent with the previous shot\noverall_soundscape: subtle ambient room tone\nnon_diegetic_music: soft atmospheric score",
+      "seconds": 3,
+      "seed": 100003,
+      "inline_media_state": "{\"images\":[]}",
+      "previous_segment": [
+        "108",
+        0
+      ]
+    },
+    "class_type": "AICG3D_H3SequenceSegment",
+    "_meta": {
+      "title": "MiniMax H3 Aicg 视频段落"
+    }
+  },
+  "_beatdesign": {
+    "positive": "107,108,109",
+    "seed": "107"
+  }
+}
