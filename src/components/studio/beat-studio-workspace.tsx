@@ -119,6 +119,8 @@ export function BeatStudioWorkspace({
   const [analysisFile, setAnalysisFile] = useState<File | null>(null);
   const [referenceUrls, setReferenceUrls] = useState<string[]>([]);
   const [error, setError] = useState('');
+  // composer 是浮层，结果列表要用它的实际高度留底部空间（默认值只是首帧兜底）。
+  const [composerHeight, setComposerHeight] = useState(0);
   const models = draft.type === 'video' ? videoModels : imageModels;
   const selectedModel =
     findWorkspaceModelOption(models, draft.modelId) ?? models[0] ?? null;
@@ -235,7 +237,13 @@ export function BeatStudioWorkspace({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_112%,rgba(56,189,248,0.12),transparent_34%),linear-gradient(180deg,#08090a_0%,#0b0b0d_48%,#08090a_100%)]" />
       <div className="pointer-events-none absolute inset-x-[8%] top-0 h-[62%] opacity-25 [background-image:radial-gradient(rgba(255,255,255,0.16)_0.75px,transparent_0.75px)] [background-size:18px_18px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[220px] pt-8 sm:px-6 sm:pb-[210px]">
+      <div
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-8 sm:px-6"
+        style={{
+          // 分段导演台展开时 composer 会变高，写死的留白不够，最后一条结果会被压住。
+          paddingBottom: composerHeight > 0 ? composerHeight + 8 : 220,
+        }}
+      >
         {feedItems.length > 0 ? (
           <div className="flex min-h-full w-full flex-col justify-end">
             <StudioGenerationFeed
@@ -314,6 +322,7 @@ export function BeatStudioWorkspace({
           }
         }}
         onAnalysisDepthChange={setAnalysisDepth}
+        onHeightChange={setComposerHeight}
         onReferenceFileSelect={(file) => {
           void uploadLocalProjectAsset({ projectId, file })
             .then((asset) => {

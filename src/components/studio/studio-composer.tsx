@@ -55,6 +55,7 @@ export function StudioComposer({
   referenceUrls = [],
   onRemoveReference,
   onReferenceFileSelect,
+  onHeightChange,
 }: {
   draft: CanvasGenerationCard;
   media: StudioMedia;
@@ -74,13 +75,35 @@ export function StudioComposer({
   referenceUrls?: string[];
   onRemoveReference?: (url: string) => void;
   onReferenceFileSelect?: (file: File) => void;
+  /**
+   * 上报 composer 的占用高度。composer 绝对定位浮在内容之上，结果列表要用它的
+   * 实际高度留底部空间 —— 固定值不够用：分段导演台展开后 composer 会明显变高，
+   * 最后一条结果就被压住。
+   */
+  onHeightChange?: (height: number) => void;
 }) {
   const labels = useCanvasComposerLabels();
   const t = useTranslations('AppShell.studio.analysis');
   const analysisFileInputRef = useRef<HTMLInputElement | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
   const parameterPickerRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [isParameterOpen, setIsParameterOpen] = useState(false);
+  // 把自身高度报给外层：结果列表据此留底部空间。
+  // onHeightChange 每次渲染都是新函数，用 ref 固定住避免 ResizeObserver 反复重建。
+  const onHeightChangeRef = useRef(onHeightChange);
+  onHeightChangeRef.current = onHeightChange;
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const report = () => onHeightChangeRef.current?.(el.offsetHeight);
+    report();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(report);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const isAnalysis = media === 'analysis';
   const models = media === 'video' ? videoModels : imageModels;
   const selectedModel =
@@ -211,7 +234,10 @@ export function StudioComposer({
   ]);
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#09090a] via-[#09090a]/96 to-transparent px-3 pb-3 pt-12 sm:px-6 sm:pb-5 sm:pt-14">
+    <div
+      ref={rootRef}
+      className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#09090a] via-[#09090a]/96 to-transparent px-3 pb-3 pt-12 sm:px-6 sm:pb-5 sm:pt-14"
+    >
       <div
         className={cn(
           'mx-auto w-full max-w-[1138px] p-2.5 sm:p-3.5',
@@ -230,6 +256,101 @@ export function StudioComposer({
               >
                 <img src={url} alt="" className="h-full w-full object-cover" />
               </button>
+            ))}
+          </div>
+        ) : null}
+        {media === 'video' && selectedModel?.multiSegment ? (
+          <div className="mb-2 rounded-[12px] border border-white/[0.08] bg-black/30 p-2.5">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--beat-text-2)]">
+                {t('segmentPanelTitle')}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={(draft.segments?.length ?? 0) >= 4}
+                  onClick={() =>
+                    onDraftChange({
+                      ...draft,
+                      segments: [
+                        ...(draft.segments ?? []),
+                        { prompt: '', duration: undefined },
+                      ],
+                    })
+                  }
+                  className="rounded-full border border-white/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-white/[0.06] disabled:opacity-40"
+                >
+                  {t('segmentAdd')}
+                </button>
+                <button
+                  type="button"
+                  disabled={(draft.segments?.length ?? 0) <= 1}
+                  onClick={() =>
+                    onDraftChange({
+                      ...draft,
+                      segments: (draft.segments ?? []).slice(0, -1),
+                    })
+                  }
+                  className="rounded-full border border-white/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-white/[0.06] disabled:opacity-40"
+                >
+                  {t('segmentRemove')}
+                </button>
+              </div>
+            </div>
+            {(draft.segments ?? []).map((segment, index) => (
+              <div
+                key={index}
+                className="mb-1.5 flex items-center gap-2 last:mb-0"
+              >
+                <span className="w-11 shrink-0 text-[11px] tabular-nums text-[var(--beat-text-3)]">
+                  {t('segmentIndex', { index: index + 1 })}
+                </span>
+                <input
+                  value={segment.prompt}
+                  onChange={(event) => {
+                    const next = [...(draft.segments ?? [])];
+                    next[index] = { ...segment, prompt: event.target.value };
+                    onDraftChange({ ...draft, segments: next });
+                  }}
+                  placeholder={t('segmentPromptPlaceholder')}
+                  disabled={isBusy}
+                  className="min-w-0 flex-1 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-2.5 py-1.5 text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-white/30 focus:border-white/20"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={segment.duration ?? ''}
+                  onChange={(event) => {
+                    const value = Number(event.target.value);
+                    const next = [...(draft.segments ?? [])];
+                    next[index] = {
+                      ...segment,
+                      duration:
+                        event.target.value === ''
+                          ? undefined
+                          : Number.isFinite(value) && value >= 1
+                            ? Math.min(30, Math.round(value))
+                            : undefined,
+                    };
+                    onDraftChange({ ...draft, segments: next });
+                  }}
+                  placeholder={String(
+                    Math.max(
+                      1,
+                      Math.round(
+                        (Number(draft.duration.replace('s', '')) || 5) /
+                          Math.max(1, draft.segments?.length ?? 1)
+                      )
+                    )
+                  )}
+                  disabled={isBusy}
+                  className="w-14 shrink-0 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-1.5 py-1.5 text-center text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-white/30 focus:border-white/20"
+                />
+                <span className="w-4 shrink-0 text-[10px] text-[var(--beat-text-3)]">
+                  {t('segmentSeconds')}
+                </span>
+              </div>
             ))}
           </div>
         ) : null}
@@ -275,101 +396,6 @@ export function StudioComposer({
               event.currentTarget.value = '';
             }}
           />
-          {media === 'video' && selectedModel?.multiSegment ? (
-            <div className="mt-2 rounded-[12px] border border-white/[0.08] bg-black/30 p-2.5">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--beat-text-2)]">
-                  {t('segmentPanelTitle')}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    disabled={(draft.segments?.length ?? 0) >= 4}
-                    onClick={() =>
-                      onDraftChange({
-                        ...draft,
-                        segments: [
-                          ...(draft.segments ?? []),
-                          { prompt: '', duration: undefined },
-                        ],
-                      })
-                    }
-                    className="rounded-full border border-white/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-white/[0.06] disabled:opacity-40"
-                  >
-                    {t('segmentAdd')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={(draft.segments?.length ?? 0) <= 1}
-                    onClick={() =>
-                      onDraftChange({
-                        ...draft,
-                        segments: (draft.segments ?? []).slice(0, -1),
-                      })
-                    }
-                    className="rounded-full border border-white/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-white/[0.06] disabled:opacity-40"
-                  >
-                    {t('segmentRemove')}
-                  </button>
-                </div>
-              </div>
-              {(draft.segments ?? []).map((segment, index) => (
-                <div
-                  key={index}
-                  className="mb-1.5 flex items-center gap-2 last:mb-0"
-                >
-                  <span className="w-11 shrink-0 text-[11px] tabular-nums text-[var(--beat-text-3)]">
-                    {t('segmentIndex', { index: index + 1 })}
-                  </span>
-                  <input
-                    value={segment.prompt}
-                    onChange={(event) => {
-                      const next = [...(draft.segments ?? [])];
-                      next[index] = { ...segment, prompt: event.target.value };
-                      onDraftChange({ ...draft, segments: next });
-                    }}
-                    placeholder={t('segmentPromptPlaceholder')}
-                    disabled={isBusy}
-                    className="min-w-0 flex-1 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-2.5 py-1.5 text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-white/30 focus:border-white/20"
-                  />
-                  <input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={segment.duration ?? ''}
-                    onChange={(event) => {
-                      const value = Number(event.target.value);
-                      const next = [...(draft.segments ?? [])];
-                      next[index] = {
-                        ...segment,
-                        duration:
-                          event.target.value === ''
-                            ? undefined
-                            : Number.isFinite(value) && value >= 1
-                              ? Math.min(30, Math.round(value))
-                              : undefined,
-                      };
-                      onDraftChange({ ...draft, segments: next });
-                    }}
-                    placeholder={String(
-                      Math.max(
-                        1,
-                        Math.round(
-                          (Number(draft.duration.replace('s', '')) || 5) /
-                            Math.max(1, draft.segments?.length ?? 1)
-                        )
-                      )
-                    )}
-                    disabled={isBusy}
-                    className="w-14 shrink-0 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-1.5 py-1.5 text-center text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-white/30 focus:border-white/20"
-                  />
-                  <span className="w-4 shrink-0 text-[10px] text-[var(--beat-text-3)]">
-                    {t('segmentSeconds')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : null}
           <div className="absolute right-1.5 top-1.5 z-10">
             <AiExpandControl
               prompt={draft.prompt}
