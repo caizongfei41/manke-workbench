@@ -9,6 +9,8 @@ import { join } from 'node:path';
 
 const ROOT = process.argv[2] ?? process.cwd();
 const COMFY = process.argv[3] ?? 'http://127.0.0.1:8188';
+// Filesystem root of the ComfyUI install; separate from the URL above.
+const COMFY_DIR = process.argv[4] ?? process.env.BEATDESIGN_COMFYUI_HOME ?? 'E:\\ComfyUI';
 const WF_DIR = join(ROOT, 'data/comfyui/workflows');
 const OUT = join(ROOT, 'docs/DEPENDENCIES.md');
 
@@ -85,14 +87,37 @@ for (const [cls, meta] of Object.entries(info)) {
   if (typeof mod === 'string') moduleOf.set(cls, mod);
 }
 
+// The module name in /object_info is not always the folder name: a package can
+// register itself under a shorter name than its directory. Resolve against the
+// real custom_nodes listing so the install instructions name a directory that
+// actually exists.
+const cnDir = join(COMFY_DIR, 'ComfyUI', 'custom_nodes');
+let cnFolders = [];
+try {
+  cnFolders = readdirSync(cnDir, { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name);
+} catch {
+  // custom_nodes not readable; fall back to the reported module name.
+}
+
 const packageOf = (mod) => {
   if (!mod) return null;
-  // "custom_nodes.ComfyUI-SeedVR2_VideoUpscaler" -> "ComfyUI-SeedVR2_VideoUpscaler"
   const m = /^custom_nodes\.([^.]+)/.exec(mod);
-  if (m) return m[1];
-  if (/^comfy_extras/.test(mod)) return '(comfy_extras)';
-  if (/^nodes$|^comfy\./.test(mod)) return '(core)';
-  return mod;
+  if (!m) {
+    if (/^comfy_extras/.test(mod)) return '(comfy_extras)';
+    if (/^nodes$|^comfy\./.test(mod)) return '(core)';
+    return mod;
+  }
+  const reported = m[1];
+  if (cnFolders.includes(reported)) return reported;
+  // Prefer a folder that starts with the reported name ("Comfyui-Qwen-Image-2" ->
+  // "Comfyui-Qwen-Image-2.1-BlockCache-T8").
+  const lower = reported.toLowerCase();
+  const prefixed = cnFolders
+    .filter((f) => f.toLowerCase().startsWith(lower))
+    .sort((a, b) => a.length - b.length);
+  return prefixed[0] ?? reported;
 };
 
 const byPackage = new Map(); // package -> Set(class)

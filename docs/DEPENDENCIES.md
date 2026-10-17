@@ -22,7 +22,7 @@
 | `ComfyUI-SeedVR2_VideoUpscaler` | `SeedVR2LoadDiTModel`, `SeedVR2LoadVAEModel`, `SeedVR2TorchCompileSettings`, `SeedVR2VideoUpscaler` |
 | `ComfyUI-VideoHelperSuite` | `VHS_LoadVideo`, `VHS_VideoCombine` |
 | `ComfyUI_MiniMaxH3_Director` | `MiniMaxH3Director`, `MiniMaxH3DirectorFaceRefine`, `MiniMaxH3DirectorRefine` |
-| `Comfyui-Qwen-Image-2` | `QwenImage21BlockCacheT8` |
+| `Comfyui-Qwen-Image-2.1-BlockCache-T8` | `QwenImage21BlockCacheT8` |
 
 ### 随 ComfyUI 自带（无需单独安装）
 
@@ -132,13 +132,13 @@
 ### 小枫-qwen-image-2-1-图编辑-4步加速版.json
 
 - 节点 14 个（自定义 8）
-- 依赖节点包：`(comfy_extras)`、`ComfyUI-GGUF`、`Comfyui-Qwen-Image-2`
+- 依赖节点包：`(comfy_extras)`、`ComfyUI-GGUF`、`Comfyui-Qwen-Image-2.1-BlockCache-T8`
 - 资源文件：`qwen-image-2.1-Q6_K.gguf`、`qwen3vl_8b_int8_convrot.safetensors`、`qwen_image_2.1_vae_bf16.safetensors`、`352474e31ab5d0bf4e5da57a32b957f4.jpg`、`qwen-image-2.1-lightning-4step-int8_convrot.safetensors`
 
 ### 小枫-qwen-image-2-1-文生图-4步加速版.json
 
 - 节点 14 个（自定义 8）
-- 依赖节点包：`(comfy_extras)`、`ComfyUI-GGUF`、`Comfyui-Qwen-Image-2`
+- 依赖节点包：`(comfy_extras)`、`ComfyUI-GGUF`、`Comfyui-Qwen-Image-2.1-BlockCache-T8`
 - 资源文件：`qwen-image-2.1-Q6_K.gguf`、`qwen3vl_8b_int8_convrot.safetensors`、`qwen_image_2.1_vae_bf16.safetensors`、`qwen-image-2.1-lightning-4step-int8_convrot.safetensors`
 
 ### 小枫-qwen-image-2-1-文生图.json
