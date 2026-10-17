@@ -901,5 +901,6 @@
   "studio.director.analyzing": "正在分析剧本…",
   "studio.director.scriptImportTitle": "导入剧本",
   "studio.director.assetImportEmpty": "这个素材还没有图，先「生图」或「上传」一张再导入。",
-  "studio.director.useTemplate": "套用模板"
+  "studio.director.useTemplate": "套用模板",
+  "studio.director.stitchHint": "按顺序首尾衔接，最后自动拼成一条完整视频"
 }

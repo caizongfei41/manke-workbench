@@ -743,6 +743,8 @@ export function BeatCanvasShell({
   const frontLayerValue = useMemo<BeatCanvasFrontLayerValue>(
     () => ({
       cards: canvasCards,
+      projectId,
+      updateDraftCard,
       selectedShapeIds,
       selectedCanvasCardIds,
       activeComposerCardId,

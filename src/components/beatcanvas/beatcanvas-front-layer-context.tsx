@@ -1,3 +1,4 @@
+import type { CanvasDraftCard } from '@/core/beatcanvas/canvas-types';
 import type { EffectMetadata } from '@/core/effects/client-api';
 import type {
   WorkspaceAspectRatio,
@@ -139,6 +140,11 @@ export type BeatCanvasFrontLayerValue = {
   onRedoCanvas: () => void;
   /** Optional seed prompt, so the starting-idea cards can open a filled draft. */
   onCreateImageDraft: (prompt?: string) => void;
+  projectId: string;
+  updateDraftCard: (
+    cardId: string,
+    updater: Partial<CanvasDraftCard> | ((current: CanvasDraftCard) => CanvasDraftCard)
+  ) => void;
   onUploadImage: () => void;
   onCreateGenerationFromConnector: (input: {
     sourceCardId: string;

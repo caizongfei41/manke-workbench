@@ -132,6 +132,11 @@ export function StudioDirectorConsole({
                 })
               : m['studio.director.summaryEmpty']()}
           </span>
+          {segments.length > 0 ? (
+            <span className="mt-0.5 truncate text-[10px] leading-none text-[var(--beat-text-3)]">
+              {m['studio.director.stitchHint']()}
+            </span>
+          ) : null}
         </div>
         <button
           type="button"
@@ -280,6 +285,38 @@ export function StudioDirectorConsole({
                   className="mb-1.5 h-16 w-full resize-none rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2 py-1.5 text-[12px] leading-5 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
                 />
                 <div className="flex flex-wrap items-center gap-1.5">
+                  {/* Consistency: the same character/scene image in every shot it appears in. */}
+                  {settings.assets.length > 0 ? (
+                    <div className="mb-1 flex flex-wrap items-center gap-1">
+                      {settings.assets.map((asset) => {
+                        const on = (seg.assetIds ?? []).includes(asset.id);
+                        return (
+                          <button
+                            key={asset.id}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => {
+                              const ids = seg.assetIds ?? [];
+                              updateSegment(index, {
+                                assetIds: on
+                                  ? ids.filter((id) => id !== asset.id)
+                                  : [...ids, asset.id],
+                              });
+                            }}
+                            title={asset.description || asset.name}
+                            className={cn(
+                              'max-w-[110px] truncate rounded-full border px-1.5 py-0.5 text-[10px] transition disabled:opacity-40',
+                              on
+                                ? 'border-[var(--beat-accent)]/50 bg-[var(--beat-accent)]/15 text-[var(--beat-accent)]'
+                                : 'border-ink/[0.1] bg-ink/[0.03] text-[var(--beat-text-3)] hover:text-ink'
+                            )}
+                          >
+                            {ASSET_KIND_LABELS[asset.kind]?.slice(0, 1)} · {asset.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                   {(seg.imageUrls ?? []).map((url) => (
                     <ImageHoverPreview key={url} src={url} previewWidth={280} previewHeight={280}>
                     <span

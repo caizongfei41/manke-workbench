@@ -1590,83 +1590,84 @@ export class ComfyUiAdapter extends BaseAdapter {
 
       // AICG3D 分段：每段独立的提示词 / 时长 / 参考图。
       // 没给分段时保留模板行为（同一提示词写进每一段）。
-      const sequenceSegmentIds = workflow._beatdesign?.sequence_segments;
-      const directorSegments = Array.isArray(record.director_segments)
-        ? (record.director_segments as Array<Record<string, unknown>>)
-        : [];
-      if (
-        Array.isArray(sequenceSegmentIds) &&
-        sequenceSegmentIds.length > 0 &&
-        directorSegments.length > 0
-      ) {
-        const count = Math.min(sequenceSegmentIds.length, directorSegments.length);
-        for (let i = 0; i < count; i += 1) {
-          const segInputs = asRecord(asRecord(nodes[sequenceSegmentIds[i]])?.inputs);
-          const seg = directorSegments[i];
-          if (!segInputs || !seg) continue;
-          if (typeof seg.prompt === 'string' && seg.prompt.trim()) {
-            // 节点的多模态描述前缀不能丢，模型靠它区分画面/音频通道。
-            const raw = segInputs.prompt;
-            const prefix =
-              typeof raw === 'string' && raw.startsWith('integrated_multimodal_description:')
-                ? 'integrated_multimodal_description: '
-                : '';
-            segInputs.prompt = prefix + seg.prompt.trim();
-          }
-          if (typeof seg.seconds === 'number' && seg.seconds > 0) {
-            segInputs.seconds = Math.min(30, Math.max(0.2, seg.seconds));
-          }
-          if (typeof seg.seed === 'number') {
-            segInputs.seed = seg.seed;
-          }
-          // 每段参考图：上传进 ComfyUI 的 input/，再写成内嵌资源库 JSON。
-          const segImages = Array.isArray(seg.imageUrls)
-            ? (seg.imageUrls as unknown[]).filter(
-                (u): u is string => typeof u === 'string' && u.length > 0
-              )
-            : [];
-          if (segImages.length > 0) {
+        // ── AICG3D 分段导演 ────────────────────────────────────────────────
+        // 模板只带固定的几段，用户写多少段就展开多少段：克隆第一段当原型，
+        // 逐段用 previous_segment 串起来，再让合成节点指向最后一段。
+        // 不这么做的话，40 段分镜只会跑出模板那 3 段。
+        const sequenceSegmentIds = workflow._beatdesign?.sequence_segments;
+        const directorSegments = Array.isArray(record.director_segments)
+          ? (record.director_segments as Array<Record<string, unknown>>)
+          : [];
+        if (
+          Array.isArray(sequenceSegmentIds) &&
+          sequenceSegmentIds.length > 0 &&
+          directorSegments.length > 0
+        ) {
+          const protoNode = asRecord(nodes[sequenceSegmentIds[0]]);
+          const protoInputs = asRecord(protoNode?.inputs) ?? {};
+          // 节点的多模态描述前缀不能丢，模型靠它区分画面/音频通道。
+          const promptPrefix =
+            typeof protoInputs.prompt === 'string' &&
+            protoInputs.prompt.startsWith('integrated_multimodal_description:')
+              ? 'integrated_multimodal_description: '
+              : '';
+          const baseSeed = Number(protoInputs.seed ?? 0) || 0;
+          const sequenceConfigRef = protoInputs.sequence_config;
+
+          const built: string[] = [];
+          for (let i = 0; i < directorSegments.length; i += 1) {
+            const seg = directorSegments[i] ?? {};
+            const segId = String(9000 + i);
+
+            // 每段参考图：上传进 ComfyUI 的 input/，再写成内嵌资源库 JSON。
+            // 顺序即 <Picture N> 的编号，所以调用方要先放人物、再放场景。
+            const segImages = Array.isArray(seg.imageUrls)
+              ? (seg.imageUrls as unknown[]).filter(
+                  (u): u is string => typeof u === 'string' && u.length > 0
+                )
+              : [];
             const names: string[] = [];
             for (const url of segImages.slice(0, 9)) {
               names.push(await uploadReferenceImage(baseUrl, url));
             }
-            segInputs.inline_media_state = JSON.stringify({
-              images: names,
-              audios: [],
-              videos: [],
-            });
-          } else {
-            // 没给本段参考图就清空模板残留，避免沿用模板内置的示例图。
-            segInputs.inline_media_state = JSON.stringify({
-              images: [],
-              audios: [],
-              videos: [],
-            });
-          }
-        }
-      }
 
-      // 用户定义的分镜比模板少时，把多余的模板分段摘掉并重新挂链接。
-      // 否则多出来的那段会带着模板里的示例提示词一起出片。
-      if (
-        Array.isArray(sequenceSegmentIds) &&
-        directorSegments.length > 0 &&
-        directorSegments.length < sequenceSegmentIds.length
-      ) {
-        const keep = sequenceSegmentIds.slice(0, directorSegments.length);
-        const drop = sequenceSegmentIds.slice(directorSegments.length);
-        for (const id of drop) delete nodes[id];
-        const lastId = keep[keep.length - 1];
-        // Combine 的 final_segment 必须改指最后一段，否则指向已删除的节点。
-        for (const node of Object.values(nodes)) {
-          const comboInputs = asRecord(asRecord(node)?.inputs);
-          if (!comboInputs || !('final_segment' in comboInputs)) continue;
-          const current = comboInputs.final_segment;
-          if (Array.isArray(current) && drop.includes(String(current[0]))) {
+            const segInputs: Record<string, unknown> = {
+              prompt: promptPrefix + String(seg.prompt ?? ''),
+              seconds: Math.min(
+                30,
+                Math.max(0.2, typeof seg.seconds === 'number' ? seg.seconds : 3)
+              ),
+              seed:
+                typeof seg.seed === 'number' ? seg.seed : baseSeed + i,
+              // 没给本段参考图就清空，避免沿用模板内置的示例图。
+              inline_media_state: JSON.stringify({
+                images: names,
+                audios: [],
+                videos: [],
+              }),
+            };
+            if (i === 0) {
+              if (sequenceConfigRef) segInputs.sequence_config = sequenceConfigRef;
+            } else {
+              segInputs.previous_segment = [built[i - 1], 0];
+            }
+
+            nodes[segId] = { ...protoNode, inputs: segInputs };
+            built.push(segId);
+          }
+
+          // 模板原有的分段全部摘掉，只留展开出来的这条链。
+          for (const id of sequenceSegmentIds) delete nodes[id];
+
+          // 合成节点改指最后一段，否则指向已删除的节点。
+          const lastId = built[built.length - 1];
+          for (const node of Object.values(nodes)) {
+            const comboInputs = asRecord(asRecord(node)?.inputs);
+            if (!comboInputs || !('final_segment' in comboInputs)) continue;
             comboInputs.final_segment = [lastId, 0];
           }
         }
-      }
+
 
       // LoRA 槽位：写到 H3Loader 的 lora_1..9 + lora_N_strength。
       const loraLoaderId = workflow._beatdesign?.lora_loader;

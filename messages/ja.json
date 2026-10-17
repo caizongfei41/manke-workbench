@@ -901,5 +901,6 @@
   "studio.director.analyzing": "脚本を解析中…",
   "studio.director.scriptImportTitle": "脚本を読み込む",
   "studio.director.assetImportEmpty": "素材に画像がありません。先に生成かアップロードをしてください。",
-  "studio.director.useTemplate": "テンプレート"
+  "studio.director.useTemplate": "テンプレート",
+  "studio.director.stitchHint": "順に繋がり、最後に 1 本の動画に結合されます"
 }

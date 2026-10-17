@@ -215,8 +215,16 @@ export type DirectorSegment = {
   prompt: string;
   /** 段落时长（秒），节点范围 0.2~30。 */
   seconds: number;
-  /** 每段独立的参考图 URL。为空则沿用全局参考或上一段素材。 */
+  /** 每段独立的参考图 URL（手动加的）。 */
   imageUrls?: string[];
+  /**
+   * 这一段用到的素材 id（人物/场景/道具）。
+   *
+   * 保持一致性靠的就是这个：同一个角色在每一段都挂同一张定妆图，
+   * 模型才有稳定的参考。提交时按「人物 → 场景 → 道具」的顺序展开成图片，
+   * 这个顺序也就是提示词里 <Picture N> 的编号。
+   */
+  assetIds?: string[];
 };
 
 export type DirectorSettings = {
@@ -293,6 +301,29 @@ export const pickChangedDirectorGlobal = (
     if (defaults[k] !== v && v !== undefined && v !== '') out[k] = v;
   }
   return out;
+};
+
+/**
+ * 把分段挂的素材展开成参考图 URL。
+ *
+ * 顺序固定为 人物 → 场景 → 道具，再接手动图：H3 按顺序把素材编号成
+ * <Picture 1>、<Picture 2>…，顺序一变，同一个角色就会指到别的图上，
+ * 一致性立刻崩掉。所以这里不允许调用方随便排序。
+ */
+export const resolveSegmentImages = (
+  segment: Pick<DirectorSegment, 'assetIds' | 'imageUrls'>,
+  assets: ScriptAsset[]
+): string[] => {
+  const order: Record<string, number> = { character: 0, scene: 1, prop: 2 };
+  const picked = (segment.assetIds ?? [])
+    .map((id) => assets.find((a) => a.id === id))
+    .filter((a): a is ScriptAsset => !!a && !!a.imageUrl)
+    .sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9));
+  const urls = [
+    ...picked.map((a) => a.imageUrl as string),
+    ...(segment.imageUrls ?? []),
+  ];
+  return [...new Set(urls)].slice(0, 9);
 };
 
 /** 只在真的选了 LoRA 时才下发，避免把 9 个 none 全写一遍。 */

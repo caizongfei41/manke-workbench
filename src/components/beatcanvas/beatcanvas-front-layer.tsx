@@ -53,6 +53,7 @@ import { BeatCanvasComposerParameterPicker } from './beatcanvas-composer-paramet
 import { BeatCanvasComposerReferencePicker } from './beatcanvas-composer-reference-picker';
 import { BeatCanvasComposerShell } from './beatcanvas-composer-shell';
 import { StudioDirectorConsole } from '@/components/studio/studio-director-console';
+import { uploadLocalProjectAsset } from '@/core/workspace-lib/app/local-project-asset-client';
 import { getDefaultDirectorSettings } from '@/core/effects/aicg3d-director';
 import { BeatCanvasComposerTypePicker } from './beatcanvas-composer-type-picker';
 import { BeatCanvasComposerVersionPicker } from './beatcanvas-composer-version-picker';
@@ -87,6 +88,8 @@ function areZoomStepsEqual(current: number[] | undefined, next: number[]) {
 
 export function BeatCanvasFrontLayer() {
   const { editor } = useCanvasEngine();
+  // Asset images started from the director panel attach back when their draft lands.
+  const [pendingAssetId, setPendingAssetId] = useState<string | null>(null);
   const {
     cards,
     composerPresentation,
@@ -98,6 +101,8 @@ export function BeatCanvasFrontLayer() {
     onUndoCanvas,
     onRedoCanvas,
     onCreateImageDraft,
+    updateDraftCard,
+    projectId,
     onActiveComposerCardIdChange,
     onSelectedShapeIdsChange,
     onDraftAnalysisDepthChange,
@@ -992,6 +997,54 @@ export function BeatCanvasFrontLayer() {
           panel={
             activeDraftCard.type === 'video' && selectedModel?.segmentUi === 'sequence' ? (
               <StudioDirectorConsole
+                onGenerateAssetImage={(assetId, assetPrompt) => {
+                  // Asset image on canvas: start an image draft with the description, then
+                  // attach its result back once it finishes.
+                  setPendingAssetId(assetId);
+                  onCreateImageDraft(assetPrompt);
+                }}
+                onUploadAssetImage={(assetId, file) => {
+                  void uploadLocalProjectAsset({ projectId, file })
+                    .then((asset) =>
+                      updateDraftCard(activeDraftCard.id, (current) => {
+                        const settings = current.directorSettings ?? getDefaultDirectorSettings();
+                        return {
+                          ...current,
+                          directorSettings: {
+                            ...settings,
+                            assets: settings.assets.map((a) =>
+                              a.id === assetId
+                                ? { ...a, imageUrl: asset.publicUrl, source: 'uploaded' as const }
+                                : a
+                            ),
+                          },
+                        };
+                      })
+                    )
+                    .catch(() => {});
+                }}
+                onImportAssetToShots={(asset) => {
+                  if (!asset.imageUrl) return;
+                  updateDraftCard(activeDraftCard.id, (current) => {
+                    const settings = current.directorSettings ?? getDefaultDirectorSettings();
+                    if (settings.segments.length === 0) return current;
+                    const target = settings.segments.findIndex(
+                      (seg) => (seg.imageUrls?.length ?? 0) === 0
+                    );
+                    const index = target >= 0 ? target : settings.segments.length - 1;
+                    return {
+                      ...current,
+                      directorSettings: {
+                        ...settings,
+                        segments: settings.segments.map((seg, i) =>
+                          i === index
+                            ? { ...seg, imageUrls: [...(seg.imageUrls ?? []), asset.imageUrl as string] }
+                            : seg
+                        ),
+                      },
+                    };
+                  });
+                }}
                 settings={activeDraftCard.directorSettings ?? getDefaultDirectorSettings()}
                 onChange={(next) => onDraftDirectorChange(activeDraftCard.id, next)}
                 disabled={isDraftBusy}
