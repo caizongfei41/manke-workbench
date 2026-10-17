@@ -9,11 +9,25 @@
 # 停止时要额外杀进程：Stop-ScheduledTask 只结束任务本身，
 # 任务里 cmd.exe 拉起的 node / python 子进程会留下来继续占端口。
 #
+# ── 关于「卡顿」的两条硬规矩 ────────────────────────────────────────
+#
+# 1) 状态轮询绝不能在 UI 线程上阻塞。服务没起来时，连一个关闭的本地端口要等
+#    防火墙丢包超时（实测约 2 秒），Invoke-WebRequest 同样。两个服务各算一次
+#    同步调用，一次 tick 就能冻住界面 8 秒，关窗口也一起卡住。
+#    现在：端口探测用 ConnectAsync 加 120ms 上限；HTTP 健康检查是真正的异步
+#    task，这个 tick 发起、下个 tick 看结果，从不等待。
+#
+# 2) 不用 Application::DoEvents()。它会把消息泵再跑一遍，定时器因此在
+#    Update-Status 内部重入，越滚越深。需要立刻重绘时用控件的 Refresh()。
+#
 # 界面沿用工作台的深色配色（--beat-bg / --beat-surface / --beat-accent），
 # 无系统标题栏，自绘标题栏以便整体保持深色。
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+# PowerShell 5.1 默认不加载 System.Net.Http。不加载的话 New-Object HttpClient 会
+# 静默失败，健康检查的 task 永远是 null，状态就一直停在「启动中」。
+Add-Type -AssemblyName System.Net.Http
 
 $ErrorActionPreference = 'Continue'
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -30,13 +44,13 @@ function C([string]$hex) {
 
 $BG      = C '#09090A'   # 窗口底
 $CARD    = C '#131416'   # 卡片底
-$CARD2   = C '#1A1B1F'   # 次级面（输入框 / 日志）
+$CARD2   = C '#1A1B1F'   # 次级面（日志）
 $LINE    = C '#26272B'   # 描边
 $TXT1    = C '#F4F4F5'
 $TXT2    = C '#A3A3AB'
 $TXT3    = C '#71717A'
 $ACCENT  = C '#38BDF8'
-$ACCENTD = C '#12242E'   # 强调色的深底
+$ACCENTD = C '#12242E'
 $ACCENTL = C '#1E4C63'
 $OK      = C '#34D399'
 $WARN    = C '#FBBF24'
@@ -44,9 +58,9 @@ $BAD     = C '#F87171'
 $BTN     = C '#1C1D21'
 $BTNHOV  = C '#26272C'
 
-$FONT     = 'Microsoft YaHei UI'
+$FONTFACE = 'Microsoft YaHei UI'
 function F([single]$size, [string]$style = 'Regular') {
-    return New-Object Drawing.Font($FONT, $size, [Drawing.FontStyle]::$style)
+    return New-Object Drawing.Font($FONTFACE, $size, [Drawing.FontStyle]::$style)
 }
 
 # ---------------------------------------------------------------- 配置
@@ -56,23 +70,31 @@ $BD = $PSScriptRoot | Split-Path -Parent
 $SERVICES = @(
     [pscustomobject]@{
         Key = 'comfyui';  Name = 'ComfyUI';  Task = 'BD-ComfyUI';  Port = 8188
-        Url = 'http://127.0.0.1:8188/system_stats'; UrlLabel = 'ComfyUI'
+        Url = 'http://127.0.0.1:8188/system_stats'
         ReadySeconds = 90; Desc = '本地推理后端'
     },
     [pscustomobject]@{
         Key = 'workbench'; Name = '工作台';  Task = 'BD-Workbench'; Port = 3020
-        Url = 'http://127.0.0.1:3020/zh'; UrlLabel = '工作台'
+        Url = 'http://127.0.0.1:3020/zh'
         ReadySeconds = 30; Desc = '网页界面'
     }
 )
 
-# ---------------------------------------------------------------- 工具函数
+# ---------------------------------------------------------------- 探测
 
+# 端口探测：ConnectAsync + 120ms 上限。连接成功通常 <1ms；
+# 端口关闭且被防火墙丢包时会等 SYN 重试，绝不能把这段时间加在 UI 上。
 function Test-PortOpen([int]$Port) {
     $client = New-Object Net.Sockets.TcpClient
-    try { $client.Connect('127.0.0.1', $Port); $client.Close(); return $true }
-    catch { return $false }
-    finally { if ($client) { $client.Dispose() } }
+    try {
+        $task = $client.ConnectAsync('127.0.0.1', $Port)
+        if (-not $task.Wait(120)) { return $false }
+        return $task.Status -eq [System.Threading.Tasks.TaskStatus]::RanToCompletion -and $client.Connected
+    } catch {
+        return $false
+    } finally {
+        try { $client.Dispose() } catch { }
+    }
 }
 
 function Get-PortOwner([int]$Port) {
@@ -88,7 +110,38 @@ function Stop-ServiceProcess([int]$Port) {
     return $false
 }
 
-# 统一风格的按钮
+# HTTP 健康检查：异步 task，发起后不等，下次 tick 再看结果。
+$httpClient = New-Object System.Net.Http.HttpClient
+$httpClient.Timeout = [TimeSpan]::FromMilliseconds(1500)
+
+$health = @{}   # key -> @{ Task = Task; Ok = bool }
+
+function Start-Health([string]$Key, [string]$Url) {
+    $st = $health[$Key]
+    if (-not $Url -or $st.Task) { return }
+    try { $st.Task = $httpClient.GetAsync($Url) } catch { $st.Task = $null }
+}
+
+# 返回 $null 表示还在跑；$true/$false 是本次结果
+function Poll-Health([string]$Key) {
+    $st = $health[$Key]
+    if (-not $st.Task) { return $null }
+    if (-not $st.Task.IsCompleted) { return $null }
+    $ok = $false
+    try {
+        $resp = $st.Task.Result
+        $ok = $resp.IsSuccessStatusCode
+        $resp.Dispose()
+    } catch {
+        $ok = $false
+    }
+    $st.Task = $null
+    $st.Ok = $ok
+    return $ok
+}
+
+# ---------------------------------------------------------------- 控件工厂
+
 function New-Button([string]$text, [int]$x, [int]$y, [int]$w, [int]$h, [bool]$primary = $false) {
     $b = New-Object Windows.Forms.Button
     $b.Text = $text
@@ -106,7 +159,6 @@ function New-Button([string]$text, [int]$x, [int]$y, [int]$w, [int]$h, [bool]$pr
     return $b
 }
 
-# 卡片：纯色面板 + 1px 描边
 function New-Card([int]$x, [int]$y, [int]$w, [int]$h) {
     $p = New-Object Windows.Forms.Panel
     $p.Location = New-Object Drawing.Point($x, $y)
@@ -177,11 +229,11 @@ $closeBtn.Location = New-Object Drawing.Point(($W - 44), 0)
 $closeBtn.Size = New-Object Drawing.Size(44, 44)
 $closeBtn.FlatStyle = 'Flat'
 $closeBtn.FlatAppearance.BorderSize = 0
+$closeBtn.FlatAppearance.MouseOverBackColor = $BAD
 $closeBtn.BackColor = $BG
 $closeBtn.ForeColor = $TXT2
 $closeBtn.Font = F 10
 $closeBtn.Cursor = [Windows.Forms.Cursors]::Hand
-$closeBtn.Add_Click({ $form.Close() }.GetNewClosure())
 $bar.Controls.Add($closeBtn)
 
 $minBtn = New-Object Windows.Forms.Button
@@ -190,36 +242,28 @@ $minBtn.Location = New-Object Drawing.Point(($W - 88), 0)
 $minBtn.Size = New-Object Drawing.Size(44, 44)
 $minBtn.FlatStyle = 'Flat'
 $minBtn.FlatAppearance.BorderSize = 0
+$minBtn.FlatAppearance.MouseOverBackColor = $BTNHOV
 $minBtn.BackColor = $BG
 $minBtn.ForeColor = $TXT2
 $minBtn.Font = F 10
 $minBtn.Cursor = [Windows.Forms.Cursors]::Hand
-$minBtn.Add_Click({ $form.WindowState = 'Minimized' }.GetNewClosure())
 $bar.Controls.Add($minBtn)
 
-# 拖动窗口
 $drag = @{ Active = $false; X = 0; Y = 0 }
 $onDown = {
     param($s, $e)
-    if ($e.Button -eq [Windows.Forms.MouseButtons]::Left) {
-        $drag.Active = $true
-        $drag.X = $e.X
-        $drag.Y = $e.Y
-    }
+    if ($e.Button -eq [Windows.Forms.MouseButtons]::Left) { $drag.Active = $true; $drag.X = $e.X; $drag.Y = $e.Y }
 }
 $onMove = {
     param($s, $e)
-    if ($drag.Active) {
-        $form.Left += ($e.X - $drag.X)
-        $form.Top += ($e.Y - $drag.Y)
-    }
+    if ($drag.Active) { $form.Left += ($e.X - $drag.X); $form.Top += ($e.Y - $drag.Y) }
 }
 $onUp = { param($s, $e) $drag.Active = $false }
 
-foreach ($c in @($bar, $barTitle)) {
-    $c.Add_MouseDown($onDown)
-    $c.Add_MouseMove($onMove)
-    $c.Add_MouseUp($onUp)
+foreach ($ctl in @($bar, $barTitle)) {
+    $ctl.Add_MouseDown($onDown)
+    $ctl.Add_MouseMove($onMove)
+    $ctl.Add_MouseUp($onUp)
 }
 
 # ── 页头
@@ -235,7 +279,6 @@ foreach ($svc in $SERVICES) {
     $svcCard = New-Card 20 $y 480 84
     $form.Controls.Add($svcCard)
 
-    # 状态圆点（自绘）
     $dot = New-Object Windows.Forms.Panel
     $dot.Location = New-Object Drawing.Point(18, 26)
     $dot.Size = New-Object Drawing.Size(10, 10)
@@ -261,7 +304,8 @@ foreach ($svc in $SERVICES) {
     $act.Tag = $svc
     $svcCard.Controls.Add($act)
 
-    $rows[$svc.Key] = [pscustomobject]@{ Svc = $svc; Dot = $dot; Status = $status; Act = $act }
+    $rows[$svc.Key] = [pscustomobject]@{ Svc = $svc; Dot = $dot; Status = $status; Act = $act; PortOpen = $false }
+    $health[$svc.Key] = @{ Task = $null; Ok = $false }
     $y += 92
 }
 
@@ -303,8 +347,7 @@ $envPanel.Add_Paint({
 }.GetNewClosure())
 $form.Controls.Add($envPanel)
 
-$envHint = New-Label '点「检查」看看模板依赖的模型、节点包、构建产物是否就位。' 14 14 440 20 9 $TXT3
-$envPanel.Controls.Add($envHint)
+$envPanel.Controls.Add((New-Label '点「检查」看看模板依赖的模型、节点包、构建产物是否就位。' 14 14 440 20 9 $TXT3))
 
 # ── 运行日志
 $y += 206
@@ -323,62 +366,84 @@ $logBox.ScrollBars = 'Vertical'
 $logBox.BorderStyle = 'FixedSingle'
 $logBox.BackColor = $CARD2
 $logBox.ForeColor = $TXT2
-$logBox.Font = New-Object Drawing.Font('Microsoft YaHei UI', 8.5)
+$logBox.Font = New-Object Drawing.Font($FONTFACE, 8.5)
 $form.Controls.Add($logBox)
 
-$y += 132
+$y += 116
 $form.ClientSize = New-Object Drawing.Size($W, ($y + 16))
 
 # ---------------------------------------------------------------- 行为
 
+$script:closing = $false
+
 function Add-Log([string]$Message) {
+    if ($script:closing) { return }
     $stamp = Get-Date -Format 'HH:mm:ss'
     $logBox.AppendText("[$stamp] $Message`r`n")
     $logBox.SelectionStart = $logBox.TextLength
     $logBox.ScrollToCaret()
-    [Windows.Forms.Application]::DoEvents()
 }
 
+function Set-RowState($Row, [string]$State) {
+    switch ($State) {
+        'running' {
+            $Row.Dot.ForeColor = $OK
+            $Row.Status.Text = '运行中'
+            $Row.Status.ForeColor = $OK
+            $Row.Act.Text = '停止'
+            $Row.Act.BackColor = $BTN
+            $Row.Act.ForeColor = $TXT1
+            $Row.Act.FlatAppearance.BorderColor = $LINE
+        }
+        'starting' {
+            $Row.Dot.ForeColor = $WARN
+            $Row.Status.Text = '启动中…'
+            $Row.Status.ForeColor = $WARN
+            $Row.Act.Text = '停止'
+            $Row.Act.BackColor = $BTN
+            $Row.Act.ForeColor = $TXT1
+            $Row.Act.FlatAppearance.BorderColor = $LINE
+        }
+        default {
+            $Row.Dot.ForeColor = $TXT3
+            $Row.Status.Text = '已停止'
+            $Row.Status.ForeColor = $TXT3
+            $Row.Act.Text = '启动'
+            $Row.Act.BackColor = $ACCENTD
+            $Row.Act.ForeColor = $ACCENT
+            $Row.Act.FlatAppearance.BorderColor = $ACCENTL
+        }
+    }
+}
+
+# 全程不阻塞：端口探测 ≤120ms，HTTP 结果从上一个 tick 的 task 里取。
 function Update-Status {
+    if ($script:closing) { return }
     foreach ($key in $rows.Keys) {
         $row = $rows[$key]
         $svc = $row.Svc
         $open = Test-PortOpen $svc.Port
+        $row.PortOpen = $open
 
-        if ($open) {
-            $healthy = $true
-            if ($svc.Url) {
-                try { Invoke-WebRequest $svc.Url -TimeoutSec 4 -UseBasicParsing | Out-Null }
-                catch { $healthy = $false }
-            }
-            if ($healthy) {
-                $row.Dot.ForeColor = $OK
-                $row.Status.Text = '运行中'
-                $row.Status.ForeColor = $OK
-                $row.Act.Text = '停止'
-                $row.Act.BackColor = $BTN
-                $row.Act.ForeColor = $TXT1
-                $row.Act.FlatAppearance.BorderColor = $LINE
-            } else {
-                $row.Dot.ForeColor = $WARN
-                $row.Status.Text = '启动中…'
-                $row.Status.ForeColor = $WARN
-                $row.Act.Text = '停止'
-                $row.Act.BackColor = $BTN
-                $row.Act.ForeColor = $TXT1
-                $row.Act.FlatAppearance.BorderColor = $LINE
-            }
+        if (-not $open) {
+            # 服务没起来：丢掉在飞的请求，避免它超时后污染下一次判断
+            $health[$key].Task = $null
+            $health[$key].Ok = $false
+            Set-RowState $row 'stopped'
+            continue
+        }
+
+        $result = Poll-Health $key
+        if ($result -eq $null) {
+            # 还没有结果：先显示启动中，并发起一次
+            Set-RowState $row 'starting'
+            Start-Health $key $svc.Url
+        } elseif ($result) {
+            Set-RowState $row 'running'
         } else {
-            $row.Dot.ForeColor = $TXT3
-            $row.Status.Text = '已停止'
-            $row.Status.ForeColor = $TXT3
-            $row.Act.Text = '启动'
-            $row.Act.BackColor = $ACCENTD
-            $row.Act.ForeColor = $ACCENT
-            $row.Act.FlatAppearance.BorderColor = $ACCENTL
+            Set-RowState $row 'starting'
         }
     }
-    [Windows.Forms.Application]::DoEvents()
 }
 
 function Start-One($svc) {
@@ -392,13 +457,13 @@ function Stop-One($svc) {
     if (-not (Test-PortOpen $svc.Port)) { Add-Log "$($svc.Name) 已停止，跳过。"; return }
     Add-Log "停止 $($svc.Name)…"
     Stop-ScheduledTask -TaskName $svc.Task -ErrorAction SilentlyContinue
-    Start-Sleep -Milliseconds 600
+    Start-Sleep -Milliseconds 500
     # 任务的子进程不随任务结束而退出，按端口占用者清理。
     if (Stop-ServiceProcess $svc.Port) { Add-Log "已结束占用端口 $($svc.Port) 的进程。" }
-    for ($i = 0; $i -lt 10; $i++) {
+    for ($i = 0; $i -lt 8; $i++) {
         if (-not (Test-PortOpen $svc.Port)) { break }
-        Start-Sleep -Milliseconds 500
-        if ($i -eq 4) { Stop-ServiceProcess $svc.Port | Out-Null }
+        Start-Sleep -Milliseconds 400
+        if ($i -eq 3) { Stop-ServiceProcess $svc.Port | Out-Null }
     }
     if (Test-PortOpen $svc.Port) { Add-Log "⚠ $($svc.Name) 端口仍被占用，可再点一次停止。" }
     else { Add-Log "$($svc.Name) 已停止。" }
@@ -439,10 +504,8 @@ $openLogsBtn.Add_Click({
 
 # 环境自检
 #
-# 走 --json 而不是文本输出，有两个原因：
-#   1) node 输出 UTF-8，GUI 进程的控制台代码页是 936，直接捕获会乱码 ——
-#      cmd 重定向到文件再按 UTF-8 读，与代码页无关；
-#   2) 文本输出靠空格对齐，字体一变就错位，JSON 由这里排版更稳。
+# 走 --json 而不是文本输出：node 输出 UTF-8，GUI 进程的控制台代码页是 936，
+# 直接捕获会乱码；cmd 重定向到文件再按 UTF-8 读，与代码页无关。
 function Render-Env([string]$json) {
     $envPanel.Controls.Clear()
     $y0 = 12
@@ -455,13 +518,11 @@ function Render-Env([string]$json) {
     }
 
     $data = $json | ConvertFrom-Json
-    $color = @{ 'pass' = $OK; 'warn' = $WARN; 'fail' = $BAD }
+    $toneMap = @{ 'pass' = $OK; 'warn' = $WARN; 'fail' = $BAD }
     $mark = @{ 'pass' = '✓'; 'warn' = '!'; 'fail' = '✕' }
 
     foreach ($chk in $data.checks) {
-        $m = New-Label $mark[$chk.status] 14 $y0 18 20 9.5 $color[$chk.status] 'Bold'
-        $envPanel.Controls.Add($m)
-
+        $envPanel.Controls.Add((New-Label $mark[$chk.status] 14 $y0 18 20 9.5 $toneMap[$chk.status] 'Bold'))
         $envPanel.Controls.Add((New-Label $chk.label 34 $y0 118 20 8.5 $TXT3))
         $envPanel.Controls.Add((New-Label $chk.detail 156 $y0 306 20 8.5 $TXT2))
         $y0 += 22
@@ -475,22 +536,21 @@ function Render-Env([string]$json) {
     $s = $data.summary
     $envSummary.Text = "通过 $($s.pass) · 警告 $($s.warn) · 失败 $($s.fail)"
     $envSummary.ForeColor = $(if ($data.ok) { $OK } else { $WARN })
-    [Windows.Forms.Application]::DoEvents()
 }
 
 $checkBtn.Add_Click({
     $this.Enabled = $false
     $this.Text = '检查中'
-    [Windows.Forms.Application]::DoEvents()
+    $this.Refresh()
 
-    $script = Join-Path $BD 'scripts\check-environment.mjs'
-    if (-not (Test-Path $script)) {
+    $checkScript = Join-Path $BD 'scripts\check-environment.mjs'
+    if (-not (Test-Path $checkScript)) {
         Add-Log '✗ 缺少 scripts\check-environment.mjs，无法自检。'
     } else {
         Add-Log '环境自检开始…'
         $tmp = [IO.Path]::GetTempFileName()
         try {
-            & cmd /c "node `"$script`" --json > `"$tmp`" 2>&1"
+            & cmd /c "node `"$checkScript`" --json > `"$tmp`" 2>&1"
             $text = [IO.File]::ReadAllText($tmp, [Text.Encoding]::UTF8)
             Render-Env $text
 
@@ -513,11 +573,19 @@ $checkBtn.Add_Click({
     $this.Enabled = $true
 }.GetNewClosure())
 
-# 每 3 秒自动刷新状态
+# 每 2 秒刷新一次；成本只有端口探测（≤120ms ×2），HTTP 走异步。
 $timer = New-Object Windows.Forms.Timer
-$timer.Interval = 3000
+$timer.Interval = 2000
 $timer.Add_Tick({ Update-Status })
 $timer.Start()
+
+$closeBtn.Add_Click({ $form.Close() }.GetNewClosure())
+$minBtn.Add_Click({ $form.WindowState = 'Minimized' }.GetNewClosure())
+
+$form.Add_FormClosing({
+    $script:closing = $true
+    $timer.Stop()
+}.GetNewClosure())
 
 $form.Add_Shown({
     Add-Log '就绪。服务不随开机启动，需要时点「全部启动」。'
@@ -526,7 +594,6 @@ $form.Add_Shown({
     if ($env:BD_CHECK_ON_START -eq '1') { $checkBtn.PerformClick() }
 })
 
-# Esc 关闭
 $form.Add_KeyDown({
     param($s, $e)
     if ($e.KeyCode -eq 'Escape') { $form.Close() }
@@ -535,4 +602,5 @@ $form.Add_KeyDown({
 [void]$form.ShowDialog()
 
 $timer.Stop()
+try { $httpClient.Dispose() } catch { }
 $form.Dispose()
