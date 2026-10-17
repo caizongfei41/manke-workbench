@@ -845,5 +845,15 @@
   "studio.hint.language.desc": "只影响「AI 扩写」输出的语言，模型本身中英文都认。",
   "studio.mediaMusic": "音乐",
   "studio.audioPromptPlaceholder": "粘贴歌词，或描述你想写什么（留空则按风格自由发挥）",
-  "studio.audioUpload": "上传音频"
+  "studio.audioUpload": "上传音频",
+  "studio.music.panelLabel": "音乐风格",
+  "studio.music.panelHint": "这些参数直接写进工作流的风格节点。留默认即可，改哪个生效哪个。",
+  "studio.music.insertLyricsTemplate": "插入歌词模板",
+  "studio.music.moreParams": "更多参数",
+  "studio.music.lessParams": "收起",
+  "studio.music.uploadAudio": "上传源歌曲",
+  "studio.music.uploadAudioHint": "翻唱需要一首歌当旋律来源。支持 mp3 / wav / m4a / flac。",
+  "studio.music.audioRequired": "翻唱需要先上传源歌曲。",
+  "studio.music.removeAudio": "移除源歌曲",
+  "studio.music.lyricsTemplateInserted": "已插入歌词段落模板"
 }

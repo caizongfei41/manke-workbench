@@ -24,7 +24,7 @@ export type ProjectGenerationItem = {
   prompt: string | null;
   modelId: string | null;
   modelName: string | null;
-  mediaType: 'image' | 'video' | 'analysis';
+  mediaType: 'image' | 'video' | 'analysis' | 'audio';
   resultUrl: string | null;
   resultText: string | null;
   paramsLabel: string | null;

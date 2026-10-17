@@ -240,6 +240,7 @@
   },
   "_beatdesign": {
     "positive": "60",
+    "style": "59",
     "audio": "73"
   }
 }

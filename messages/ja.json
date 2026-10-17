@@ -845,5 +845,15 @@
   "studio.hint.language.desc": "AI 拡張の出力言語だけに影響します。モデルは両方理解します。",
   "studio.mediaMusic": "音楽",
   "studio.audioPromptPlaceholder": "歌詞を貼り付けるか、書きたい内容を説明してください（空欄ならスタイルに任せます）",
-  "studio.audioUpload": "音声をアップロード"
+  "studio.audioUpload": "音声をアップロード",
+  "studio.music.panelLabel": "音楽スタイル",
+  "studio.music.panelHint": "ワークフローのスタイルノードに直接書き込まれます。既定値のままでも動きます。",
+  "studio.music.insertLyricsTemplate": "歌詞テンプレート",
+  "studio.music.moreParams": "詳細パラメータ",
+  "studio.music.lessParams": "閉じる",
+  "studio.music.uploadAudio": "元の曲をアップロード",
+  "studio.music.uploadAudioHint": "カバーには旋律の元になる曲が必要です。mp3 / wav / m4a / flac。",
+  "studio.music.audioRequired": "先に元の曲をアップロードしてください。",
+  "studio.music.removeAudio": "元の曲を削除",
+  "studio.music.lyricsTemplateInserted": "歌詞の構成を挿入しました"
 }

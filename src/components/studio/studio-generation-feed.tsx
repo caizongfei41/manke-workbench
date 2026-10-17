@@ -1,4 +1,4 @@
-import { Loader2, X } from 'lucide-react';
+import { Loader2, Music2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { composerCardClassName } from '@/components/app/composer-styles';
@@ -29,6 +29,7 @@ function StudioHistoryItem({
   const isBusy = item.status === 'pending' || item.status === 'processing';
   const isAnalysis = item.mediaType === 'analysis';
   const isVideo = item.mediaType === 'video';
+  const isAudio = item.mediaType === 'audio';
   const previewUrl = item.resultUrl;
 
   // Step progress only exists for locally-run jobs (ComfyUI reports it over its
@@ -94,11 +95,18 @@ function StudioHistoryItem({
                 className="h-full w-full object-contain"
               />
             ) : (
+            isAudio ? (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-black/40 px-5">
+                <Music2 className="size-8 text-[var(--beat-text-3)]" />
+                <audio src={previewUrl} controls preload="metadata" className="w-full max-w-[420px]" />
+              </div>
+            ) : (
               <img
                 src={previewUrl}
                 alt=""
                 className="block h-full w-full object-contain"
               />
+            )
             )
           ) : (
             <div className="flex h-full items-center justify-center text-[12px] text-[var(--beat-text-3)]">

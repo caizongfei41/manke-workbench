@@ -11,7 +11,7 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 
-type SidebarUploadIntent = 'image' | 'video' | 'media';
+type SidebarUploadIntent = 'image' | 'video' | 'audio' | 'media';
 type ActivePanel = 'history';
 
 const HistoryPanel = lazy(() =>

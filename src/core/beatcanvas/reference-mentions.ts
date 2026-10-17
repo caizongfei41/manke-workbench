@@ -48,6 +48,7 @@ export const buildCanvasReferenceMentions = ({
   const counts: Record<CanvasCardMediaType, number> = {
     image: 0,
     video: 0,
+    audio: 0,
   };
 
   return referenceCardIds.flatMap((cardId) => {

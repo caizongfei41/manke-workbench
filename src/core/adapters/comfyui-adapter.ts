@@ -98,6 +98,8 @@ type ComfyUiWorkflowConfig = {
   resolution?: string;
   /** 音乐模板的源音频节点 id（翻唱）：上传的音频写进该节点的 audio 字段。 */
   audio?: string;
+  /** 音乐模板的风格节点 id：input.style 里的键按同名写进该节点。 */
+  style?: string;
 };
 
 type ComfyUiWorkflow = Record<string, unknown> & {
@@ -1222,9 +1224,11 @@ async function uploadReferenceImageBytes(
   baseUrl: string,
   bytes: Uint8Array,
   filename: string,
-  mimeType: string
+
+  mimeType: string,
+  maxBytes: number = MAX_LOCAL_IMAGE_ASSET_BYTES
 ): Promise<string> {
-  if (bytes.byteLength > MAX_LOCAL_IMAGE_ASSET_BYTES) {
+  if (bytes.byteLength > maxBytes) {
     throw new Error('Reference image is too large to upload to ComfyUI.');
   }
   const form = new FormData();
@@ -1254,6 +1258,24 @@ async function uploadReferenceImage(
     throw new Error(`ComfyUI image references require an image, got ${mimeType}.`);
   }
   return uploadReferenceImageBytes(baseUrl, bytes, filename, mimeType);
+}
+
+/**
+ * 音频上传。ComfyUI 的 /upload/image 接受任意输入文件，但图片那条路径
+ * 会检查 mime，音频得单独走一遍（上限用视频档，mp3 动辄几十 MB）。
+ */
+async function uploadReferenceAudio(
+  baseUrl: string,
+  url: string
+): Promise<string> {
+  const { bytes, filename, mimeType } = await readReferenceBytes(url);
+  return uploadReferenceImageBytes(
+    baseUrl,
+    bytes,
+    filename,
+    mimeType,
+    MAX_LOCAL_VIDEO_ASSET_BYTES
+  );
 }
 
 /** 下载参考图 → 按目标宽高比补边 → 上传到 ComfyUI，返回文件名；失败回退原图。 */
@@ -1519,7 +1541,24 @@ export class ComfyUiAdapter extends BaseAdapter {
         const audioNode = asRecord(nodes[audioNodeId]);
         const audioInputs = asRecord(audioNode?.inputs);
         if (audioInputs && 'audio' in audioInputs) {
-          audioInputs.audio = await uploadReferenceImage(baseUrl, audioUrls[0]);
+          audioInputs.audio = await uploadReferenceAudio(baseUrl, audioUrls[0]);
+        }
+      }
+
+      // 音乐风格参数：按字段名找风格节点（编译后的 prompt 不一定保留原 id，
+      // 和 positive 一样用字段探测更稳）。不认识的键直接忽略。
+      const styleParams = asRecord(record.style);
+      if (styleParams) {
+        for (const styleNode of Object.values(nodes)) {
+          const styleInputs = asRecord(asRecord(styleNode)?.inputs);
+          if (!styleInputs || !('音乐风格' in styleInputs)) continue;
+          for (const [key, value] of Object.entries(styleParams)) {
+            if (!(key in styleInputs)) continue;
+            if (typeof value === 'string' || typeof value === 'number') {
+              styleInputs[key] = value;
+            }
+          }
+          break;
         }
       }
 

@@ -18,6 +18,7 @@ import {
 import { AiExpandControl } from '@/components/app/ai-expand-control';
 import { HintTip } from '@/components/app/hint-tip';
 import { WorkspaceSelect } from '@/components/app/workspace-select';
+import { StudioMusicPanel } from '@/components/studio/studio-music-panel';
 import { BeatCanvasComposerParameterPicker } from '@/components/beatcanvas/beatcanvas-composer-parameter-picker';
 import { normalizeComposerToken } from '@/components/beatcanvas/beatcanvas-composer-utils';
 import { useCanvasComposerLabels } from '@/components/beatcanvas/use-canvas-composer-labels';
@@ -45,6 +46,12 @@ export function StudioComposer({
   imageModels,
   videoModels,
   audioModels,
+  musicStyle,
+  onMusicStyleChange,
+  onInsertLyricsTemplate,
+  audioRefs,
+  onAudioFileSelect,
+  onRemoveAudio,
   isBusy,
   promptCharacterLimit,
   takeCount: _takeCount = 0,
@@ -66,6 +73,12 @@ export function StudioComposer({
   imageModels: WorkspaceModelOption[];
   videoModels: WorkspaceModelOption[];
   audioModels: WorkspaceModelOption[];
+  musicStyle?: Record<string, string | number>;
+  onMusicStyleChange?: (next: Record<string, string | number>) => void;
+  onInsertLyricsTemplate?: () => void;
+  audioRefs?: string[];
+  onAudioFileSelect?: (file: File) => void;
+  onRemoveAudio?: (url: string) => void;
   isBusy: boolean;
   promptCharacterLimit: number;
   takeCount?: number;
@@ -91,6 +104,7 @@ export function StudioComposer({
   const t = useTranslations('AppShell.studio.analysis');
   const analysisFileInputRef = useRef<HTMLInputElement | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const audioFileInputRef = useRef<HTMLInputElement | null>(null);
   const parameterPickerRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [isParameterOpen, setIsParameterOpen] = useState(false);
@@ -368,6 +382,51 @@ export function StudioComposer({
                 </span>
               </div>
             ))}
+          </div>
+        ) : null}
+
+        {media === 'audio' ? (
+          <StudioMusicPanel
+            value={musicStyle ?? {}}
+            onChange={(next) => onMusicStyleChange?.(next)}
+            onInsertLyricsTemplate={() => onInsertLyricsTemplate?.()}
+            disabled={isBusy}
+          />
+        ) : null}
+
+        {media === 'audio' ? (
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={isBusy}
+              onClick={() => audioFileInputRef.current?.click()}
+              className="flex items-center gap-1.5 rounded-full border border-dashed border-white/[0.13] bg-white/[0.03] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-white/25 hover:text-white disabled:opacity-40"
+            >
+              <Music2 className="size-3.5" />
+              {m['studio.music.uploadAudio']()}
+            </button>
+            {(audioRefs ?? []).map((url) => (
+              <button
+                key={url}
+                type="button"
+                onClick={() => onRemoveAudio?.(url)}
+                title={m['studio.music.removeAudio']()}
+                className="max-w-[200px] truncate rounded-full border border-white/[0.1] bg-white/[0.05] px-2.5 py-1 text-[11px] text-[var(--beat-text-1)]"
+              >
+                {decodeURIComponent(url.split('/').pop() ?? url).slice(0, 40)}
+              </button>
+            ))}
+            <input
+              ref={audioFileInputRef}
+              type="file"
+              accept="audio/mpeg,audio/wav,audio/mp4,audio/flac,audio/ogg,.mp3,.wav,.m4a,.flac,.ogg"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onAudioFileSelect?.(file);
+                event.currentTarget.value = '';
+              }}
+            />
           </div>
         ) : null}
         <div className="relative">

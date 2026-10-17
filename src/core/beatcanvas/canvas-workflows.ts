@@ -1,6 +1,6 @@
 export type WorkflowCardType = 'image' | 'video';
 export type WorkflowCardRole = 'asset';
-export type WorkflowTaskType = 'image' | 'video';
+export type WorkflowTaskType = 'image' | 'video' | 'audio';
 
 export type WorkflowReferenceCard = {
   id: string;

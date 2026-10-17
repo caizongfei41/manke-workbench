@@ -11,7 +11,7 @@ import type {
 } from '@/core/effects/workspace-models';
 import type { VideoAnalysisDepth } from '@/core/effects/video-analysis';
 
-export type CanvasCardMediaType = 'image' | 'video';
+export type CanvasCardMediaType = 'image' | 'video' | 'audio';
 
 /** 多段导演台逐段控制：每段独立提示词与时长（秒，缺省按等比分摊总时长）。 */
 export type CanvasDirectorSegment = {

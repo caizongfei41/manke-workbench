@@ -36,6 +36,11 @@ import { uploadLocalProjectAsset } from '@/core/workspace-lib/app/local-project-
 import { parseLocalProjectAssetUrl } from '@/core/projects/local-project-asset-url';
 import { GENERATION_REQUEST_VERSION } from '@/core/commands/generation-contract';
 import { precheckEffect, generateEffect } from '@/core/effects/client-api';
+import {
+  MUSIC_LYRICS_TEMPLATE,
+  getDefaultMusicStyle,
+  pickChangedMusicStyle,
+} from '@/core/effects/music-style';
 import { fetchRecentAssets } from '@/core/workspace-lib/app/workspace-client-api';
 import { getEffectsMetadata } from '@/core/effects/client-api';
 import { buildDraftModelParameters } from '@/core/effects/model-parameters';
@@ -122,6 +127,10 @@ export function BeatStudioWorkspace({
   const [error, setError] = useState('');
   // The composer floats; the results list reserves its real height (value below is a first-frame fallback).
   const [composerHeight, setComposerHeight] = useState(0);
+  const [musicStyle, setMusicStyle] = useState<Record<string, string | number>>(
+    () => getDefaultMusicStyle()
+  );
+  const [audioRefs, setAudioRefs] = useState<string[]>([]);
   const models = draft.type === 'video' ? videoModels : imageModels;
   const selectedModel =
     findWorkspaceModelOption(models, draft.modelId) ?? models[0] ?? null;
@@ -175,7 +184,16 @@ export function BeatStudioWorkspace({
             ...buildDraftModelParameters(draft, (await getEffectsMetadata([selectedModel!.id])).data.effects?.[selectedModel!.id]?.inputSchema),
           };
       const assets = referenceUrls.length ? await fetchRecentAssets(projectId) : null;
-      const references = referenceUrls.map((url) => {
+      // Music: style params key straight onto the style node; a cover also needs its source song as an audio reference.
+      const musicParameters =
+        !isAnalysis && draft.type === 'audio'
+          ? { style: pickChangedMusicStyle(musicStyle) }
+          : null;
+      const musicAudioRefs =
+        !isAnalysis && draft.type === 'audio' ? audioRefs : [];
+      const allReferenceUrls = [...new Set([...referenceUrls, ...musicAudioRefs])];
+
+      const references = allReferenceUrls.map((url) => {
         const local = parseLocalProjectAssetUrl(url);
         const asset = [...(assets?.images ?? []), ...(assets?.videos ?? []), ...(assets?.audios ?? [])]
           .find((item) => item.publicUrl === url ||
@@ -195,7 +213,9 @@ export function BeatStudioWorkspace({
         modelId: isAnalysis ? VIDEO_ANALYSIS_MODEL_ID : selectedModel!.id,
         prompt: draft.prompt,
         references,
-        parameters: initialInput,
+        parameters: musicParameters
+          ? { ...initialInput, ...musicParameters }
+          : initialInput,
       };
       const precheck = await precheckEffect({ generation: request });
       if (!precheck.ok) throw new Error(precheck.data.error || 'Generation validation failed.');
@@ -278,6 +298,7 @@ export function BeatStudioWorkspace({
         imageModels={imageModels}
         videoModels={videoModels}
         audioModels={audioModels}
+        musicStyle={musicStyle}         onMusicStyleChange={setMusicStyle}         onInsertLyricsTemplate={() =>           setDraft((current) => ({ ...current, prompt: MUSIC_LYRICS_TEMPLATE }))         }         audioRefs={audioRefs}         onAudioFileSelect={(file) => {           void uploadLocalProjectAsset({ projectId, file })             .then((asset) => setAudioRefs((prev) => [...prev, asset.publicUrl]))             .catch((error: unknown) =>               setError(error instanceof Error ? error.message : 'Failed to upload audio')             );         }}         onRemoveAudio={(url) =>           setAudioRefs((prev) => prev.filter((item) => item !== url))         }
         isBusy={generation.isPending}
         promptCharacterLimit={
           media === 'analysis'
