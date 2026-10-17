@@ -131,29 +131,41 @@ Host github.com
     IdentityFile ~/.ssh/id_ed25519
 ```
 
-**唯一缺的一步**：把这台机器的公钥登记到 GitHub 账号。
-
-公钥内容（`~/.ssh/id_ed25519.pub`）：
+公钥（`~/.ssh/id_ed25519.pub`）已于首次发布时登记到账号，现在可用：
 
 ```
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAhUZ+rBJwKXPBwSKKJBFXnq4ts+jXk47GqVe20OoG+x dsh@WIN-20210729NQG
 ```
 
-两种加法：
+验证（两步都应成功）：
 
-1. **网页**：https://github.com/settings/ssh/new → Title 随便填 → 粘贴上面的公钥 → Add SSH key
-2. **命令行**（需要一次 `write:public_key` 授权）：
+```powershell
+ssh -T git@github.com    # Hi <用户名>! You've successfully authenticated
+git ls-remote origin     # 列出 refs/heads/main
+```
+
+换机器或密钥丢失时，重新登记有两条路：
+
+1. **网页**：https://github.com/settings/ssh/new → 粘贴公钥 → Add SSH key
+   （注意：本机 `github.com` 网页不通，需用手机网络或等网络窗口）
+2. **命令行**（需要一次 `write:public_key` 授权，同样依赖 github.com 网页能打开）：
    ```powershell
    gh auth refresh -h github.com -s write:public_key
    gh api user/keys -f title="workbench-pc" -f key="$(Get-Content ~/.ssh/id_ed25519.pub -Raw)"
    ```
 
-加完之后验证并推送：
+### 网络不通时的应急：走 API 推单文件
+
+`github.com` 不通、但 `api.github.com` 通的窗口期里，**小的单文件改动**可以用
+REST contents API 直接提交，不需要 git 传输层：
 
 ```powershell
-git ls-remote origin        # 应该列出 refs/heads/main
-git push
+node push-file-via-api.mjs caizongfei41/manke-workbench main <文件路径> "提交说明"
 ```
+
+脚本在 `..\ComfyUI无线画布-本地运维\scripts\`（属运维工具，不在仓库内）。
+它读当前 blob 的 sha、PUT base64 内容，由 GitHub 生成提交。
+**只适合单文件小改**；整仓库或批量改动仍需等 git 传输恢复。
 
 ### 关于 ghproxy
 
