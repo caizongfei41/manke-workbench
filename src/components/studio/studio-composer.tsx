@@ -19,6 +19,8 @@ import { AiExpandControl } from '@/components/app/ai-expand-control';
 import { HintTip } from '@/components/app/hint-tip';
 import { WorkspaceSelect } from '@/components/app/workspace-select';
 import { StudioMusicPanel } from '@/components/studio/studio-music-panel';
+import { StudioDirectorConsole } from '@/components/studio/studio-director-console';
+import type { DirectorSettings } from '@/core/effects/aicg3d-director';
 import type { MusicLyricsExample } from '@/core/effects/music-style';
 import { BeatCanvasComposerParameterPicker } from '@/components/beatcanvas/beatcanvas-composer-parameter-picker';
 import { normalizeComposerToken } from '@/components/beatcanvas/beatcanvas-composer-utils';
@@ -54,6 +56,10 @@ export function StudioComposer({
   audioRefs,
   onAudioFileSelect,
   onRemoveAudio,
+  directorSettings,
+  onDirectorChange,
+  projectImageUrls,
+  onRequestShotImage,
   isBusy,
   promptCharacterLimit,
   takeCount: _takeCount = 0,
@@ -82,6 +88,10 @@ export function StudioComposer({
   audioRefs?: string[];
   onAudioFileSelect?: (file: File) => void;
   onRemoveAudio?: (url: string) => void;
+  directorSettings?: DirectorSettings;
+  onDirectorChange?: (next: DirectorSettings) => void;
+  projectImageUrls?: string[];
+  onRequestShotImage?: (index: number, prompt: string) => void;
   isBusy: boolean;
   promptCharacterLimit: number;
   takeCount?: number;
@@ -286,7 +296,7 @@ export function StudioComposer({
             ))}
           </div>
         ) : null}
-        {media === 'video' && selectedModel?.multiSegment ? (
+        {media === 'video' && selectedModel?.multiSegment && selectedModel.segmentUi !== 'sequence' ? (
           <div className="mb-2 rounded-[12px] border border-ink/[0.08] bg-[var(--beat-panel)] p-2.5">
             <div className="mb-2 flex items-center justify-between">
               <HintTip
@@ -386,6 +396,16 @@ export function StudioComposer({
               </div>
             ))}
           </div>
+        ) : null}
+
+        {media === 'video' && selectedModel?.segmentUi === 'sequence' && directorSettings ? (
+          <StudioDirectorConsole
+            settings={directorSettings}
+            onChange={(next) => onDirectorChange?.(next)}
+            disabled={isBusy}
+            assetUrls={projectImageUrls ?? []}
+            onRequestGenerateImage={onRequestShotImage}
+          />
         ) : null}
 
         {media === 'audio' ? (

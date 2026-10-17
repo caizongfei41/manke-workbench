@@ -43,6 +43,8 @@ export type WorkspaceModelOption = {
   name: string;
   /** 一句话说明这个模型能做什么，界面上作为悬浮注释显示。 */
   description?: string;
+  /** 分段界面的形态，见注册表同名注释。 */
+  segmentUi?: 'timeline' | 'sequence';
   mediaSchema?: WorkspaceMediaSchema;
   mode?: WorkspaceModelMode;
   defaultMode?: WorkspaceModelMode;
@@ -162,6 +164,7 @@ const toWorkspaceModelOption = (
     requiresImageInput: entry.requiresImageInput,
     supportsSeed: entry.supportsSeed,
     multiSegment: entry.multiSegment,
+    segmentUi: entry.segmentUi,
     isLocalFree: entry.isLocalFree === true,
     maxReferenceImages: mediaSchema.image.max,
     maxSourceVideos: mediaSchema.video.max,

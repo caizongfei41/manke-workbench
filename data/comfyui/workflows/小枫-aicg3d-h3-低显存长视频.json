@@ -173,6 +173,14 @@
   "_beatdesign": {
     "positive": "107,108,109",
     "seed": "107",
-    "resolution": "78"
+    "resolution": "78",
+    "sequence_global": "78",
+    "sequence_segments": [
+      "107",
+      "108",
+      "109"
+    ],
+    "lora_loader": "106",
+    "media_loader": "77"
   }
 }

@@ -41,6 +41,12 @@ import {
   getDefaultMusicStyle,
   pickChangedMusicStyle,
 } from '@/core/effects/music-style';
+import {
+  getDefaultDirectorSettings,
+  pickActiveLoras,
+  pickChangedDirectorGlobal,
+  type DirectorSettings,
+} from '@/core/effects/aicg3d-director';
 import { fetchRecentAssets } from '@/core/workspace-lib/app/workspace-client-api';
 import { getEffectsMetadata } from '@/core/effects/client-api';
 import { buildDraftModelParameters } from '@/core/effects/model-parameters';
@@ -143,6 +149,10 @@ export function BeatStudioWorkspace({
     () => getDefaultMusicStyle()
   );
   const [audioRefs, setAudioRefs] = useState<string[]>([]);
+  // AICG3D segment director: global params + per-shot control + LoRA slots.
+  const [directorSettings, setDirectorSettings] = useState<DirectorSettings>(
+    () => getDefaultDirectorSettings()
+  );
   // Tracks whether the current prompt came from a lyric template/example, so
   // switching away from music can clear it instead of leaving it behind.
   const lyricsAutoInsertedRef = useRef(false);
@@ -165,6 +175,11 @@ export function BeatStudioWorkspace({
         ? 2500
         : false,
   });
+  // Shot references can be picked from finished results, so collect image URLs here.
+  const projectImageUrls = (generationsQuery.data?.items ?? [])
+    .filter((item) => item.mediaType === 'image' && item.resultUrl)
+    .map((item) => item.resultUrl as string);
+
   const feedItems = (generationsQuery.data?.items ?? []).filter(
     (item) => item.status !== 'failed'
   );
@@ -209,6 +224,20 @@ export function BeatStudioWorkspace({
         !isAnalysis && draft.type === 'audio'
           ? { style: pickChangedMusicStyle(musicStyle) }
           : null;
+      // Director params only go out when shots exist; otherwise the template repeats one prompt.
+      const directorParameters =
+        !isAnalysis && draft.type === 'video' && directorSettings.segments.length > 0
+          ? {
+              director_global: pickChangedDirectorGlobal(directorSettings.global),
+              director_segments: directorSettings.segments.map((seg) => ({
+                prompt: seg.prompt,
+                seconds: seg.seconds,
+                imageUrls: seg.imageUrls ?? [],
+              })),
+              director_loras: pickActiveLoras(directorSettings.loras),
+            }
+          : null;
+
       const musicAudioRefs =
         !isAnalysis && draft.type === 'audio' ? audioRefs : [];
       const allReferenceUrls = [...new Set([...referenceUrls, ...musicAudioRefs])];
@@ -235,7 +264,9 @@ export function BeatStudioWorkspace({
         references,
         parameters: musicParameters
           ? { ...initialInput, ...musicParameters }
-          : initialInput,
+          : directorParameters
+            ? { ...initialInput, ...directorParameters }
+            : initialInput,
       };
       const precheck = await precheckEffect({ generation: request });
       if (!precheck.ok) throw new Error(precheck.data.error || 'Generation validation failed.');
@@ -372,6 +403,24 @@ export function BeatStudioWorkspace({
             }
           }
           setDraft(next);
+        }}
+        directorSettings={directorSettings}
+        onDirectorChange={setDirectorSettings}
+        projectImageUrls={projectImageUrls}
+        onRequestShotImage={(index, shotPrompt) => {
+          // Carry this shot into image mode: switch media, pick an image model, fill the prompt.
+          const firstImageModel = imageModels[0] ?? null;
+          setMedia('image');
+          if (firstImageModel) {
+            setDraft((current) =>
+              applyStudioDraftModel({
+                draft: { ...current, type: 'image', prompt: shotPrompt },
+                model: firstImageModel,
+              })
+            );
+          } else {
+            setDraft((current) => ({ ...current, prompt: shotPrompt }));
+          }
         }}
         onMediaChange={(nextMedia) => {
           setMedia(nextMedia);

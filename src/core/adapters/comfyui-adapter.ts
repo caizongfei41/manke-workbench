@@ -98,8 +98,14 @@ type ComfyUiWorkflowConfig = {
   resolution?: string;
   /** 音乐模板的源音频节点 id（翻唱）：上传的音频写进该节点的 audio 字段。 */
   audio?: string;
-  /** 音乐模板的风格节点 id：input.style 里的键按同名写进该节点。 */
   style?: string;
+  /** AICG3D 分段导演台：全局参数节点 id（SequenceGlobal）。 */
+  sequence_global?: string;
+  /** AICG3D 各分段节点 id，按播放顺序排列。 */
+  sequence_segments?: string[];
+  /** AICG3D 的 H3Loader 节点 id（9 个 LoRA 槽挂在它上面）。 */
+  lora_loader?: string;
+
 };
 
 type ComfyUiWorkflow = Record<string, unknown> & {
@@ -1561,6 +1567,108 @@ export class ComfyUiAdapter extends BaseAdapter {
           break;
         }
       }
+
+      // AICG3D 分段导演：全局参数 → SequenceGlobal 节点。
+      // 只写用户改过的键，模板自带的默认值原样保留。
+      const directorGlobal = asRecord(record.director_global);
+      const sequenceGlobalId = workflow._beatdesign?.sequence_global;
+      if (sequenceGlobalId && directorGlobal) {
+        const globalInputs = asRecord(asRecord(nodes[sequenceGlobalId])?.inputs);
+        if (globalInputs) {
+          for (const [key, value] of Object.entries(directorGlobal)) {
+            if (!(key in globalInputs)) continue;
+            if (
+              typeof value === 'string' ||
+              typeof value === 'number' ||
+              typeof value === 'boolean'
+            ) {
+              globalInputs[key] = value;
+            }
+          }
+        }
+      }
+
+      // AICG3D 分段：每段独立的提示词 / 时长 / 参考图。
+      // 没给分段时保留模板行为（同一提示词写进每一段）。
+      const sequenceSegmentIds = workflow._beatdesign?.sequence_segments;
+      const directorSegments = Array.isArray(record.director_segments)
+        ? (record.director_segments as Array<Record<string, unknown>>)
+        : [];
+      if (
+        Array.isArray(sequenceSegmentIds) &&
+        sequenceSegmentIds.length > 0 &&
+        directorSegments.length > 0
+      ) {
+        const count = Math.min(sequenceSegmentIds.length, directorSegments.length);
+        for (let i = 0; i < count; i += 1) {
+          const segInputs = asRecord(asRecord(nodes[sequenceSegmentIds[i]])?.inputs);
+          const seg = directorSegments[i];
+          if (!segInputs || !seg) continue;
+          if (typeof seg.prompt === 'string' && seg.prompt.trim()) {
+            // 节点的多模态描述前缀不能丢，模型靠它区分画面/音频通道。
+            const raw = segInputs.prompt;
+            const prefix =
+              typeof raw === 'string' && raw.startsWith('integrated_multimodal_description:')
+                ? 'integrated_multimodal_description: '
+                : '';
+            segInputs.prompt = prefix + seg.prompt.trim();
+          }
+          if (typeof seg.seconds === 'number' && seg.seconds > 0) {
+            segInputs.seconds = Math.min(30, Math.max(0.2, seg.seconds));
+          }
+          if (typeof seg.seed === 'number') {
+            segInputs.seed = seg.seed;
+          }
+          // 每段参考图：上传进 ComfyUI 的 input/，再写成内嵌资源库 JSON。
+          const segImages = Array.isArray(seg.imageUrls)
+            ? (seg.imageUrls as unknown[]).filter(
+                (u): u is string => typeof u === 'string' && u.length > 0
+              )
+            : [];
+          if (segImages.length > 0) {
+            const names: string[] = [];
+            for (const url of segImages.slice(0, 9)) {
+              names.push(await uploadReferenceImage(baseUrl, url));
+            }
+            segInputs.inline_media_state = JSON.stringify({
+              images: names,
+              audios: [],
+              videos: [],
+            });
+          } else {
+            // 没给本段参考图就清空模板残留，避免沿用模板内置的示例图。
+            segInputs.inline_media_state = JSON.stringify({
+              images: [],
+              audios: [],
+              videos: [],
+            });
+          }
+        }
+      }
+
+      // LoRA 槽位：写到 H3Loader 的 lora_1..9 + lora_N_strength。
+      const loraLoaderId = workflow._beatdesign?.lora_loader;
+      const directorLoras = Array.isArray(record.director_loras)
+        ? (record.director_loras as Array<Record<string, unknown>>)
+        : [];
+      if (loraLoaderId && directorLoras.length > 0) {
+        const loraInputs = asRecord(asRecord(nodes[loraLoaderId])?.inputs);
+        if (loraInputs) {
+          for (let slot = 1; slot <= 9; slot += 1) {
+            const key = `lora_${slot}`;
+            if (!(key in loraInputs)) continue;
+            const entry = directorLoras[slot - 1];
+            const file = entry && typeof entry.file === 'string' ? entry.file : 'none';
+            loraInputs[key] = file;
+            const strengthKey = `lora_${slot}_strength`;
+            if (strengthKey in loraInputs) {
+              const raw = entry ? Number(entry.strength) : NaN;
+              loraInputs[strengthKey] = Number.isFinite(raw) ? raw : 1;
+            }
+          }
+        }
+      }
+
 
       // Qwen21MultiImageLoader（多参考图图像编辑）：全部图上传并写入 image_files 数组
       // （完全覆盖模板自带的残留参考图，避免"用户图 + 模板图"混用）。

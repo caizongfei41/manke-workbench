@@ -96,6 +96,12 @@ export type WorkspaceEffectRegistryEntry = {
   isLocalFree?: boolean;
   /** 多段导演台：界面可逐段控制提示词与时长。 */
   multiSegment?: boolean;
+  /**
+   * 分段界面的形态：'timeline' 走 Director 的 timeline_data（MiniMaxH3 一体节点），
+   * 'sequence' 走 AICG3D 的独立分段节点（每段自己的提示词/时长/参考图）。
+   * 两种机制完全不同，界面不能混用。
+   */
+  segmentUi?: 'timeline' | 'sequence';
   referenceInputDefaultsByType?: Partial<
     Record<
       WorkspaceRegistryReferenceType,
@@ -603,6 +609,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
       supportedOutputQualities: ['480p', '720p', '1080p'],
       supportsSeed: true,
       multiSegment: true,
+        segmentUi: 'sequence',
       isLocalFree: true,
     },
     {
@@ -619,6 +626,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
       supportedOutputQualities: ['720p'],
       supportsSeed: true,
       multiSegment: true,
+        segmentUi: 'sequence',
       isLocalFree: true,
     },
     {
@@ -635,6 +643,7 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
       supportedOutputQualities: ['480p'],
       supportsSeed: true,
       multiSegment: true,
+        segmentUi: 'sequence',
       isLocalFree: true,
     },
     {
