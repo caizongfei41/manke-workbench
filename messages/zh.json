@@ -967,5 +967,9 @@
   "drama.final.concat": "拼接已生成的 {count} 段",
   "drama.params.title": "生成参数台",
   "drama.params.subtitle": "{resolution} · {loras} 个 LoRA",
-  "drama.params.auto": "默认"
+  "drama.params.auto": "默认",
+  "drama.final.subtitles": "台词烧进画面",
+  "drama.final.bgmNone": "没有背景音乐",
+  "drama.final.bgmPick": "选音乐",
+  "drama.final.bgmVolume": "音乐音量"
 }

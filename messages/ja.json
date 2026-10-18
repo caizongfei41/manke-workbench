@@ -967,5 +967,9 @@
   "drama.final.concat": "生成済み {count} 本を結合",
   "drama.params.title": "生成パラメータ",
   "drama.params.subtitle": "{resolution} · LoRA {loras} 個",
-  "drama.params.auto": "既定"
+  "drama.params.auto": "既定",
+  "drama.final.subtitles": "セリフを焼き込む",
+  "drama.final.bgmNone": "BGM なし",
+  "drama.final.bgmPick": "音楽を選ぶ",
+  "drama.final.bgmVolume": "音楽の音量"
 }

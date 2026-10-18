@@ -967,5 +967,9 @@
   "drama.final.concat": "Join the {count} finished shots",
   "drama.params.title": "Generation settings",
   "drama.params.subtitle": "{resolution} · {loras} LoRAs",
-  "drama.params.auto": "default"
+  "drama.params.auto": "default",
+  "drama.final.subtitles": "Burn in dialogue",
+  "drama.final.bgmNone": "No music",
+  "drama.final.bgmPick": "Pick music",
+  "drama.final.bgmVolume": "Music level"
 }

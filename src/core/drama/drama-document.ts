@@ -68,6 +68,12 @@ export type DramaDocument = {
   params: DramaParams;
   /** LoRA slots applied to every shot. */
   loras: DramaLora[];
+  /** Burn the dialogue into the picture when assembling. */
+  subtitles: boolean;
+  /** Music bed mixed under the generated audio. */
+  bgmAssetId?: string | null;
+  bgmName?: string | null;
+  bgmVolume: number;
   /** 公共资产：整部片子共用的人物/场景/道具。 */
   publicAssets: ScriptAsset[];
   shots: DramaShot[];
@@ -94,6 +100,10 @@ export const createEmptyDramaDocument = (): DramaDocument => ({
   links: defaultLinks([]),
   params: {},
   loras: [],
+  subtitles: true,
+  bgmAssetId: null,
+  bgmName: null,
+  bgmVolume: 0.25,
   publicAssets: [],
   shots: [],
   finalVideoUrl: null,
@@ -182,6 +192,10 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
         parsed.params && typeof parsed.params === 'object'
           ? (parsed.params as DramaParams)
           : {},
+      subtitles: parsed.subtitles === true,
+      bgmAssetId: typeof parsed.bgmAssetId === 'string' ? parsed.bgmAssetId : null,
+      bgmName: typeof parsed.bgmName === 'string' ? parsed.bgmName : null,
+      bgmVolume: typeof parsed.bgmVolume === 'number' ? parsed.bgmVolume : 0.25,
       loras: Array.isArray(parsed.loras)
         ? parsed.loras
             .map((entry) => {

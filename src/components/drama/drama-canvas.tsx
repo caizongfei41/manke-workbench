@@ -31,6 +31,7 @@ import {
   type DramaShot,
 } from '@/core/drama/drama-document';
 import { ASSET_KIND_LABELS, type ScriptAsset } from '@/core/effects/script-document';
+import { buildAssSubtitle, buildSubtitleCues } from '@/core/drama/subtitles';
 import {
   COMMON_LORAS,
   DIRECTOR_FIELDS,
@@ -666,6 +667,30 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
    * Re-running forty segments to change one line takes an hour; concatenating
    * the finished clips takes seconds and loses nothing.
    */
+  const bgmFileRef = useRef<HTMLInputElement | null>(null);
+
+  const uploadBgm = async (file: File) => {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    try {
+      const res = await fetch(`/api/app/projects/${projectId}/assets`, {
+        method: 'POST',
+        headers: { 'x-beatapi-workspace-request': '1' },
+        body: form,
+      });
+      const json = await res.json().catch(() => null);
+      const assetId = json?.assetId ?? json?.id ?? json?.asset?.id;
+      if (!res.ok || !assetId) return;
+      setDoc((current) => ({
+        ...current,
+        bgmAssetId: assetId,
+        bgmName: file.name,
+      }));
+    } catch {
+      // A failed upload just means no music; the film still renders.
+    }
+  };
+
   const concatGenerated = async () => {
     const assetIds = doc.shots
       .filter((shot) => isInFinal(shot.id) && !!shot.videoUrl)
@@ -681,7 +706,20 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           'content-type': 'application/json',
           'x-beatapi-workspace-request': '1',
         },
-        body: JSON.stringify({ assetIds }),
+        body: JSON.stringify({
+          assetIds,
+          subtitles: doc.subtitles
+            ? buildAssSubtitle(
+                buildSubtitleCues(
+                  doc.shots
+                    .filter((shot) => isInFinal(shot.id))
+                    .map((shot) => ({ prompt: shot.prompt, seconds: shot.seconds }))
+                )
+              )
+            : '',
+          bgmAssetId: doc.bgmAssetId ?? '',
+          bgmVolume: doc.bgmVolume,
+        }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.publicUrl) {
@@ -1442,6 +1480,74 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             {doc.finalStatus === 'failed' ? (
               <p className="mt-1.5 text-[9px] text-red-400">{m['drama.final.failed']()}</p>
             ) : null}
+            <div className="mt-2 flex flex-col gap-1.5">
+              <label className="flex items-center justify-between gap-2">
+                <span className="text-[10px] text-[var(--beat-text-2)]">
+                  {m['drama.final.subtitles']()}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={doc.subtitles}
+                  onChange={(event) =>
+                    setDoc((current) => ({ ...current, subtitles: event.target.checked }))
+                  }
+                  className="size-3"
+                />
+              </label>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                  {doc.bgmName ?? m['drama.final.bgmNone']()}
+                </span>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => bgmFileRef.current?.click()}
+                    className="rounded-[5px] border border-ink/[0.12] px-1.5 py-0.5 text-[9px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+                  >
+                    {m['drama.final.bgmPick']()}
+                  </button>
+                  {doc.bgmAssetId ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDoc((current) => ({
+                          ...current,
+                          bgmAssetId: null,
+                          bgmName: null,
+                        }))
+                      }
+                      className="rounded-[5px] px-1 py-0.5 text-[9px] text-[var(--beat-text-3)] transition hover:text-ink"
+                    >
+                      ×
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              {doc.bgmAssetId ? (
+                <label className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-[var(--beat-text-2)]">
+                    {m['drama.final.bgmVolume']()}
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={doc.bgmVolume}
+                    onChange={(event) =>
+                      setDoc((current) => ({
+                        ...current,
+                        bgmVolume: Number(event.target.value),
+                      }))
+                    }
+                    className="w-[92px]"
+                  />
+                </label>
+              ) : null}
+            </div>
+
             {generatedClips > 0 ? (
               <button
                 type="button"
@@ -1469,6 +1575,17 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </div>
       </div>
 
+      <input
+        ref={bgmFileRef}
+        type="file"
+        accept="audio/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.currentTarget.value = '';
+          if (file) void uploadBgm(file);
+        }}
+      />
       <input
         ref={shotFileRef}
         type="file"
