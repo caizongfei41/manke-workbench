@@ -977,5 +977,12 @@
   "drama.final.rerun": "重跑失败段",
   "drama.final.stop": "停止",
   "drama.final.allDone": "全部 {count} 段都已完成",
-  "drama.final.progress": "正在跑第 {done}/{total} 段"
+  "drama.final.progress": "正在跑第 {done}/{total} 段",
+  "drama.version.prev": "上一版",
+  "drama.version.next": "下一版",
+  "drama.version.counter": "第 {index}/{total} 版",
+  "drama.version.adopt": "采用这版",
+  "drama.version.adopted": "已采用",
+  "drama.final.toEditor": "送进剪辑台",
+  "drama.final.editorName": "剪辑 {time}"
 }

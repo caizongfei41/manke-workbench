@@ -977,5 +977,12 @@
   "drama.final.rerun": "失敗した分をやり直す",
   "drama.final.stop": "停止",
   "drama.final.allDone": "全 {count} 本が完了",
-  "drama.final.progress": "{done}/{total} 本目を実行中"
+  "drama.final.progress": "{done}/{total} 本目を実行中",
+  "drama.version.prev": "前のテイク",
+  "drama.version.next": "次のテイク",
+  "drama.version.counter": "テイク {index}/{total}",
+  "drama.version.adopt": "このテイクを採用",
+  "drama.version.adopted": "採用済み",
+  "drama.final.toEditor": "編集台で開く",
+  "drama.final.editorName": "編集 {time}"
 }

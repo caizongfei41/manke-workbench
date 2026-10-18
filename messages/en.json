@@ -977,5 +977,12 @@
   "drama.final.rerun": "Retry failed shots",
   "drama.final.stop": "Stop",
   "drama.final.allDone": "All {count} shots are done",
-  "drama.final.progress": "Shot {done} of {total}"
+  "drama.final.progress": "Shot {done} of {total}",
+  "drama.version.prev": "Previous take",
+  "drama.version.next": "Next take",
+  "drama.version.counter": "Take {index} of {total}",
+  "drama.version.adopt": "Use this take",
+  "drama.version.adopted": "Adopted",
+  "drama.final.toEditor": "Open in the editor",
+  "drama.final.editorName": "Edit {time}"
 }

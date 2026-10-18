@@ -17,6 +17,23 @@ import {
  * 哪些图、什么提示词、多长」，最终台把所有分段的成片接成一条。
  */
 
+/**
+ * One rendered take of a shot.
+ *
+ * Generating again used to overwrite the previous result, so picking the best
+ * take was impossible — and a retry that came out worse destroyed good work.
+ * Every result is kept; `videoUrl` points at the adopted one.
+ */
+export type ShotVersion = {
+  id: string;
+  url: string;
+  /** 生成时间，方便按新旧排。 */
+  createdAt: number;
+};
+
+/** 每段保留的版本数上限，避免快照无限长。 */
+export const MAX_SHOT_VERSIONS = 5;
+
 export type DramaShot = {
   id: string;
   /** 这一段的提示词，来自分镜台，可以在分段工作台里改。 */
@@ -28,6 +45,8 @@ export type DramaShot = {
   ownImageUrls: string[];
   /** 生成结果。 */
   videoUrl?: string | null;
+  /** Every take rendered for this shot, newest first. */
+  versions?: ShotVersion[];
   status: 'idle' | 'running' | 'succeeded' | 'failed';
   error?: string | null;
 };
@@ -169,6 +188,20 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
             videoUrl: typeof shot.videoUrl === 'string' ? shot.videoUrl : null,
             status: (shot.status ?? 'idle') as DramaShot['status'],
             error: typeof shot.error === 'string' ? shot.error : null,
+            versions: Array.isArray((shot as { versions?: unknown }).versions)
+              ? ((shot as { versions: unknown[] }).versions
+                  .map((entry) => {
+                    const item = entry as { id?: unknown; url?: unknown; createdAt?: unknown };
+                    if (typeof item?.url !== 'string' || !item.url) return null;
+                    return {
+                      id: typeof item.id === 'string' ? item.id : item.url,
+                      url: item.url,
+                      createdAt: typeof item.createdAt === 'number' ? item.createdAt : 0,
+                    };
+                  })
+                  .filter((entry): entry is ShotVersion => entry !== null)
+                  .slice(0, MAX_SHOT_VERSIONS) as ShotVersion[])
+              : [],
           }))
         : [],
       links: (() => {

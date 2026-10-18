@@ -18,6 +18,7 @@ import { HintTip } from '@/components/app/hint-tip';
 import {
   DRAMA_ASPECT_RATIO,
   DRAMA_MODEL_ID,
+  MAX_SHOT_VERSIONS,
   analyzeScript,
   defaultLinks,
   mergeAssets,
@@ -160,6 +161,8 @@ function NodeShell({
 export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const [doc, setDoc] = useState<DramaDocument>(() => loadDramaDocument(initialDocument));
   const [busyShot, setBusyShot] = useState<string | null>(null);
+  // Which take each shot is previewing (transient; adopting is a separate act).
+  const [previewVersion, setPreviewVersion] = useState<Record<string, number>>({});
   const shotFileRef = useRef<HTMLInputElement | null>(null);
   const [shotUploadTarget, setShotUploadTarget] = useState<string | null>(null);
   const publicFileRef = useRef<HTMLInputElement | null>(null);
@@ -512,6 +515,41 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
   const hasLink = (from: string, to: string) => linkSet.has(`${from}->${to}`);
 
+  /** Switch which take goes into the film. Previewing is a separate action. */
+  const sendToEditor = async () => {
+    const assetId = doc.finalVideoUrl?.match(/\/assets\/([0-9a-f-]{36})/i)?.[1];
+    if (!assetId) return;
+    try {
+      const res = await fetch(`/api/app/projects/${projectId}/send-to-editor`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-beatapi-workspace-request': '1',
+        },
+        body: JSON.stringify({ assetId, name: m['drama.final.editorName']({ time: new Date().toLocaleString() }) }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.projectId) return;
+      window.open(`/zh/canvas/${json.projectId}`, '_blank');
+    } catch {
+      // A failed handoff leaves the board untouched.
+    }
+  };
+
+  const adoptVersion = (shotId: string, versionId: string) =>
+    updateDoc((current) => ({
+      ...current,
+      shots: current.shots.map((shot) =>
+        shot.id === shotId
+          ? {
+              ...shot,
+              videoUrl:
+                (shot.versions ?? []).find((v) => v.id === versionId)?.url ?? shot.videoUrl,
+            }
+          : shot
+      ),
+    }));
+
   const usesSharedAssets = (shotId: string) => hasLink('assets', shotId);
   const isInFinal = (shotId: string) => hasLink(shotId, 'final');
 
@@ -637,9 +675,17 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             r.json()
           );
           const item = (gens.items ?? []).find((g: { id: string }) => g.id === wmTaskId);
+          const url = item?.resultUrl ?? null;
+          // Every take is kept; the newest is adopted, older ones stay pickable.
           setShot(shot.id, {
             status: 'succeeded',
-            videoUrl: item?.resultUrl ?? null,
+            videoUrl: url,
+            versions: url
+              ? [
+                  { id: String(wmTaskId), url, createdAt: Date.now() },
+                  ...(shot.versions ?? []),
+                ].slice(0, MAX_SHOT_VERSIONS)
+              : (shot.versions ?? []),
           });
           return true;
         }
@@ -1467,13 +1513,60 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               {shot.error ? (
                 <p className="mt-1 line-clamp-2 text-[9px] text-red-400">{shot.error}</p>
               ) : null}
-              {shot.videoUrl ? (
-                <video
-                  src={shot.videoUrl}
-                  controls
-                  className="mt-1.5 w-full rounded-[6px]"
-                />
-              ) : null}
+              {(() => {
+                const versions = shot.versions ?? [];
+                if (versions.length === 0) return null;
+                const previewIndex = Math.min(previewVersion[shot.id] ?? 0, versions.length - 1);
+                const shown = versions[previewIndex];
+                const adoptedIndex = versions.findIndex((v) => v.url === shot.videoUrl);
+                const isAdopted = adoptedIndex === previewIndex;
+                return (
+                  <>
+                    <video src={shown.url} controls className="mt-1.5 w-full rounded-[6px]" />
+                    {versions.length > 1 ? (
+                      <div className="mt-1 flex items-center gap-1">
+                        <button
+                          type="button"
+                          aria-label={m['drama.version.prev']()}
+                          onClick={() =>
+                            setPreviewVersion((current) => ({
+                              ...current,
+                              [shot.id]: (previewIndex - 1 + versions.length) % versions.length,
+                            }))
+                          }
+                          className="grid size-5 place-items-center rounded-[5px] border border-ink/[0.12] text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+                        >
+                          ‹
+                        </button>
+                        <span className="tabular-nums text-[9.5px] text-[var(--beat-text-2)]">
+                          {m['drama.version.counter']({ index: previewIndex + 1, total: versions.length })}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={m['drama.version.next']()}
+                          onClick={() =>
+                            setPreviewVersion((current) => ({
+                              ...current,
+                              [shot.id]: (previewIndex + 1) % versions.length,
+                            }))
+                          }
+                          className="grid size-5 place-items-center rounded-[5px] border border-ink/[0.12] text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+                        >
+                          ›
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isAdopted}
+                          onClick={() => adoptVersion(shot.id, shown.id)}
+                          className="ml-auto rounded-[5px] px-1.5 py-0.5 text-[9px] text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/10 disabled:text-[var(--beat-text-3)] disabled:hover:bg-transparent"
+                        >
+                          {isAdopted ? m['drama.version.adopted']() : m['drama.version.adopt']()}
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
+                );
+              })()}
             </NodeShell>
           </div>
         ))}
@@ -1645,6 +1738,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             <p className="mt-1.5 text-[9px] leading-4 text-[var(--beat-text-3)]">
               {m['drama.wire.hint']({ count: doc.links.length })}
             </p>
+            {doc.finalVideoUrl ? (
+              <button
+                type="button"
+                onClick={() => void sendToEditor()}
+                className="mt-1.5 w-full rounded-[8px] border border-ink/[0.14] py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+              >
+                {m['drama.final.toEditor']()}
+              </button>
+            ) : null}
             {doc.finalVideoUrl ? (
               <video src={doc.finalVideoUrl} controls className="mt-2 w-full rounded-[8px]" />
             ) : null}
