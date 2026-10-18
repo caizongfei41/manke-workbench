@@ -34,6 +34,15 @@ export type DramaShot = {
 
 export type NodePosition = { x: number; y: number };
 
+/**
+ * A wire between two nodes.
+ *
+ * Wires are not decoration: `assets → shot` decides whether a shot inherits the
+ * shared cast, and `shot → final` decides whether the shot makes it into the
+ * finished film. Cutting either one changes the render.
+ */
+export type DramaLink = { from: string; to: string };
+
 export type DramaDocument = {
   version: 1;
   script: string;
@@ -42,6 +51,8 @@ export type DramaDocument = {
    * pipeline layout, so a document saved before dragging existed still opens.
    */
   positions: Record<string, NodePosition>;
+  /** Wires between nodes; see DramaLink for what each one controls. */
+  links: DramaLink[];
   /** 公共资产：整部片子共用的人物/场景/道具。 */
   publicAssets: ScriptAsset[];
   shots: DramaShot[];
@@ -50,10 +61,22 @@ export type DramaDocument = {
   finalStatus: 'idle' | 'running' | 'succeeded' | 'failed';
 };
 
+/** The pipeline as it ships: script feeds the board, the board feeds assets,
+ *  every shot draws from assets and lands in the final cut. */
+export const defaultLinks = (shotIds: string[]): DramaLink[] => [
+  { from: 'script', to: 'board' },
+  { from: 'board', to: 'assets' },
+  ...shotIds.flatMap((id) => [
+    { from: 'assets', to: id },
+    { from: id, to: 'final' },
+  ]),
+];
+
 export const createEmptyDramaDocument = (): DramaDocument => ({
   version: 1,
   script: '',
   positions: {},
+  links: defaultLinks([]),
   publicAssets: [],
   shots: [],
   finalVideoUrl: null,
@@ -121,6 +144,23 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
             error: typeof shot.error === 'string' ? shot.error : null,
           }))
         : [],
+      links: (() => {
+        const shots = Array.isArray(parsed.shots) ? parsed.shots : [];
+        const shotIds = shots
+          .map((shot) => (typeof shot.id === 'string' ? shot.id : ''))
+          .filter(Boolean);
+        const raw = (parsed as { links?: unknown }).links;
+        if (!Array.isArray(raw)) return defaultLinks(shotIds);
+        const links = raw
+          .map((link) => {
+            const value = link as { from?: unknown; to?: unknown };
+            return typeof value?.from === 'string' && typeof value?.to === 'string'
+              ? { from: value.from, to: value.to }
+              : null;
+          })
+          .filter((link): link is DramaLink => link !== null);
+        return links.length > 0 ? links : defaultLinks(shotIds);
+      })(),
       finalVideoUrl:
         typeof parsed.finalVideoUrl === 'string' ? parsed.finalVideoUrl : null,
       finalStatus: (parsed.finalStatus ?? 'idle') as DramaDocument['finalStatus'],
@@ -151,3 +191,25 @@ export const DRAMA_GLOBAL = {
   vram_policy: '卸载模型',
 } as const;
 export const DRAMA_ASPECT_RATIO = '9:16';
+
+/**
+ * Merge a freshly parsed cast into the existing one.
+ *
+ * Re-splitting used to keep whatever assets already existed, so editing the
+ * script never produced new characters or scenes. Matching by kind and name
+ * keeps an asset's uploaded image while letting the list follow the script.
+ */
+export const mergeAssets = (
+  existing: ScriptAsset[],
+  incoming: ScriptAsset[]
+): ScriptAsset[] => {
+  const byKey = new Map(existing.map((asset) => [`${asset.kind}:${asset.name}`, asset]));
+  return incoming.map((asset) => {
+    const match = byKey.get(`${asset.kind}:${asset.name}`);
+    if (!match) return asset;
+    return {
+      ...match,
+      description: asset.description || match.description,
+    };
+  });
+};

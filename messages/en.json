@@ -958,5 +958,10 @@
   "drama.view.fitHint": "Fit view (Shift+1)",
   "drama.view.undo": "Undo",
   "drama.view.redo": "Redo",
-  "drama.view.resetLayout": "Tidy layout"
+  "drama.view.resetLayout": "Tidy layout",
+  "drama.wire.drag": "Drag a wire to another node's left dot",
+  "drama.wire.drop": "Drop a wire here",
+  "drama.wire.auto": "Auto-wire",
+  "drama.wire.detached": "Shared assets disconnected — this shot uses only its own images",
+  "drama.wire.hint": "{count} wires · cut the assets wire to drop shared images, cut the final wire to leave the shot out"
 }

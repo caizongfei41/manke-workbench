@@ -958,5 +958,10 @@
   "drama.view.fitHint": "全体表示 (Shift+1)",
   "drama.view.undo": "元に戻す",
   "drama.view.redo": "やり直す",
-  "drama.view.resetLayout": "レイアウト整理"
+  "drama.view.resetLayout": "レイアウト整理",
+  "drama.wire.drag": "線をドラッグして別ノードの左の点へ",
+  "drama.wire.drop": "ここに線を接続",
+  "drama.wire.auto": "自動配線",
+  "drama.wire.detached": "共通素材を切断：このショットは自前の画像のみ使用",
+  "drama.wire.hint": "{count} 本の配線 · 素材の線を切ると共通画像を使わず、最終の線を切ると作品に入りません"
 }

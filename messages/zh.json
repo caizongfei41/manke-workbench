@@ -958,5 +958,10 @@
   "drama.view.fitHint": "适配视图 (Shift+1)",
   "drama.view.undo": "撤销",
   "drama.view.redo": "重做",
-  "drama.view.resetLayout": "整理布局"
+  "drama.view.resetLayout": "整理布局",
+  "drama.wire.drag": "拖出这根线，接到另一个节点的左侧圆点",
+  "drama.wire.drop": "把线拖到这里接线",
+  "drama.wire.auto": "自动接线",
+  "drama.wire.detached": "已断开公共资产：这一段只用它自己的图",
+  "drama.wire.hint": "当前 {count} 条接线 · 断开公共资产线 = 该段不用共享图；断开入片线 = 该段不进成片"
 }

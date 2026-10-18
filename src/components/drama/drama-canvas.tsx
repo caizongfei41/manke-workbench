@@ -19,6 +19,8 @@ import {
   DRAMA_GLOBAL,
   DRAMA_MODEL_ID,
   analyzeScript,
+  defaultLinks,
+  mergeAssets,
   buildShotsFromScript,
   createEmptyDramaDocument,
   dramaTemplate,
@@ -83,6 +85,7 @@ function NodeShell({
   accent,
   children,
   width = NODE_WIDTH,
+  ports,
 }: {
   title: string;
   subtitle?: string;
@@ -90,15 +93,17 @@ function NodeShell({
   accent?: boolean;
   children: React.ReactNode;
   width?: number;
+  /** Wiring handles: an input on the left edge, an output on the right. */
+  ports?: { inputId?: string; onStartLink?: (event: React.PointerEvent<HTMLSpanElement>) => void };
 }) {
   return (
-    <div
-      style={{ width }}
-      className={cn(
-        'overflow-hidden rounded-[16px] border bg-[var(--beat-surface)] shadow-[0_18px_44px_rgba(0,0,0,0.18)]',
-        accent ? 'border-[var(--beat-accent)]/45' : 'border-ink/[0.1]'
-      )}
-    >
+    <div className="relative" style={{ width }}>
+      <div
+        className={cn(
+          'overflow-hidden rounded-[16px] border bg-[var(--beat-surface)] shadow-[0_18px_44px_rgba(0,0,0,0.18)]',
+          accent ? 'border-[var(--beat-accent)]/45' : 'border-ink/[0.1]'
+        )}
+      >
       <div
         data-drama-drag-handle="true"
         className="flex cursor-grab touch-none select-none items-center gap-2 border-b border-ink/[0.08] px-3 py-2.5 active:cursor-grabbing"
@@ -124,7 +129,22 @@ function NodeShell({
           ) : null}
         </div>
       </div>
-      <div className="p-3">{children}</div>
+        <div className="p-3">{children}</div>
+      </div>
+      {ports?.inputId ? (
+        <span
+          data-drama-input-port={ports.inputId}
+          title={m['drama.wire.drop']()}
+          className="absolute -left-[7px] top-1/2 size-3 -translate-y-1/2 rounded-full border-2 border-[var(--beat-accent)] bg-[var(--beat-surface)] transition hover:scale-125"
+        />
+      ) : null}
+      {ports?.onStartLink ? (
+        <span
+          onPointerDown={ports.onStartLink}
+          title={m['drama.wire.drag']()}
+          className="absolute -right-[7px] top-1/2 size-3 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-[var(--beat-accent)] bg-[var(--beat-surface)] transition hover:scale-125"
+        />
+      ) : null}
     </div>
   );
 }
@@ -321,12 +341,31 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
   const splitScript = () => {
     const shots = buildShotsFromScript(doc.script);
-    setDoc((current) => ({
-      ...current,
-      shots,
-      publicAssets:
-        current.publicAssets.length > 0 ? current.publicAssets : analysis.assets,
+    const merged = mergeAssets(doc.publicAssets, analysis.assets);
+    const alive = new Set(merged.map((asset) => asset.id));
+    const prunedShots = shots.map((shot) => ({
+      ...shot,
+      publicAssetIds: shot.publicAssetIds.filter((id) => alive.has(id)),
     }));
+    setDoc((current) => {
+      // Re-splitting replaces the shots, so their wires have to be rebuilt too —
+      // otherwise every new workbench starts unlinked and silently leaves the
+      // film. Stage-to-stage wires the user changed are kept; shot wires are
+      // recreated for the new shot ids.
+      const stageIds = new Set(['script', 'board', 'assets', 'final']);
+      const keptStageLinks = current.links.filter(
+        (link) => stageIds.has(link.from) && stageIds.has(link.to)
+      );
+      const shotLinks = defaultLinks(prunedShots.map((shot) => shot.id)).filter(
+        (link) => !stageIds.has(link.from) || !stageIds.has(link.to)
+      );
+      return {
+        ...current,
+        shots: prunedShots,
+        publicAssets: merged,
+        links: [...keptStageLinks, ...shotLinks],
+      };
+    });
   };
 
   const addShot = () => {
@@ -363,9 +402,14 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
    * cast-typo cast cast to string[] meant nothing was sent at all — both
    * showed up as "1 reference" while the job carried zero.
    */
+  const usesSharedAssets = (shotId: string) => hasLink('assets', shotId);
+  const isInFinal = (shotId: string) => hasLink(shotId, 'final');
+
   const resolveShotRefs = (shot: DramaShot): ResolvedRef[] => {
     const order: Record<string, number> = { character: 0, scene: 1, prop: 2 };
-    const picked = shot.publicAssetIds
+    // Cutting the assets wire leaves the shot with only its own images.
+    const picked = (usesSharedAssets(shot.id) ? shot.publicAssetIds : [])
+      
       .map((id) => doc.publicAssets.find((a) => a.id === id))
       .filter((a): a is ScriptAsset => !!a && !!a.imageUrl)
       .sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9))
@@ -528,7 +572,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               wmDuration: '12s',
               wmOutputQuality: '480p',
               director_global: { ...DRAMA_GLOBAL },
-              director_segments: doc.shots.map((shot) => ({
+              director_segments: doc.shots.filter((shot) => isInFinal(shot.id)).map((shot) => ({
                 prompt: shot.prompt,
                 seconds: shot.seconds,
                 imageUrls: resolveImages(shot),
@@ -571,6 +615,79 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const shotY = (index: number) => 150 + index * SHOT_PITCH;
   const canvasHeight = Math.max(760, shotY(doc.shots.length) + 60);
 
+  // ---- Wiring -----------------------------------------------------------
+  const linkKey = (link: { from: string; to: string }) => `${link.from}->${link.to}`;
+  const linkSet = useMemo(() => new Set(doc.links.map(linkKey)), [doc.links]);
+
+  const hasLink = (from: string, to: string) => linkSet.has(`${from}->${to}`);
+
+  const toggleLink = (from: string, to: string) => {
+    if (from === to) return;
+    setDoc((current) => {
+      const exists = current.links.some((l) => l.from === from && l.to === to);
+      return {
+        ...current,
+        links: exists
+          ? current.links.filter((l) => !(l.from === from && l.to === to))
+          : [...current.links, { from, to }],
+      };
+    });
+  };
+
+  const autoWire = () =>
+    setDoc((current) => ({
+      ...current,
+      links: defaultLinks(current.shots.map((shot) => shot.id)),
+    }));
+
+  // Dragging a wire out of an output port.
+  const [pendingLink, setPendingLink] = useState<{ from: string; x: number; y: number } | null>(null);
+  const linkDragRef = useRef<{ from: string; pointerId: number } | null>(null);
+
+  const beginLink = (from: string) => (event: React.PointerEvent<HTMLSpanElement>) => {
+    if (event.button !== 0) return;
+    event.stopPropagation();
+    event.preventDefault();
+    linkDragRef.current = { from, pointerId: event.pointerId };
+    setPendingLink({ from, x: 0, y: 0 });
+  };
+
+  useEffect(() => {
+    if (!pendingLink) return;
+    const onMove = (event: PointerEvent) => {
+      const stage = stageRef.current;
+      if (!stage) return;
+      const rect = stage.getBoundingClientRect();
+      const k = viewScaleRef.current || 1;
+      setPendingLink((current) =>
+        current
+          ? {
+              ...current,
+              x: (event.clientX - rect.left) / k,
+              y: (event.clientY - rect.top) / k,
+            }
+          : current
+      );
+    };
+    const onUp = (event: PointerEvent) => {
+      const drag = linkDragRef.current;
+      linkDragRef.current = null;
+      setPendingLink(null);
+      if (!drag) return;
+      const target = (event.target as HTMLElement | null)?.closest('[data-drama-input-port]');
+      const to = target?.getAttribute('data-drama-input-port');
+      if (to) toggleLink(drag.from, to);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [pendingLink, hasLink]);
+
+  const stageRef = useRef<HTMLDivElement | null>(null);
+
   const edgeFor = (fromId: string, toId: string) => {
     const from = rects[fromId];
     const to = rects[toId];
@@ -583,12 +700,24 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2 - 6} ${y2}`;
   };
 
-  const edges = [
-    { path: edgeFor('script', 'board'), strong: true },
-    { path: edgeFor('board', 'assets'), strong: true },
-    ...doc.shots.map((shot) => ({ path: edgeFor('assets', shot.id), strong: false })),
-    ...doc.shots.map((shot) => ({ path: edgeFor(shot.id, 'final'), strong: false })),
-  ].filter((edge): edge is { path: string; strong: boolean } => !!edge.path);
+  const edges = doc.links
+    .map((link) => {
+      const path = edgeFor(link.from, link.to);
+      const strong = link.from === 'script' || link.from === 'board';
+      return path ? { path, strong, key: linkKey(link), from: link.from, to: link.to } : null;
+    })
+    .filter((edge): edge is { path: string; strong: boolean; key: string; from: string; to: string } => edge !== null);
+
+  const ghostPath = pendingLink
+    ? (() => {
+        const from = rects[pendingLink.from];
+        if (!from) return null;
+        const x1 = from.x + from.w;
+        const y1 = from.y + from.h / 2;
+        const bend = Math.max(40, Math.abs(pendingLink.x - x1) * 0.45);
+        return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${pendingLink.x - bend} ${pendingLink.y}, ${pendingLink.x} ${pendingLink.y}`;
+      })()
+    : null;
 
   // The stage grows with the nodes so nothing gets clipped at the edge.
   const stageWidth = Math.max(
@@ -672,6 +801,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.script.title']()}
             subtitle={doc.script ? m['drama.script.chars']({ count: doc.script.length }) : m['drama.script.empty']()}
             icon={<Clapperboard className="size-3.5" />}
+            ports={{ onStartLink: beginLink('script') }}
           >
             <textarea
               value={doc.script}
@@ -714,6 +844,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.board.title']()}
             subtitle={m['drama.board.subtitle']({ segments: analysis.segments.length, assets: analysis.assets.length })}
             icon={<Layers className="size-3.5" />}
+            ports={{ inputId: 'board', onStartLink: beginLink('board') }}
             accent
           >
             <div className="flex flex-col gap-1.5 text-[11px] text-[var(--beat-text-2)]">
@@ -750,6 +881,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.assets.title']()}
             subtitle={m['drama.assets.subtitle']({ ready: doc.publicAssets.filter((a) => a.imageUrl).length, total: doc.publicAssets.length })}
             icon={<ImagePlus className="size-3.5" />}
+            ports={{ inputId: 'assets', onStartLink: beginLink('assets') }}
             accent
           >
             <div className="flex max-h-[320px] flex-col gap-1.5 overflow-y-auto">
@@ -829,6 +961,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               title={m['drama.shot.title']({ index: index + 1 })}
               subtitle={`${shot.seconds}s · ${shotStatusLabel(shot.status)}`}
               icon={<Film className="size-3.5" />}
+              ports={{ inputId: shot.id, onStartLink: beginLink(shot.id) }}
             >
               <textarea
                 value={shot.prompt}
@@ -836,6 +969,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 placeholder={m['drama.shot.placeholder']()}
                 className="h-16 w-full resize-none rounded-[8px] border border-ink/[0.08] bg-ink/[0.03] px-2 py-1.5 text-[11px] leading-4 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
               />
+              {!usesSharedAssets(shot.id) ? (
+                <p className="mt-1 text-[9px] text-[var(--beat-text-3)]">
+                  {m['drama.wire.detached']()}
+                </p>
+              ) : null}
               <div className="mt-1.5 flex items-center gap-1.5">
                 <input
                   type="number"
@@ -990,6 +1128,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.final.title']()}
             subtitle={m['drama.final.subtitle']({ shots: doc.shots.length, seconds: Math.round(grandTotal) })}
             icon={<Sparkles className="size-3.5" />}
+            ports={{ inputId: 'final' }}
             accent
           >
             <p className="mb-2 text-[10px] leading-4 text-[var(--beat-text-3)]">
@@ -1007,6 +1146,16 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             {doc.finalStatus === 'failed' ? (
               <p className="mt-1.5 text-[9px] text-red-400">{m['drama.final.failed']()}</p>
             ) : null}
+            <button
+              type="button"
+              onClick={autoWire}
+              className="mt-1.5 w-full rounded-[8px] border border-ink/[0.12] py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+            >
+              {m['drama.wire.auto']()}
+            </button>
+            <p className="mt-1.5 text-[9px] leading-4 text-[var(--beat-text-3)]">
+              {m['drama.wire.hint']({ count: doc.links.length })}
+            </p>
             {doc.finalVideoUrl ? (
               <video src={doc.finalVideoUrl} controls className="mt-2 w-full rounded-[8px]" />
             ) : null}
