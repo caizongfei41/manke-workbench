@@ -1003,7 +1003,7 @@
   "help.final.title": "Final cut",
   "help.final.body": "\"Resume the N missing shots\" renders shot by shot and survives a refresh.\n\"Join the N finished shots\" only concatenates, in seconds.\nExport defaults to vertical; once there is a film you can open it in the editor.",
   "help.canvas.title": "Canvas controls",
-  "help.canvas.body": "Drag a node header to move it; drag the right dot to wire it.\nDrag empty space to select, Delete removes the selection.\nSpace or middle-drag pans, wheel zooms, Shift+1 fits the view.",
+  "help.canvas.body": "Right-drag or middle-drag pans, the wheel pans too, ctrl+wheel zooms.\nDrag a node header to move it, drag the right dot to wire it.\nDrag empty space to select, Delete removes, Esc clears, ctrl+A takes all.\nDouble-click empty space to fit everything; Shift+1 does the same.",
   "startHere.groupLabel": "Four ways in",
   "startHere.caption": "Four ways in · pick one to open that tool",
   "startHere.heading": "Start Here",

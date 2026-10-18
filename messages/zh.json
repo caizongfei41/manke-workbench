@@ -1003,7 +1003,7 @@
   "help.final.title": "最终视频台",
   "help.final.body": "「续跑未完成的 N 段」逐段生成，刷新也不丢进度。\n「拼接已生成的 N 段」只拼接、不重跑，几秒出片。\n导出规格默认竖屏；出片后可以送进剪辑台。",
   "help.canvas.title": "画布操作",
-  "help.canvas.body": "拖节点标题栏可以移动；拖右侧圆点可以接线。\n空白处拖动 = 框选，Delete 批量删除。\n空格或中键拖动 = 平移，滚轮缩放，Shift+1 适配视图。",
+  "help.canvas.body": "右键或中键拖动 = 平移画布，滚轮也能平移，Ctrl+滚轮缩放。\n拖节点标题栏移动，拖右侧圆点接线。\n空白处拖动 = 框选，Delete 删除，Esc 取消选择，Ctrl+A 全选。\n双击空白 = 显示全部，Shift+1 同样是适配视图。",
   "startHere.groupLabel": "四个创作入口",
   "startHere.caption": "四个入口 · 点一张直接进对应功能",
   "startHere.heading": "从这里开始",

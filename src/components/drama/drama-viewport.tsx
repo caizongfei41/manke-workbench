@@ -57,6 +57,7 @@ export function DramaViewport({
   onScaleChange,
   onResetLayout,
   onMarquee,
+  apiRef,
   onUndo,
   onRedo,
   canUndo = false,
@@ -72,6 +73,8 @@ export function DramaViewport({
   onResetLayout?: () => void;
   /** Reports a marquee in content coordinates, or null when it was a click. */
   onMarquee?: (rect: { x: number; y: number; w: number; h: number } | null, additive: boolean) => void;
+  /** Lets the board move the view, e.g. to reveal a node it just created. */
+  apiRef?: React.MutableRefObject<{ centerOn: (x: number, y: number) => void } | null>;
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -174,14 +177,14 @@ export function DramaViewport({
         });
         return;
       }
+      // Plain wheel pans — that is what a trackpad two-finger scroll has to do.
+      // Zoom is ctrl/cmd + wheel above; shift pans sideways.
       event.preventDefault();
-      const el = viewportRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const factor = Math.exp(-event.deltaY * 0.0015);
-      zoomAt(view.k * factor, event.clientX - rect.left, event.clientY - rect.top);
+      const dx = event.shiftKey ? event.deltaY : event.deltaX;
+      const dy = event.shiftKey ? 0 : event.deltaY;
+      setView((current) => ({ ...current, x: current.x - dx, y: current.y - dy }));
     },
-    [view.k, zoomAt]
+    [zoomAt]
   );
 
   const onPointerDown = useCallback(
@@ -190,9 +193,10 @@ export function DramaViewport({
       const target = event.target as HTMLElement;
       const isBackground = target.dataset.dramaBackground === 'true';
       if (!isBackground) return;
-      if (event.button !== 0 && event.button !== 1) return;
+      // 0 = select, 1 = middle pan, 2 = right pan (the usual shortcut in node editors)
+      if (event.button !== 0 && event.button !== 1 && event.button !== 2) return;
 
-      const wantsPan = event.button === 1 || spaceRef.current;
+      const wantsPan = event.button === 1 || event.button === 2 || spaceRef.current;
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
@@ -359,6 +363,14 @@ export function DramaViewport({
     }));
   }, []);
 
+  useEffect(() => {
+    if (!apiRef) return;
+    apiRef.current = { centerOn };
+    return () => {
+      apiRef.current = null;
+    };
+  }, [apiRef, centerOn]);
+
   const minimapRef = useRef<HTMLDivElement | null>(null);
   const minimapDraggingRef = useRef(false);
   const [viewportBox, setViewportBox] = useState({ x: 0, y: 0, w: 1, h: 1 });
@@ -398,6 +410,16 @@ export function DramaViewport({
         panning ? 'cursor-grabbing' : spaceDown ? 'cursor-grab' : 'cursor-default'
       )}
       onWheel={onWheel}
+      onContextMenu={(event) => event.preventDefault()}
+      onDoubleClick={(event) => {
+        // Only a double-click on empty canvas fits; a double-click on a card is not
+        // a navigation command.
+        // Pointer capture retargets the second click to the container itself, so
+        // accept that as empty space too.
+        const target = event.target as HTMLElement;
+        const isEmpty = target.dataset.dramaBackground === 'true' || target === event.currentTarget;
+        if (isEmpty) fit();
+      }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endPan}

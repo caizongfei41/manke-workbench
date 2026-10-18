@@ -480,6 +480,10 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         },
       ],
     }));
+    // A node created off-screen is a node that vanished; bring it into view.
+    const index = doc.shots.length;
+    const spot = posOf(`pending`, { x: COLUMN.shots, y: shotY(index) });
+    viewportApi.current?.centerOn(spot.x + NODE_WIDTH / 2, spot.y + 150);
   };
 
   /** Images for one shot: shared assets first (character → scene → prop), then its own. */
@@ -536,6 +540,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
   // ---- Selection --------------------------------------------------------
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const viewportApi = useRef<{ centerOn: (x: number, y: number) => void } | null>(null);
   const FIXED_NODES = ['script', 'board', 'assets', 'params', 'final'];
 
   /** Only workbenches can be removed; the pipeline stages are structure. */
@@ -1088,6 +1093,30 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const resetLayout = () =>
     updateDoc((current) => ({ ...current, positions: {} }));
 
+  // Esc clears the selection, Ctrl/Cmd+A takes every workbench. Ignored while typing.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        !!target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable);
+      if (typing) return;
+
+      if (event.key === 'Escape') {
+        setSelectedIds([]);
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        setSelectedIds(doc.shots.map((shot) => shot.id));
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [doc.shots]);
+
   // Delete removes the selected workbenches. Ignored while typing.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -1155,6 +1184,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
       }}
       onResetLayout={resetLayout}
       onMarquee={onMarquee}
+      apiRef={viewportApi}
       onUndo={undo}
       onRedo={redo}
       canUndo={historyState.canUndo}
