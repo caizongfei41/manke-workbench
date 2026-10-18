@@ -950,5 +950,12 @@
   "BeatAPI.project.startDrama": "AI ショートドラマ",
   "drama.shot.assets": "ショット素材",
   "drama.shot.assetsEmpty": "このショット専用の画像はまだありません",
-  "drama.shot.assetRemove": "この画像を削除"
+  "drama.shot.assetRemove": "この画像を削除",
+  "drama.view.zoomOut": "縮小",
+  "drama.view.zoomIn": "拡大",
+  "drama.view.resetZoom": "100% に戻す",
+  "drama.view.fit": "全体表示",
+  "drama.view.fitHint": "全体表示 (Shift+1)",
+  "drama.view.undo": "元に戻す",
+  "drama.view.redo": "やり直す"
 }

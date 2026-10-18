@@ -950,5 +950,12 @@
   "BeatAPI.project.startDrama": "AI 短剧模式",
   "drama.shot.assets": "分镜资产图",
   "drama.shot.assetsEmpty": "这一段还没有自己的图",
-  "drama.shot.assetRemove": "移除这张图"
+  "drama.shot.assetRemove": "移除这张图",
+  "drama.view.zoomOut": "缩小",
+  "drama.view.zoomIn": "放大",
+  "drama.view.resetZoom": "回到 100%",
+  "drama.view.fit": "适配视图",
+  "drama.view.fitHint": "适配视图 (Shift+1)",
+  "drama.view.undo": "撤销",
+  "drama.view.redo": "重做"
 }

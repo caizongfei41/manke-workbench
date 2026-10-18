@@ -12,6 +12,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ImageHoverPreview } from '@/components/app/image-hover-preview';
+import { DramaViewport, type ViewportMarker } from '@/components/drama/drama-viewport';
 import { HintTip } from '@/components/app/hint-tip';
 import {
   DRAMA_ASPECT_RATIO,
@@ -407,8 +408,27 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const shotY = (index: number) => 150 + index * SHOT_PITCH;
   const canvasHeight = Math.max(760, shotY(doc.shots.length) + 60);
 
+  // Markers for the minimap: the four fixed nodes plus every workbench.
+  const markers: ViewportMarker[] = [
+    { x: COLUMN.script, y: 40, w: NODE_WIDTH, h: 250, tone: 'node' },
+    { x: COLUMN.board, y: 40, w: NODE_WIDTH, h: 190, tone: 'node' },
+    { x: COLUMN.assets, y: 40, w: NODE_WIDTH, h: 330, tone: 'node' },
+    { x: COLUMN.final, y: 40, w: NODE_WIDTH, h: 150, tone: 'node' },
+    ...doc.shots.map((_, index) => ({
+      x: COLUMN.shots,
+      y: shotY(index),
+      w: NODE_WIDTH,
+      h: 300,
+      tone: 'shot' as const,
+    })),
+  ];
+
   return (
-    <div className="relative h-full w-full overflow-auto bg-[var(--beat-bg)]">
+    <DramaViewport
+      contentWidth={COLUMN.final + NODE_WIDTH + 80}
+      contentHeight={canvasHeight}
+      markers={markers}
+    >
       <div
         className="relative"
         style={{ width: COLUMN.final + NODE_WIDTH + 80, height: canvasHeight }}
@@ -476,7 +496,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </svg>
 
         {/* Script */}
-        <div className="absolute" style={{ left: COLUMN.script, top: 40 }}>
+        <div className="pointer-events-auto absolute" style={{ left: COLUMN.script, top: 40 }}>
           <NodeShell
             title={m['drama.script.title']()}
             subtitle={doc.script ? m['drama.script.chars']({ count: doc.script.length }) : m['drama.script.empty']()}
@@ -510,7 +530,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </div>
 
         {/* Storyboard */}
-        <div className="absolute" style={{ left: COLUMN.board, top: 40 }}>
+        <div className="pointer-events-auto absolute" style={{ left: COLUMN.board, top: 40 }}>
           <NodeShell
             title={m['drama.board.title']()}
             subtitle={m['drama.board.subtitle']({ segments: analysis.segments.length, assets: analysis.assets.length })}
@@ -538,7 +558,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </div>
 
         {/* Assets */}
-        <div className="absolute" style={{ left: COLUMN.assets, top: 40 }}>
+        <div className="pointer-events-auto absolute" style={{ left: COLUMN.assets, top: 40 }}>
           <NodeShell
             title={m['drama.assets.title']()}
             subtitle={m['drama.assets.subtitle']({ ready: doc.publicAssets.filter((a) => a.imageUrl).length, total: doc.publicAssets.length })}
@@ -610,7 +630,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         {doc.shots.map((shot, index) => (
           <div
             key={shot.id}
-            className="absolute"
+            className="pointer-events-auto absolute"
             style={{ left: COLUMN.shots, top: shotY(index) }}
           >
             <NodeShell
@@ -752,7 +772,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         ))}
 
         {/* Add a segment */}
-        <div className="absolute" style={{ left: COLUMN.shots, top: shotY(doc.shots.length) }}>
+        <div className="pointer-events-auto absolute" style={{ left: COLUMN.shots, top: shotY(doc.shots.length) }}>
           <button
             type="button"
             onClick={addShot}
@@ -765,7 +785,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </div>
 
         {/* Final video stage */}
-        <div className="absolute" style={{ left: COLUMN.final, top: 40 }}>
+        <div className="pointer-events-auto absolute" style={{ left: COLUMN.final, top: 40 }}>
           <NodeShell
             title={m['drama.final.title']()}
             subtitle={m['drama.final.subtitle']({ shots: doc.shots.length, seconds: Math.round(grandTotal) })}
@@ -807,6 +827,6 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           if (file && target) uploadShotImage(target, file);
         }}
       />
-    </div>
+    </DramaViewport>
   );
 }

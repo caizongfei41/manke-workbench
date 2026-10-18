@@ -950,5 +950,12 @@
   "BeatAPI.project.startDrama": "AI short drama",
   "drama.shot.assets": "Shot assets",
   "drama.shot.assetsEmpty": "No images for this shot yet",
-  "drama.shot.assetRemove": "Remove this image"
+  "drama.shot.assetRemove": "Remove this image",
+  "drama.view.zoomOut": "Zoom out",
+  "drama.view.zoomIn": "Zoom in",
+  "drama.view.resetZoom": "Back to 100%",
+  "drama.view.fit": "Fit view",
+  "drama.view.fitHint": "Fit view (Shift+1)",
+  "drama.view.undo": "Undo",
+  "drama.view.redo": "Redo"
 }
