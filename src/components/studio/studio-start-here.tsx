@@ -4,115 +4,125 @@ import { HintTip } from '@/components/app/hint-tip';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 
-type StudioStartHereIdea = {
+/** The four surfaces a new project can start in. */
+export type StartMode = 'image' | 'video' | 'audio' | 'analysis';
+
+type StartEntry = {
+  mode: StartMode;
   className: string;
-  src: string;
-  /** i18n key prefix; short name and one-line description live in messages. */
-  key: 'cinematic' | 'character' | 'material' | 'surreal';
-  /** Seed prompt dropped into the composer when the idea is picked. */
-  prompt: string;
+  key: StartMode;
 };
 
-// The prompt is the point of these cards: picking one used to do nothing beyond
-// highlighting the thumbnail, which made the whole row a dead end.
-const STUDIO_START_HERE_IDEAS: StudioStartHereIdea[] = [
+// These used to be four decorative stills whose only effect was filling the
+// composer with a canned prompt. They are now the way into each part of the
+// workbench, so the picture, the label and the destination all describe the same
+// thing.
+const START_ENTRIES: StartEntry[] = [
   {
+    mode: 'image',
     className:
       'left-0 top-[18px] size-[90px] rotate-[-8deg] rounded-[14px] sm:left-[22px] sm:top-[14px] sm:size-[132px]',
-    src: '/app/create-thumb-forest.webp',
-    key: 'cinematic',
-    prompt:
-      'A lone figure on a misty ridge at golden hour, layered mountains fading into haze, cinematic wide shot, volumetric light, 35mm film grain, muted teal and amber palette',
+    key: 'image',
   },
   {
+    mode: 'video',
     className:
       'left-[82px] top-[2px] size-[102px] rotate-[3deg] rounded-[17px] sm:left-[134px] sm:top-0 sm:size-[132px]',
-    src: '/app/create-thumb-character.webp',
-    key: 'character',
-    prompt:
-      'Studio portrait of a woman in a structured ivory blazer, seamless warm grey backdrop, soft key light from the left, editorial fashion photography, medium format, shallow depth of field',
+    key: 'video',
   },
   {
+    mode: 'audio',
     className:
       'left-[172px] top-[10px] size-[96px] rounded-full sm:left-[250px] sm:top-[4px] sm:size-[126px]',
-    src: '/app/create-thumb-texture.webp',
-    key: 'material',
-    prompt:
-      'Extreme close-up of brushed aluminium meeting frosted glass, raking side light revealing micro texture, minimal industrial material study, high detail, neutral palette',
+    key: 'audio',
   },
   {
+    mode: 'analysis',
     className:
       'right-0 top-[16px] size-[98px] rotate-[6deg] rounded-[14px] sm:right-[6px] sm:top-[12px] sm:size-[128px]',
-    src: '/app/create-thumb-mask.webp',
-    key: 'surreal',
-    prompt:
-      'Surreal fashion film still, model in sculptural white couture against a dark void, single hard light, floating fabric, dreamlike, high contrast with a single red accent',
+    key: 'analysis',
   },
 ];
 
-const IDEA_NAMES = {
-  cinematic: () => m['studio.idea.cinematic.name'](),
-  character: () => m['studio.idea.character.name'](),
-  material: () => m['studio.idea.material.name'](),
-  surreal: () => m['studio.idea.surreal.name'](),
+const THUMBS: Record<StartMode, string> = {
+  image: '/app/create-thumb-image.webp',
+  video: '/app/create-thumb-video.webp',
+  audio: '/app/create-thumb-audio.webp',
+  analysis: '/app/create-thumb-analysis.webp',
 };
 
-const IDEA_DESCS = {
-  cinematic: () => m['studio.idea.cinematic.desc'](),
-  character: () => m['studio.idea.character.desc'](),
-  material: () => m['studio.idea.material.desc'](),
-  surreal: () => m['studio.idea.surreal.desc'](),
+const MODE_NAMES = {
+  image: () => m['startHere.image.name'](),
+  video: () => m['startHere.video.name'](),
+  audio: () => m['startHere.audio.name'](),
+  analysis: () => m['startHere.analysis.name'](),
+};
+
+// Seed prompt per entry; kept in the catalogs so the copy stays translatable.
+const SEED_PROMPTS = {
+  image: () => m['startHere.image.prompt'](),
+  video: () => m['startHere.video.prompt'](),
+  audio: () => m['startHere.audio.prompt'](),
+  analysis: () => m['startHere.analysis.prompt'](),
+};
+
+const MODE_DESCS = {
+  image: () => m['startHere.image.desc'](),
+  video: () => m['startHere.video.desc'](),
+  audio: () => m['startHere.audio.desc'](),
+  analysis: () => m['startHere.analysis.desc'](),
 };
 
 export function StudioStartHere({
-  onPickIdea,
+  onPickMode,
 }: {
   /**
-   * Called with the idea's seed prompt. The studio drops it into the composer;
-   * the canvas opens a new draft card with it. Omitted on surfaces with nowhere
-   * to put a prompt, in which case the cards only show their selection state.
+   * Runs the entry. The studio switches its media tab; the canvas opens a draft
+   * or routes to the studio. Omitted on surfaces with nowhere to go, in which
+   * case the cards only show their selected state.
    */
-  onPickIdea?: (prompt: string) => void;
+  onPickMode?: (mode: StartMode, prompt: string) => void;
 } = {}) {
-  const [selectedSrc, setSelectedSrc] = useState<string | null>(null);
+  const [selected, setSelected] = useState<StartMode | null>(null);
 
   return (
     <div className="pointer-events-auto w-[min(94vw,620px)] text-center">
       <div
-        aria-label="Starting ideas"
+        aria-label={m['startHere.groupLabel']()}
         className="relative mx-auto h-[122px] w-[min(88vw,350px)] sm:h-[148px] sm:w-[500px]"
       >
         <div className="pointer-events-none absolute inset-0 opacity-45 blur-[42px]">
-          {STUDIO_START_HERE_IDEAS.map((idea) => (
+          {START_ENTRIES.map((entry) => (
             <img
-              key={`glow-${idea.src}`}
-              src={idea.src}
+              key={`glow-${entry.mode}`}
+              src={THUMBS[entry.mode]}
               alt=""
-              className={`absolute border-[6px] border-[#6b6b72]/75 object-cover shadow-[0_18px_52px_rgba(0,0,0,0.45)] ${idea.className}`}
+              className={`absolute border-[6px] border-[#6b6b72]/75 object-cover shadow-[0_18px_52px_rgba(0,0,0,0.45)] ${entry.className}`}
             />
           ))}
         </div>
 
-        {STUDIO_START_HERE_IDEAS.map((idea) => {
-          const isSelected = selectedSrc === idea.src;
-          const hasSelection = selectedSrc !== null;
-          const name = IDEA_NAMES[idea.key]();
+        {START_ENTRIES.map((entry) => {
+          const isSelected = selected === entry.mode;
+          const hasSelection = selected !== null;
+          const name = MODE_NAMES[entry.key]();
 
           return (
             <HintTip
-              key={idea.src}
+              key={entry.mode}
               label={name}
-              description={IDEA_DESCS[idea.key]()}
-              className={cn('absolute', idea.className)}
+              description={MODE_DESCS[entry.key]()}
+              className={cn('absolute', entry.className)}
             >
               <button
                 type="button"
                 title={name}
                 aria-label={name}
                 aria-pressed={isSelected}
+                data-start-mode={entry.mode}
                 onClick={() => {
-                  setSelectedSrc(idea.src);
-                  onPickIdea?.(idea.prompt);
+                  setSelected(entry.mode);
+                  onPickMode?.(entry.mode, SEED_PROMPTS[entry.mode]());
                 }}
                 className={cn(
                   'group absolute inset-0 overflow-hidden border-[6px] border-[#6b6b72]/85 bg-[var(--beat-surface)] object-cover shadow-[0_18px_48px_rgba(0,0,0,0.4)] transition-[transform,border-color,filter,box-shadow,opacity] duration-300 ease-out hover:z-20 hover:scale-[1.045] hover:border-ink/65 hover:brightness-100 hover:opacity-100 focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]',
@@ -122,7 +132,7 @@ export function StudioStartHere({
                 )}
               >
                 <img
-                  src={idea.src}
+                  src={THUMBS[entry.mode]}
                   alt=""
                   className={cn(
                     'h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105',
@@ -135,31 +145,29 @@ export function StudioStartHere({
         })}
       </div>
 
-      {/* Names under the stack: four thumbnails alone do not say what they are. */}
+      {/* Names under the stack: four thumbnails alone do not say what they open. */}
       <ul className="mx-auto mt-4 flex max-w-[560px] flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] text-ink/45">
-        {STUDIO_START_HERE_IDEAS.map((idea) => (
-          <li key={`label-${idea.src}`} className="flex items-center gap-1.5">
+        {START_ENTRIES.map((entry) => (
+          <li key={`label-${entry.mode}`} className="flex items-center gap-1.5">
             <span
               className={cn(
                 'size-1.5 rounded-full',
-                selectedSrc === idea.src ? 'bg-[#38bdf8]' : 'bg-ink/25'
+                selected === entry.mode ? 'bg-[#38bdf8]' : 'bg-ink/25'
               )}
             />
-            <span className={cn(selectedSrc === idea.src && 'text-ink/80')}>
-              {IDEA_NAMES[idea.key]()}
+            <span className={cn(selected === entry.mode && 'text-ink/80')}>
+              {MODE_NAMES[entry.key]()}
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[11px] text-ink/30">
-        {m['studio.startHere.caption']()}
-      </p>
+      <p className="mt-2 text-[11px] text-ink/30">{m['startHere.caption']()}</p>
 
       <h1 className="mt-6 text-[1.7rem] font-semibold leading-none tracking-[-0.035em] text-ink sm:text-[2.15rem]">
-        Create Here
+        {m['startHere.heading']()}
       </h1>
       <p className="mx-auto mt-3 max-w-[390px] text-[13px] leading-6 text-ink/35 sm:text-sm">
-        Imagine the scene. Shape the mood. Bring it to life.
+        {m['startHere.subheading']()}
       </p>
     </div>
   );

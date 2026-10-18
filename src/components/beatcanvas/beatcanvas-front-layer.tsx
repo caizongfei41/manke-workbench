@@ -987,7 +987,15 @@ export function BeatCanvasFrontLayer() {
           {/* There is no prompt box on the canvas, so a picked idea opens a new
               draft card already seeded with that prompt. */}
           <StudioStartHere
-            onPickIdea={(prompt) => onCreateImageDraft(prompt)}
+            onPickMode={(mode, prompt) => {
+              if (mode === 'image' || mode === 'video') {
+                onCreateImageDraft(prompt);
+                return;
+              }
+              // The canvas has no audio or analysis draft, so route to the studio tab.
+              const projectId = window.location.pathname.match(/\/canvas\/([0-9a-f-]{36})/i)?.[1];
+              if (projectId) window.location.assign(`/zh/studio/${projectId}?target=${mode}`);
+            }}
           />
         </div>
       ) : null}

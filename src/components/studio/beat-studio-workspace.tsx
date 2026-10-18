@@ -372,9 +372,11 @@ export function BeatStudioWorkspace({
         ) : (
           <div className="flex flex-1 items-center justify-center">
             <StudioStartHere
-              onPickIdea={(prompt) =>
-                setDraft((current) => ({ ...current, prompt }))
-              }
+              onPickMode={(mode, prompt) => {
+                // Switch the media tab in place: the most direct thing this surface can do.
+                setMedia(mode);
+                if (prompt) setDraft((current) => ({ ...current, prompt }));
+              }}
             />
           </div>
         )}

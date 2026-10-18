@@ -42,7 +42,8 @@ test('studio keeps the original wide composer and a project generation feed', ()
   assert.match(feedSource, /object-contain/);
   assert.doesNotMatch(feedSource, /item\.prompt/);
   assert.match(studioSource, /justify-end/);
-  assert.match(startHereSource, /Create Here/);
+  // 标题改成走 i18n，中文界面显示「从这里开始」
+  assert.match(startHereSource, /startHere\.heading/);
   assert.match(studioSource, /fetchProjectGenerations/);
   assert.match(studioSource, /VIDEO_ANALYSIS_MODEL_ID/);
   assert.match(composerSource, /value: 'analysis'/);
