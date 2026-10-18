@@ -1049,5 +1049,7 @@
   "fail.hint.missingModel": "インストールの問題です：モデルファイルがありません。再試行しても変わりません",
   "fail.hint.cancelled": "中断されました。そのまま再実行できます",
   "fail.hint.invalidInput": "プロンプトとパラメータがモデルの対応範囲か確認してください",
-  "fail.hint.unknown": "一度は再試行して構いません。再度失敗するならサービスログを見てください"
+  "fail.hint.unknown": "一度は再試行して構いません。再度失敗するならサービスログを見てください",
+  "drama.final.needClips": "まだ {count} ショットに映像がありません。先に生成してください",
+  "drama.final.needShots": "合成するショットがまだありません"
 }

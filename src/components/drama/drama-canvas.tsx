@@ -994,66 +994,24 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   ).length;
 
   const generateFinal = async () => {
-    updateDoc((current) => ({ ...current, finalStatus: 'running' }));
-    try {
-      const res = await fetch('/api/effects/generate', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-beatapi-workspace-request': '1',
-        },
-        body: JSON.stringify({
-          generation: {
-            version: 2,
-            projectId,
-            modelId: DRAMA_MODEL_ID,
-            mode: 'video',
-            prompt: doc.shots[0]?.prompt || 'short drama',
-            references: [],
-            parameters: {
-              aspect_ratio: DRAMA_ASPECT_RATIO,
-              wmDuration: '12s',
-              wmOutputQuality: '480p',
-              director_global: dramaGlobalParameters(),
-              director_loras: activeDramaLoras(),
-              director_segments: doc.shots.filter((shot) => isInFinal(shot.id)).map((shot) => ({
-                prompt: enhancePrompt(shot.prompt, effectiveEnhance()),
-                seconds: shot.seconds,
-                imageUrls: resolveImages(shot),
-                refs: resolveRefs(shot),
-              })),
-            },
-          },
-        }),
-      });
-      const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error ?? `HTTP ${res.status}`);
-      const wmTaskId = json?.wmTaskId;
-      for (let i = 0; i < 400; i += 1) {
-        await new Promise((r) => setTimeout(r, 5000));
-        const status = await fetch(`/api/effects/status?wmTaskId=${wmTaskId}`).then((r) =>
-          r.json()
-        );
-        if (status?.status === 'succeeded') {
-          const gens = await fetch(`/api/app/projects/${projectId}/generations`).then((r) =>
-            r.json()
-          );
-          const item = (gens.items ?? []).find((g: { id: string }) => g.id === wmTaskId);
-          updateDoc((current) => ({
-            ...current,
-            finalStatus: 'succeeded',
-            finalVideoUrl: item?.resultUrl ?? null,
-          }));
-          break;
-        }
-        if (status?.status === 'failed') {
-          updateDoc((current) => ({ ...current, finalStatus: 'failed' }));
-          break;
-        }
-      }
-    } catch {
-      updateDoc((current) => ({ ...current, finalStatus: 'failed' }));
+    // Both controls in this panel — the export preset and the burned-in subtitles —
+    // only take effect on the concat path. Assembling used to re-render a fresh video
+    // at the model's native size instead, so three visible settings silently did
+    // nothing. With every clip on disk, assembling now means concatenating.
+    const inFinal = doc.shots.filter((shot) => isInFinal(shot.id));
+    const missing = inFinal.filter((shot) => !shot.videoUrl);
+    if (!inFinal.length || missing.length) {
+      updateDoc((current) => ({
+        ...current,
+        finalStatus: 'failed',
+        finalError:
+          missing.length > 0
+            ? m['drama.final.needClips']({ count: missing.length })
+            : m['drama.final.needShots'](),
+      }));
+      return;
     }
+    await concatGenerated();
   };
 
   const shotY = (index: number) => 150 + index * SHOT_PITCH;
@@ -1972,7 +1930,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               {doc.finalStatus === 'running' ? m['drama.final.running']() : m['drama.final.run']()}
             </button>
             {doc.finalStatus === 'failed' ? (
-              <p className="mt-1.5 text-[9px] text-red-400">{m['drama.final.failed']()}</p>
+              <p className="mt-1.5 text-[9px] text-red-400">{doc.finalError ?? m['drama.final.failed']()}</p>
             ) : null}
             <div className="mt-2 flex flex-col gap-1.5">
               <label className="flex items-center justify-between gap-2">
@@ -2097,16 +2055,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               </p>
             ) : null}
 
-            {generatedClips > 0 ? (
-              <button
-                type="button"
-                disabled={doc.finalStatus === 'running'}
-                onClick={() => void concatGenerated()}
-                className="mt-1.5 w-full rounded-[8px] border border-[var(--beat-accent)]/45 bg-[var(--beat-accent)]/10 py-1.5 text-[10.5px] font-medium text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/18 disabled:opacity-45"
-              >
-                {m['drama.final.concat']({ count: generatedClips })}
-              </button>
-            ) : null}
+            {null}
             <button
               type="button"
               onClick={autoWire}

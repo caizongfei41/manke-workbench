@@ -108,6 +108,8 @@ export type DramaDocument = {
   shots: DramaShot[];
   /** 最终合成结果。 */
   finalVideoUrl?: string | null;
+  /** Why the last compose did not start, so the panel can say it plainly. */
+  finalError?: string | null;
   finalStatus: 'idle' | 'running' | 'succeeded' | 'failed';
 };
 
@@ -305,6 +307,7 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
         : [],
       finalVideoUrl:
         typeof parsed.finalVideoUrl === 'string' ? parsed.finalVideoUrl : null,
+      finalError: typeof parsed.finalError === 'string' ? parsed.finalError : null,
       finalStatus: (parsed.finalStatus ?? 'idle') as DramaDocument['finalStatus'],
     };
   } catch {

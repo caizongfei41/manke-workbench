@@ -1049,5 +1049,7 @@
   "fail.hint.missingModel": "An install problem: the model file is missing, retrying will not help",
   "fail.hint.cancelled": "It was interrupted; just run it again",
   "fail.hint.invalidInput": "Check the prompt and parameters against what this model supports",
-  "fail.hint.unknown": "One retry is reasonable; if it fails again, check the service log"
+  "fail.hint.unknown": "One retry is reasonable; if it fails again, check the service log",
+  "drama.final.needClips": "{count} segment(s) still have no clip; generate them first",
+  "drama.final.needShots": "No segments are in the final cut yet"
 }

@@ -1049,5 +1049,7 @@
   "fail.hint.missingModel": "这是安装问题：模型文件不在，重试也没用",
   "fail.hint.cancelled": "被中断了，可以直接重跑",
   "fail.hint.invalidInput": "检查提示词与参数是否该模型支持",
-  "fail.hint.unknown": "可以重试一次；再失败就去看服务页日志"
+  "fail.hint.unknown": "可以重试一次；再失败就去看服务页日志",
+  "drama.final.needClips": "还有 {count} 段没有视频，先生成它们再合成",
+  "drama.final.needShots": "还没有要合成的分段"
 }
