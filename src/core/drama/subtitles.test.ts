@@ -7,6 +7,7 @@ import {
   buildSubtitleCues,
   extractDialogue,
   presetPlayRes,
+  stripDialogueMarkup,
 } from './subtitles';
 
 describe('extractDialogue', () => {
@@ -101,5 +102,23 @@ describe('export presets', () => {
     const ass = buildAssSubtitle([{ start: 0, end: 1, text: 'a' }], presetPlayRes('vertical'));
     assert.ok(ass.includes('PlayResX: 1080'));
     assert.ok(ass.includes('PlayResY: 1920'));
+  });
+});
+
+describe('stripDialogueMarkup', () => {
+  test('removes the dialogue tags but keeps the line', () => {
+    const prompt = '阿明站在路灯下。阿明：<d>[Chinese] 灯还亮着。</d>';
+    const out = stripDialogueMarkup(prompt);
+    assert.equal(out, '阿明站在路灯下。阿明：灯还亮着。');
+    assert.ok(!out.includes('<d>') && !out.includes('[Chinese]'));
+  });
+
+  test('handles several lines and stray closing tags', () => {
+    const out = stripDialogueMarkup('<d>一句话。</d>中间。<d>[English] Second.</d></d>');
+    assert.equal(out, '一句话。中间。Second.');
+  });
+
+  test('leaves a prompt without markup alone', () => {
+    assert.equal(stripDialogueMarkup('中景，雨夜街头。'), '中景，雨夜街头。');
   });
 });

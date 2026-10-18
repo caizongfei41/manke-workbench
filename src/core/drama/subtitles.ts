@@ -17,6 +17,23 @@ export type SubtitleCue = {
 const MAX_LINE_CHARS = 22;
 
 /** Pull spoken lines out of a shot prompt: `<d>[Chinese] 台词</d>`. */
+/**
+ * Remove the internal dialogue markup before the prompt reaches the model.
+ *
+ * `<d>[Chinese] 台词</d>` is how the script marks spoken lines so they can be cut
+ * into subtitles, but the shot prompt was forwarded verbatim — the model received
+ * angle-bracket tags and a language hint it has no use for. The spoken text stays,
+ * only the markup goes.
+ */
+export const stripDialogueMarkup = (prompt: string): string =>
+  prompt
+    .replace(/<d>([\s\S]*?)<\/d>/g, (_match, inner: string) =>
+      inner.replace(/^\s*\[[^\]]*\]\s*/, '').trim()
+    )
+    .replace(/<\/?d>/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
+
 export const extractDialogue = (prompt: string): string[] => {
   const out: string[] = [];
   const pattern = /<d>([\s\S]*?)<\/d>/g;

@@ -51,6 +51,7 @@ import {
   buildSubtitleCues,
   presetPlayRes,
   type ExportPresetId,
+  stripDialogueMarkup,
 } from '@/core/drama/subtitles';
 import {
   COMMON_LORAS,
@@ -802,7 +803,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             projectId,
             modelId: DRAMA_MODEL_ID,
             mode: 'video',
-            prompt: enhancePrompt(shot.prompt, effectiveEnhance()) || 'short drama shot',
+            prompt: enhancePrompt(stripDialogueMarkup(shot.prompt), effectiveEnhance()) || 'short drama shot',
             references: [],
             parameters: {
               aspect_ratio: DRAMA_ASPECT_RATIO,
@@ -812,7 +813,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               director_loras: activeDramaLoras(),
               director_segments: [
                 {
-                  prompt: enhancePrompt(shot.prompt, effectiveEnhance()),
+                  prompt: enhancePrompt(stripDialogueMarkup(shot.prompt), effectiveEnhance()),
                   seconds: shot.seconds,
                   imageUrls: images,
                   refs,
@@ -965,7 +966,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 buildSubtitleCues(
                   doc.shots
                     .filter((shot) => isInFinal(shot.id))
-                    .map((shot) => ({ prompt: shot.prompt, seconds: shot.seconds }))
+                    .map((shot) => ({ prompt: stripDialogueMarkup(shot.prompt), seconds: shot.seconds }))
                 ),
                 presetPlayRes(doc.exportPreset)
               )
