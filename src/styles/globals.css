@@ -1042,3 +1042,22 @@ html[data-theme] body {
     animation: none;
   }
 }
+
+/*
+ * The editor's media rail is a permanently dark strip (it sits against the video
+ * canvas, like the panels in a NLE). Its text used the themed `ink` token, so in
+ * light mode it rendered near-black on near-black. Pin the tokens here instead of
+ * flipping the whole rail to a light panel.
+ */
+.editor-rail {
+  --beat-ink: #ffffff;
+  --color-ink: #ffffff;
+  --beat-text-1: #f4f4f5;
+  --beat-text-2: #a3a3ab;
+  --beat-text-3: #71717a;
+  --beat-border: rgba(255, 255, 255, 0.1);
+  --beat-border-strong: rgba(255, 255, 255, 0.18);
+  --beat-surface: #1d1e21;
+  --beat-surface-2: #202124;
+  --beat-control: #24252a;
+}

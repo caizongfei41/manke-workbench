@@ -1563,7 +1563,7 @@ export function VideoEditorWorkspace({
         ))}
 
       <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-[292px] shrink-0 flex-col border-r border-ink/[0.07] bg-[#17181a] lg:flex">
+        <aside className="editor-rail hidden w-[292px] shrink-0 flex-col border-r border-ink/[0.07] bg-[#17181a] lg:flex">
           <div className="flex h-[74px] items-end gap-5 border-b border-ink/[0.07] px-5 pb-3">
             <button
               type="button"
