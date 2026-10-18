@@ -4,6 +4,7 @@ import {
   ImagePlus,
   Layers,
   Plus,
+  Sliders,
   Sparkles,
   Trash2,
   Upload,
@@ -16,7 +17,6 @@ import { DramaViewport, type ViewportMarker } from '@/components/drama/drama-vie
 import { HintTip } from '@/components/app/hint-tip';
 import {
   DRAMA_ASPECT_RATIO,
-  DRAMA_GLOBAL,
   DRAMA_MODEL_ID,
   analyzeScript,
   defaultLinks,
@@ -31,6 +31,13 @@ import {
   type DramaShot,
 } from '@/core/drama/drama-document';
 import { ASSET_KIND_LABELS, type ScriptAsset } from '@/core/effects/script-document';
+import {
+  COMMON_LORAS,
+  DIRECTOR_FIELDS,
+  DIRECTOR_GROUP_LABELS,
+  LORA_SLOT_COUNT,
+  getDefaultDirectorGlobal,
+} from '@/core/effects/aicg3d-director';
 import { uploadLocalProjectAsset } from '@/core/workspace-lib/app/local-project-asset-client';
 import { m } from '@/paraglide/messages.js';
 import { cn } from '@/lib/utils';
@@ -158,6 +165,70 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const [publicUploadTarget, setPublicUploadTarget] = useState<string | null>(null);
   const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ---- Undo/redo -------------------------------------------------------
+  // A plain snapshot stack. Pushes are throttled so a continuous drag becomes
+  // one history entry instead of two hundred, which is what an undo should feel
+  // like: back to where the card was before you grabbed it.
+  const historyRef = useRef<DramaDocument[]>([]);
+  const historyIndexRef = useRef(-1);
+  const lastPushRef = useRef(0);
+  const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
+
+  const syncHistoryState = () => {
+    setHistoryState({
+      canUndo: historyIndexRef.current > 0,
+      canRedo: historyIndexRef.current < historyRef.current.length - 1,
+    });
+  };
+
+  useEffect(() => {
+    if (historyRef.current.length === 0) {
+      historyRef.current = [doc];
+      historyIndexRef.current = 0;
+      syncHistoryState();
+    }
+    // Seed the baseline once, on mount.
+  }, []);
+
+  const updateDoc = useCallback(
+    (updater: (current: DramaDocument) => DramaDocument) => {
+      setDoc((current) => {
+        const next = updater(current);
+        if (next === current) return current;
+        const now = Date.now();
+        if (now - lastPushRef.current > 600) {
+          const trimmed = historyRef.current.slice(0, historyIndexRef.current + 1);
+          trimmed.push(current);
+          if (trimmed.length > 60) trimmed.shift();
+          historyRef.current = trimmed;
+          historyIndexRef.current = trimmed.length - 1;
+          lastPushRef.current = now;
+          syncHistoryState();
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  const undo = useCallback(() => {
+    if (historyIndexRef.current <= 0) return;
+    historyIndexRef.current -= 1;
+    const target = historyRef.current[historyIndexRef.current];
+    lastPushRef.current = 0;
+    setDoc(target);
+    syncHistoryState();
+  }, []);
+
+  const redo = useCallback(() => {
+    if (historyIndexRef.current >= historyRef.current.length - 1) return;
+    historyIndexRef.current += 1;
+    const target = historyRef.current[historyIndexRef.current];
+    lastPushRef.current = 0;
+    setDoc(target);
+    syncHistoryState();
+  }, []);
+
   // Debounce persistence so typing does not write the snapshot on every key.
   useEffect(() => {
     if (persistTimer.current) clearTimeout(persistTimer.current);
@@ -188,6 +259,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     if (key === 'script') return { x: COLUMN.script, y: 40 };
     if (key === 'board') return { x: COLUMN.board, y: 40 };
     if (key === 'assets') return { x: COLUMN.assets, y: 40 };
+    if (key === 'params') return { x: COLUMN.assets, y: 430 };
     if (key === 'final') return { x: COLUMN.final, y: 40 };
     const index = Math.max(0, doc.shots.findIndex((shot) => shot.id === key));
     return { x: COLUMN.shots, y: shotY(index) };
@@ -267,7 +339,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     const rawX = drag.originX + dx / k;
     const rawY = drag.originY + dy / k;
     const snapped = snapPosition(drag.id, rawX, rawY);
-    setDoc((current) => ({
+    updateDoc((current) => ({
       ...current,
       positions: {
         ...current.positions,
@@ -333,7 +405,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const grandTotal = totalSeconds(doc.shots);
 
   const setShot = useCallback((id: string, patch: Partial<DramaShot>) => {
-    setDoc((current) => ({
+    updateDoc((current) => ({
       ...current,
       shots: current.shots.map((shot) => (shot.id === id ? { ...shot, ...patch } : shot)),
     }));
@@ -347,7 +419,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
       ...shot,
       publicAssetIds: shot.publicAssetIds.filter((id) => alive.has(id)),
     }));
-    setDoc((current) => {
+    updateDoc((current) => {
       // Re-splitting replaces the shots, so their wires have to be rebuilt too —
       // otherwise every new workbench starts unlinked and silently leaves the
       // film. Stage-to-stage wires the user changed are kept; shot wires are
@@ -369,7 +441,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   };
 
   const addShot = () => {
-    setDoc((current) => ({
+    updateDoc((current) => ({
       ...current,
       shots: [
         ...current.shots,
@@ -402,6 +474,43 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
    * cast-typo cast cast to string[] meant nothing was sent at all — both
    * showed up as "1 reference" while the job carried zero.
    */
+  /**
+   * Merge the board's parameters over the AICG3D defaults.
+   *
+   * The canvas used to send a hardcoded 480P block, so nothing on the board could
+   * change resolution, sampler or LoRA. Only keys the user actually touched are
+   * sent; everything else keeps the template's own value.
+   */
+  const dramaGlobalParameters = () => {
+    const defaults = getDefaultDirectorGlobal();
+    const out: Record<string, string | number | boolean> = {};
+    for (const [key, value] of Object.entries(doc.params ?? {})) {
+      if (defaults[key] !== value && value !== '' && value !== undefined) {
+        out[key] = value;
+      }
+    }
+    return out;
+  };
+
+  const activeDramaLoras = () =>
+    (doc.loras ?? []).filter((lora) => lora.file && lora.file !== 'none').slice(0, LORA_SLOT_COUNT);
+
+  const setParam = (key: string, value: string | number | boolean) =>
+    updateDoc((current) => ({ ...current, params: { ...current.params, [key]: value } }));
+
+  const setLora = (index: number, patch: { file?: string; strength?: number }) =>
+    updateDoc((current) => {
+      const next = [...(current.loras ?? [])];
+      while (next.length <= index) next.push({ file: 'none', strength: 1 });
+      next[index] = { ...next[index], ...patch };
+      return { ...current, loras: next };
+    });
+
+  const linkKey = (link: { from: string; to: string }) => `${link.from}->${link.to}`;
+  const linkSet = useMemo(() => new Set(doc.links.map(linkKey)), [doc.links]);
+
+  const hasLink = (from: string, to: string) => linkSet.has(`${from}->${to}`);
+
   const usesSharedAssets = (shotId: string) => hasLink('assets', shotId);
   const isInFinal = (shotId: string) => hasLink(shotId, 'final');
 
@@ -446,7 +555,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const uploadShotImage = (shotId: string, file: File) => {
     void uploadLocalProjectAsset({ projectId, file })
       .then((asset) => {
-        setDoc((current) => ({
+        updateDoc((current) => ({
           ...current,
           shots: current.shots.map((shot) =>
             shot.id === shotId
@@ -461,7 +570,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const uploadPublicImage = (assetId: string, file: File) => {
     void uploadLocalProjectAsset({ projectId, file })
       .then((asset) => {
-        setDoc((current) => ({
+        updateDoc((current) => ({
           ...current,
           publicAssets: current.publicAssets.map((a) =>
             a.id === assetId
@@ -497,7 +606,8 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               aspect_ratio: DRAMA_ASPECT_RATIO,
               wmDuration: '12s',
               wmOutputQuality: '480p',
-              director_global: { ...DRAMA_GLOBAL },
+              director_global: dramaGlobalParameters(),
+              director_loras: activeDramaLoras(),
               director_segments: [
                 {
                   prompt: shot.prompt,
@@ -550,8 +660,49 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     }
   };
 
-  const generateFinal = async () => {
+  /**
+   * Join the clips that already exist instead of re-rendering the whole film.
+   *
+   * Re-running forty segments to change one line takes an hour; concatenating
+   * the finished clips takes seconds and loses nothing.
+   */
+  const concatGenerated = async () => {
+    const assetIds = doc.shots
+      .filter((shot) => isInFinal(shot.id) && !!shot.videoUrl)
+      .map((shot) => shot.videoUrl?.match(/\/assets\/([0-9a-f-]{36})/i)?.[1])
+      .filter((id): id is string => !!id);
+    if (assetIds.length === 0) return;
+
     setDoc((current) => ({ ...current, finalStatus: 'running' }));
+    try {
+      const res = await fetch(`/api/app/projects/${projectId}/concat`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-beatapi-workspace-request': '1',
+        },
+        body: JSON.stringify({ assetIds }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.publicUrl) {
+        throw new Error(json?.error ?? `HTTP ${res.status}`);
+      }
+      setDoc((current) => ({
+        ...current,
+        finalStatus: 'succeeded',
+        finalVideoUrl: json.publicUrl,
+      }));
+    } catch {
+      setDoc((current) => ({ ...current, finalStatus: 'failed' }));
+    }
+  };
+
+  const generatedClips = doc.shots.filter(
+    (shot) => isInFinal(shot.id) && !!shot.videoUrl
+  ).length;
+
+  const generateFinal = async () => {
+    updateDoc((current) => ({ ...current, finalStatus: 'running' }));
     try {
       const res = await fetch('/api/effects/generate', {
         method: 'POST',
@@ -571,7 +722,8 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               aspect_ratio: DRAMA_ASPECT_RATIO,
               wmDuration: '12s',
               wmOutputQuality: '480p',
-              director_global: { ...DRAMA_GLOBAL },
+              director_global: dramaGlobalParameters(),
+              director_loras: activeDramaLoras(),
               director_segments: doc.shots.filter((shot) => isInFinal(shot.id)).map((shot) => ({
                 prompt: shot.prompt,
                 seconds: shot.seconds,
@@ -595,7 +747,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             r.json()
           );
           const item = (gens.items ?? []).find((g: { id: string }) => g.id === wmTaskId);
-          setDoc((current) => ({
+          updateDoc((current) => ({
             ...current,
             finalStatus: 'succeeded',
             finalVideoUrl: item?.resultUrl ?? null,
@@ -603,12 +755,12 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           break;
         }
         if (status?.status === 'failed') {
-          setDoc((current) => ({ ...current, finalStatus: 'failed' }));
+          updateDoc((current) => ({ ...current, finalStatus: 'failed' }));
           break;
         }
       }
     } catch {
-      setDoc((current) => ({ ...current, finalStatus: 'failed' }));
+      updateDoc((current) => ({ ...current, finalStatus: 'failed' }));
     }
   };
 
@@ -616,14 +768,10 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const canvasHeight = Math.max(760, shotY(doc.shots.length) + 60);
 
   // ---- Wiring -----------------------------------------------------------
-  const linkKey = (link: { from: string; to: string }) => `${link.from}->${link.to}`;
-  const linkSet = useMemo(() => new Set(doc.links.map(linkKey)), [doc.links]);
-
-  const hasLink = (from: string, to: string) => linkSet.has(`${from}->${to}`);
 
   const toggleLink = (from: string, to: string) => {
     if (from === to) return;
-    setDoc((current) => {
+    updateDoc((current) => {
       const exists = current.links.some((l) => l.from === from && l.to === to);
       return {
         ...current,
@@ -635,7 +783,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   };
 
   const autoWire = () =>
-    setDoc((current) => ({
+    updateDoc((current) => ({
       ...current,
       links: defaultLinks(current.shots.map((shot) => shot.id)),
     }));
@@ -730,7 +878,28 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   );
 
   const resetLayout = () =>
-    setDoc((current) => ({ ...current, positions: {} }));
+    updateDoc((current) => ({ ...current, positions: {} }));
+
+  // Ctrl/Cmd+Z is undo, Shift added redoes. Ignored while typing.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [redo, undo]);
 
   // Markers for the minimap: the four fixed nodes plus every workbench.
   const markerFor = (id: string, tone: ViewportMarker['tone']): ViewportMarker => {
@@ -744,6 +913,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     markerFor('script', 'node'),
     markerFor('board', 'node'),
     markerFor('assets', 'node'),
+    markerFor('params', 'node'),
     markerFor('final', 'node'),
     ...doc.shots.map((shot) => markerFor(shot.id, 'shot')),
   ];
@@ -757,6 +927,10 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         viewScaleRef.current = scale;
       }}
       onResetLayout={resetLayout}
+      onUndo={undo}
+      onRedo={redo}
+      canUndo={historyState.canUndo}
+      canRedo={historyState.canRedo}
     >
       <div className="relative" style={{ width: stageWidth, height: stageHeight }}>
         {/* Connectors follow the measured rects, so they track a dragged node. */}
@@ -806,7 +980,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             <textarea
               value={doc.script}
               onChange={(e) =>
-                setDoc((current) => ({ ...current, script: e.target.value }))
+                updateDoc((current) => ({ ...current, script: e.target.value }))
               }
               placeholder={m['drama.script.placeholder']()}
               className="h-40 w-full resize-none rounded-[10px] border border-ink/[0.08] bg-ink/[0.03] px-2.5 py-2 text-[11.5px] leading-5 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
@@ -814,7 +988,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             <div className="mt-2 flex flex-wrap gap-1.5">
               <button
                 type="button"
-                onClick={() => setDoc((c) => ({ ...c, script: dramaTemplate() }))}
+                onClick={() => updateDoc((c) => ({ ...c, script: dramaTemplate() }))}
                 className="rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:text-ink"
               >
                 {m['drama.script.useTemplate']()}
@@ -942,6 +1116,128 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 if (file && target) uploadPublicImage(target, file);
               }}
             />
+          </NodeShell>
+        </div>
+
+        {/* Parameters */}
+        <div
+          ref={registerNode('params')}
+          onPointerDown={startNodeDrag('params')}
+          onPointerMove={moveNodeDrag}
+          onPointerUp={endNodeDrag}
+          onPointerCancel={endNodeDrag}
+          className={cn('pointer-events-auto absolute', draggingId === 'params' && 'z-30')}
+          style={{ ...posStyle('params') }}
+        >
+          <NodeShell
+            title={m['drama.params.title']()}
+            subtitle={m['drama.params.subtitle']({
+              resolution: String(doc.params.resolution ?? m['drama.params.auto']()),
+              loras: activeDramaLoras().length,
+            })}
+            icon={<Sliders className="size-3.5" />}
+            ports={{ inputId: 'params', onStartLink: beginLink('params') }}
+          >
+            <div className="flex max-h-[340px] flex-col gap-2 overflow-y-auto pr-1">
+              {(['output', 'motion', 'sampling', 'memory'] as const).map((group) => (
+                <div key={group} className="flex flex-col gap-1">
+                  <span className="text-[9px] uppercase tracking-wider text-[var(--beat-text-3)]">
+                    {DIRECTOR_GROUP_LABELS[group]}
+                  </span>
+                  {DIRECTOR_FIELDS.filter((field) => field.group === group).map((field) => {
+                    const current = doc.params[field.key] ?? field.default;
+                    if (field.type === 'boolean') {
+                      return (
+                        <label key={field.key} className="flex items-center justify-between gap-2">
+                          <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                            {field.label}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={current === true}
+                            onChange={(event) => setParam(field.key, event.target.checked)}
+                            className="size-3 shrink-0"
+                          />
+                        </label>
+                      );
+                    }
+                    if (field.type === 'number') {
+                      return (
+                        <label key={field.key} className="flex items-center justify-between gap-2">
+                          <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                            {field.label}
+                          </span>
+                          <input
+                            type="number"
+                            value={Number(current)}
+                            min={field.min}
+                            max={field.max}
+                            step={field.step}
+                            onChange={(event) =>
+                              setParam(field.key, Number(event.target.value) || 0)
+                            }
+                            className="w-[62px] shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-right text-[10px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
+                          />
+                        </label>
+                      );
+                    }
+                    return (
+                      <label key={field.key} className="flex items-center justify-between gap-2">
+                        <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                          {field.label}
+                        </span>
+                        <select
+                          value={String(current)}
+                          onChange={(event) => setParam(field.key, event.target.value)}
+                          className="w-[104px] shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-[10px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
+                        >
+                          {(field.options ?? []).map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    );
+                  })}
+                </div>
+              ))}
+
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] uppercase tracking-wider text-[var(--beat-text-3)]">
+                  LoRA
+                </span>
+                {Array.from({ length: 3 }, (_, index) => {
+                  const entry = doc.loras[index] ?? { file: 'none', strength: 1 };
+                  return (
+                    <div key={index} className="flex items-center gap-1">
+                      <select
+                        value={entry.file}
+                        onChange={(event) => setLora(index, { file: event.target.value })}
+                        className="min-w-0 flex-1 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-[9px] text-[var(--beat-text-1)] outline-none"
+                      >
+                        {COMMON_LORAS.map((file) => (
+                          <option key={file} value={file}>
+                            {file === 'none' ? 'none' : file.split('\\').pop()?.replace('.safetensors', '')}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        value={entry.strength}
+                        min={-4}
+                        max={4}
+                        step={0.05}
+                        onChange={(event) =>
+                          setLora(index, { strength: Number(event.target.value) })
+                        }
+                        className="w-11 shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-right text-[9px] outline-none"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </NodeShell>
         </div>
 
@@ -1076,7 +1372,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 <button
                   type="button"
                   onClick={() =>
-                    setDoc((current) => ({
+                    updateDoc((current) => ({
                       ...current,
                       shots: current.shots.filter((s) => s.id !== shot.id),
                     }))
@@ -1145,6 +1441,16 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             </button>
             {doc.finalStatus === 'failed' ? (
               <p className="mt-1.5 text-[9px] text-red-400">{m['drama.final.failed']()}</p>
+            ) : null}
+            {generatedClips > 0 ? (
+              <button
+                type="button"
+                disabled={doc.finalStatus === 'running'}
+                onClick={() => void concatGenerated()}
+                className="mt-1.5 w-full rounded-[8px] border border-[var(--beat-accent)]/45 bg-[var(--beat-accent)]/10 py-1.5 text-[10.5px] font-medium text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/18 disabled:opacity-45"
+              >
+                {m['drama.final.concat']({ count: generatedClips })}
+              </button>
             ) : null}
             <button
               type="button"

@@ -963,5 +963,9 @@
   "drama.wire.drop": "Drop a wire here",
   "drama.wire.auto": "Auto-wire",
   "drama.wire.detached": "Shared assets disconnected — this shot uses only its own images",
-  "drama.wire.hint": "{count} wires · cut the assets wire to drop shared images, cut the final wire to leave the shot out"
+  "drama.wire.hint": "{count} wires · cut the assets wire to drop shared images, cut the final wire to leave the shot out",
+  "drama.final.concat": "Join the {count} finished shots",
+  "drama.params.title": "Generation settings",
+  "drama.params.subtitle": "{resolution} · {loras} LoRAs",
+  "drama.params.auto": "default"
 }

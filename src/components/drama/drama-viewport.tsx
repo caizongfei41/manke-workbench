@@ -55,6 +55,10 @@ export function DramaViewport({
   markers,
   onScaleChange,
   onResetLayout,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
   children,
 }: {
   contentWidth: number;
@@ -64,6 +68,10 @@ export function DramaViewport({
   onScaleChange?: (scale: number) => void;
   /** Clears any dragged positions and returns to the default pipeline layout. */
   onResetLayout?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   children: ReactNode;
 }) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -370,17 +378,19 @@ export function DramaViewport({
         <span className="mx-0.5 h-4 w-px bg-ink/[0.12]" />
         <button
           type="button"
-          disabled
+          onClick={onUndo}
+          disabled={!canUndo}
           aria-label={m['drama.view.undo']()}
-          className="grid size-7 place-items-center rounded-full text-[var(--beat-text-3)] opacity-40"
+          className="grid size-7 place-items-center rounded-full text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink disabled:opacity-35 disabled:hover:bg-transparent"
         >
           <Undo2 className="size-3.5" />
         </button>
         <button
           type="button"
-          disabled
+          onClick={onRedo}
+          disabled={!canRedo}
           aria-label={m['drama.view.redo']()}
-          className="grid size-7 place-items-center rounded-full text-[var(--beat-text-3)] opacity-40"
+          className="grid size-7 place-items-center rounded-full text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink disabled:opacity-35 disabled:hover:bg-transparent"
         >
           <Redo2 className="size-3.5" />
         </button>

@@ -963,5 +963,9 @@
   "drama.wire.drop": "ここに線を接続",
   "drama.wire.auto": "自動配線",
   "drama.wire.detached": "共通素材を切断：このショットは自前の画像のみ使用",
-  "drama.wire.hint": "{count} 本の配線 · 素材の線を切ると共通画像を使わず、最終の線を切ると作品に入りません"
+  "drama.wire.hint": "{count} 本の配線 · 素材の線を切ると共通画像を使わず、最終の線を切ると作品に入りません",
+  "drama.final.concat": "生成済み {count} 本を結合",
+  "drama.params.title": "生成パラメータ",
+  "drama.params.subtitle": "{resolution} · LoRA {loras} 個",
+  "drama.params.auto": "既定"
 }

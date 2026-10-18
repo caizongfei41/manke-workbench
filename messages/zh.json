@@ -963,5 +963,9 @@
   "drama.wire.drop": "把线拖到这里接线",
   "drama.wire.auto": "自动接线",
   "drama.wire.detached": "已断开公共资产：这一段只用它自己的图",
-  "drama.wire.hint": "当前 {count} 条接线 · 断开公共资产线 = 该段不用共享图；断开入片线 = 该段不进成片"
+  "drama.wire.hint": "当前 {count} 条接线 · 断开公共资产线 = 该段不用共享图；断开入片线 = 该段不进成片",
+  "drama.final.concat": "拼接已生成的 {count} 段",
+  "drama.params.title": "生成参数台",
+  "drama.params.subtitle": "{resolution} · {loras} 个 LoRA",
+  "drama.params.auto": "默认"
 }

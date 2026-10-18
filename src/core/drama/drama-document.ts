@@ -34,6 +34,17 @@ export type DramaShot = {
 
 export type NodePosition = { x: number; y: number };
 
+export type DramaLora = { file: string; strength: number };
+
+/**
+ * Generation parameters for the whole film.
+ *
+ * These come straight from the AICG3D global node; the canvas used to hardcode
+ * a 480P baseline, which meant quality could not be changed from the board at
+ * all. Missing keys fall back to the template defaults.
+ */
+export type DramaParams = Record<string, string | number | boolean>;
+
 /**
  * A wire between two nodes.
  *
@@ -53,6 +64,10 @@ export type DramaDocument = {
   positions: Record<string, NodePosition>;
   /** Wires between nodes; see DramaLink for what each one controls. */
   links: DramaLink[];
+  /** Global generation parameters shown on the 参数台 node. */
+  params: DramaParams;
+  /** LoRA slots applied to every shot. */
+  loras: DramaLora[];
   /** 公共资产：整部片子共用的人物/场景/道具。 */
   publicAssets: ScriptAsset[];
   shots: DramaShot[];
@@ -77,6 +92,8 @@ export const createEmptyDramaDocument = (): DramaDocument => ({
   script: '',
   positions: {},
   links: defaultLinks([]),
+  params: {},
+  loras: [],
   publicAssets: [],
   shots: [],
   finalVideoUrl: null,
@@ -161,6 +178,24 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
           .filter((link): link is DramaLink => link !== null);
         return links.length > 0 ? links : defaultLinks(shotIds);
       })(),
+      params:
+        parsed.params && typeof parsed.params === 'object'
+          ? (parsed.params as DramaParams)
+          : {},
+      loras: Array.isArray(parsed.loras)
+        ? parsed.loras
+            .map((entry) => {
+              const value = entry as { file?: unknown; strength?: unknown };
+              return typeof value?.file === 'string'
+                ? {
+                    file: value.file,
+                    strength:
+                      typeof value.strength === 'number' ? value.strength : 1,
+                  }
+                : null;
+            })
+            .filter((entry): entry is DramaLora => entry !== null)
+        : [],
       finalVideoUrl:
         typeof parsed.finalVideoUrl === 'string' ? parsed.finalVideoUrl : null,
       finalStatus: (parsed.finalStatus ?? 'idle') as DramaDocument['finalStatus'],
