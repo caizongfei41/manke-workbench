@@ -244,14 +244,14 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     if (dx === 0 && dy === 0) return;
     // Divide by zoom, or the card lags behind the cursor when scaled.
     const k = viewScaleRef.current || 1;
+    const rawX = drag.originX + dx / k;
+    const rawY = drag.originY + dy / k;
+    const snapped = snapPosition(drag.id, rawX, rawY);
     setDoc((current) => ({
       ...current,
       positions: {
         ...current.positions,
-        [drag.id]: {
-          x: Math.round(drag.originX + dx / k),
-          y: Math.round(drag.originY + dy / k),
-        },
+        [drag.id]: { x: Math.round(snapped.x), y: Math.round(snapped.y) },
       },
     }));
   };
@@ -264,6 +264,52 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   };
 
   const viewScaleRef = useRef(1);
+
+  /**
+   * Snap a dragged card to its neighbours.
+   *
+   * Hand-placing forty workbenches produces near-misses that read as sloppy, so
+   * edges and centres of other nodes win when they are within a few screen
+   * pixels; otherwise fall back to an 8px grid. The threshold is divided by zoom
+   * so the feel stays the same at any scale.
+   */
+  const snapPosition = (id: string, x: number, y: number) => {
+    const self = rects[id];
+    const k = viewScaleRef.current || 1;
+    const threshold = 7 / k;
+    if (!self) return { x, y };
+
+    const others = Object.entries(rects)
+      .filter(([otherId]) => otherId !== id)
+      .map(([, rect]) => rect);
+
+    const pick = (value: number, candidates: number[]) => {
+      let best = value;
+      let bestDelta = threshold + 1;
+      for (const candidate of candidates) {
+        const delta = Math.abs(value - candidate);
+        if (delta <= threshold && delta < bestDelta) {
+          best = candidate;
+          bestDelta = delta;
+        }
+      }
+      return bestDelta <= threshold ? best : value;
+    };
+
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (const rect of others) {
+      xs.push(rect.x, rect.x + rect.w - self.w, rect.x + (rect.w - self.w) / 2);
+      ys.push(rect.y, rect.y + rect.h - self.h, rect.y + (rect.h - self.h) / 2);
+    }
+
+    const snappedX = pick(x, xs);
+    const snappedY = pick(y, ys);
+    return {
+      x: snappedX === x ? Math.round(x / 8) * 8 : snappedX,
+      y: snappedY === y ? Math.round(y / 8) * 8 : snappedY,
+    };
+  };
   const grandTotal = totalSeconds(doc.shots);
 
   const setShot = useCallback((id: string, patch: Partial<DramaShot>) => {
