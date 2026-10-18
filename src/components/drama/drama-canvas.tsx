@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ImageHoverPreview } from '@/components/app/image-hover-preview';
 import { DramaViewport, type ViewportMarker } from '@/components/drama/drama-viewport';
+import { HelpPopover, type HelpId } from '@/components/drama/help-popover';
 import { HintTip } from '@/components/app/hint-tip';
 import {
   DRAMA_ASPECT_RATIO,
@@ -107,6 +108,7 @@ function NodeShell({
   accent,
   children,
   width = NODE_WIDTH,
+  helpId,
   ports,
 }: {
   title: string;
@@ -115,6 +117,8 @@ function NodeShell({
   accent?: boolean;
   children: React.ReactNode;
   width?: number;
+  /** Shows the floating usage notes button in the header. */
+  helpId?: HelpId;
   /** Wiring handles: an input on the left edge, an output on the right. */
   ports?: { inputId?: string; onStartLink?: (event: React.PointerEvent<HTMLSpanElement>) => void };
 }) {
@@ -140,6 +144,7 @@ function NodeShell({
         >
           {icon}
         </span>
+        {helpId ? <HelpPopover id={helpId} className="ml-auto" /> : null}
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-[12px] font-medium leading-none text-[var(--beat-text-1)]">
             {title}
@@ -1199,6 +1204,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.script.title']()}
             subtitle={doc.script ? m['drama.script.chars']({ count: doc.script.length }) : m['drama.script.empty']()}
             icon={<Clapperboard className="size-3.5" />}
+            helpId="script"
             ports={{ onStartLink: beginLink('script') }}
           >
             <textarea
@@ -1246,6 +1252,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.board.title']()}
             subtitle={m['drama.board.subtitle']({ segments: analysis.segments.length, assets: analysis.assets.length })}
             icon={<Layers className="size-3.5" />}
+            helpId="board"
             ports={{ inputId: 'board', onStartLink: beginLink('board') }}
             accent
           >
@@ -1287,6 +1294,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.assets.title']()}
             subtitle={m['drama.assets.subtitle']({ ready: doc.publicAssets.filter((a) => a.imageUrl).length, total: doc.publicAssets.length })}
             icon={<ImagePlus className="size-3.5" />}
+            helpId="assets"
             ports={{ inputId: 'assets', onStartLink: beginLink('assets') }}
             accent
           >
@@ -1372,6 +1380,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               loras: activeDramaLoras().length,
             })}
             icon={<Sliders className="size-3.5" />}
+            helpId="params"
             ports={{ inputId: 'params', onStartLink: beginLink('params') }}
           >
             <div className="flex max-h-[340px] flex-col gap-2 overflow-y-auto pr-1">
@@ -1562,6 +1571,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               title={m['drama.shot.title']({ index: index + 1 })}
               subtitle={`${shot.seconds}s · ${shotStatusLabel(shot.status)}`}
               icon={<Film className="size-3.5" />}
+              helpId="shot"
               ports={{ inputId: shot.id, onStartLink: beginLink(shot.id) }}
             >
               <textarea
@@ -1780,6 +1790,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             title={m['drama.final.title']()}
             subtitle={m['drama.final.subtitle']({ shots: doc.shots.length, seconds: Math.round(grandTotal) })}
             icon={<Sparkles className="size-3.5" />}
+            helpId="final"
             ports={{ inputId: 'final' }}
             accent
           >

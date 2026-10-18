@@ -996,5 +996,21 @@
   "drama.enhance.lockCamera": "カメラ固定",
   "drama.enhance.lockLight": "照明固定",
   "drama.enhance.noText": "文字なし",
-  "drama.enhance.extraPlaceholder": "各ショットに追加する制約"
+  "drama.enhance.extraPlaceholder": "各ショットに追加する制約",
+  "help.open": "使い方",
+  "help.close": "閉じる",
+  "help.script.title": "脚本",
+  "help.script.body": "テンプレート通りに書きます：人物 / 場景 / 第N段。\n「絵コンテへ渡す」で【第N段】ごとに分割し、人物・場景・道具を抽出します。\n書き換えたらもう一度押すと分段が再構築されます。",
+  "help.board.title": "絵コンテ",
+  "help.board.body": "切り出した段数と認識した素材を表示します。\n認識した素材が一貫性の参照になります。\n再分割するとワークベンチが作り直され、配線もリセットされます。",
+  "help.assets.title": "共通素材",
+  "help.assets.body": "作品全体で使う人物・場景・道具。\n「画像を差し替え」でポートレートを登録します。画像のある素材だけが参照になります。\n各ショットは自分の台詞に出てくる人物を自動で参照します。",
+  "help.params.title": "生成パラメータ",
+  "help.params.body": "解像度・サンプリング・LoRA・プロンプト補強はここ。\n変更した値だけ送信し、他はテンプレートの既定値のままです。\n字幕 ON ではモデルの画面文字を止めます（二重字幕を防ぐため）。",
+  "help.shot.title": "ショット作業台",
+  "help.shot.body": "1 ショット = 1 ジョブ。中断しても再開できます。\n何度生成してもテイクは残り、‹ › で見比べられます。\n「このテイクを採用」だけが作品に入ります。",
+  "help.final.title": "最終映像",
+  "help.final.body": "「未完了の N 本を再開」は 1 本ずつ生成し、再読み込みでも進捗を保ちます。\n「生成済みの N 本を結合」は結合だけ、数秒で完了。\n書き出しは既定で縦。完成後は編集台へ送れます。",
+  "help.canvas.title": "キャンバス操作",
+  "help.canvas.body": "ノードのヘッダーをドラッグで移動、右の点をドラッグで接続。\n空白をドラッグで範囲選択、Delete でまとめて削除。\nスペースか中ボタンドラッグで移動、ホイールで拡大、Shift+1 で全体表示。"
 }

@@ -996,5 +996,21 @@
   "drama.enhance.lockCamera": "锁机位",
   "drama.enhance.lockLight": "锁光线",
   "drama.enhance.noText": "不要文字",
-  "drama.enhance.extraPlaceholder": "补充约束，追加到每段提示词"
+  "drama.enhance.extraPlaceholder": "补充约束，追加到每段提示词",
+  "help.open": "使用说明",
+  "help.close": "关闭",
+  "help.script.title": "剧本",
+  "help.script.body": "按模板写：人物 / 场景 / 第N段。\n点「交给分镜台」按【第N段】切分，并抽出人物、场景、道具。\n改完剧本要再点一次，分段会重建。",
+  "help.board.title": "分镜台",
+  "help.board.body": "显示切出的段数和识别到的素材。\n识别的素材会变成一致性参考：人物、场景、道具。\n重新切分会重建分段工作台，已有的接线会被重置。",
+  "help.assets.title": "公共资产图",
+  "help.assets.body": "整部片子共用的人物 / 场景 / 道具。\n点「换图」上传定妆图 —— 有图的资产才会变成参考图。\n分段会自动挂上它提到的人物，人物才不会在镜头间漂。",
+  "help.params.title": "生成参数台",
+  "help.params.body": "分辨率、采样、LoRA、提示词增强都在这里。\n只发你改过的参数，没动过的保持模板默认。\n开字幕会自动关掉模型画面文字，否则会叠成两层字幕。",
+  "help.shot.title": "分段工作台",
+  "help.shot.body": "一段就是一个独立任务，中断可以续跑。\n多次生成会保留多个版本，用 ‹ › 翻看。\n点「采用这版」才会把这一版送进成片。",
+  "help.final.title": "最终视频台",
+  "help.final.body": "「续跑未完成的 N 段」逐段生成，刷新也不丢进度。\n「拼接已生成的 N 段」只拼接、不重跑，几秒出片。\n导出规格默认竖屏；出片后可以送进剪辑台。",
+  "help.canvas.title": "画布操作",
+  "help.canvas.body": "拖节点标题栏可以移动；拖右侧圆点可以接线。\n空白处拖动 = 框选，Delete 批量删除。\n空格或中键拖动 = 平移，滚轮缩放，Shift+1 适配视图。"
 }

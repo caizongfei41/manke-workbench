@@ -15,6 +15,7 @@ import {
 } from 'react';
 
 import { m } from '@/paraglide/messages.js';
+import { HelpPopover } from '@/components/drama/help-popover';
 import { cn } from '@/lib/utils';
 
 /**
@@ -482,6 +483,8 @@ export function DramaViewport({
             </button>
           </>
         ) : null}
+        <span className="mx-0.5 h-4 w-px bg-ink/[0.12]" />
+        <HelpPopover id="canvas" />
         <span className="mx-0.5 h-4 w-px bg-ink/[0.12]" />
         <button
           type="button"
