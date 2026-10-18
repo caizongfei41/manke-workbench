@@ -990,5 +990,11 @@
   "drama.preset.vertical": "竖屏 1080×1920",
   "drama.preset.vertical720": "竖屏 720×1280",
   "drama.preset.square": "方形 1080×1080",
-  "drama.preset.landscape": "横屏 1920×1080"
+  "drama.preset.landscape": "横屏 1920×1080",
+  "drama.enhance.title": "提示词增强",
+  "drama.enhance.soloSubject": "只他一人",
+  "drama.enhance.lockCamera": "锁机位",
+  "drama.enhance.lockLight": "锁光线",
+  "drama.enhance.noText": "不要文字",
+  "drama.enhance.extraPlaceholder": "补充约束，追加到每段提示词"
 }

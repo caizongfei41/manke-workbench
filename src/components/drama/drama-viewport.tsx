@@ -55,6 +55,7 @@ export function DramaViewport({
   markers,
   onScaleChange,
   onResetLayout,
+  onMarquee,
   onUndo,
   onRedo,
   canUndo = false,
@@ -68,6 +69,8 @@ export function DramaViewport({
   onScaleChange?: (scale: number) => void;
   /** Clears any dragged positions and returns to the default pipeline layout. */
   onResetLayout?: () => void;
+  /** Reports a marquee in content coordinates, or null when it was a click. */
+  onMarquee?: (rect: { x: number; y: number; w: number; h: number } | null, additive: boolean) => void;
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -81,6 +84,11 @@ export function DramaViewport({
   // re-render, so the pan ran away from the cursor.
   const panRef = useRef<{ pointerId: number; lastX: number; lastY: number } | null>(null);
   const [panning, setPanning] = useState(false);
+  // FigJam convention: drag empty space selects, space/middle drags pans.
+  const [spaceDown, setSpaceDown] = useState(false);
+  const [marquee, setMarquee] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const marqueeRef = useRef<{ pointerId: number; x1: number; y1: number } | null>(null);
+  const spaceRef = useRef(false);
 
   const clampScale = (k: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, k));
 
@@ -177,28 +185,57 @@ export function DramaViewport({
 
   const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      // Only the background pans, so inputs inside the cards keep working.
+      // Only the background takes the gesture, so inputs inside the cards keep working.
       const target = event.target as HTMLElement;
       const isBackground = target.dataset.dramaBackground === 'true';
       if (!isBackground) return;
       if (event.button !== 0 && event.button !== 1) return;
-      panRef.current = {
-        pointerId: event.pointerId,
-        lastX: event.clientX,
-        lastY: event.clientY,
-      };
-      setPanning(true);
+
+      const wantsPan = event.button === 1 || spaceRef.current;
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
-        // Synthetic or already-released pointers cannot be captured; panning
-        // still works through bubbling.
+        // Synthetic or already-released pointers cannot be captured.
       }
+
+      if (wantsPan) {
+        panRef.current = {
+          pointerId: event.pointerId,
+          lastX: event.clientX,
+          lastY: event.clientY,
+        };
+        setPanning(true);
+        return;
+      }
+
+      const bounds = event.currentTarget.getBoundingClientRect();
+      marqueeRef.current = {
+        pointerId: event.pointerId,
+        x1: event.clientX - bounds.left,
+        y1: event.clientY - bounds.top,
+      };
+      setMarquee({
+        x1: event.clientX - bounds.left,
+        y1: event.clientY - bounds.top,
+        x2: event.clientX - bounds.left,
+        y2: event.clientY - bounds.top,
+      });
     },
     []
   );
 
   const onPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = marqueeRef.current;
+    if (drag && drag.pointerId === event.pointerId) {
+      const bounds = event.currentTarget.getBoundingClientRect();
+      setMarquee((current) =>
+        current
+          ? { ...current, x2: event.clientX - bounds.left, y2: event.clientY - bounds.top }
+          : current
+      );
+      return;
+    }
+
     const pan = panRef.current;
     if (!pan || pan.pointerId !== event.pointerId) return;
     const dx = event.clientX - pan.lastX;
@@ -209,11 +246,69 @@ export function DramaViewport({
     setView((current) => ({ ...current, x: current.x + dx, y: current.y + dy }));
   }, []);
 
-  const endPan = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (panRef.current?.pointerId === event.pointerId) {
-      panRef.current = null;
-      setPanning(false);
-    }
+  const endPan = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = marqueeRef.current;
+      if (drag && drag.pointerId === event.pointerId) {
+        marqueeRef.current = null;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const x2 = event.clientX - bounds.left;
+        const y2 = event.clientY - bounds.top;
+        const x1 = drag.x1;
+        const y1 = drag.y1;
+        setMarquee(null);
+        // A tiny drag is a click: clear the selection.
+        if (Math.abs(x2 - x1) < 4 && Math.abs(y2 - y1) < 4) {
+          onMarquee?.(null, event.shiftKey);
+          return;
+        }
+        // Screen coordinates back to content coordinates.
+        const k = view.k || 1;
+        onMarquee?.(
+          {
+            x: (Math.min(x1, x2) - view.x) / k,
+            y: (Math.min(y1, y2) - view.y) / k,
+            w: Math.abs(x2 - x1) / k,
+            h: Math.abs(y2 - y1) / k,
+          },
+          event.shiftKey
+        );
+        return;
+      }
+
+      if (panRef.current?.pointerId === event.pointerId) {
+        panRef.current = null;
+        setPanning(false);
+      }
+    },
+    [onMarquee, view.k, view.x, view.y]
+  );
+
+  useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      if (event.code !== 'Space') return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      spaceRef.current = true;
+      setSpaceDown(true);
+    };
+    const up = (event: KeyboardEvent) => {
+      if (event.code !== 'Space') return;
+      spaceRef.current = false;
+      setSpaceDown(false);
+    };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+    };
   }, []);
 
   // The shortcuts every canvas app shares.
@@ -299,7 +394,7 @@ export function DramaViewport({
       ref={viewportRef}
       className={cn(
         'relative h-full w-full overflow-hidden bg-[var(--beat-bg)]',
-        panning ? 'cursor-grabbing' : 'cursor-grab'
+        panning ? 'cursor-grabbing' : spaceDown ? 'cursor-grab' : 'cursor-default'
       )}
       onWheel={onWheel}
       onPointerDown={onPointerDown}
@@ -325,6 +420,18 @@ export function DramaViewport({
       >
         {children}
       </div>
+
+      {marquee ? (
+        <div
+          className="pointer-events-none absolute border border-[var(--beat-accent)] bg-[var(--beat-accent)]/12"
+          style={{
+            left: Math.min(marquee.x1, marquee.x2),
+            top: Math.min(marquee.y1, marquee.y2),
+            width: Math.abs(marquee.x2 - marquee.x1),
+            height: Math.abs(marquee.y2 - marquee.y1),
+          }}
+        />
+      ) : null}
 
       {/* Zoom bar, same semantics as the freeform canvas. */}
       <div className="pointer-events-auto absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-ink/[0.1] bg-[var(--beat-surface)]/95 px-1.5 py-1 shadow-[0_12px_32px_rgba(0,0,0,0.18)] backdrop-blur">

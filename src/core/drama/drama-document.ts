@@ -3,6 +3,12 @@ import {
   parseScriptDocument,
   type ScriptAsset,
 } from '@/core/effects/script-document';
+import {
+  ENHANCE_RULES,
+  createEmptyEnhancement,
+  type EnhanceRuleId,
+  type PromptEnhancement,
+} from '@/core/drama/prompt-enhance';
 
 /**
  * AI 短剧画布的文档模型。
@@ -89,6 +95,8 @@ export type DramaDocument = {
   loras: DramaLora[];
   /** Burn the dialogue into the picture when assembling. */
   subtitles: boolean;
+  /** Appended constraints for every shot; see prompt-enhance. */
+  enhance: PromptEnhancement;
   /** Export target; see EXPORT_PRESETS. */
   exportPreset: string;
   /** Music bed mixed under the generated audio. */
@@ -122,6 +130,7 @@ export const createEmptyDramaDocument = (): DramaDocument => ({
   params: {},
   loras: [],
   subtitles: true,
+  enhance: createEmptyEnhancement(),
   exportPreset: 'vertical',
   bgmAssetId: null,
   bgmName: null,
@@ -229,6 +238,22 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
           ? (parsed.params as DramaParams)
           : {},
       subtitles: parsed.subtitles === true,
+      enhance: (() => {
+        const raw = (parsed as { enhance?: unknown }).enhance as
+          | { enabled?: unknown; rules?: unknown; extra?: unknown }
+          | undefined;
+        if (!raw) return createEmptyEnhancement();
+        const valid = ENHANCE_RULES.map((rule) => rule.id);
+        return {
+          enabled: raw.enabled === true,
+          rules: Array.isArray(raw.rules)
+            ? (raw.rules.filter(
+                (id): id is EnhanceRuleId => typeof id === 'string' && valid.includes(id as EnhanceRuleId)
+              ) as EnhanceRuleId[])
+            : [],
+          extra: typeof raw.extra === 'string' ? raw.extra : '',
+        };
+      })(),
       exportPreset: typeof parsed.exportPreset === 'string' ? parsed.exportPreset : 'vertical',
       bgmAssetId: typeof parsed.bgmAssetId === 'string' ? parsed.bgmAssetId : null,
       bgmName: typeof parsed.bgmName === 'string' ? parsed.bgmName : null,

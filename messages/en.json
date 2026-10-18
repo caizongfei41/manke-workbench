@@ -990,5 +990,11 @@
   "drama.preset.vertical": "Vertical 1080×1920",
   "drama.preset.vertical720": "Vertical 720×1280",
   "drama.preset.square": "Square 1080×1080",
-  "drama.preset.landscape": "Landscape 1920×1080"
+  "drama.preset.landscape": "Landscape 1920×1080",
+  "drama.enhance.title": "Prompt reinforcement",
+  "drama.enhance.soloSubject": "Solo subject",
+  "drama.enhance.lockCamera": "Lock camera",
+  "drama.enhance.lockLight": "Lock light",
+  "drama.enhance.noText": "No text",
+  "drama.enhance.extraPlaceholder": "Extra constraint appended to every shot"
 }

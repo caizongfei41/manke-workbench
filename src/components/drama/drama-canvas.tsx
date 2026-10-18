@@ -33,6 +33,11 @@ import {
 } from '@/core/drama/drama-document';
 import { ASSET_KIND_LABELS, type ScriptAsset } from '@/core/effects/script-document';
 import {
+  ENHANCE_RULES,
+  enhancePrompt,
+  type EnhanceRuleId,
+} from '@/core/drama/prompt-enhance';
+import {
   EXPORT_PRESETS,
   buildAssSubtitle,
   buildSubtitleCues,
@@ -521,6 +526,47 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
   const hasLink = (from: string, to: string) => linkSet.has(`${from}->${to}`);
 
+  // ---- Selection --------------------------------------------------------
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const FIXED_NODES = ['script', 'board', 'assets', 'params', 'final'];
+
+  /** Only workbenches can be removed; the pipeline stages are structure. */
+  const removable = (id: string) => !FIXED_NODES.includes(id);
+
+  const onMarquee = (rect: { x: number; y: number; w: number; h: number } | null, additive: boolean) => {
+    if (!rect) {
+      if (!additive) setSelectedIds([]);
+      return;
+    }
+    const hits = Object.entries(rects)
+      .filter(([, box]) =>
+        box.x < rect.x + rect.w &&
+        box.x + box.w > rect.x &&
+        box.y < rect.y + rect.h &&
+        box.y + box.h > rect.y
+      )
+      .map(([id]) => id);
+    setSelectedIds((current) =>
+      additive ? [...new Set([...current, ...hits])] : hits
+    );
+  };
+
+  const deleteSelected = () => {
+    const targets = selectedIds.filter(removable);
+    if (targets.length === 0) return;
+    updateDoc((current) => ({
+      ...current,
+      shots: current.shots.filter((shot) => !targets.includes(shot.id)),
+      links: current.links.filter(
+        (link) => !targets.includes(link.from) && !targets.includes(link.to)
+      ),
+      positions: Object.fromEntries(
+        Object.entries(current.positions).filter(([id]) => !targets.includes(id))
+      ),
+    }));
+    setSelectedIds([]);
+  };
+
   /** Switch which take goes into the film. Previewing is a separate action. */
   const sendToEditor = async () => {
     const assetId = doc.finalVideoUrl?.match(/\/assets\/([0-9a-f-]{36})/i)?.[1];
@@ -563,6 +609,13 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     vertical720: m['drama.preset.vertical720'],
     square: m['drama.preset.square'],
     landscape: m['drama.preset.landscape'],
+  };
+
+  const ENHANCE_LABELS: Record<EnhanceRuleId, () => string> = {
+    soloSubject: m['drama.enhance.soloSubject'],
+    lockCamera: m['drama.enhance.lockCamera'],
+    lockLight: m['drama.enhance.lockLight'],
+    noText: m['drama.enhance.noText'],
   };
 
   const usesSharedAssets = (shotId: string) => hasLink('assets', shotId);
@@ -654,7 +707,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             projectId,
             modelId: DRAMA_MODEL_ID,
             mode: 'video',
-            prompt: shot.prompt || 'short drama shot',
+            prompt: enhancePrompt(shot.prompt, doc.enhance) || 'short drama shot',
             references: [],
             parameters: {
               aspect_ratio: DRAMA_ASPECT_RATIO,
@@ -664,7 +717,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               director_loras: activeDramaLoras(),
               director_segments: [
                 {
-                  prompt: shot.prompt,
+                  prompt: enhancePrompt(shot.prompt, doc.enhance),
                   seconds: shot.seconds,
                   imageUrls: images,
                   refs,
@@ -869,7 +922,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               director_global: dramaGlobalParameters(),
               director_loras: activeDramaLoras(),
               director_segments: doc.shots.filter((shot) => isInFinal(shot.id)).map((shot) => ({
-                prompt: shot.prompt,
+                prompt: enhancePrompt(shot.prompt, doc.enhance),
                 seconds: shot.seconds,
                 imageUrls: resolveImages(shot),
                 refs: resolveRefs(shot),
@@ -1024,6 +1077,25 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const resetLayout = () =>
     updateDoc((current) => ({ ...current, positions: {} }));
 
+  // Delete removes the selected workbenches. Ignored while typing.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      ) {
+        return;
+      }
+      if (selectedIds.length === 0) return;
+      event.preventDefault();
+      deleteSelected();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   // Ctrl/Cmd+Z is undo, Shift added redoes. Ignored while typing.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -1071,6 +1143,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         viewScaleRef.current = scale;
       }}
       onResetLayout={resetLayout}
+      onMarquee={onMarquee}
       onUndo={undo}
       onRedo={redo}
       canUndo={historyState.canUndo}
@@ -1110,7 +1183,8 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           onPointerUp={endNodeDrag}
           onPointerCancel={endNodeDrag}
           className={cn(
-            'pointer-events-auto absolute',
+            'pointer-events-auto absolute rounded-[16px]',
+            selectedIds.includes('script') && 'ring-2 ring-[var(--beat-accent)]',
             draggingId === 'script' && 'z-30'
           )}
           style={{ ...posStyle('script') }}
@@ -1155,7 +1229,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           onPointerMove={moveNodeDrag}
           onPointerUp={endNodeDrag}
           onPointerCancel={endNodeDrag}
-          className={cn('pointer-events-auto absolute', draggingId === 'board' && 'z-30')}
+          className={cn(
+            'pointer-events-auto absolute rounded-[16px]',
+            selectedIds.includes('board') && 'ring-2 ring-[var(--beat-accent)]',
+            draggingId === 'board' && 'z-30'
+          )}
           style={{ ...posStyle('board') }}
         >
           <NodeShell
@@ -1192,7 +1270,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           onPointerMove={moveNodeDrag}
           onPointerUp={endNodeDrag}
           onPointerCancel={endNodeDrag}
-          className={cn('pointer-events-auto absolute', draggingId === 'assets' && 'z-30')}
+          className={cn(
+            'pointer-events-auto absolute rounded-[16px]',
+            selectedIds.includes('assets') && 'ring-2 ring-[var(--beat-accent)]',
+            draggingId === 'assets' && 'z-30'
+          )}
           style={{ ...posStyle('assets') }}
         >
           <NodeShell
@@ -1270,7 +1352,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           onPointerMove={moveNodeDrag}
           onPointerUp={endNodeDrag}
           onPointerCancel={endNodeDrag}
-          className={cn('pointer-events-auto absolute', draggingId === 'params' && 'z-30')}
+          className={cn(
+            'pointer-events-auto absolute rounded-[16px]',
+            selectedIds.includes('params') && 'ring-2 ring-[var(--beat-accent)]',
+            draggingId === 'params' && 'z-30'
+          )}
           style={{ ...posStyle('params') }}
         >
           <NodeShell
@@ -1347,6 +1433,71 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 </div>
               ))}
 
+              <div className="flex flex-col gap-1 border-t border-ink/[0.08] pt-1.5">
+                <label className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] uppercase tracking-wider text-[var(--beat-text-3)]">
+                    {m['drama.enhance.title']()}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={doc.enhance.enabled}
+                    onChange={(event) =>
+                      setDoc((current) => ({
+                        ...current,
+                        enhance: { ...current.enhance, enabled: event.target.checked },
+                      }))
+                    }
+                    className="size-3"
+                  />
+                </label>
+                {doc.enhance.enabled ? (
+                  <>
+                    <div className="flex flex-wrap gap-1">
+                      {ENHANCE_RULES.map((rule) => {
+                        const active = doc.enhance.rules.includes(rule.id);
+                        return (
+                          <button
+                            key={rule.id}
+                            type="button"
+                            title={rule.text}
+                            onClick={() =>
+                              setDoc((current) => ({
+                                ...current,
+                                enhance: {
+                                  ...current.enhance,
+                                  rules: active
+                                    ? current.enhance.rules.filter((id: EnhanceRuleId) => id !== rule.id)
+                                    : [...current.enhance.rules, rule.id],
+                                },
+                              }))
+                            }
+                            className={cn(
+                              'rounded-full border px-1.5 py-0.5 text-[9px] transition',
+                              active
+                                ? 'border-[var(--beat-accent)]/50 bg-[var(--beat-accent)]/12 text-[var(--beat-accent)]'
+                                : 'border-ink/[0.12] text-[var(--beat-text-2)] hover:border-ink/25 hover:text-ink'
+                            )}
+                          >
+                            {ENHANCE_LABELS[rule.id]()}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <input
+                      value={doc.enhance.extra}
+                      onChange={(event) =>
+                        setDoc((current) => ({
+                          ...current,
+                          enhance: { ...current.enhance, extra: event.target.value },
+                        }))
+                      }
+                      placeholder={m['drama.enhance.extraPlaceholder']()}
+                      className="w-full rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1.5 py-1 text-[9.5px] text-[var(--beat-text-1)] outline-none focus:border-ink/25"
+                    />
+                  </>
+                ) : null}
+              </div>
+
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] uppercase tracking-wider text-[var(--beat-text-3)]">
                   LoRA
@@ -1394,7 +1545,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             onPointerMove={moveNodeDrag}
             onPointerUp={endNodeDrag}
             onPointerCancel={endNodeDrag}
-            className={cn('pointer-events-auto absolute', draggingId === shot.id && 'z-30')}
+            className={cn(
+            'pointer-events-auto absolute rounded-[16px]',
+            selectedIds.includes(shot.id) && 'ring-2 ring-[var(--beat-accent)]',
+            draggingId === shot.id && 'z-30'
+          )}
             style={{ ...posStyle(shot.id) }}
           >
             <NodeShell
@@ -1608,7 +1763,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           onPointerMove={moveNodeDrag}
           onPointerUp={endNodeDrag}
           onPointerCancel={endNodeDrag}
-          className={cn('pointer-events-auto absolute', draggingId === 'final' && 'z-30')}
+          className={cn(
+            'pointer-events-auto absolute rounded-[16px]',
+            selectedIds.includes('final') && 'ring-2 ring-[var(--beat-accent)]',
+            draggingId === 'final' && 'z-30'
+          )}
           style={{ ...posStyle('final') }}
         >
           <NodeShell

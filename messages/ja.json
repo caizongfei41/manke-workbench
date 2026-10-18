@@ -990,5 +990,11 @@
   "drama.preset.vertical": "縦 1080×1920",
   "drama.preset.vertical720": "縦 720×1280",
   "drama.preset.square": "正方形 1080×1080",
-  "drama.preset.landscape": "横 1920×1080"
+  "drama.preset.landscape": "横 1920×1080",
+  "drama.enhance.title": "プロンプト補強",
+  "drama.enhance.soloSubject": "本人のみ",
+  "drama.enhance.lockCamera": "カメラ固定",
+  "drama.enhance.lockLight": "照明固定",
+  "drama.enhance.noText": "文字なし",
+  "drama.enhance.extraPlaceholder": "各ショットに追加する制約"
 }
