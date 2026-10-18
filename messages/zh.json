@@ -957,5 +957,6 @@
   "drama.view.fit": "适配视图",
   "drama.view.fitHint": "适配视图 (Shift+1)",
   "drama.view.undo": "撤销",
-  "drama.view.redo": "重做"
+  "drama.view.redo": "重做",
+  "drama.view.resetLayout": "整理布局"
 }

@@ -99,7 +99,10 @@ function NodeShell({
         accent ? 'border-[var(--beat-accent)]/45' : 'border-ink/[0.1]'
       )}
     >
-      <div className="flex items-center gap-2 border-b border-ink/[0.08] px-3 py-2.5">
+      <div
+        data-drama-drag-handle="true"
+        className="flex cursor-grab touch-none select-none items-center gap-2 border-b border-ink/[0.08] px-3 py-2.5 active:cursor-grabbing"
+      >
         <span
           className={cn(
             'grid size-6 shrink-0 place-items-center rounded-[7px]',
@@ -147,6 +150,120 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   }, [doc, onPersist]);
 
   const analysis = useMemo(() => analyzeScript(doc.script), [doc.script]);
+
+  /** Saved position, or the default pipeline slot. */
+  const posOf = (key: string, fallback: { x: number; y: number }) =>
+    doc.positions[key] ?? fallback;
+
+  /**
+   * Inline style for a node. Positions are stored as {x, y}; CSS wants left/top,
+   * and passing the raw object silently positioned everything at the origin.
+   */
+  const posStyle = (key: string) => {
+    const point = posOf(key, defaultPos(key));
+    return { left: point.x, top: point.y };
+  };
+
+  const defaultPos = (key: string): { x: number; y: number } => {
+    if (key === 'script') return { x: COLUMN.script, y: 40 };
+    if (key === 'board') return { x: COLUMN.board, y: 40 };
+    if (key === 'assets') return { x: COLUMN.assets, y: 40 };
+    if (key === 'final') return { x: COLUMN.final, y: 40 };
+    const index = Math.max(0, doc.shots.findIndex((shot) => shot.id === key));
+    return { x: COLUMN.shots, y: shotY(index) };
+  };
+
+  // Measured rects drive the connectors, so they follow a node wherever it is
+  // dragged instead of assuming the fixed column layout.
+  const nodeRefs = useRef(new Map<string, HTMLDivElement>());
+  const [rects, setRects] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
+
+  const measure = useCallback(() => {
+    const next: Record<string, { x: number; y: number; w: number; h: number }> = {};
+    for (const [id, el] of nodeRefs.current) {
+      next[id] = {
+        x: el.offsetLeft,
+        y: el.offsetTop,
+        w: el.offsetWidth,
+        h: el.offsetHeight,
+      };
+    }
+    setRects((current) => {
+      const same =
+        Object.keys(current).length === Object.keys(next).length &&
+        Object.entries(next).every(([id, rect]) => {
+          const prev = current[id];
+          return (
+            prev &&
+            prev.x === rect.x &&
+            prev.y === rect.y &&
+            prev.w === rect.w &&
+            prev.h === rect.h
+          );
+        });
+      return same ? current : next;
+    });
+  }, []);
+
+  const registerNode = useCallback(
+    (id: string) => (el: HTMLDivElement | null) => {
+      if (el) nodeRefs.current.set(id, el);
+      else nodeRefs.current.delete(id);
+      requestAnimationFrame(measure);
+    },
+    [measure]
+  );
+
+  // Dragging a node by its header.
+  const dragRef = useRef<{ id: string; pointerId: number; startX: number; startY: number; originX: number; originY: number } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const startNodeDrag = (id: string) => (event: React.PointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('button, input, textarea, select, a')) return;
+    if (event.button !== 0) return;
+    const origin = posOf(id, defaultPos(id));
+    dragRef.current = {
+      id,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: origin.x,
+      originY: origin.y,
+    };
+    setDraggingId(id);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.stopPropagation();
+  };
+
+  const moveNodeDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (dx === 0 && dy === 0) return;
+    // Divide by zoom, or the card lags behind the cursor when scaled.
+    const k = viewScaleRef.current || 1;
+    setDoc((current) => ({
+      ...current,
+      positions: {
+        ...current.positions,
+        [drag.id]: {
+          x: Math.round(drag.originX + dx / k),
+          y: Math.round(drag.originY + dy / k),
+        },
+      },
+    }));
+  };
+
+  const endNodeDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current?.pointerId === event.pointerId) {
+      dragRef.current = null;
+      setDraggingId(null);
+    }
+  };
+
+  const viewScaleRef = useRef(1);
   const grandTotal = totalSeconds(doc.shots);
 
   const setShot = useCallback((id: string, patch: Partial<DramaShot>) => {
@@ -408,36 +525,70 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const shotY = (index: number) => 150 + index * SHOT_PITCH;
   const canvasHeight = Math.max(760, shotY(doc.shots.length) + 60);
 
+  const edgeFor = (fromId: string, toId: string) => {
+    const from = rects[fromId];
+    const to = rects[toId];
+    if (!from || !to) return null;
+    const x1 = from.x + from.w;
+    const y1 = from.y + from.h / 2;
+    const x2 = to.x;
+    const y2 = to.y + to.h / 2;
+    const bend = Math.max(40, Math.abs(x2 - x1) * 0.45);
+    return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2 - 6} ${y2}`;
+  };
+
+  const edges = [
+    { path: edgeFor('script', 'board'), strong: true },
+    { path: edgeFor('board', 'assets'), strong: true },
+    ...doc.shots.map((shot) => ({ path: edgeFor('assets', shot.id), strong: false })),
+    ...doc.shots.map((shot) => ({ path: edgeFor(shot.id, 'final'), strong: false })),
+  ].filter((edge): edge is { path: string; strong: boolean } => !!edge.path);
+
+  // The stage grows with the nodes so nothing gets clipped at the edge.
+  const stageWidth = Math.max(
+    COLUMN.final + NODE_WIDTH + 80,
+    ...Object.values(rects).map((rect) => rect.x + rect.w + 80)
+  );
+  const stageHeight = Math.max(
+    canvasHeight,
+    ...Object.values(rects).map((rect) => rect.y + rect.h + 80)
+  );
+
+  const resetLayout = () =>
+    setDoc((current) => ({ ...current, positions: {} }));
+
   // Markers for the minimap: the four fixed nodes plus every workbench.
+  const markerFor = (id: string, tone: ViewportMarker['tone']): ViewportMarker => {
+    const rect = rects[id];
+    if (rect) return { x: rect.x, y: rect.y, w: rect.w, h: rect.h, tone };
+    const fallback = posOf(id, defaultPos(id));
+    return { x: fallback.x, y: fallback.y, w: NODE_WIDTH, h: 200, tone };
+  };
+
   const markers: ViewportMarker[] = [
-    { x: COLUMN.script, y: 40, w: NODE_WIDTH, h: 250, tone: 'node' },
-    { x: COLUMN.board, y: 40, w: NODE_WIDTH, h: 190, tone: 'node' },
-    { x: COLUMN.assets, y: 40, w: NODE_WIDTH, h: 330, tone: 'node' },
-    { x: COLUMN.final, y: 40, w: NODE_WIDTH, h: 150, tone: 'node' },
-    ...doc.shots.map((_, index) => ({
-      x: COLUMN.shots,
-      y: shotY(index),
-      w: NODE_WIDTH,
-      h: 300,
-      tone: 'shot' as const,
-    })),
+    markerFor('script', 'node'),
+    markerFor('board', 'node'),
+    markerFor('assets', 'node'),
+    markerFor('final', 'node'),
+    ...doc.shots.map((shot) => markerFor(shot.id, 'shot')),
   ];
 
   return (
     <DramaViewport
-      contentWidth={COLUMN.final + NODE_WIDTH + 80}
-      contentHeight={canvasHeight}
+      contentWidth={stageWidth}
+      contentHeight={stageHeight}
       markers={markers}
+      onScaleChange={(scale) => {
+        viewScaleRef.current = scale;
+      }}
+      onResetLayout={resetLayout}
     >
-      <div
-        className="relative"
-        style={{ width: COLUMN.final + NODE_WIDTH + 80, height: canvasHeight }}
-      >
-        {/* Connectors between the fixed columns. */}
+      <div className="relative" style={{ width: stageWidth, height: stageHeight }}>
+        {/* Connectors follow the measured rects, so they track a dragged node. */}
         <svg
           className="pointer-events-none absolute inset-0"
-          width={COLUMN.final + NODE_WIDTH + 80}
-          height={canvasHeight}
+          width={stageWidth}
+          height={stageHeight}
           aria-hidden="true"
         >
           <defs>
@@ -445,58 +596,32 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               <path d="M0,0 L8,4 L0,8 z" fill="var(--beat-accent)" opacity="0.65" />
             </marker>
           </defs>
-          {[
-            // script → storyboard
-            { x1: COLUMN.script + NODE_WIDTH, y1: 130, x2: COLUMN.board, y2: 130 },
-            // storyboard → assets
-            { x1: COLUMN.board + NODE_WIDTH, y1: 130, x2: COLUMN.assets, y2: 130 },
-          ].map((line, i) => (
-            <line
-              key={i}
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2 - 6}
-              y2={line.y2}
+          {edges.map((edge, index) => (
+            <path
+              key={index}
+              d={edge.path}
+              fill="none"
               stroke="var(--beat-accent)"
-              strokeOpacity="0.5"
-              strokeWidth="1.5"
+              strokeOpacity={edge.strong ? 0.5 : 0.32}
+              strokeWidth={edge.strong ? 1.6 : 1.4}
               markerEnd="url(#drama-arrow)"
             />
           ))}
-          {/* assets → each workbench */}
-          {doc.shots.map((shot, index) => {
-            const y = shotY(index) + 40;
-            return (
-              <path
-                key={shot.id}
-                d={`M ${COLUMN.assets + NODE_WIDTH} 200 C ${COLUMN.assets + NODE_WIDTH + 80} 200, ${COLUMN.shots - 80} ${y}, ${COLUMN.shots - 6} ${y}`}
-                fill="none"
-                stroke="var(--beat-accent)"
-                strokeOpacity="0.35"
-                strokeWidth="1.5"
-                markerEnd="url(#drama-arrow)"
-              />
-            );
-          })}
-          {/* segments → final stage */}
-          {doc.shots.map((shot, index) => {
-            const y = shotY(index) + 40;
-            return (
-              <path
-                key={`f-${shot.id}`}
-                d={`M ${COLUMN.shots + NODE_WIDTH} ${y} C ${COLUMN.shots + NODE_WIDTH + 80} ${y}, ${COLUMN.final - 80} 200, ${COLUMN.final - 6} 200`}
-                fill="none"
-                stroke="var(--beat-accent)"
-                strokeOpacity="0.3"
-                strokeWidth="1.4"
-                markerEnd="url(#drama-arrow)"
-              />
-            );
-          })}
         </svg>
 
         {/* Script */}
-        <div className="pointer-events-auto absolute" style={{ left: COLUMN.script, top: 40 }}>
+        <div
+          ref={registerNode('script')}
+          onPointerDown={startNodeDrag('script')}
+          onPointerMove={moveNodeDrag}
+          onPointerUp={endNodeDrag}
+          onPointerCancel={endNodeDrag}
+          className={cn(
+            'pointer-events-auto absolute',
+            draggingId === 'script' && 'z-30'
+          )}
+          style={{ ...posStyle('script') }}
+        >
           <NodeShell
             title={m['drama.script.title']()}
             subtitle={doc.script ? m['drama.script.chars']({ count: doc.script.length }) : m['drama.script.empty']()}
@@ -530,7 +655,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </div>
 
         {/* Storyboard */}
-        <div className="pointer-events-auto absolute" style={{ left: COLUMN.board, top: 40 }}>
+        <div
+          ref={registerNode('board')}
+          onPointerDown={startNodeDrag('board')}
+          onPointerMove={moveNodeDrag}
+          onPointerUp={endNodeDrag}
+          onPointerCancel={endNodeDrag}
+          className={cn('pointer-events-auto absolute', draggingId === 'board' && 'z-30')}
+          style={{ ...posStyle('board') }}
+        >
           <NodeShell
             title={m['drama.board.title']()}
             subtitle={m['drama.board.subtitle']({ segments: analysis.segments.length, assets: analysis.assets.length })}
@@ -558,7 +691,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </div>
 
         {/* Assets */}
-        <div className="pointer-events-auto absolute" style={{ left: COLUMN.assets, top: 40 }}>
+        <div
+          ref={registerNode('assets')}
+          onPointerDown={startNodeDrag('assets')}
+          onPointerMove={moveNodeDrag}
+          onPointerUp={endNodeDrag}
+          onPointerCancel={endNodeDrag}
+          className={cn('pointer-events-auto absolute', draggingId === 'assets' && 'z-30')}
+          style={{ ...posStyle('assets') }}
+        >
           <NodeShell
             title={m['drama.assets.title']()}
             subtitle={m['drama.assets.subtitle']({ ready: doc.publicAssets.filter((a) => a.imageUrl).length, total: doc.publicAssets.length })}
@@ -630,8 +771,13 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         {doc.shots.map((shot, index) => (
           <div
             key={shot.id}
-            className="pointer-events-auto absolute"
-            style={{ left: COLUMN.shots, top: shotY(index) }}
+            ref={registerNode(shot.id)}
+            onPointerDown={startNodeDrag(shot.id)}
+            onPointerMove={moveNodeDrag}
+            onPointerUp={endNodeDrag}
+            onPointerCancel={endNodeDrag}
+            className={cn('pointer-events-auto absolute', draggingId === shot.id && 'z-30')}
+            style={{ ...posStyle(shot.id) }}
           >
             <NodeShell
               title={m['drama.shot.title']({ index: index + 1 })}
@@ -785,7 +931,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         </div>
 
         {/* Final video stage */}
-        <div className="pointer-events-auto absolute" style={{ left: COLUMN.final, top: 40 }}>
+        <div
+          ref={registerNode('final')}
+          onPointerDown={startNodeDrag('final')}
+          onPointerMove={moveNodeDrag}
+          onPointerUp={endNodeDrag}
+          onPointerCancel={endNodeDrag}
+          className={cn('pointer-events-auto absolute', draggingId === 'final' && 'z-30')}
+          style={{ ...posStyle('final') }}
+        >
           <NodeShell
             title={m['drama.final.title']()}
             subtitle={m['drama.final.subtitle']({ shots: doc.shots.length, seconds: Math.round(grandTotal) })}

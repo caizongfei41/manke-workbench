@@ -32,9 +32,16 @@ export type DramaShot = {
   error?: string | null;
 };
 
+export type NodePosition = { x: number; y: number };
+
 export type DramaDocument = {
   version: 1;
   script: string;
+  /**
+   * Where each node sits on the board. Missing entries fall back to the default
+   * pipeline layout, so a document saved before dragging existed still opens.
+   */
+  positions: Record<string, NodePosition>;
   /** 公共资产：整部片子共用的人物/场景/道具。 */
   publicAssets: ScriptAsset[];
   shots: DramaShot[];
@@ -46,6 +53,7 @@ export type DramaDocument = {
 export const createEmptyDramaDocument = (): DramaDocument => ({
   version: 1,
   script: '',
+  positions: {},
   publicAssets: [],
   shots: [],
   finalVideoUrl: null,
@@ -87,6 +95,19 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
     return {
       version: 1,
       script: typeof parsed.script === 'string' ? parsed.script : '',
+      positions:
+        parsed.positions && typeof parsed.positions === 'object'
+          ? Object.fromEntries(
+              Object.entries(parsed.positions as Record<string, unknown>)
+                .map(([key, value]) => {
+                  const point = value as { x?: unknown; y?: unknown };
+                  return typeof point?.x === 'number' && typeof point?.y === 'number'
+                    ? [key, { x: point.x, y: point.y }]
+                    : null;
+                })
+                .filter((entry): entry is [string, NodePosition] => entry !== null)
+            )
+          : {},
       publicAssets: Array.isArray(parsed.publicAssets) ? parsed.publicAssets : [],
       shots: Array.isArray(parsed.shots)
         ? parsed.shots.map((shot) => ({

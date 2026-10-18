@@ -957,5 +957,6 @@
   "drama.view.fit": "全体表示",
   "drama.view.fitHint": "全体表示 (Shift+1)",
   "drama.view.undo": "元に戻す",
-  "drama.view.redo": "やり直す"
+  "drama.view.redo": "やり直す",
+  "drama.view.resetLayout": "レイアウト整理"
 }

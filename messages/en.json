@@ -957,5 +957,6 @@
   "drama.view.fit": "Fit view",
   "drama.view.fitHint": "Fit view (Shift+1)",
   "drama.view.undo": "Undo",
-  "drama.view.redo": "Redo"
+  "drama.view.redo": "Redo",
+  "drama.view.resetLayout": "Tidy layout"
 }

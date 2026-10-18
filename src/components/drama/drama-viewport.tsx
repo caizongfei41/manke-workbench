@@ -53,11 +53,17 @@ export function DramaViewport({
   contentWidth,
   contentHeight,
   markers,
+  onScaleChange,
+  onResetLayout,
   children,
 }: {
   contentWidth: number;
   contentHeight: number;
   markers: ViewportMarker[];
+  /** Reported so drag maths can convert screen pixels to content pixels. */
+  onScaleChange?: (scale: number) => void;
+  /** Clears any dragged positions and returns to the default pipeline layout. */
+  onResetLayout?: () => void;
   children: ReactNode;
 }) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +75,10 @@ export function DramaViewport({
   const [panning, setPanning] = useState(false);
 
   const clampScale = (k: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, k));
+
+  useEffect(() => {
+    onScaleChange?.(view.k);
+  }, [onScaleChange, view.k]);
 
   const fit = useCallback(() => {
     const el = viewportRef.current;
@@ -233,6 +243,41 @@ export function DramaViewport({
     return () => window.removeEventListener('keydown', onKey);
   }, [fit, zoomByCenter]);
 
+  /** Put a content-space point in the middle of the viewport. */
+  const centerOn = useCallback((contentX: number, contentY: number) => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setView((current) => ({
+      ...current,
+      x: rect.width / 2 - contentX * current.k,
+      y: rect.height / 2 - contentY * current.k,
+    }));
+  }, []);
+
+  const minimapRef = useRef<HTMLDivElement | null>(null);
+  const minimapDraggingRef = useRef(false);
+  const [viewportBox, setViewportBox] = useState({ x: 0, y: 0, w: 1, h: 1 });
+
+  // The rectangle drawn on the minimap.
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setViewportBox({
+        x: -view.x / view.k,
+        y: -view.y / view.k,
+        w: rect.width / view.k,
+        h: rect.height / view.k,
+      });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [view]);
+
   const minimap = useMemo(() => {
     const W = 168;
     const H = 112;
@@ -309,6 +354,19 @@ export function DramaViewport({
         >
           <Maximize2 className="size-3.5" />
         </button>
+        {onResetLayout ? (
+          <>
+            <span className="mx-0.5 h-4 w-px bg-ink/[0.12]" />
+            <button
+              type="button"
+              onClick={onResetLayout}
+              title={m['drama.view.resetLayout']()}
+              className="rounded-full px-2 py-0.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
+            >
+              {m['drama.view.resetLayout']()}
+            </button>
+          </>
+        ) : null}
         <span className="mx-0.5 h-4 w-px bg-ink/[0.12]" />
         <button
           type="button"
@@ -328,9 +386,34 @@ export function DramaViewport({
         </button>
       </div>
 
-      {/* Minimap: with forty workbenches this is how you stay oriented. */}
+      {/* Minimap: with forty workbenches this is how you stay oriented. Click to jump. */}
       <div
-        className="pointer-events-none absolute bottom-4 right-4 hidden overflow-hidden rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)]/92 shadow-[0_10px_26px_rgba(0,0,0,0.16)] backdrop-blur sm:block"
+        ref={minimapRef}
+        role="presentation"
+        onPointerDown={(event) => {
+          minimapDraggingRef.current = true;
+          event.currentTarget.setPointerCapture(event.pointerId);
+          const rect = event.currentTarget.getBoundingClientRect();
+          centerOn(
+            (event.clientX - rect.left - minimap.pad) / minimap.k,
+            (event.clientY - rect.top - minimap.pad) / minimap.k
+          );
+        }}
+        onPointerMove={(event) => {
+          if (!minimapDraggingRef.current) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          centerOn(
+            (event.clientX - rect.left - minimap.pad) / minimap.k,
+            (event.clientY - rect.top - minimap.pad) / minimap.k
+          );
+        }}
+        onPointerUp={() => {
+          minimapDraggingRef.current = false;
+        }}
+        onPointerCancel={() => {
+          minimapDraggingRef.current = false;
+        }}
+        className="absolute bottom-4 right-4 hidden cursor-pointer overflow-hidden rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)]/92 shadow-[0_10px_26px_rgba(0,0,0,0.16)] backdrop-blur sm:block"
         style={{ width: minimap.W, height: minimap.H }}
       >
         <svg width={minimap.W} height={minimap.H} aria-hidden="true">
@@ -346,6 +429,17 @@ export function DramaViewport({
               opacity={marker.tone === 'shot' ? 0.55 : 0.4}
             />
           ))}
+          <rect
+            x={minimap.pad + viewportBox.x * minimap.k}
+            y={minimap.pad + viewportBox.y * minimap.k}
+            width={Math.max(6, viewportBox.w * minimap.k)}
+            height={Math.max(6, viewportBox.h * minimap.k)}
+            rx={2}
+            fill="none"
+            stroke="var(--beat-accent)"
+            strokeWidth={1.2}
+            opacity={0.9}
+          />
         </svg>
       </div>
     </div>
