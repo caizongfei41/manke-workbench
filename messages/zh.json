@@ -940,7 +940,7 @@
   "drama.final.subtitle": "{shots} 段 · {seconds} 秒",
   "drama.final.hint": "按顺序把每一段首尾衔接，直接合成一条完整短剧。",
   "drama.final.run": "一键合成整片",
-  "drama.final.running": "合成中…",
+  "drama.final.running": "生成中…",
   "drama.final.failed": "合成失败",
   "drama.error.noTask": "生成请求没有返回任务号",
   "drama.error.failed": "生成失败",
@@ -971,5 +971,11 @@
   "drama.final.subtitles": "台词烧进画面",
   "drama.final.bgmNone": "没有背景音乐",
   "drama.final.bgmPick": "选音乐",
-  "drama.final.bgmVolume": "音乐音量"
+  "drama.final.bgmVolume": "音乐音量",
+  "drama.error.timeout": "超时未完成",
+  "drama.final.resume": "续跑未完成的 {count} 段",
+  "drama.final.rerun": "重跑失败段",
+  "drama.final.stop": "停止",
+  "drama.final.allDone": "全部 {count} 段都已完成",
+  "drama.final.progress": "正在跑第 {done}/{total} 段"
 }

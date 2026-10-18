@@ -940,7 +940,7 @@
   "drama.final.subtitle": "{shots} shots · {seconds}s",
   "drama.final.hint": "Chains every shot head-to-tail into one finished short drama.",
   "drama.final.run": "Assemble the whole film",
-  "drama.final.running": "Assembling…",
+  "drama.final.running": "Generating…",
   "drama.final.failed": "Assembly failed",
   "drama.error.noTask": "The generation request returned no task id",
   "drama.error.failed": "Generation failed",
@@ -971,5 +971,11 @@
   "drama.final.subtitles": "Burn in dialogue",
   "drama.final.bgmNone": "No music",
   "drama.final.bgmPick": "Pick music",
-  "drama.final.bgmVolume": "Music level"
+  "drama.final.bgmVolume": "Music level",
+  "drama.error.timeout": "Timed out",
+  "drama.final.resume": "Resume the {count} missing shots",
+  "drama.final.rerun": "Retry failed shots",
+  "drama.final.stop": "Stop",
+  "drama.final.allDone": "All {count} shots are done",
+  "drama.final.progress": "Shot {done} of {total}"
 }

@@ -583,7 +583,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
       .catch(() => {});
   };
 
-  const generateShot = async (shot: DramaShot) => {
+  const generateShot = async (shot: DramaShot): Promise<boolean> => {
     setBusyShot(shot.id);
     setShot(shot.id, { status: 'running', error: null });
     try {
@@ -641,21 +641,25 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             status: 'succeeded',
             videoUrl: item?.resultUrl ?? null,
           });
-          break;
+          return true;
         }
         if (status?.status === 'failed') {
           setShot(shot.id, {
             status: 'failed',
             error: String(status.error ?? m['drama.error.failed']()),
           });
-          break;
+          return false;
         }
       }
+      // A timeout counts as a failure; the caller decides whether to retry.
+      setShot(shot.id, { status: 'failed', error: m['drama.error.timeout']() });
+      return false;
     } catch (error) {
       setShot(shot.id, {
         status: 'failed',
         error: error instanceof Error ? error.message : m['drama.error.failed'](),
       });
+      return false;
     } finally {
       setBusyShot(null);
     }
@@ -667,6 +671,45 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
    * Re-running forty segments to change one line takes an hour; concatenating
    * the finished clips takes seconds and loses nothing.
    */
+  // ---- Resumable pipeline ----------------------------------------------
+  // The whole film used to be one graph: a failure at segment 30 threw away
+  // thirty minutes of work. Each shot is now its own job and its result is
+  // persisted immediately, so a run resumes where it stopped.
+  const [pipeline, setPipeline] = useState<{
+    running: boolean;
+    done: number;
+    total: number;
+  }>({ running: false, done: 0, total: 0 });
+  const stopPipelineRef = useRef(false);
+
+  const pendingShots = () =>
+    doc.shots.filter(
+      (shot) => isInFinal(shot.id) && (!shot.videoUrl || shot.status === 'failed')
+    );
+
+  const runPipeline = async ({ retry }: { retry: boolean }) => {
+    if (pipeline.running) return;
+    const queue = doc.shots.filter(
+      (shot) =>
+        isInFinal(shot.id) &&
+        (!shot.videoUrl || (retry && shot.status === 'failed'))
+    );
+    if (queue.length === 0) return;
+
+    stopPipelineRef.current = false;
+    setPipeline({ running: true, done: 0, total: queue.length });
+
+    for (let index = 0; index < queue.length; index += 1) {
+      if (stopPipelineRef.current) break;
+      setPipeline({ running: true, done: index, total: queue.length });
+      // Each setShot persists the snapshot, so every shot is a checkpoint.
+      await generateShot(queue[index]);
+    }
+
+    setPipeline({ running: false, done: 0, total: 0 });
+    stopPipelineRef.current = false;
+  };
+
   const bgmFileRef = useRef<HTMLInputElement | null>(null);
 
   const uploadBgm = async (file: File) => {
@@ -1547,6 +1590,40 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 </label>
               ) : null}
             </div>
+
+            {pipeline.running ? (
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className="flex-1 text-[10px] tabular-nums text-[var(--beat-accent)]">
+                  {m['drama.final.progress']({
+                    done: pipeline.done + 1,
+                    total: pipeline.total,
+                  })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopPipelineRef.current = true;
+                  }}
+                  className="rounded-[6px] border border-ink/[0.14] px-2 py-0.5 text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+                >
+                  {m['drama.final.stop']()}
+                </button>
+              </div>
+            ) : pendingShots().length > 0 ? (
+              <button
+                type="button"
+                onClick={() => void runPipeline({ retry: true })}
+                className="mt-1.5 w-full rounded-[8px] bg-[var(--beat-accent)] py-1.5 text-[10.5px] font-medium text-white transition hover:opacity-90"
+              >
+                {doc.shots.some((s) => isInFinal(s.id) && s.status === 'failed')
+                  ? m['drama.final.rerun']()
+                  : m['drama.final.resume']({ count: pendingShots().length })}
+              </button>
+            ) : doc.shots.length > 0 ? (
+              <p className="mt-1.5 text-[10px] text-[var(--beat-text-3)]">
+                {m['drama.final.allDone']({ count: doc.shots.length })}
+              </p>
+            ) : null}
 
             {generatedClips > 0 ? (
               <button

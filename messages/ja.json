@@ -940,7 +940,7 @@
   "drama.final.subtitle": "{shots} ショット · {seconds} 秒",
   "drama.final.hint": "各ショットを順に繋いで 1 本の短編に仕上げます。",
   "drama.final.run": "全編を合成",
-  "drama.final.running": "合成中…",
+  "drama.final.running": "生成中…",
   "drama.final.failed": "合成に失敗",
   "drama.error.noTask": "生成リクエストにタスク ID がありません",
   "drama.error.failed": "生成に失敗",
@@ -971,5 +971,11 @@
   "drama.final.subtitles": "セリフを焼き込む",
   "drama.final.bgmNone": "BGM なし",
   "drama.final.bgmPick": "音楽を選ぶ",
-  "drama.final.bgmVolume": "音楽の音量"
+  "drama.final.bgmVolume": "音楽の音量",
+  "drama.error.timeout": "タイムアウト",
+  "drama.final.resume": "未完了の {count} 本を再開",
+  "drama.final.rerun": "失敗した分をやり直す",
+  "drama.final.stop": "停止",
+  "drama.final.allDone": "全 {count} 本が完了",
+  "drama.final.progress": "{done}/{total} 本目を実行中"
 }
