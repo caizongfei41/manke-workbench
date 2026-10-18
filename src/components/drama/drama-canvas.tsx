@@ -14,6 +14,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ImageHoverPreview } from '@/components/app/image-hover-preview';
 import { DramaViewport, type ViewportMarker } from '@/components/drama/drama-viewport';
+import {
+  classifyGenerationFailure,
+  type GenerationFailureKind,
+} from '@/core/app/comfy-monitor';
 import { CastLibraryButton } from '@/components/drama/cast-library-button';
 import { HelpPopover, type HelpId } from '@/components/drama/help-popover';
 import { HintTip } from '@/components/app/hint-tip';
@@ -670,6 +674,28 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
   // Subtitles are burned by us, so the model must not draw the dialogue too.
   const effectiveEnhance = () => withSubtitleSuppression(doc.enhance, doc.subtitles);
+
+  // Name the failure and say what to do about it; a raw stack tells nobody whether
+  // retrying is even worth it.
+  const FAILURE_LABELS: Record<GenerationFailureKind, () => string> = {
+    outOfMemory: m['fail.outOfMemory'],
+    timeout: m['fail.timeout'],
+    missingNode: m['fail.missingNode'],
+    missingModel: m['fail.missingModel'],
+    cancelled: m['fail.cancelled'],
+    invalidInput: m['fail.invalidInput'],
+    unknown: m['fail.unknown'],
+  };
+
+  const FAILURE_HINTS: Record<GenerationFailureKind, () => string> = {
+    outOfMemory: m['fail.hint.outOfMemory'],
+    timeout: m['fail.hint.timeout'],
+    missingNode: m['fail.hint.missingNode'],
+    missingModel: m['fail.hint.missingModel'],
+    cancelled: m['fail.hint.cancelled'],
+    invalidInput: m['fail.hint.invalidInput'],
+    unknown: m['fail.hint.unknown'],
+  };
 
   const ENHANCE_LABELS: Record<EnhanceRuleId, () => string> = {
     soloSubject: m['drama.enhance.soloSubject'],
@@ -1824,9 +1850,22 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   <Trash2 className="size-3" />
                 </button>
               </div>
-              {shot.error ? (
-                <p className="mt-1 line-clamp-2 text-[9px] text-red-400">{shot.error}</p>
-              ) : null}
+              {shot.error
+                ? (() => {
+                    const kind = classifyGenerationFailure(shot.error);
+                    return (
+                      <div className="mt-1 flex flex-col gap-0.5">
+                        <p className="text-[9px] font-medium text-red-400">
+                          {FAILURE_LABELS[kind]()}
+                          <span className="ml-1 font-normal text-[var(--beat-text-3)]">
+                            {FAILURE_HINTS[kind]()}
+                          </span>
+                        </p>
+                        <p className="line-clamp-2 text-[8.5px] text-[var(--beat-text-3)]">{shot.error}</p>
+                      </div>
+                    );
+                  })()
+                : null}
               {(() => {
                 const versions = shot.versions ?? [];
                 if (versions.length === 0) return null;

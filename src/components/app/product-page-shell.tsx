@@ -5,6 +5,7 @@ import { Images, LayoutPanelTop, Scissors, Server, Workflow } from 'lucide-react
 import { WorkspaceApiConfigDialog } from '@/components/app/workspace-api-config-dialog';
 import { LanguageSwitcher } from '@/components/app/language-switcher';
 import { ThemeToggle } from '@/components/app/theme-toggle';
+import { ComfyMonitorPill } from '@/components/app/comfy-monitor-pill';
 import { GitHubIcon } from '@/components/icons/github';
 import { REPOSITORY_URL } from '@/core/app/repository';
 import { Link } from '@/core/i18n/navigation';
@@ -183,6 +184,7 @@ export function ProductPageShell({
               ) : null}
               <ThemeToggle />
               <LanguageSwitcher variant="workspace" />
+              <ComfyMonitorPill className="hidden md:inline-flex" />
               <ServicesStatusEntry />
               <WorkspaceApiConfigDialog
                 providerId={ACTIVE_GENERATION_PROVIDER_ID}
