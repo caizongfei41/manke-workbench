@@ -997,7 +997,7 @@
   "help.assets.title": "Shared assets",
   "help.assets.body": "Cast, scenes and props used by the whole film.\n\"Swap image\" uploads a portrait — only assets with an image become references.\nShots inherit whoever they mention, which is what keeps faces stable.",
   "help.params.title": "Generation settings",
-  "help.params.body": "Resolution, sampling, LoRA and prompt reinforcement live here.\nOnly what you changed is sent; the rest keeps the template defaults.\nSubtitles on also suppresses the model drawing dialogue, or you get two captions.",
+  "help.params.body": "Resolution, sampling, LoRA and prompt reinforcement live here.\nThese apply to the whole film and need no wiring: the graph has a single global\nparameter node, so per-shot settings are not possible.\nOnly what you changed is sent; the rest keeps the template defaults.\nSubtitles on also suppresses the model drawing dialogue, or you get two captions.",
   "help.shot.title": "Shot workbench",
   "help.shot.body": "One shot is one job, and a run can be resumed.\nGenerating again keeps every take; flip through them with ‹ ›.\nOnly the take you adopt goes into the film.",
   "help.final.title": "Final cut",

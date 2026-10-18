@@ -319,11 +319,54 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     });
   }, []);
 
+  // Rects cannot rely on requestAnimationFrame alone: the one scheduled at mount
+  // may never run (background tab, commit timing), and then nodes are never
+  // measured — no wires, no drag math. Measure now and track resizes too.
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => measure());
+    resizeObserverRef.current = observer;
+    for (const el of nodeRefs.current.values()) observer.observe(el);
+    return () => {
+      observer.disconnect();
+      resizeObserverRef.current = null;
+    };
+  }, [measure]);
+
+  // One callback per id, cached: a fresh arrow each render makes React detach and
+  // re-attach every ref on every render, and since measuring sets state that turned
+  // into an endless render loop (React error #185).
+  const nodeRefCallbacks = useRef(new Map<string, (el: HTMLDivElement | null) => void>());
+
+  // Moving a node changes its offsetLeft without changing its size, which a
+  // ResizeObserver cannot see; re-measure whenever the document changes so the
+  // wires follow the card.
+  useEffect(() => {
+    measure();
+  }, [doc, measure]);
+
   const registerNode = useCallback(
-    (id: string) => (el: HTMLDivElement | null) => {
-      if (el) nodeRefs.current.set(id, el);
-      else nodeRefs.current.delete(id);
-      requestAnimationFrame(measure);
+    (id: string) => {
+      const existing = nodeRefCallbacks.current.get(id);
+      if (existing) return existing;
+      const callback = (el: HTMLDivElement | null) => {
+        const observer = resizeObserverRef.current;
+        if (el) {
+          nodeRefs.current.set(id, el);
+          observer?.observe(el);
+        } else {
+          const previous = nodeRefs.current.get(id);
+          if (previous) observer?.unobserve(previous);
+          nodeRefs.current.delete(id);
+        }
+        // Layout is already computed by the time a ref callback runs.
+        measure();
+        requestAnimationFrame(measure);
+      };
+      nodeRefCallbacks.current.set(id, callback);
+      return callback;
     },
     [measure]
   );
@@ -1448,7 +1491,6 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             })}
             icon={<Sliders className="size-3.5" />}
             helpId="params"
-            ports={{ inputId: 'params', onStartLink: beginLink('params') }}
           >
             <div className="flex max-h-[340px] flex-col gap-2 overflow-y-auto pr-1">
               {(['output', 'motion', 'sampling', 'memory'] as const).map((group) => (
