@@ -1090,6 +1090,42 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     ...Object.values(rects).map((rect) => rect.y + rect.h + 80)
   );
 
+  /**
+   * Tidy the board: columns in pipeline order, each stack spaced by the measured
+   * height of its cards rather than a fixed pitch, so a tall workbench does not
+   * collide with the next one. The final cut centres on the shot column.
+   */
+  const autoArrange = () => {
+    const GAP = 32;
+    const TOP = 40;
+    const heightOf = (id: string, fallback: number) => rects[id]?.h || fallback;
+
+    const positions: Record<string, { x: number; y: number }> = {};
+
+    positions.script = { x: COLUMN.script, y: TOP };
+    positions.board = { x: COLUMN.board, y: TOP };
+
+    const assetsHeight = heightOf('assets', 330);
+    positions.assets = { x: COLUMN.assets, y: TOP };
+    positions.params = { x: COLUMN.assets, y: TOP + assetsHeight + GAP };
+
+    let y = TOP;
+    for (const shot of doc.shots) {
+      positions[shot.id] = { x: COLUMN.shots, y };
+      y += heightOf(shot.id, 300) + GAP;
+    }
+
+    const shotStackHeight = Math.max(0, y - GAP - TOP);
+    const finalHeight = heightOf('final', 150);
+    // Centre the final cut on the shot column so the pipeline reads as one flow.
+    positions.final = {
+      x: COLUMN.final,
+      y: TOP + Math.max(0, (shotStackHeight - finalHeight) / 2),
+    };
+
+    updateDoc((current) => ({ ...current, positions }));
+  };
+
   const resetLayout = () =>
     updateDoc((current) => ({ ...current, positions: {} }));
 
@@ -1183,6 +1219,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
         viewScaleRef.current = scale;
       }}
       onResetLayout={resetLayout}
+      onAutoArrange={autoArrange}
       onMarquee={onMarquee}
       apiRef={viewportApi}
       onUndo={undo}

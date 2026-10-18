@@ -1019,5 +1019,6 @@
   "startHere.image.prompt": "电影感静帧：黄金时刻的山脊，薄雾分层，宽画幅，胶片颗粒，青橙色调",
   "startHere.video.prompt": "中景，人物在雨夜街头停下脚步，镜头缓慢推近，冷色调，浅景深",
   "startHere.audio.prompt": "悬疑氛围配乐，低频铺底，稀疏钢琴，缓慢推进，约 30 秒",
-  "startHere.analysis.prompt": "上传一段影片或一张图，分析会拆出镜头、节奏与可复用的描述。"
+  "startHere.analysis.prompt": "上传一段影片或一张图，分析会拆出镜头、节奏与可复用的描述。",
+  "drama.view.autoArrange": "自动排版"
 }

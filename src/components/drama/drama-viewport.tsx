@@ -56,6 +56,7 @@ export function DramaViewport({
   markers,
   onScaleChange,
   onResetLayout,
+  onAutoArrange,
   onMarquee,
   apiRef,
   onUndo,
@@ -71,6 +72,8 @@ export function DramaViewport({
   onScaleChange?: (scale: number) => void;
   /** Clears any dragged positions and returns to the default pipeline layout. */
   onResetLayout?: () => void;
+  /** Tidies the board: columns aligned, stacks spaced by measured height. */
+  onAutoArrange?: () => void;
   /** Reports a marquee in content coordinates, or null when it was a click. */
   onMarquee?: (rect: { x: number; y: number; w: number; h: number } | null, additive: boolean) => void;
   /** Lets the board move the view, e.g. to reveal a node it just created. */
@@ -492,6 +495,19 @@ export function DramaViewport({
         >
           <Maximize2 className="size-3.5" />
         </button>
+        {onAutoArrange ? (
+          <>
+            <span className="mx-0.5 h-4 w-px bg-ink/[0.12]" />
+            <button
+              type="button"
+              onClick={onAutoArrange}
+              title={m['drama.view.autoArrange']()}
+              className="rounded-full px-2 py-0.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
+            >
+              {m['drama.view.autoArrange']()}
+            </button>
+          </>
+        ) : null}
         {onResetLayout ? (
           <>
             <span className="mx-0.5 h-4 w-px bg-ink/[0.12]" />

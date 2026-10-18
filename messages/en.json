@@ -1019,5 +1019,6 @@
   "startHere.image.prompt": "Cinematic still: a mountain ridge at golden hour, layered haze, wide frame, film grain, teal and amber",
   "startHere.video.prompt": "Medium shot, a figure stops on a rainy street, slow push in, cool grade, shallow depth of field",
   "startHere.audio.prompt": "Suspense score, low bed, sparse piano, slow build, about thirty seconds",
-  "startHere.analysis.prompt": "Upload a clip or an image and the analysis breaks it into shots, pacing and reusable notes."
+  "startHere.analysis.prompt": "Upload a clip or an image and the analysis breaks it into shots, pacing and reusable notes.",
+  "drama.view.autoArrange": "Tidy up"
 }
