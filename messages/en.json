@@ -984,5 +984,11 @@
   "drama.version.adopt": "Use this take",
   "drama.version.adopted": "Adopted",
   "drama.final.toEditor": "Open in the editor",
-  "drama.final.editorName": "Edit {time}"
+  "drama.final.editorName": "Edit {time}",
+  "drama.final.preset": "Export size",
+  "drama.preset.source": "As rendered (16:9)",
+  "drama.preset.vertical": "Vertical 1080×1920",
+  "drama.preset.vertical720": "Vertical 720×1280",
+  "drama.preset.square": "Square 1080×1080",
+  "drama.preset.landscape": "Landscape 1920×1080"
 }

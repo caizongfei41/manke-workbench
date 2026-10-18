@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
-import { buildAssSubtitle, buildSubtitleCues, extractDialogue } from './subtitles';
+import {
+  EXPORT_PRESETS,
+  buildAssSubtitle,
+  buildSubtitleCues,
+  extractDialogue,
+  presetPlayRes,
+} from './subtitles';
 
 describe('extractDialogue', () => {
   test('takes the spoken line and drops the language tag', () => {
@@ -72,5 +78,28 @@ describe('buildAssSubtitle', () => {
   test('accepts a custom font size', () => {
     const ass = buildAssSubtitle([{ start: 0, end: 1, text: 'a' }], { fontPx: 60 });
     assert.ok(ass.includes(',Microsoft YaHei,60,'));
+  });
+});
+
+describe('export presets', () => {
+  test('leaves the frame alone for source', () => {
+    assert.equal(EXPORT_PRESETS.source.mode, 'none');
+    assert.deepEqual(presetPlayRes('source'), { playResX: 1280, playResY: 720 });
+  });
+
+  test('vertical is the 1080x1920 short-drama target', () => {
+    assert.equal(EXPORT_PRESETS.vertical.width, 1080);
+    assert.equal(EXPORT_PRESETS.vertical.height, 1920);
+    assert.deepEqual(presetPlayRes('vertical'), { playResX: 1080, playResY: 1920 });
+  });
+
+  test('falls back to source for an unknown id', () => {
+    assert.deepEqual(presetPlayRes('nonsense'), { playResX: 1280, playResY: 720 });
+  });
+
+  test('writes the requested PlayRes into the ASS header', () => {
+    const ass = buildAssSubtitle([{ start: 0, end: 1, text: 'a' }], presetPlayRes('vertical'));
+    assert.ok(ass.includes('PlayResX: 1080'));
+    assert.ok(ass.includes('PlayResY: 1920'));
   });
 });

@@ -984,5 +984,11 @@
   "drama.version.adopt": "このテイクを採用",
   "drama.version.adopted": "採用済み",
   "drama.final.toEditor": "編集台で開く",
-  "drama.final.editorName": "編集 {time}"
+  "drama.final.editorName": "編集 {time}",
+  "drama.final.preset": "書き出しサイズ",
+  "drama.preset.source": "元のまま（16:9）",
+  "drama.preset.vertical": "縦 1080×1920",
+  "drama.preset.vertical720": "縦 720×1280",
+  "drama.preset.square": "正方形 1080×1080",
+  "drama.preset.landscape": "横 1920×1080"
 }

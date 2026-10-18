@@ -32,7 +32,13 @@ import {
   type DramaShot,
 } from '@/core/drama/drama-document';
 import { ASSET_KIND_LABELS, type ScriptAsset } from '@/core/effects/script-document';
-import { buildAssSubtitle, buildSubtitleCues } from '@/core/drama/subtitles';
+import {
+  EXPORT_PRESETS,
+  buildAssSubtitle,
+  buildSubtitleCues,
+  presetPlayRes,
+  type ExportPresetId,
+} from '@/core/drama/subtitles';
 import {
   COMMON_LORAS,
   DIRECTOR_FIELDS,
@@ -550,6 +556,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
       ),
     }));
 
+  // Explicit map: paraglide's message table is typed, so a composed key will not index it.
+  const PRESET_LABELS: Record<ExportPresetId, () => string> = {
+    source: m['drama.preset.source'],
+    vertical: m['drama.preset.vertical'],
+    vertical720: m['drama.preset.vertical720'],
+    square: m['drama.preset.square'],
+    landscape: m['drama.preset.landscape'],
+  };
+
   const usesSharedAssets = (shotId: string) => hasLink('assets', shotId);
   const isInFinal = (shotId: string) => hasLink(shotId, 'final');
 
@@ -803,9 +818,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   doc.shots
                     .filter((shot) => isInFinal(shot.id))
                     .map((shot) => ({ prompt: shot.prompt, seconds: shot.seconds }))
-                )
+                ),
+                presetPlayRes(doc.exportPreset)
               )
             : '',
+          exportPreset: doc.exportPreset,
           bgmAssetId: doc.bgmAssetId ?? '',
           bgmVolume: doc.bgmVolume,
         }),
@@ -1617,6 +1634,27 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               <p className="mt-1.5 text-[9px] text-red-400">{m['drama.final.failed']()}</p>
             ) : null}
             <div className="mt-2 flex flex-col gap-1.5">
+              <label className="flex items-center justify-between gap-2">
+                <span className="text-[10px] text-[var(--beat-text-2)]">
+                  {m['drama.final.preset']()}
+                </span>
+                <select
+                  value={doc.exportPreset}
+                  onChange={(event) =>
+                    setDoc((current) => ({
+                      ...current,
+                      exportPreset: event.target.value,
+                    }))
+                  }
+                  className="w-[132px] rounded-[5px] border border-ink/[0.1] bg-ink/[0.03] px-1 py-0.5 text-[9.5px] text-[var(--beat-text-1)] outline-none focus:border-ink/25"
+                >
+                  {(Object.keys(EXPORT_PRESETS) as ExportPresetId[]).map((id) => (
+                    <option key={id} value={id}>
+                      {PRESET_LABELS[id]()}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="flex items-center justify-between gap-2">
                 <span className="text-[10px] text-[var(--beat-text-2)]">
                   {m['drama.final.subtitles']()}

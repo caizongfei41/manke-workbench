@@ -13,6 +13,10 @@ import {
 } from '@/core/projects/local-project-assets';
 import { getProject } from '@/core/projects/projects';
 import {
+  EXPORT_PRESETS,
+  type ExportPresetId,
+} from '@/core/drama/subtitles';
+import {
   getProjectAssetById,
   linkProjectAsset,
   recordUserAsset,
@@ -67,6 +71,7 @@ async function POST({
     subtitles?: unknown;
     bgmAssetId?: unknown;
     bgmVolume?: unknown;
+    exportPreset?: unknown;
   } | null;
 
   const assetIds = Array.isArray(payload?.assetIds)
@@ -83,6 +88,8 @@ async function POST({
   if (subtitleText.length > MAX_SUBTITLE_BYTES) {
     return Response.json({ error: 'Subtitle track too large' }, { status: 400 });
   }
+  const presetId = typeof payload?.exportPreset === 'string' ? payload.exportPreset : 'source';
+  const preset = EXPORT_PRESETS[(presetId as ExportPresetId) ?? 'source'] ?? EXPORT_PRESETS.source;
   const bgmAssetId = typeof payload?.bgmAssetId === 'string' ? payload.bgmAssetId : '';
   const rawVolume = typeof payload?.bgmVolume === 'number' ? payload.bgmVolume : 0.25;
   const bgmVolume = Math.min(2, Math.max(0, rawVolume));
@@ -118,7 +125,8 @@ async function POST({
     }
 
     const wantsSubtitles = subtitleText.trim().length > 0;
-    const needsReencode = wantsSubtitles || !!bgmPath;
+    const wantsResize = preset.mode !== 'none';
+    const needsReencode = wantsSubtitles || !!bgmPath || wantsResize;
 
     if (!needsReencode) {
       await run(FFMPEG, ['-y', '-i', joined, '-c', 'copy', outFile]);
@@ -130,12 +138,19 @@ async function POST({
       }
 
       const filters: string[] = [];
+      if (wantsResize) {
+        // Scale up to fill, then centre-crop: a vertical cut with no bars.
+        filters.push(
+          `[0:v]scale=${preset.width}:${preset.height}:force_original_aspect_ratio=increase,crop=${preset.width}:${preset.height},setsar=1[scaled]`
+        );
+      }
+      const videoBase = wantsResize ? '[scaled]' : '[0:v]';
       if (wantsSubtitles) {
         const assFile = join(workDir, 'subs.ass');
         await writeFile(assFile, subtitleText, 'utf8');
         // Backslashes and colons are separators inside a filter argument.
         const escaped = assFile.replace(/\\/g, '/').replace(/:/g, '\\:');
-        filters.push(`[0:v]subtitles='${escaped}'[v]`);
+        filters.push(`${videoBase}subtitles='${escaped}'[v]`);
       }
       if (bgmPath) {
         filters.push(`[1:a]volume=${bgmVolume}[music]`);
@@ -143,7 +158,7 @@ async function POST({
       }
 
       if (filters.length > 0) args.push('-filter_complex', filters.join(';'));
-      args.push('-map', wantsSubtitles ? '[v]' : '0:v');
+      args.push('-map', wantsSubtitles ? '[v]' : wantsResize ? '[scaled]' : '0:v');
       args.push('-map', bgmPath ? '[a]' : '0:a?');
       args.push(
         '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20',
@@ -186,6 +201,9 @@ async function POST({
       clips: assetIds.length,
       subtitles: wantsSubtitles,
       music: !!bgmPath,
+      preset: presetId,
+      width: preset.width || null,
+      height: preset.height || null,
     });
   } catch (error) {
     return Response.json(

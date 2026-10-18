@@ -89,6 +89,8 @@ export type DramaDocument = {
   loras: DramaLora[];
   /** Burn the dialogue into the picture when assembling. */
   subtitles: boolean;
+  /** Export target; see EXPORT_PRESETS. */
+  exportPreset: string;
   /** Music bed mixed under the generated audio. */
   bgmAssetId?: string | null;
   bgmName?: string | null;
@@ -120,6 +122,7 @@ export const createEmptyDramaDocument = (): DramaDocument => ({
   params: {},
   loras: [],
   subtitles: true,
+  exportPreset: 'vertical',
   bgmAssetId: null,
   bgmName: null,
   bgmVolume: 0.25,
@@ -226,6 +229,7 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
           ? (parsed.params as DramaParams)
           : {},
       subtitles: parsed.subtitles === true,
+      exportPreset: typeof parsed.exportPreset === 'string' ? parsed.exportPreset : 'vertical',
       bgmAssetId: typeof parsed.bgmAssetId === 'string' ? parsed.bgmAssetId : null,
       bgmName: typeof parsed.bgmName === 'string' ? parsed.bgmName : null,
       bgmVolume: typeof parsed.bgmVolume === 'number' ? parsed.bgmVolume : 0.25,

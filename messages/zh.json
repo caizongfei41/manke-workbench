@@ -984,5 +984,11 @@
   "drama.version.adopt": "采用这版",
   "drama.version.adopted": "已采用",
   "drama.final.toEditor": "送进剪辑台",
-  "drama.final.editorName": "剪辑 {time}"
+  "drama.final.editorName": "剪辑 {time}",
+  "drama.final.preset": "导出规格",
+  "drama.preset.source": "原样（16:9）",
+  "drama.preset.vertical": "竖屏 1080×1920",
+  "drama.preset.vertical720": "竖屏 720×1280",
+  "drama.preset.square": "方形 1080×1080",
+  "drama.preset.landscape": "横屏 1920×1080"
 }

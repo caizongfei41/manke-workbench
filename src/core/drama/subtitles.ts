@@ -91,18 +91,27 @@ const assTime = (seconds: number) => {
  */
 export const buildAssSubtitle = (
   cues: SubtitleCue[],
-  options: { fontName?: string; fontPx?: number; marginBottom?: number } = {}
+  options: {
+    fontName?: string;
+    fontPx?: number;
+    marginBottom?: number;
+    /** Must match the exported frame, or libass stretches the text. */
+    playResX?: number;
+    playResY?: number;
+  } = {}
 ): string => {
   const fontName = options.fontName ?? 'Microsoft YaHei';
   const fontPx = options.fontPx ?? 42;
   const marginBottom = options.marginBottom ?? 48;
+  const playResX = options.playResX ?? 1280;
+  const playResY = options.playResY ?? 720;
   const header = [
     '[Script Info]',
     'ScriptType: v4.00+',
     'WrapStyle: 2',
     'ScaledBorderAndShadow: yes',
-    'PlayResX: 1280',
-    'PlayResY: 720',
+    `PlayResX: ${playResX}`,
+    `PlayResY: ${playResY}`,
     '',
     '[V4+ Styles]',
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
@@ -117,4 +126,32 @@ export const buildAssSubtitle = (
       `Dialogue: 0,${assTime(cue.start)},${assTime(cue.end)},Default,,0,0,0,,${cue.text}`
   );
   return [...header, ...events, ''].join('\n');
+};
+
+/**
+ * Export targets.
+ *
+ * The board renders 16:9, but a short drama is published vertical: 1080x1920 is
+ * what Douyin and Kuaishou take. "cover" scales until the frame is filled and
+ * then centre-crops, which keeps the picture edge to edge instead of adding bars.
+ */
+export type ExportPresetId = 'source' | 'vertical' | 'vertical720' | 'square' | 'landscape';
+
+export const EXPORT_PRESETS: Record<
+  ExportPresetId,
+  { width: number; height: number; mode: 'none' | 'cover' }
+> = {
+  source: { width: 0, height: 0, mode: 'none' },
+  vertical: { width: 1080, height: 1920, mode: 'cover' },
+  vertical720: { width: 720, height: 1280, mode: 'cover' },
+  square: { width: 1080, height: 1080, mode: 'cover' },
+  landscape: { width: 1920, height: 1080, mode: 'cover' },
+};
+
+/** PlayRes for the subtitle track, so text is authored at the export size. */
+export const presetPlayRes = (id: ExportPresetId | string | undefined) => {
+  const preset = EXPORT_PRESETS[(id as ExportPresetId) ?? 'source'] ?? EXPORT_PRESETS.source;
+  return preset.mode === 'none'
+    ? { playResX: 1280, playResY: 720 }
+    : { playResX: preset.width, playResY: preset.height };
 };
