@@ -120,7 +120,7 @@ await fetch(`${APP}/api/effects/generate`, {
 }).catch(() => {});
 // 提交到真正入队有延迟（模型要加载），轮询而不是死等 6 秒
 let busyMonitor = null;
-for (let i = 0; i < 20; i += 1) {
+for (let i = 0; i < 60; i += 1) {
   await delay(1500);
   busyMonitor = await (await fetch(`${APP}/api/app/comfyui/monitor`, { headers: { origin: APP } })).json();
   if (busyMonitor.running + busyMonitor.pending > 0) break;

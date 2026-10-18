@@ -1051,5 +1051,7 @@
   "fail.hint.invalidInput": "Check the prompt and parameters against what this model supports",
   "fail.hint.unknown": "One retry is reasonable; if it fails again, check the service log",
   "drama.final.needClips": "{count} segment(s) still have no clip; generate them first",
-  "drama.final.needShots": "No segments are in the final cut yet"
+  "drama.final.needShots": "No segments are in the final cut yet",
+  "fail.serverDown": "ComfyUI is offline",
+  "fail.hint.serverDown": "The service is gone: start ComfyUI again, then re-run this shot"
 }

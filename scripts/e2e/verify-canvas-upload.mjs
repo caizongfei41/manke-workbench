@@ -1,8 +1,14 @@
 // 画布：素材上传真实落盘 + 导入分镜 + 该段拿到参考图
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
+// 测试图必须自己造：以前它只是运维目录里偶然留着的文件，换台机器就跑不了
+const FIXTURE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAACXBIWXMAAAABAAAAAQBPJcTWAAAAgUlEQVR4nNXOQQ0AIBDAsJHMFZqQhU9E3IOsCrr2uZRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMT5OzD1AOVGAktNnSC0AAAAAElFTkSuQmCC', 'base64');
+const ensureFixture = (path) => {
+  if (!existsSync(path)) writeFileSync(path, FIXTURE_PNG);
+  return path;
+};
 
 import { setTimeout as delay } from 'node:timers/promises';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 
 const CDP = process.env.VERIFY_CDP ?? 'http://127.0.0.1:9232';
 const APP = process.env.VERIFY_APP ?? 'http://127.0.0.1:3020';
@@ -148,7 +154,7 @@ const nodeIds = search.nodeIds ?? [];
 console.log('  导演台里的 file input:', nodeIds.length);
 let uploaded = false;
 if (nodeIds[0]) {
-  await send('DOM.setFileInputFiles', { files: [TEST_IMAGE], nodeId: nodeIds[0] });
+  await send('DOM.setFileInputFiles', { files: [ensureFixture(TEST_IMAGE)], nodeId: nodeIds[0] });
   await delay(5000);
   uploaded = true;
 }

@@ -67,6 +67,11 @@ describe('classifyGenerationFailure', () => {
     assert.equal(classifyGenerationFailure('execution interrupted by user'), 'cancelled');
   });
 
+  test('recognises the provider being gone', () => {
+    assert.equal(classifyGenerationFailure('TypeError: fetch failed'), 'serverDown');
+    assert.equal(classifyGenerationFailure('connect ECONNREFUSED 127.0.0.1:8188'), 'serverDown');
+  });
+
   test('falls back to unknown rather than guessing', () => {
     assert.equal(classifyGenerationFailure('something odd happened'), 'unknown');
     assert.equal(classifyGenerationFailure(null), 'unknown');
@@ -79,5 +84,6 @@ describe('classifyGenerationFailure', () => {
     assert.equal(isRetryableFailure('missingNode'), false);
     assert.equal(isRetryableFailure('missingModel'), false);
     assert.equal(isRetryableFailure('invalidInput'), false);
+    assert.equal(isRetryableFailure('serverDown'), false);
   });
 });

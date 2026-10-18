@@ -1,9 +1,9 @@
-﻿// 一致性：同一角色图进每一段、顺序稳定、<Picture N> 编号不跳
+// 一致性：同一角色图进每一段、顺序稳定、<Picture N> 编号不跳
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
 
 const COMFY = process.env.VERIFY_COMFY ?? 'http://127.0.0.1:8188';
 import { setTimeout as delay } from 'node:timers/promises';
-const APP = `${APP}`;
+const APP = process.env.VERIFY_APP ?? 'http://127.0.0.1:3020';
 const H={'content-type':'application/json','x-beatapi-workspace-request':'1',origin:APP};
 let pass=0; const fails=[];
 const check=(n,ok,d='')=>{ if(ok){pass++;console.log(`  ok   ${n}${d?'  '+d:''}`);} else {fails.push(n);console.log(`  FAIL ${n}${d?'  '+d:''}`);} };

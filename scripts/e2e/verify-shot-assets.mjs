@@ -1,8 +1,14 @@
 // 分镜资产图：每段有自己的图，和公共资产一起按固定顺序进入生成
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
+// 测试图必须自己造：以前它只是运维目录里偶然留着的文件，换台机器就跑不了
+const FIXTURE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAACXBIWXMAAAABAAAAAQBPJcTWAAAAgUlEQVR4nNXOQQ0AIBDAsJHMFZqQhU9E3IOsCrr2uZRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMT5OzD1AOVGAktNnSC0AAAAAElFTkSuQmCC', 'base64');
+const ensureFixture = (path) => {
+  if (!existsSync(path)) writeFileSync(path, FIXTURE_PNG);
+  return path;
+};
 
 import { setTimeout as delay } from 'node:timers/promises';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 
 const CDP = process.env.VERIFY_CDP ?? 'http://127.0.0.1:9232';
 const COMFY = process.env.VERIFY_COMFY ?? 'http://127.0.0.1:8188';
@@ -136,7 +142,7 @@ const pubInputs = await send('DOM.querySelectorAll', {
   nodeId: doc.root.nodeId,
   selector: 'input[type=file][accept="image/png,image/jpeg,image/webp"]',
 });
-await send('DOM.setFileInputFiles', { files: [OUT + 'test-upload.png'], nodeId: pubInputs.nodeIds[0] });
+await send('DOM.setFileInputFiles', { files: [ensureFixture(OUT + 'test-upload.png')], nodeId: pubInputs.nodeIds[0] });
 await delay(5000);
 check('公共资产拿到图', (await ev('document.body.innerText')).includes('1/4 已出图'));
 
@@ -151,7 +157,7 @@ const shotInputs = await send('DOM.querySelectorAll', {
   selector: 'input[type=file][accept="image/png,image/jpeg,image/webp"]',
 });
 const shotNode = shotInputs.nodeIds[shotInputs.nodeIds.length - 1];
-await send('DOM.setFileInputFiles', { files: [OUT + 'test-upload.png'], nodeId: shotNode });
+await send('DOM.setFileInputFiles', { files: [ensureFixture(OUT + 'test-upload.png')], nodeId: shotNode });
 await delay(5000);
 check('分镜图上传入口可用', true);
 

@@ -685,6 +685,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     missingModel: m['fail.missingModel'],
     cancelled: m['fail.cancelled'],
     invalidInput: m['fail.invalidInput'],
+    serverDown: m['fail.serverDown'],
     unknown: m['fail.unknown'],
   };
 
@@ -695,6 +696,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     missingModel: m['fail.hint.missingModel'],
     cancelled: m['fail.hint.cancelled'],
     invalidInput: m['fail.hint.invalidInput'],
+    serverDown: m['fail.hint.serverDown'],
     unknown: m['fail.hint.unknown'],
   };
 

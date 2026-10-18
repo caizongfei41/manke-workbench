@@ -93,7 +93,7 @@ function PromptComposer({ copy }: { copy: HomeCopy }) {
     <form
       action="/studio"
       method="get"
-      className="mx-auto mt-10 flex min-h-[160px] w-full max-w-[720px] flex-col rounded-[var(--beat-radius)] border border-ink/[0.13] bg-[image:var(--beat-card)] p-5 text-left shadow-[0_30px_100px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.035)] sm:p-6"
+      className="mx-auto mt-10 flex min-h-[160px] w-full max-w-[720px] flex-col rounded-[var(--beat-radius)] border border-ink/[0.13] bg-[image:var(--beat-card)] p-5 text-left shadow-[var(--beat-card-shadow)] sm:p-6"
     >
       <textarea
         name="prompt"
@@ -107,7 +107,7 @@ function PromptComposer({ copy }: { copy: HomeCopy }) {
         <button
           type="submit"
           aria-label={copy.create}
-          className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--beat-accent)] text-[var(--beat-accent-ink)] shadow-[0_8px_24px_rgba(56,189,248,0.3)] transition hover:scale-[1.04] hover:bg-[#4cc2ff]"
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--beat-accent)] text-[var(--beat-accent-ink)] shadow-[var(--beat-accent-shadow)] transition hover:scale-[1.04] hover:bg-[var(--beat-accent-hover)]"
         >
           <ArrowUp className="size-4" />
         </button>
@@ -126,7 +126,7 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
         <section className="beat-product-hero relative overflow-hidden pb-14 pt-[64px] text-center sm:pt-[84px] lg:pb-[72px]">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_-12%,rgba(56,189,248,0.16),transparent_55%),radial-gradient(ellipse_at_50%_118%,rgba(14,165,233,0.08),transparent_46%)]"
+            className="pointer-events-none absolute inset-0 [background-image:var(--beat-hero-glow)]"
           />
           <div className="relative">
           <p className="beat-product-display inline-flex items-center gap-2.5 text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[11px]">

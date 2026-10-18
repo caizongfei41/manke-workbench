@@ -68,6 +68,7 @@ export type GenerationFailureKind =
   | 'missingModel'
   | 'cancelled'
   | 'invalidInput'
+  | 'serverDown'
   | 'unknown';
 
 /**
@@ -83,6 +84,10 @@ export const classifyGenerationFailure = (
   const text = String(message ?? '').toLowerCase();
   if (!text) return 'unknown';
 
+  // 服务掉线最容易被当成「未知失败」：任务凭空消失，界面上只有一行报错
+  if (/econnrefused|fetch failed|socket hang up|connection refused|comfyui.*(down|unreachable)|未连接/.test(text)) {
+    return 'serverDown';
+  }
   if (/out of memory|outofmemory|cuda oom|allocation on device|显存不足/.test(text)) {
     return 'outOfMemory';
   }

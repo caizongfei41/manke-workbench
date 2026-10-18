@@ -55,6 +55,7 @@ const proj = await (await fetch(`${APP}/api/app/projects`, { method: 'POST', hea
 
 console.log('项目:', proj.id.slice(0, 8));
 await send('Page.navigate', { url: `${APP}/zh/studio/${proj.id}` });
+for (let i = 0; i < 30; i++) { await delay(800); if ((await ev(`location.pathname.includes('${proj.id}')`)) === true) break; }
 for (let i = 0; i < 30; i++) { await delay(800); if ((await ev(`!!document.querySelector('[data-beatapi-composer]')`)) === true) break; }
 await delay(2000);
 
@@ -126,5 +127,4 @@ const succeeded = items.some((it) => it.status === 'succeeded' && it.resultUrl);
 console.log('\n端到端结果:', succeeded ? '✓ 生成成功且落库' : '✗ 未成功');
 
 await fetch(`${APP}/api/app/projects`, { method: 'DELETE', headers: H, body: JSON.stringify({ projectIds: [proj.id] }) });
-ws.close();
 process.exit(succeeded ? 0 : 1);

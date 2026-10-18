@@ -400,8 +400,8 @@ button[aria-disabled="true"] {
 }
 
 :root {
-  --background: #f5f6f3;
-  --foreground: #171814;
+  --background: #f7f5f1;
+  --foreground: #17150f;
   --card: oklch(1 0 0);
   --card-foreground: #171814;
   --popover: oklch(1 0 0);
@@ -479,6 +479,11 @@ button[aria-disabled="true"] {
       transparent 34%
     ),
     linear-gradient(180deg, #08090a 0%, #0b0b0d 48%, #08090a 100%);
+  /* 首页光晕：深色下是冷蓝，浅色下必须几乎看不见 */
+  --beat-hero-glow: radial-gradient(ellipse at 50% -12%, rgba(56, 189, 248, 0.16), transparent 55%),
+    radial-gradient(ellipse at 50% 118%, rgba(14, 165, 233, 0.08), transparent 46%);
+  --beat-card-shadow: 0 30px 100px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  --beat-accent-shadow: 0 8px 24px rgba(56, 189, 248, 0.3);
   --beat-dot: rgba(255, 255, 255, 0.16);
   --beatcanvas-grid-dot: rgba(255, 255, 255, 0.18);
   --beat-border: rgba(255, 255, 255, 0.08);
@@ -962,40 +967,50 @@ html[data-theme='light'] {
   --beat-success-text: #0f766e;
   --beat-success-bg: rgba(16, 185, 129, 0.12);
 
-  --beat-bg: #f6f6f7;
-  --beat-text-1: #18181b;
-  --beat-text-2: #52525b;
-  --beat-text-3: #8b8b94;
+  --beat-bg: #f7f5f1;
+  --beat-text-1: #17150f;
+  --beat-text-2: #57534a;
+  --beat-text-3: #8b867a;
 
   --beat-surface: #ffffff;
-  --beat-surface-2: #fbfbfc;
-  --beat-control: #f4f4f5;
+  --beat-surface-2: #fdfcfa;
+  --beat-control: #f2efe9;
 
-  --beat-border: rgba(9, 9, 11, 0.1);
-  --beat-border-strong: rgba(9, 9, 11, 0.18);
+  --beat-border: rgba(23, 21, 15, 0.09);
+  --beat-border-strong: rgba(23, 21, 15, 0.17);
 
-  --beat-accent: #0284c7;
-  --beat-accent-hover: #0369a1;
+  --beat-accent: #1a1815;
+  --beat-accent-hover: #2b2822;
   --beat-accent-ink: #ffffff;
+
+  /* 次级强调：低饱和钢蓝，只用于焦点环与链接 */
+  --beat-link: #1f4e79;
+  --beat-focus: rgba(31, 78, 121, 0.42);
+
+  /* 阴影带暖调：纯黑阴影落在暖底上会发脏 */
+  --beat-shadow-sm: 0 1px 2px rgba(23, 21, 15, 0.06), 0 1px 1px rgba(23, 21, 15, 0.04);
+  --beat-shadow-md: 0 8px 24px rgba(23, 21, 15, 0.08), 0 2px 6px rgba(23, 21, 15, 0.05);
+  --beat-shadow-lg: 0 24px 64px rgba(23, 21, 15, 0.12), 0 8px 20px rgba(23, 21, 15, 0.06);
 
   --beat-graph: #2563eb;
   --beat-graph-strong: #1d4ed8;
   --beat-graph-soft: rgba(37, 99, 235, 0.12);
 
   /* Panels that were `bg-black/30` become a soft tinted card, not a dark slab. */
-  --beat-panel: rgba(9, 9, 11, 0.035);
-  --beat-panel-2: rgba(9, 9, 11, 0.025);
-  --beat-card: linear-gradient(145deg, #ffffff, #f4f4f5);
-  --beat-wash: radial-gradient(
-      circle at 50% 112%,
-      rgba(2, 132, 199, 0.1),
-      transparent 36%
-    ),
-    linear-gradient(180deg, #ffffff 0%, #f6f6f7 48%, #f6f6f7 100%);
-  --beat-dot: rgba(9, 9, 11, 0.14);
+  --beat-panel: rgba(23, 21, 15, 0.032);
+  --beat-panel-2: rgba(23, 21, 15, 0.022);
+  --beat-card: linear-gradient(145deg, #ffffff, #faf8f4);
+  --beat-wash: linear-gradient(180deg, #fdfcfa 0%, #f8f6f2 44%, #f7f5f1 100%);
+  /* 浅色完全不要光斑：任何椭圆边缘落在内容区都会读成「抹痕」，干净靠层次而不是光 */
+  --beat-hero-glow: none;
+  /* 浅色：暖调多层阴影，0.42 的纯黑会变成一团灰雾 */
+  --beat-card-shadow: 0 1px 2px rgba(23, 21, 15, 0.04), 0 8px 24px rgba(23, 21, 15, 0.06),
+    0 24px 60px rgba(23, 21, 15, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --beat-accent-shadow: 0 6px 18px rgba(23, 21, 15, 0.22);
+  --beat-dot: rgba(23, 21, 15, 0.1);
 
   /* React Flow canvas: keep the dot grid visible on a pale backdrop. */
-  --beatcanvas-grid-dot: rgba(9, 9, 11, 0.22);
+  --beatcanvas-grid-dot: rgba(23, 21, 15, 0.15);
 }
 
 /*

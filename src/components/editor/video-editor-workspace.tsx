@@ -1791,10 +1791,10 @@ export function VideoEditorWorkspace({
                 disabled={
                   !isExporting && !clips.some((clip) => clip.sourceType !== 'audio')
                 }
-                className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-ink transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 ${
                   isExporting
-                    ? 'border border-ink/12 bg-ink/[0.06] hover:bg-ink/[0.1]'
-                    : 'bg-[var(--beat-accent)] hover:brightness-110'
+                    ? 'border border-ink/12 bg-ink/[0.06] text-ink hover:bg-ink/[0.1]'
+                    : 'bg-[var(--beat-accent)] text-[var(--beat-accent-ink)] hover:brightness-110'
                 }`}
               >
                 <Download className="size-3.5" />

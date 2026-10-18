@@ -1051,5 +1051,7 @@
   "fail.hint.invalidInput": "プロンプトとパラメータがモデルの対応範囲か確認してください",
   "fail.hint.unknown": "一度は再試行して構いません。再度失敗するならサービスログを見てください",
   "drama.final.needClips": "まだ {count} ショットに映像がありません。先に生成してください",
-  "drama.final.needShots": "合成するショットがまだありません"
+  "drama.final.needShots": "合成するショットがまだありません",
+  "fail.serverDown": "ComfyUI が停止しています",
+  "fail.hint.serverDown": "サービスが落ちています。ComfyUI を再起動してから再実行してください"
 }

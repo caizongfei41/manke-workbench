@@ -132,7 +132,7 @@ function CreateProjectDialog({
 
           <Link
             href="/canvas"
-            className="group relative min-h-[190px] overflow-hidden rounded-[20px] border border-ink/[0.10] bg-[radial-gradient(circle_at_82%_8%,rgba(255,255,255,0.09),transparent_42%),#171719] p-5 transition hover:-translate-y-0.5 hover:border-ink/[0.22] hover:bg-[var(--beat-surface)]"
+            className="group relative min-h-[190px] overflow-hidden rounded-[20px] border border-ink/[0.08] shadow-[var(--beat-shadow-sm)] bg-[radial-gradient(circle_at_82%_8%,rgba(255,255,255,0.09),transparent_42%),#171719] p-5 transition hover:-translate-y-0.5 hover:border-ink/[0.22] hover:bg-[var(--beat-surface)]"
           >
             <span className="grid size-11 place-items-center rounded-[14px] border border-ink/[0.12] bg-[#202126] text-white">
               <Workflow className="size-5" />
