@@ -154,11 +154,42 @@ export const buildShotsFromScript = (script: string): DramaShot[] => {
     id: nextShotId(),
     prompt: seg.prompt,
     seconds: seg.seconds,
-    publicAssetIds: [],
+    // A shot inherits every character/scene/prop named in its own prompt. This
+    // is what feeds reference images into the render; leaving it empty meant
+    // consistency rested on prompt text alone and faces drifted between shots.
+    publicAssetIds: parsed.assets
+      .filter((asset) => asset.name && seg.prompt.includes(asset.name))
+      .map((asset) => asset.id),
     ownImageUrls: [],
     videoUrl: null,
     status: 'idle',
     error: null,
+  }));
+};
+
+/**
+ * Re-point shot asset ids after a merge.
+ *
+ * Merge keeps the id of an asset that already existed, so ids captured before the
+ * merge can go stale. Map them through kind+name and drop anything that no longer
+ * exists.
+ */
+export const linkAssetsToShots = (
+  shots: DramaShot[],
+  parsedAssets: ScriptAsset[],
+  mergedAssets: ScriptAsset[]
+): DramaShot[] => {
+  const keyOfParsed = new Map(parsedAssets.map((asset) => [asset.id, `${asset.kind}:${asset.name}`]));
+  const idOfMerged = new Map(mergedAssets.map((asset) => [`${asset.kind}:${asset.name}`, asset.id]));
+  const alive = new Set(mergedAssets.map((asset) => asset.id));
+  return shots.map((shot) => ({
+    ...shot,
+    publicAssetIds: shot.publicAssetIds
+      .map((id) => {
+        const key = keyOfParsed.get(id);
+        return key ? (idOfMerged.get(key) ?? id) : id;
+      })
+      .filter((id) => alive.has(id)),
   }));
 };
 

@@ -60,3 +60,25 @@ export const enhancePrompt = (prompt: string, enhancement: PromptEnhancement): s
   if (!base) return texts.join('。') + '。';
   return `${base}。${texts.join('。')}。`;
 };
+
+/**
+ * Keep the model from painting the dialogue itself when we burn our own track.
+ *
+ * AICG3D renders the `<d>` lines into the frame, so burning a subtitle track on
+ * top of that yields two captions. This is derived at submit time rather than
+ * toggled in the UI, because the subtitle switch defaults to on and the
+ * duplication appeared without anyone touching it.
+ */
+export const withSubtitleSuppression = (
+  enhancement: PromptEnhancement,
+  subtitlesBurned: boolean
+): PromptEnhancement => {
+  if (!subtitlesBurned) return enhancement;
+  return {
+    enabled: true,
+    rules: enhancement.rules.includes('noText')
+      ? enhancement.rules
+      : [...enhancement.rules, 'noText'],
+    extra: enhancement.extra,
+  };
+};

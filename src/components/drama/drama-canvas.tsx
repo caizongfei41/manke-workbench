@@ -20,6 +20,7 @@ import {
   DRAMA_MODEL_ID,
   MAX_SHOT_VERSIONS,
   analyzeScript,
+  linkAssetsToShots,
   defaultLinks,
   mergeAssets,
   buildShotsFromScript,
@@ -35,6 +36,7 @@ import { ASSET_KIND_LABELS, type ScriptAsset } from '@/core/effects/script-docum
 import {
   ENHANCE_RULES,
   enhancePrompt,
+  withSubtitleSuppression,
   type EnhanceRuleId,
 } from '@/core/drama/prompt-enhance';
 import {
@@ -430,7 +432,8 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     const shots = buildShotsFromScript(doc.script);
     const merged = mergeAssets(doc.publicAssets, analysis.assets);
     const alive = new Set(merged.map((asset) => asset.id));
-    const prunedShots = shots.map((shot) => ({
+    const relinked = linkAssetsToShots(shots, analysis.assets, merged);
+    const prunedShots = relinked.map((shot) => ({
       ...shot,
       publicAssetIds: shot.publicAssetIds.filter((id) => alive.has(id)),
     }));
@@ -611,6 +614,9 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     landscape: m['drama.preset.landscape'],
   };
 
+  // Subtitles are burned by us, so the model must not draw the dialogue too.
+  const effectiveEnhance = () => withSubtitleSuppression(doc.enhance, doc.subtitles);
+
   const ENHANCE_LABELS: Record<EnhanceRuleId, () => string> = {
     soloSubject: m['drama.enhance.soloSubject'],
     lockCamera: m['drama.enhance.lockCamera'],
@@ -707,7 +713,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             projectId,
             modelId: DRAMA_MODEL_ID,
             mode: 'video',
-            prompt: enhancePrompt(shot.prompt, doc.enhance) || 'short drama shot',
+            prompt: enhancePrompt(shot.prompt, effectiveEnhance()) || 'short drama shot',
             references: [],
             parameters: {
               aspect_ratio: DRAMA_ASPECT_RATIO,
@@ -717,7 +723,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               director_loras: activeDramaLoras(),
               director_segments: [
                 {
-                  prompt: enhancePrompt(shot.prompt, doc.enhance),
+                  prompt: enhancePrompt(shot.prompt, effectiveEnhance()),
                   seconds: shot.seconds,
                   imageUrls: images,
                   refs,
@@ -922,7 +928,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               director_global: dramaGlobalParameters(),
               director_loras: activeDramaLoras(),
               director_segments: doc.shots.filter((shot) => isInFinal(shot.id)).map((shot) => ({
-                prompt: enhancePrompt(shot.prompt, doc.enhance),
+                prompt: enhancePrompt(shot.prompt, effectiveEnhance()),
                 seconds: shot.seconds,
                 imageUrls: resolveImages(shot),
                 refs: resolveRefs(shot),

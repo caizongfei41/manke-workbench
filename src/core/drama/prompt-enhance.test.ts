@@ -6,6 +6,7 @@ import {
   activeRuleTexts,
   createEmptyEnhancement,
   enhancePrompt,
+  withSubtitleSuppression,
 } from './prompt-enhance';
 
 describe('enhancePrompt', () => {
@@ -59,5 +60,32 @@ describe('enhancePrompt', () => {
 
   test('activeRuleTexts is empty when nothing is selected', () => {
     assert.deepEqual(activeRuleTexts({ enabled: true, rules: [], extra: '  ' }), []);
+  });
+});
+
+describe('withSubtitleSuppression', () => {
+  test('turns the no-text rule on when we burn subtitles', () => {
+    const off = createEmptyEnhancement();
+    const applied = withSubtitleSuppression(off, true);
+    assert.equal(applied.enabled, true);
+    assert.deepEqual(applied.rules, ['noText']);
+    // 模型若把台词画进画面，就会和我们烧的字幕叠成两层
+    assert.ok(enhancePrompt('中景', applied).includes('不要出现任何文字'));
+  });
+
+  test('leaves everything alone when subtitles are off', () => {
+    const off = createEmptyEnhancement();
+    assert.deepEqual(withSubtitleSuppression(off, false), off);
+  });
+
+  test('does not duplicate the rule', () => {
+    const on = { enabled: true, rules: ['noText' as const], extra: '' };
+    const applied = withSubtitleSuppression(on, true);
+    assert.deepEqual(applied.rules, ['noText']);
+  });
+
+  test('keeps the free text', () => {
+    const withExtra = { enabled: false, rules: [], extra: '雨天' };
+    assert.equal(withSubtitleSuppression(withExtra, true).extra, '雨天');
   });
 });
