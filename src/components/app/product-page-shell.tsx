@@ -6,6 +6,7 @@ import { WorkspaceApiConfigDialog } from '@/components/app/workspace-api-config-
 import { LanguageSwitcher } from '@/components/app/language-switcher';
 import { ThemeToggle } from '@/components/app/theme-toggle';
 import { GitHubIcon } from '@/components/icons/github';
+import { REPOSITORY_URL } from '@/core/app/repository';
 import { Link } from '@/core/i18n/navigation';
 import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
 import { apiJsonGet, apiJsonPatch, apiJsonPost } from '@/lib/api-client';
@@ -187,7 +188,7 @@ export function ProductPageShell({
                 providerId={ACTIVE_GENERATION_PROVIDER_ID}
               />
               <a
-                href="https://github.com/BeatAPI/BeatDesign"
+                href={REPOSITORY_URL}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={t('header.githubRepository')}

@@ -5,6 +5,10 @@
 Everything runs against your own ComfyUI instance — no account, no API key, no
 asset ever leaves your machine. All views share one local project.
 
+Beyond single images and clips it ships an **AI short-drama pipeline**: script →
+portrait → shot by shot → subtitles → music → vertical film, resumable, and
+generation never overwrites a previous take.
+
 ![Manke Workbench home](docs/assets/home.png)
 
 > This is a fork of [BeatDesign](https://github.com/BeatAPI/BeatDesign)
@@ -53,6 +57,66 @@ ComfyUI's `progress` events over the WebSocket, not estimated from elapsed time.
 An infinite canvas where nodes are assets or generation tasks, and edges express
 reference relationships. Generated images can be pulled back in from the history
 panel and composed further.
+
+### AI short-drama canvas
+
+Picking **AI short drama** when creating a canvas project opens a dedicated
+pipeline: script on the left, cast and settings in the middle, one workbench per
+shot, and the final cut on the right. Nodes are工序, not just references — you
+write the script and work down the columns.
+
+![AI short-drama canvas](docs/assets/drama-canvas.png)
+
+| Node | Role |
+| --- | --- |
+| Script | Write `[cast] / [scene] / [shot N]`, then hand it to the board |
+| Storyboard | Shows the shots cut and the cast recognised |
+| Shared assets | Upload a portrait per character — **this is what keeps faces stable** |
+| Settings | Resolution, sampling, LoRA, prompt reinforcement |
+| Shot workbench | One shot = one job; every take is kept |
+| Final cut | Resume, join, burn subtitles, mix music, pick export size |
+
+Every node header has a **?** that opens a floating help card, portalled to
+`body` so it does not shrink with the canvas zoom.
+
+![Node help](docs/assets/drama-help.png)
+
+**Consistency** comes from reference images, not prose: a shot inherits whoever
+its prompt names, assets with an image become references, and the prompt carries
+`<Subject N> is the person in <Picture N>, keep face, hair, costume and build`.
+Six shots from one portrait produced the same face throughout.
+
+![Frames from the finished film](docs/assets/drama-shot.png)
+
+**Resumable runs.** One shot is one ComfyUI job, persisted as soon as it lands,
+so a failure at shot 30 no longer throws away thirty minutes: resume only renders
+what is missing, retry only what failed, and a page refresh loses nothing.
+
+**Versioning.** Generating again never overwrites: every take is kept (five max),
+flip through them with `‹ 2/3 ›`, and only the take you adopt enters the film.
+
+**Wires carry meaning.** Cut `assets → shot` and that shot stops using the shared
+face; cut `shot → final` and it leaves the cut.
+
+**Subtitles** are extracted from the `<d>` tags the shots already carry, timed by
+shot duration, written as ASS with PlayRes matching the export size, and burned
+after scaling. Turning subtitles on also suppresses the model painting dialogue
+into the frame, which would otherwise give two captions.
+
+![Burned subtitles](docs/assets/drama-subtitles.png)
+
+**Export** offers as-rendered, vertical 1080x1920 (default), vertical 720x1280,
+square and landscape, filling the frame and centre-cropping so a vertical cut has
+no bars. Plain joining uses `-c copy`; subtitles or music switch to libx264/aac.
+
+**Canvas controls.** Right-drag, middle-drag, space+drag or the wheel pans;
+ctrl+wheel zooms; `Shift+1` or a double-click fits; drag empty space to select,
+`Delete` removes, `Esc` clears, `ctrl+A` takes all; auto-arrange lays the board out
+in five columns spaced by real card heights.
+
+![Auto-arrange](docs/assets/drama-layout.png)
+
+---
 
 ### Editor
 

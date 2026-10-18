@@ -34,10 +34,9 @@ test('workspace header keeps mode switching, shared assets, and API configuratio
   assert.doesNotMatch(shellSource, /ChevronDown/);
   assert.doesNotMatch(shellSource, /header\.create/);
   assert.match(shellSource, /GitHubIcon/);
-  assert.match(
-    shellSource,
-    /https:\/\/github\.com\/BeatAPI\/BeatDesign/
-  );
+  // 链接来自单一常量，具体地址由 repository.test.ts 对着 package.json 校验
+  assert.match(shellSource, /href=\{REPOSITORY_URL\}/);
+  assert.match(shellSource, /from '@\/core\/app\/repository'/);
   assert.match(shellSource, /target="_blank"/);
   assert.match(shellSource, /rel="noreferrer"/);
   assert.match(shellSource, /\{ workspaceMode \}/);
