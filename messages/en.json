@@ -1020,5 +1020,15 @@
   "startHere.video.prompt": "Medium shot, a figure stops on a rainy street, slow push in, cool grade, shallow depth of field",
   "startHere.audio.prompt": "Suspense score, low bed, sparse piano, slow build, about thirty seconds",
   "startHere.analysis.prompt": "Upload a clip or an image and the analysis breaks it into shots, pacing and reusable notes.",
-  "drama.view.autoArrange": "Tidy up"
+  "drama.view.autoArrange": "Tidy up",
+  "cast.button": "Lib",
+  "cast.open": "Pick from the cast library",
+  "cast.title": "Cast library",
+  "cast.loading": "Loading…",
+  "cast.count": "{count} saved",
+  "cast.empty": "Nothing saved yet: use \"Save to library\" on a portrait",
+  "cast.saveCurrent": "Save this one to the library",
+  "cast.saveDisabled": "No image on this asset yet",
+  "cast.saved": "Saved",
+  "cast.error": "That did not work, try again"
 }

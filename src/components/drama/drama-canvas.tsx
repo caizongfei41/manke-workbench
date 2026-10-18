@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ImageHoverPreview } from '@/components/app/image-hover-preview';
 import { DramaViewport, type ViewportMarker } from '@/components/drama/drama-viewport';
+import { CastLibraryButton } from '@/components/drama/cast-library-button';
 import { HelpPopover, type HelpId } from '@/components/drama/help-popover';
 import { HintTip } from '@/components/app/hint-tip';
 import {
@@ -748,6 +749,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
       .catch(() => {});
   };
 
+  /** Set a public asset's portrait, e.g. after picking one from the cast library. */
+  const setAssetImage = (assetId: string, url: string) =>
+    updateDoc((current) => ({
+      ...current,
+      publicAssets: current.publicAssets.map((asset) =>
+        asset.id === assetId ? { ...asset, imageUrl: url, source: 'uploaded' as const } : asset
+      ),
+    }));
+
   const generateShot = async (shot: DramaShot): Promise<boolean> => {
     setBusyShot(shot.id);
     setShot(shot.id, { status: 'running', error: null });
@@ -1448,6 +1458,13 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                       >
                         {m['drama.assets.replace']()}
                       </button>
+                        <CastLibraryButton
+                          projectId={projectId}
+                          sourceAssetId={asset.imageUrl?.match(/\/assets\/([0-9a-f-]{36})/i)?.[1] ?? ''}
+                          assetName={asset.name}
+                          hasImage={!!asset.imageUrl}
+                          onPicked={(url: string) => setAssetImage(asset.id, url)}
+                        />
                     </div>
                   );
                 })

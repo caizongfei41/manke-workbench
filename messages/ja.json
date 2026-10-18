@@ -1020,5 +1020,15 @@
   "startHere.video.prompt": "ミディアムショット、雨の街で人物が足を止め、ゆっくり寄る、寒色、浅い被写界深度",
   "startHere.audio.prompt": "サスペンス曲、低音の土台、疎らなピアノ、徐々に高まる、約 30 秒",
   "startHere.analysis.prompt": "映像か画像を読み込むと、ショット・リズム・再利用できる記述に分解します。",
-  "drama.view.autoArrange": "自動整列"
+  "drama.view.autoArrange": "自動整列",
+  "cast.button": "ライブラリ",
+  "cast.open": "キャストライブラリから選ぶ",
+  "cast.title": "キャストライブラリ",
+  "cast.loading": "読み込み中…",
+  "cast.count": "{count} 件",
+  "cast.empty": "まだ空です：画像の「ライブラリに保存」から追加してください",
+  "cast.saveCurrent": "この画像をライブラリに保存",
+  "cast.saveDisabled": "この素材にはまだ画像がありません",
+  "cast.saved": "保存しました",
+  "cast.error": "失敗しました。もう一度お試しください"
 }

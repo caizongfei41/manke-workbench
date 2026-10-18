@@ -1020,5 +1020,15 @@
   "startHere.video.prompt": "中景，人物在雨夜街头停下脚步，镜头缓慢推近，冷色调，浅景深",
   "startHere.audio.prompt": "悬疑氛围配乐，低频铺底，稀疏钢琴，缓慢推进，约 30 秒",
   "startHere.analysis.prompt": "上传一段影片或一张图，分析会拆出镜头、节奏与可复用的描述。",
-  "drama.view.autoArrange": "自动排版"
+  "drama.view.autoArrange": "自动排版",
+  "cast.button": "库",
+  "cast.open": "从角色库选图",
+  "cast.title": "角色库",
+  "cast.loading": "读取中…",
+  "cast.count": "{count} 张",
+  "cast.empty": "库还是空的：先在某张图上点「存入库」",
+  "cast.saveCurrent": "把当前这张存入库",
+  "cast.saveDisabled": "这张还没有图",
+  "cast.saved": "已存入库",
+  "cast.error": "没成功，再试一次"
 }
