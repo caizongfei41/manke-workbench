@@ -957,6 +957,9 @@ hr {
 html[data-theme='light'] {
   color-scheme: light;
   --beat-ink: #09090b;
+  /* 成功态：浅色主题下必须用深绿，浅绿压浅绿会看不见 */
+  --beat-success-text: #0f766e;
+  --beat-success-bg: rgba(16, 185, 129, 0.12);
 
   --beat-bg: #f6f6f7;
   --beat-text-1: #18181b;

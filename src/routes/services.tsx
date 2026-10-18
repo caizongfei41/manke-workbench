@@ -76,7 +76,7 @@ function ServiceCard({
         <span
           className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
             svc.up
-              ? 'bg-emerald-400/10 text-emerald-300'
+              ? 'bg-[var(--beat-success-bg)] text-[var(--beat-success-text)]'
               : 'bg-ink/[0.06] text-[var(--beat-text-3)]'
           }`}
         >
