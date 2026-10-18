@@ -76,7 +76,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var k='manke-theme';var s=localStorage.getItem(k)||'system';var d=s==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):s;document.documentElement.dataset.theme=d;document.documentElement.style.colorScheme=d;}catch(e){document.documentElement.dataset.theme='dark';}})();",
+              "(function(){try{var k='manke-theme';var s=localStorage.getItem(k)||'system';var d=s==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):s;document.documentElement.dataset.theme=d;document.documentElement.classList.toggle('dark',d==='dark');document.documentElement.style.colorScheme=d;}catch(e){document.documentElement.dataset.theme='dark';document.documentElement.classList.add('dark');}})();",
           }}
         />
       </head>

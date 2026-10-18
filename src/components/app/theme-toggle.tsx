@@ -23,6 +23,9 @@ const systemTheme = (): ResolvedTheme =>
 const applyTheme = (mode: ThemeMode) => {
   const resolved: ResolvedTheme = mode === 'system' ? systemTheme() : mode;
   document.documentElement.dataset.theme = resolved;
+  // .dark carries the shadcn token block and the dark: variant; without this
+  // class those never applied and the body stayed light in dark mode.
+  document.documentElement.classList.toggle('dark', resolved === 'dark');
   document.documentElement.style.colorScheme = resolved;
   return resolved;
 };

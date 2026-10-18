@@ -1,7 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* 主题挂在 html[data-theme] 上，.dark 只是同步出来的类：两个都认，避免任一路径失效 */
+@custom-variant dark (&:is(.dark *, [data-theme='dark'] *));
 
 button:not(:disabled):not([aria-disabled="true"]) {
   cursor: pointer;
