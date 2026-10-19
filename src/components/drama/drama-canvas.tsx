@@ -9,6 +9,7 @@ import {
   Trash2,
   Upload,
   Wand2,
+  Table2,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -1380,6 +1381,18 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             <p className="mt-2 text-[10px] leading-4 text-[var(--beat-text-3)]">
               {m['drama.board.hint']()}
             </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                // A producer wants something they can diff, not a screenshot
+                window.open(`/api/app/projects/${projectId}/shotlist`, '_blank');
+              }}
+              className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+            >
+              <Table2 className="size-3" />
+              {m['drama.board.exportList']()}
+            </button>
           </NodeShell>
         </div>
 

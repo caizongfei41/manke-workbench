@@ -1067,5 +1067,6 @@
   "cmd.mode.studio": "创作台",
   "cmd.mode.canvas": "画布",
   "cmd.mode.editor": "剪辑",
-  "cmd.mode.assets": "素材"
+  "cmd.mode.assets": "素材",
+  "drama.board.exportList": "导出分镜表 CSV"
 }

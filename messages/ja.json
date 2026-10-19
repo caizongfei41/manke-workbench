@@ -1067,5 +1067,6 @@
   "cmd.mode.studio": "スタジオ",
   "cmd.mode.canvas": "キャンバス",
   "cmd.mode.editor": "編集",
-  "cmd.mode.assets": "素材"
+  "cmd.mode.assets": "素材",
+  "drama.board.exportList": "ショットリストを CSV 出力"
 }
