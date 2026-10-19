@@ -22,16 +22,16 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
   useEffect(() => {
     let cancelled = false;
 
-    const poll = async () => {
-      if (document.visibilityState !== 'visible') return;
+    const poll = async (force = false) => {
+      if (!force && document.visibilityState !== 'visible') return;
       const res = await fetch('/api/app/comfyui/monitor').catch(() => null);
       const json = await res?.json().catch(() => null);
       if (!cancelled && json) setMonitor(json as ComfyMonitor);
     };
 
-    void poll();
+    void poll(true);
     timerRef.current = setInterval(() => void poll(), POLL_MS);
-    const onVisible = () => void poll();
+    const onVisible = () => void poll(true);
     document.addEventListener('visibilitychange', onVisible);
 
     return () => {
@@ -41,16 +41,17 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
     };
   }, []);
 
-  if (!monitor) return null;
-
+  const pending = monitor === null;
   const vramFull =
-    monitor.vramUsedGb !== null &&
-    monitor.vramTotalGb !== null &&
-    monitor.vramTotalGb > 0 &&
-    monitor.vramUsedGb / monitor.vramTotalGb > 0.9;
-  const busy = monitor.running > 0 || monitor.pending > 0;
+    monitor?.vramUsedGb !== null &&
+    monitor?.vramTotalGb !== null &&
+    (monitor?.vramTotalGb ?? 0) > 0 &&
+    (monitor?.vramUsedGb ?? 0) / (monitor?.vramTotalGb ?? 1) > 0.9;
+  const busy = (monitor?.running ?? 0) > 0 || (monitor?.pending ?? 0) > 0;
 
-  const label = monitor.reachable
+  const label = pending
+    ? m['monitor.checking']()
+    : monitor.reachable
     ? [
         busy ? m['monitor.queue']({ running: monitor.running, pending: monitor.pending }) : m['monitor.idle'](),
         monitor.vramUsedGb !== null && monitor.vramTotalGb !== null
@@ -64,19 +65,21 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
   return (
     <div
       title={[
-        monitor.device ?? '',
-        monitor.ramUsedGb !== null && monitor.ramTotalGb !== null
+        monitor?.device ?? '',
+        monitor?.ramUsedGb !== null && monitor?.ramUsedGb !== undefined && monitor?.ramTotalGb !== null && monitor?.ramTotalGb !== undefined
           ? m['monitor.ram']({ used: monitor.ramUsedGb, total: monitor.ramTotalGb })
           : '',
-        monitor.version ? `ComfyUI ${monitor.version}` : '',
+        monitor?.version ? `ComfyUI ${monitor.version}` : '',
       ]
         .filter(Boolean)
         .join('\n')}
-      data-comfy-monitor={monitor.reachable ? 'live' : 'offline'}
+      data-comfy-monitor={pending ? 'pending' : monitor?.reachable ? 'live' : 'offline'}
       className={cn(
         'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-[11px] tabular-nums transition',
-        monitor.reachable
-          ? vramFull
+        pending
+          ? 'border-ink/[0.09] bg-ink/[0.035] text-[var(--beat-text-3)]'
+          : monitor?.reachable
+            ? vramFull
             ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
             : 'border-ink/[0.09] bg-ink/[0.035] text-[var(--beat-text-2)]'
           : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-300',

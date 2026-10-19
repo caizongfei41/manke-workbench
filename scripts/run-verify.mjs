@@ -89,9 +89,14 @@ const settle = async () => {
   }
   // 只留一个标签，避免几十次运行后页面越开越多
   const tabs = await fetch(`${CDP}/json`).then((r) => r.json()).catch(() => []);
-  const appTabs = tabs.filter((tab) => tab.type === 'page' && /:3020/.test(tab.url ?? ''));
-  for (const extra of appTabs.slice(1)) {
+  const allTabs = tabs.filter((tab) => tab.type === 'page');
+  const appTabs = allTabs.filter((tab) => /:3020/.test(tab.url ?? ''));
+  // 只留一个空白页，其余全关：上一套崩溃留下的坏标签不要传染下一套
+  for (const extra of appTabs) {
     await fetch(`${CDP}/json/close/${extra.id}`).catch(() => {});
+  }
+  if (allTabs.length === appTabs.length) {
+    await fetch(`${CDP}/json/new?about:blank`, { method: 'PUT' }).catch(() => {});
   }
 };
 const runOne = (name) =>

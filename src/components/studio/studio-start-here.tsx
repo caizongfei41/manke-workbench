@@ -97,7 +97,7 @@ export function StudioStartHere({
               key={`glow-${entry.mode}`}
               src={THUMBS[entry.mode]}
               alt=""
-              className={`absolute border-[6px] border-[#6b6b72]/75 object-cover shadow-[0_18px_52px_rgba(0,0,0,0.45)] ${entry.className}`}
+              className={`absolute border-[6px] border-[#6b6b72]/75 object-cover shadow-[var(--beat-photo-shadow)] ${entry.className}`}
             />
           ))}
         </div>
@@ -127,7 +127,7 @@ export function StudioStartHere({
                 className={cn(
                   'group absolute inset-0 overflow-hidden border-[6px] border-[#6b6b72]/85 bg-[var(--beat-surface)] object-cover shadow-[0_18px_48px_rgba(0,0,0,0.4)] transition-[transform,border-color,filter,box-shadow,opacity] duration-300 ease-out hover:z-20 hover:scale-[1.045] hover:border-ink/65 hover:brightness-100 hover:opacity-100 focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]',
                   isSelected &&
-                    'z-20 scale-[1.06] border-ink/85 brightness-[1.14] shadow-[0_24px_62px_rgba(0,0,0,0.58),0_0_0_2px_rgba(255,255,255,0.12)]',
+                    'z-20 scale-[1.06] border-ink/85 brightness-[1.14] shadow-[var(--beat-photo-shadow-active)]',
                   hasSelection && !isSelected && 'brightness-[0.72] opacity-70'
                 )}
               >

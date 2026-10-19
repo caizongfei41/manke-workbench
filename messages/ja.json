@@ -1053,5 +1053,6 @@
   "drama.final.needClips": "まだ {count} ショットに映像がありません。先に生成してください",
   "drama.final.needShots": "合成するショットがまだありません",
   "fail.serverDown": "ComfyUI が停止しています",
-  "fail.hint.serverDown": "サービスが落ちています。ComfyUI を再起動してから再実行してください"
+  "fail.hint.serverDown": "サービスが落ちています。ComfyUI を再起動してから再実行してください",
+  "monitor.checking": "確認中…"
 }

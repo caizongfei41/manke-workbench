@@ -1053,5 +1053,6 @@
   "drama.final.needClips": "还有 {count} 段没有视频，先生成它们再合成",
   "drama.final.needShots": "还没有要合成的分段",
   "fail.serverDown": "ComfyUI 掉线了",
-  "fail.hint.serverDown": "服务进程不在了：先重启 ComfyUI，再重跑这一段"
+  "fail.hint.serverDown": "服务进程不在了：先重启 ComfyUI，再重跑这一段",
+  "monitor.checking": "读取中…"
 }

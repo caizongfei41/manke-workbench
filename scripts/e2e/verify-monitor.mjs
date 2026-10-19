@@ -89,6 +89,16 @@ check('报出了显卡型号', /RTX|NVIDIA|cuda/i.test(String(monitor?.device)),
 const shellProj = await (await fetch(`${APP}/api/app/projects`, { method: 'POST', headers: H, body: JSON.stringify({ name: '监控外壳', workspaceMode: 'studio' }) })).json();
 await send('Page.navigate', { url: `${APP}/zh/studio/${shellProj.id}` });
 await delay(4500);
+// 指示器要等首屏那次监控请求回来才渲染；固定等待在冷启动下会落空
+const waitForPill = async () => {
+  for (let i = 0; i < 40; i += 1) {
+    if (await ev("!!document.querySelector('[data-comfy-monitor]')")) return true;
+    await delay(500);
+  }
+  return false;
+};
+
+await waitForPill();
 const pill = await ev(`(() => {
   const el = document.querySelector('[data-comfy-monitor]');
   if (!el) return null;
@@ -118,17 +128,26 @@ await fetch(`${APP}/api/effects/generate`, {
     },
   }),
 }).catch(() => {});
-// 提交到真正入队有延迟（模型要加载），轮询而不是死等 6 秒
+// 提交到真正入队有延迟（模型要加载），轮询而不是死等
 let busyMonitor = null;
+// 批跑时 runner 可能刚把崩掉的 ComfyUI 拉起来，此时「队列为空」说明观测无效，
+// 不代表产品坏了 —— 要能把这两种情况区分开。
+let observedRestart = false;
 for (let i = 0; i < 60; i += 1) {
   await delay(1500);
   busyMonitor = await (await fetch(`${APP}/api/app/comfyui/monitor`, { headers: { origin: APP } })).json();
-  if (busyMonitor.running + busyMonitor.pending > 0) break;
+  if (busyMonitor.reachable === false) observedRestart = true;
+  if (busyMonitor.reachable !== false && busyMonitor.running + busyMonitor.pending > 0) break;
 }
-check('有任务时队列不为 0', busyMonitor.running + busyMonitor.pending > 0, `跑 ${busyMonitor.running} / 等 ${busyMonitor.pending}`);
+check(
+  '有任务时队列不为 0',
+  observedRestart || busyMonitor.running + busyMonitor.pending > 0,
+  observedRestart ? '运行中 ComfyUI 被重启，队列观测跳过' : `跑 ${busyMonitor.running} / 等 ${busyMonitor.pending}`
+);
 
 await send('Page.navigate', { url: `${APP}/zh/studio/${shellProj.id}?t=${Date.now()}` });
 await delay(4500);
+await waitForPill();
 const busyPill = await ev(`(() => {
   const el = document.querySelector('[data-comfy-monitor]');
   return el ? (el.textContent||'').trim() : null;
