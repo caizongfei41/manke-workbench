@@ -1072,5 +1072,8 @@
   "drama.board.collapseAll": "全ショットを折りたたむ",
   "drama.board.expandAll": "全ショットを展開",
   "drama.board.batchSeconds": "秒数統一",
-  "drama.board.applyAll": "全 {count} 件に適用"
+  "drama.board.applyAll": "全 {count} 件に適用",
+  "drama.board.batchAsset": "参照画像",
+  "drama.board.applyAssetAll": "全 {count} 件に付与",
+  "drama.board.removeAssetAll": "全 {count} 件から外す"
 }

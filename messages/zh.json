@@ -1072,5 +1072,8 @@
   "drama.board.collapseAll": "折叠所有分段",
   "drama.board.expandAll": "展开所有分段",
   "drama.board.batchSeconds": "统一秒数",
-  "drama.board.applyAll": "应用到全部 {count} 段"
+  "drama.board.applyAll": "应用到全部 {count} 段",
+  "drama.board.batchAsset": "挂参考图",
+  "drama.board.applyAssetAll": "挂到全部 {count} 段",
+  "drama.board.removeAssetAll": "从全部 {count} 段移除"
 }

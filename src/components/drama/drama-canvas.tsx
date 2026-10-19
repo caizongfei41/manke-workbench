@@ -613,6 +613,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   // ---- Selection --------------------------------------------------------
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [batchSeconds, setBatchSeconds] = useState(3);
+  const [batchAssetId, setBatchAssetId] = useState('');
   const viewportApi = useRef<{ centerOn: (x: number, y: number) => void } | null>(null);
   const FIXED_NODES = ['script', 'board', 'assets', 'params', 'final'];
 
@@ -804,6 +805,27 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
   /** Set a public asset's portrait, e.g. after picking one from the cast library. */
   // Uniform pacing is the common edit: changing seconds one card at a time is busywork
+  // A character usually belongs in every segment; adding it shot by shot is the same
+  // busywork as per-card seconds.
+  const applyAssetToAll = (assetId: string) =>
+    updateDoc((current) => ({
+      ...current,
+      shots: current.shots.map((shot) =>
+        shot.publicAssetIds.includes(assetId)
+          ? shot
+          : { ...shot, publicAssetIds: [...shot.publicAssetIds, assetId] }
+      ),
+    }));
+
+  const removeAssetFromAll = (assetId: string) =>
+    updateDoc((current) => ({
+      ...current,
+      shots: current.shots.map((shot) => ({
+        ...shot,
+        publicAssetIds: shot.publicAssetIds.filter((id) => id !== assetId),
+      })),
+    }));
+
   const applySecondsToAll = (seconds: number) =>
     updateDoc((current) => ({
     ...current,
@@ -1469,6 +1491,36 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   className="h-6 flex-1 rounded-[6px] border border-ink/[0.12] text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
                 >
                   {m['drama.board.applyAll']({ count: doc.shots.length })}
+                </button>
+              </div>
+
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <select
+                  value={batchAssetId}
+                  onChange={(event) => setBatchAssetId(event.target.value)}
+                  aria-label={m['drama.board.batchAsset']()}
+                  data-batch-asset="true"
+                  className="h-6 min-w-0 flex-1 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1 text-[10px] text-[var(--beat-text-1)] outline-none"
+                >
+                  <option value="">{m['drama.board.batchAsset']()}</option>
+                  {doc.publicAssets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>{asset.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  disabled={!batchAssetId || doc.shots.length === 0}
+                  onClick={() => {
+                    if (!batchAssetId) return;
+                    const everywhere = doc.shots.every((shot) => shot.publicAssetIds.includes(batchAssetId));
+                    if (everywhere) removeAssetFromAll(batchAssetId);
+                    else applyAssetToAll(batchAssetId);
+                  }}
+                  className="h-6 shrink-0 rounded-[6px] border border-ink/[0.12] px-1.5 text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                >
+                  {batchAssetId && doc.shots.every((shot) => shot.publicAssetIds.includes(batchAssetId))
+                    ? m['drama.board.removeAssetAll']({ count: doc.shots.length })
+                    : m['drama.board.applyAssetAll']({ count: doc.shots.length })}
                 </button>
               </div>
           </NodeShell>
