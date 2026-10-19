@@ -226,7 +226,8 @@ export function WorkspacePage({
 
   return (
     <BeatApiProductShell active="projects" locale={locale}>
-      <main className="mx-auto w-full max-w-[1280px] px-5 pb-10 pt-14 sm:px-6">
+      <div className="beat-aurora pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
+      <main className="relative mx-auto w-full max-w-[1280px] px-5 pb-10 pt-14 sm:px-6">
         <section className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[11px]">
@@ -252,7 +253,7 @@ export function WorkspacePage({
 
         <section className="mt-12">
           {liveProjects.length > 0 ? (
-            <div className="mb-6 flex flex-wrap items-center gap-2" data-project-toolbar="true">
+            <div className="beat-glass mb-6 flex flex-wrap items-center gap-2 rounded-full p-2" data-project-toolbar="true">
               <input
                 type="search"
                 value={projectQuery}
@@ -260,14 +261,14 @@ export function WorkspacePage({
                 placeholder={copy.searchProjects}
                 aria-label={copy.searchProjects}
                 data-project-search="true"
-                className="h-9 min-w-[180px] flex-1 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-3 text-[12.5px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
+                className="h-9 min-w-[180px] flex-1 rounded-full border border-[var(--beat-glass-border)] bg-transparent px-3 text-[12.5px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
               />
               <select
                 value={projectMode}
                 onChange={(event) => setProjectMode(event.target.value as typeof projectMode)}
                 aria-label={copy.filterMode}
                 data-project-filter="true"
-                className="h-9 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-2 text-[12px] text-[var(--beat-text-2)] outline-none"
+                className="h-9 rounded-full border border-[var(--beat-glass-border)] bg-transparent px-2 text-[12px] text-[var(--beat-text-2)] outline-none"
               >
                 <option value="all">{copy.filterAll}</option>
                 <option value="studio">{copy.modeStudio}</option>

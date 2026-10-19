@@ -1209,5 +1209,10 @@
   "standard.styleDefault": "既定",
   "standard.generate": "生成",
   "standard.status": "ノード {nodes} · 接続 {links} · ズーム {zoom}%",
-  "header.standard": "標準キャンバス"
+  "header.standard": "標準キャンバス",
+  "cmd.standard": "標準キャンバス",
+  "home.workspaces.standardTitle": "標準キャンバス",
+  "home.workspaces.standardBody": "キャラクター・シーン・設定を 1 枚のグリッドに並べ、線でつなぐ。",
+  "home.workspaces.standardOutput": "接続できる絵コンテボード",
+  "AppShell.editor.media.backToCanvas": "キャンバスに戻る"
 }

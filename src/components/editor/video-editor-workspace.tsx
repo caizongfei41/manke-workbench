@@ -22,6 +22,7 @@ import {
   Redo2,
   Volume2,
   X,
+  Workflow,
 } from 'lucide-react';
 import {
   type ChangeEvent,
@@ -1565,6 +1566,14 @@ export function VideoEditorWorkspace({
       <div className="flex min-h-0 flex-1">
         <aside className="editor-rail hidden w-[292px] shrink-0 flex-col border-r border-ink/[0.07] bg-[#17181a] lg:flex">
           <div className="flex h-[74px] items-end gap-5 border-b border-ink/[0.07] px-5 pb-3">
+            <a
+              href={`/canvas/${projectId}`}
+              data-editor-back-to-canvas="true"
+              className="mb-1 inline-flex h-7 items-center gap-1.5 rounded-full border border-ink/[0.12] px-2.5 text-[11px] text-ink/60 transition hover:border-ink/30 hover:text-ink"
+            >
+              <Workflow className="size-3.5" />
+              {t('media.backToCanvas')}
+            </a>
             <button
               type="button"
               aria-current="page"

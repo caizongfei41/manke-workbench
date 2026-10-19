@@ -34,6 +34,9 @@ function getCopy(locale: string) {
     workspacesSubtitle: m['home.workspaces.subtitle']({}, { locale: messageLocale }),
     workspaceStudioTitle: m['home.workspaces.studioTitle']({}, { locale: messageLocale }),
     workspaceStudioOutput: m['home.workspaces.studioOutput']({}, { locale: messageLocale }),
+    workspaceStandardTitle: m['home.workspaces.standardTitle']({}, { locale: messageLocale }),
+    workspaceStandardBody: m['home.workspaces.standardBody']({}, { locale: messageLocale }),
+    workspaceStandardOutput: m['home.workspaces.standardOutput']({}, { locale: messageLocale }),
     workspaceCanvasTitle: m['home.workspaces.canvasTitle']({}, { locale: messageLocale }),
     workspaceCanvasOutput: m['home.workspaces.canvasOutput']({}, { locale: messageLocale }),
     workspaceProjectsOutput: m['home.workspaces.projectsOutput']({}, { locale: messageLocale }),
@@ -200,7 +203,7 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
               </Link>
             </div>
 
-            <div className="grid gap-3.5 md:grid-cols-3">
+            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
               {[
                 {
                   title: copy.workspaceStudioTitle,
@@ -217,6 +220,14 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
                   output: copy.workspaceCanvasOutput,
                   icon: <Workflow className="size-5" />,
                   tint: 'radial-gradient(circle, rgba(168,85,247,0.45), transparent 70%)',
+                },
+                {
+                  title: copy.workspaceStandardTitle,
+                  href: '/standard',
+                  body: copy.workspaceStandardBody,
+                  output: copy.workspaceStandardOutput,
+                  icon: <Layers className="size-5" />,
+                  tint: 'radial-gradient(circle, rgba(125,211,252,0.45), transparent 70%)',
                 },
                 {
                   title: copy.projectsTitle,

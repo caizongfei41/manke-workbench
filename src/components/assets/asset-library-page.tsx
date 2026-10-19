@@ -338,7 +338,8 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
 
   return (
     <BeatApiProductShell active="assets" locale={locale}>
-      <main className="mx-auto w-full max-w-[1280px] px-5 pb-10 pt-14 sm:px-6">
+      <div className="beat-aurora pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
+      <main className="relative mx-auto w-full max-w-[1280px] px-5 pb-10 pt-14 sm:px-6">
         <section>
           <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[11px]">
             {m['assets.library.eyebrow']()}
@@ -361,10 +362,10 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
               placeholder={m['assets.library.search']()}
               aria-label={m['assets.library.search']()}
               data-library-search="true"
-              className="h-9 w-full rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] pl-8 pr-3 text-[12.5px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
+              className="h-9 w-full rounded-full border border-[var(--beat-glass-border)] bg-[var(--beat-glass-bg)] pl-8 pr-3 text-[12.5px] text-[var(--beat-text-1)] outline-none backdrop-blur-xl placeholder:text-[var(--beat-text-3)]"
             />
           </div>
-          <div className="flex items-center gap-1 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] p-1">
+          <div className="beat-glass flex items-center gap-1 rounded-full p-1">
             {(['all', 'image', 'video', 'audio'] as Kind[]).map((value) => (
               <button
                 key={value}
@@ -419,7 +420,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
               onChange={(event) => setProjectFilter(event.target.value)}
               aria-label={m['assets.library.filterProject']()}
               data-library-project="true"
-              className="h-9 max-w-[200px] rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-2 text-[12px] text-[var(--beat-text-2)] outline-none"
+              className="h-9 max-w-[200px] rounded-full border border-[var(--beat-glass-border)] bg-[var(--beat-glass-bg)] px-3 text-[12px] text-[var(--beat-text-2)] outline-none backdrop-blur-xl"
             >
               <option value="all">{m['assets.library.allProjects']()}</option>
               {projectOptions.map(([id, name]) => (

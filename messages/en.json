@@ -1209,5 +1209,10 @@
   "standard.styleDefault": "Default",
   "standard.generate": "Generate",
   "standard.status": "Nodes {nodes} · Links {links} · Zoom {zoom}%",
-  "header.standard": "Standard"
+  "header.standard": "Standard",
+  "cmd.standard": "Standard canvas",
+  "home.workspaces.standardTitle": "Standard canvas",
+  "home.workspaces.standardBody": "Characters, scenes and settings on one grid; link them into a scene.",
+  "home.workspaces.standardOutput": "Get a wired-up board",
+  "AppShell.editor.media.backToCanvas": "Back to canvas"
 }

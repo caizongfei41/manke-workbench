@@ -23,7 +23,7 @@ test('projects page resumes each project in its last workspace and filters in pl
   assert.match(source, /data-project-search/);
   assert.match(source, /data-project-filter/);
   assert.match(source, /data-project-sort/);
-  assert.match(source, /liveProjects\.length > 0 \? \(\s*<div className="mb-6/);
+  assert.match(source, /liveProjects\.length > 0 \? \(\s*<div className="[^"]*"\s+data-project-toolbar="true"/);
 
   // Filtering happens over the loaded list: no extra fetch, no server round trip.
   assert.match(source, /visibleProjects = useMemo/);
