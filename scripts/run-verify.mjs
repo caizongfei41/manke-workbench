@@ -7,7 +7,7 @@
 // 前置：本地工作台在 3020（或 VERIFY_APP），浏览器调试端口在 9232（或 VERIFY_CDP），
 // ComfyUI 在 8188（或 VERIFY_COMFY，只有生成类套件需要）。
 import { spawn } from 'node:child_process';
-import { mkdirSync, readdirSync } from 'node:fs';
+import { mkdirSync, openSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,9 +19,10 @@ mkdirSync(VERIFY_DIR, { recursive: true });
 
 const args = process.argv.slice(2);
 const listOnly = args.includes('--list');
+const includeE2e = args.includes('--e2e');
 const filter = args.find((arg) => !arg.startsWith('--')) ?? '';
 const suites = readdirSync(SUITE_DIR)
-  .filter((name) => name.startsWith('verify-') && name.endsWith('.mjs'))
+  .filter((name) => (includeE2e ? /^(verify|e2e)-.*\.mjs$/.test(name) : name.startsWith('verify-') && name.endsWith('.mjs')))
   .filter((name) => (filter ? name.includes(filter) : true))
   .sort();
 
@@ -36,6 +37,7 @@ if (!suites.length) {
 
 const COMFY = process.env.VERIFY_COMFY ?? 'http://127.0.0.1:8188';
 const CDP = process.env.VERIFY_CDP ?? 'http://127.0.0.1:9232';
+const APP = process.env.VERIFY_APP ?? 'http://127.0.0.1:3020';
 
 // ComfyUI 挂了就自己拉起来：生成类套件全依赖它，静默全红比直接说明更难查
 const COMFY_PYTHON = process.env.VERIFY_COMFY_PYTHON ?? 'E:\\ComfyUI\\python_embeded\\python.exe';
@@ -55,10 +57,12 @@ const ensureComfy = async () => {
   console.log('  ComfyUI 未响应，尝试拉起…');
   try {
     // detached + unref：父进程退出后它仍然活着
+    const logPath = join(VERIFY_DIR, 'comfyui.log');
+    const fd = openSync(logPath, 'a');
     const child = spawn(COMFY_PYTHON, ['-s', COMFY_SCRIPT, '--windows-standalone-build', '--use-sage-attention', '--disable-pinned-memory'], {
       cwd: dirname(COMFY_SCRIPT),
       detached: true,
-      stdio: 'ignore',
+      stdio: ['ignore', fd, fd],
       windowsHide: true,
     });
     child.unref();
@@ -78,25 +82,34 @@ const ensureComfy = async () => {
 };
 // 套件之间必须清场：上一套的生成任务还在 GPU 上，下一套的队列断言就会假失败
 const settle = async () => {
-  await fetch(`${COMFY}/interrupt`, { method: 'POST' }).catch(() => {});
-  const queue = await fetch(`${COMFY}/queue`).then((r) => r.json()).catch(() => null);
-  for (const item of queue?.queue_pending ?? []) {
-    await fetch(`${COMFY}/queue`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ delete: [item[0]] }),
-    }).catch(() => {});
+  // 先等队列自己排空：动不动就 interrupt 正在推理的视频任务，比等更伤
+  let queue = null;
+  for (let i = 0; i < 40; i += 1) {
+    queue = await fetch(`${COMFY}/queue`).then((r) => r.json()).catch(() => null);
+    const busy = (queue?.queue_running?.length ?? 0) + (queue?.queue_pending?.length ?? 0);
+    if (busy === 0) break;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
   }
-  // 只留一个标签，避免几十次运行后页面越开越多
+  const stillBusy =
+    (queue?.queue_running?.length ?? 0) + (queue?.queue_pending?.length ?? 0);
+  if (stillBusy > 0) await fetch(`${COMFY}/interrupt`, { method: 'POST' }).catch(() => {});
+
+  // 显存不释放会一路累积：空闲就看到 12G/20G，下一套一开跑就爆，
+  // 表现为 ComfyUI 无声消失（没有 Python 栈，是驱动层回收）。
+  await fetch(`${COMFY}/free`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ unload_models: true, free_memory: true }),
+  }).catch(() => {});
+
+  // 关掉多余页面，但一定留一个 3020 页面：套件靠「找现有标签」启动
   const tabs = await fetch(`${CDP}/json`).then((r) => r.json()).catch(() => []);
-  const allTabs = tabs.filter((tab) => tab.type === 'page');
-  const appTabs = allTabs.filter((tab) => /:3020/.test(tab.url ?? ''));
-  // 只留一个空白页，其余全关：上一套崩溃留下的坏标签不要传染下一套
-  for (const extra of appTabs) {
+  const appTabs = tabs.filter((tab) => tab.type === 'page' && /:3020/.test(tab.url ?? ''));
+  for (const extra of appTabs.slice(1)) {
     await fetch(`${CDP}/json/close/${extra.id}`).catch(() => {});
   }
-  if (allTabs.length === appTabs.length) {
-    await fetch(`${CDP}/json/new?about:blank`, { method: 'PUT' }).catch(() => {});
+  if (!appTabs.length) {
+    await fetch(`${CDP}/json/new?${encodeURIComponent(APP)}/zh`, { method: 'PUT' }).catch(() => {});
   }
 };
 const runOne = (name) =>

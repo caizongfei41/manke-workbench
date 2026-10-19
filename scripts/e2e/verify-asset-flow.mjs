@@ -169,7 +169,7 @@ check('图片生成成功', succeeded);
 
 // 生成结束后自动回到视频模式，导演台应该重新出现
 let returned = false;
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 60; i++) {
   await delay(1500);
   const media = await ev(
     "document.querySelector('[data-beatapi-composer] button[aria-label=\"Media type\"]')?.textContent?.trim()"

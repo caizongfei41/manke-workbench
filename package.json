@@ -53,7 +53,8 @@
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
     "verify:all": "node scripts/run-verify.mjs",
     "verify:one": "node scripts/run-verify.mjs",
-    "verify:list": "node scripts/run-verify.mjs --list"
+    "verify:list": "node scripts/run-verify.mjs --list",
+    "verify:e2e": "node scripts/run-verify.mjs --e2e"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1069.0",
