@@ -81,3 +81,54 @@ jobs:
           if-no-files-found: ignore
 
       - run: pnpm audit --prod --audit-level high
+
+  # The 14 suites that actually render something need a GPU, a local ComfyUI and a
+  # browser with CDP — none of which a hosted runner has. They run on the machine that
+  # already hosts the stack, and only when asked, because that machine is also the one
+  # being worked on.
+  gpu-suites:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:push
+      - run: pnpm build
+
+      # Preconditions on the host, checked rather than assumed: the app, ComfyUI and a
+      # browser exposing CDP. Each failure names what is missing.
+      - name: Check the host has the stack up
+        shell: pwsh
+        run: |
+          $targets = @{
+            'app'     = 'http://127.0.0.1:3020'
+            'comfyui' = 'http://127.0.0.1:8188/queue'
+            'cdp'     = 'http://127.0.0.1:9232/json/version'
+          }
+          $missing = @()
+          foreach ($name in $targets.Keys) {
+            try { Invoke-WebRequest $targets[$name] -TimeoutSec 5 -UseBasicParsing | Out-Null }
+            catch { $missing += $name }
+          }
+          if ($missing.Count -gt 0) {
+            Write-Error "Not running: $($missing -join ', ')"
+            exit 1
+          }
+          Write-Host 'app, comfyui and cdp are all reachable'
+
+      - name: GPU suites
+        shell: pwsh
+        run: pnpm verify:gpu
+        env:
+          VERIFY_APP: http://127.0.0.1:3020
+          VERIFY_CDP: http://127.0.0.1:9232
+          VERIFY_COMFY: http://127.0.0.1:8188
+
+      - name: Upload suite artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gpu-suite-artifacts
+          path: .verify/
+          if-no-files-found: ignore

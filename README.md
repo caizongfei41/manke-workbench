@@ -435,6 +435,27 @@ pnpm start          # http://127.0.0.1:3020
 
 ---
 
+
+### CI
+
+推送到 `main` 或提 PR 时自动跑：
+
+| 环境 | 内容 |
+|---|---|
+| GitHub hosted runner | 装依赖 → 建库 → 构建 → 类型检查 → 单元测试 → i18n → playwright → **20 套 UI 套件** → 依赖审计 |
+| self-hosted（本机） | 手动触发 → **14 套生成类套件**（需要 GPU、本机 ComfyUI、带 CDP 的浏览器） |
+
+分组是显式标注的，不靠推断：会真正提交生成任务的套件首行写 `@needs: comfyui`。
+
+```bash
+pnpm verify:all    # 全部 34 套（本机）
+pnpm verify:ci     # CI 组：20 套，不需要 GPU
+pnpm verify:gpu    # GPU 组：14 套，需要本机 ComfyUI
+pnpm verify:list   # 枚举
+```
+
+self-hosted 作业开跑前会先检查 app / ComfyUI / CDP 三者是否可达，缺哪个直接报名字。
+
 ## 验证
 
 这个仓库的改动都带可重跑的验证，不是「看着对就行」：

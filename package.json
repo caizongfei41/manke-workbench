@@ -55,7 +55,8 @@
     "verify:one": "node scripts/run-verify.mjs",
     "verify:list": "node scripts/run-verify.mjs --list",
     "verify:e2e": "node scripts/run-verify.mjs --e2e",
-    "verify:ci": "node scripts/run-verify.mjs --group=ci"
+    "verify:ci": "node scripts/run-verify.mjs --group=ci",
+    "verify:gpu": "node scripts/run-verify.mjs --group=gpu"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1069.0",

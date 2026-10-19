@@ -22,14 +22,17 @@ const listOnly = args.includes('--list');
 const includeE2e = args.includes('--e2e');
 // CI 没有 GPU：只跑明确标注了不依赖 ComfyUI 的套件
 const ciOnly = args.includes('--group=ci');
+// gpu：正好是 ci 的补集，跑在装有本机 ComfyUI 的 self-hosted runner 上
+const gpuOnly = args.includes('--group=gpu');
 const filter = args.find((arg) => !arg.startsWith('--')) ?? '';
 const suites = readdirSync(SUITE_DIR)
   .filter((name) => (includeE2e ? /^(verify|e2e)-.*\.mjs$/.test(name) : name.startsWith('verify-') && name.endsWith('.mjs')))
   .filter((name) => (filter ? name.includes(filter) : true))
   .sort()
   .filter((name) => {
-    if (!ciOnly) return true;
-    return !readFileSync(join(SUITE_DIR, name), 'utf8').includes('@needs: comfyui');
+    if (!ciOnly && !gpuOnly) return true;
+    const needsComfy = readFileSync(join(SUITE_DIR, name), 'utf8').includes('@needs: comfyui');
+    return ciOnly ? !needsComfy : needsComfy;
   });
 
 if (listOnly) {
