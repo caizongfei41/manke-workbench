@@ -11,7 +11,7 @@ import { Link } from '@/core/i18n/navigation';
 import { appConfig } from '@/config';
 import { m } from '@/paraglide/messages.js';
 
-type ProductSurface = 'home' | 'projects';
+type ProductSurface = 'home' | 'projects' | 'assets';
 
 function getShellCopy(locale: string) {
   const messageLocale = normalizeLocale(locale);
@@ -19,6 +19,7 @@ function getShellCopy(locale: string) {
     home: m['product.shell.home']({}, { locale: messageLocale }),
     create: m['product.shell.create']({}, { locale: messageLocale }),
     projects: m['product.shell.projects']({}, { locale: messageLocale }),
+    assets: m['product.shell.assets']({}, { locale: messageLocale }),
     openNavigation: m['product.shell.openNavigation'](
       {},
       { locale: messageLocale }
@@ -44,12 +45,14 @@ function getNavItems(copy: ShellCopy) {
     { label: copy.home, href: '/' },
     { label: copy.create, href: '/studio' },
     { label: copy.projects, href: '/projects' },
+    { label: copy.assets, href: '/assets' },
   ] as const;
 }
 
 const activeNavHref: Record<ProductSurface, string> = {
   home: '/',
   projects: '/projects',
+  assets: '/assets',
 };
 
 export function Brand({ href = '/' }: { href?: string }) {
