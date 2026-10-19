@@ -1112,5 +1112,13 @@
   "assets.library.noProject": "プロジェクト未所属",
   "assets.library.openProject": "プロジェクトを開く",
   "assets.library.download": "ダウンロード",
-  "product.shell.assets": "素材"
+  "product.shell.assets": "素材",
+  "assets.library.select": "選択",
+  "assets.library.selected": "{count} 件選択中",
+  "assets.library.selectAll": "表示中をすべて選択",
+  "assets.library.delete": "削除",
+  "assets.library.deleting": "削除中…",
+  "assets.library.cancel": "キャンセル",
+  "assets.library.deleteConfirmTitle": "{count} 件の素材を削除しますか？",
+  "assets.library.deleteConfirmBody": "ファイルもディスクから削除されます。元に戻せません。"
 }

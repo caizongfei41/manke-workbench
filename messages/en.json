@@ -1112,5 +1112,13 @@
   "assets.library.noProject": "No project",
   "assets.library.openProject": "Open project",
   "assets.library.download": "Download",
-  "product.shell.assets": "Assets"
+  "product.shell.assets": "Assets",
+  "assets.library.select": "Select",
+  "assets.library.selected": "{count} selected",
+  "assets.library.selectAll": "Select shown",
+  "assets.library.delete": "Delete",
+  "assets.library.deleting": "Deleting…",
+  "assets.library.cancel": "Cancel",
+  "assets.library.deleteConfirmTitle": "Delete {count} assets?",
+  "assets.library.deleteConfirmBody": "The files are removed from disk too. This cannot be undone."
 }

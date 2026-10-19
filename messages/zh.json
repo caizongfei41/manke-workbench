@@ -1112,5 +1112,13 @@
   "assets.library.noProject": "未归属项目",
   "assets.library.openProject": "打开项目",
   "assets.library.download": "下载",
-  "product.shell.assets": "素材"
+  "product.shell.assets": "素材",
+  "assets.library.select": "选择",
+  "assets.library.selected": "已选 {count}",
+  "assets.library.selectAll": "全选当前",
+  "assets.library.delete": "删除",
+  "assets.library.deleting": "删除中…",
+  "assets.library.cancel": "取消",
+  "assets.library.deleteConfirmTitle": "删除 {count} 个素材？",
+  "assets.library.deleteConfirmBody": "文件会一并从磁盘移除，无法撤销。"
 }

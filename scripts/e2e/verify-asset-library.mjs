@@ -131,7 +131,7 @@ await delay(900);
 check('清除筛选后恢复', (await tiles()) === shown, `${await tiles()} / ${shown}`);
 
 // 5. 打开预览
-await ev(`document.querySelector('[data-library-asset]')?.click()`);
+await ev(`document.querySelector('[data-library-open]')?.click()`);
 await delay(800);
 const preview = await ev(`(() => {
   const dialog = document.querySelector('[data-library-preview]');

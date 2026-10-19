@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Download, ExternalLink, Film, ImageIcon, Music4, Search } from 'lucide-react';
+import { Check, Download, ExternalLink, Film, ImageIcon, Music4, Search, Trash2 } from 'lucide-react';
 
 import { BeatApiProductShell } from '@/components/marketing/beatapi-product-shell';
 import { buildLocalizedProjectDetailPath } from '@/core/projects/project-entry';
@@ -55,6 +55,9 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
   const [kind, setKind] = useState<Kind>('all');
   const [projectFilter, setProjectFilter] = useState('all');
   const [open, setOpen] = useState<LibraryAsset | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,16 +126,73 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
     [assets]
   );
 
+  const toggleSelected = (id: string, additive: boolean) => {
+    setSelected((current) => {
+      const next = new Set(additive ? current : new Set<string>());
+      if (additive && current.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllVisible = () =>
+    setSelected(new Set(visible.map((asset) => asset.id)));
+
+  const deleteSelected = async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    setDeleting(true);
+    try {
+      const response = await fetch('/api/app/assets', {
+        method: 'DELETE',
+        headers: {
+          'content-type': 'application/json',
+          'x-beatapi-workspace-request': '1',
+        },
+        body: JSON.stringify({ assetIds: ids }),
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      // Drop them locally so the grid does not wait on a full reload
+      setAssets((current) => current.filter((asset) => !selected.has(asset.id)));
+      setSelected(new Set());
+    } finally {
+      setDeleting(false);
+      setConfirming(false);
+    }
+  };
+
   const tile = (asset: LibraryAsset) => {
     const bucket = (asset as { assetKind?: string }).assetKind ?? 'image';
     return (
-      <button
+      <div
         key={asset.id}
-        type="button"
-        onClick={() => setOpen(asset)}
         data-library-asset={asset.id}
-        className="group relative min-w-0 overflow-hidden rounded-[14px] border border-ink/[0.08] bg-[var(--beat-surface)] text-left transition hover:-translate-y-0.5 hover:border-ink/20"
+        className={`group relative min-w-0 overflow-hidden rounded-[14px] border bg-[var(--beat-surface)] text-left transition hover:-translate-y-0.5 hover:border-ink/20 ${
+          selected.has(asset.id)
+            ? 'border-[var(--beat-accent)] ring-1 ring-[var(--beat-accent)]/40'
+            : 'border-ink/[0.08]'
+        }`}
       >
+        <button
+          type="button"
+          onClick={(event) => toggleSelected(asset.id, event.shiftKey || event.metaKey || event.ctrlKey)}
+          aria-label={m['assets.library.select']()}
+          aria-pressed={selected.has(asset.id)}
+          data-library-select={asset.id}
+          className={`absolute left-2 top-2 z-10 grid size-5 place-items-center rounded-[6px] border transition ${
+            selected.has(asset.id)
+              ? 'border-[var(--beat-accent)] bg-[var(--beat-accent)] text-[var(--beat-accent-ink)]'
+              : 'border-white/70 bg-black/35 text-transparent opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          <Check className="size-3" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(asset)}
+          data-library-open={asset.id}
+          className="block w-full text-left"
+        >
         <div className="relative aspect-[4/3] overflow-hidden bg-ink/[0.04]">
           {bucket === 'image' && asset.publicUrl ? (
             <img
@@ -160,7 +220,8 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
             {formatDate(asset.createdAt)}
           </p>
         </div>
-      </button>
+        </button>
+      </div>
     );
   };
 
@@ -211,6 +272,36 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
               </button>
             ))}
           </div>
+          {selected.size > 0 ? (
+            <div className="flex items-center gap-1.5" data-library-selection="true">
+              <span className="text-[11.5px] tabular-nums text-[var(--beat-text-2)]">
+                {m['assets.library.selected']({ count: String(selected.size) })}
+              </span>
+              <button
+                type="button"
+                onClick={selectAllVisible}
+                className="h-8 rounded-[8px] border border-ink/[0.12] px-2 text-[11.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+              >
+                {m['assets.library.selectAll']()}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="h-8 rounded-[8px] px-2 text-[11.5px] text-[var(--beat-text-3)] transition hover:text-ink"
+              >
+                {m['assets.library.clear']()}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                data-library-delete="true"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-2.5 text-[11.5px] text-white"
+              >
+                <Trash2 className="size-3.5" />
+                {m['assets.library.delete']()}
+              </button>
+            </div>
+          ) : null}
           {projectOptions.length > 1 ? (
             <select
               value={projectFilter}
@@ -265,6 +356,47 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
           )}
         </section>
       </main>
+
+      {confirming ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/55 p-6"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => (deleting ? null : setConfirming(false))}
+        >
+          <div
+            className="w-full max-w-[420px] rounded-[16px] border border-ink/[0.1] bg-[var(--beat-surface)] p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-[15px] font-semibold text-[var(--beat-text-1)]">
+              {m['assets.library.deleteConfirmTitle']({ count: String(selected.size) })}
+            </h2>
+            <p className="mt-2 text-[12.5px] leading-5 text-[var(--beat-text-2)]">
+              {m['assets.library.deleteConfirmBody']()}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setConfirming(false)}
+                className="h-8 rounded-[8px] border border-ink/[0.12] px-3 text-[12px] text-[var(--beat-text-2)] disabled:opacity-50"
+              >
+                {m['assets.library.cancel']()}
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => void deleteSelected()}
+                data-library-delete-confirm="true"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-3 text-[12px] text-white disabled:opacity-50"
+              >
+                <Trash2 className="size-3.5" />
+                {deleting ? m['assets.library.deleting']() : m['assets.library.delete']()}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {open ? (
         <div
