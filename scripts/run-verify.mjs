@@ -70,6 +70,8 @@ const comfyAlive = async () => {
 };
 
 const ensureComfy = async () => {
+  // CI 组的套件按定义不需要 ComfyUI，拉起来只会抢资源
+  if (ciOnly) return false;
   if (await comfyAlive()) return true;
   restarts += 1;
   console.log('  ComfyUI 未响应，尝试拉起…');
