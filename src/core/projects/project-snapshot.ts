@@ -52,7 +52,7 @@ export type ProjectSnapshotActiveTemplateWorkflow = {
 };
 
 /** Which canvas the project opens: the freeform board or the drama pipeline. */
-export type ProjectCanvasKind = 'basic' | 'drama';
+export type ProjectCanvasKind = 'basic' | 'drama' | 'standard';
 
 export type ProjectSnapshotDocument = {
   version: 3;
@@ -64,6 +64,8 @@ export type ProjectSnapshotDocument = {
    * for a branch most projects never use.
    */
   drama?: string;
+  /** 标准画布状态，同样是 JSON 字符串；形状由 standard-canvas/document 决定。 */
+  standard?: string;
   cards: CanvasCard[];
   frames: Record<string, ProjectSnapshotShapeFrame>;
   camera?: ProjectSnapshotCamera;
@@ -385,7 +387,7 @@ export const normalizeProjectSnapshotDocument = (
   const camera = normalizeCamera(value.camera);
 
   const canvasKind =
-    value.canvasKind === 'drama' || value.canvasKind === 'basic'
+    value.canvasKind === 'drama' || value.canvasKind === 'standard' || value.canvasKind === 'basic'
       ? value.canvasKind
       : undefined;
   // Drama state is owned by its canvas; only bound its size here so a bad
@@ -394,11 +396,16 @@ export const normalizeProjectSnapshotDocument = (
     typeof value.drama === 'string' && value.drama.length < 1_000_000
       ? value.drama
       : undefined;
+  const standard =
+    typeof value.standard === 'string' && value.standard.length < 1_000_000
+      ? value.standard
+      : undefined;
 
   return {
     version: 3,
     ...(canvasKind ? { canvasKind } : {}),
     ...(drama ? { drama } : {}),
+    ...(standard ? { standard } : {}),
     cards,
     frames,
     ...(camera ? { camera } : {}),

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Images, LayoutPanelTop, Scissors, Server, Workflow } from 'lucide-react';
+import { Layers, Images, LayoutPanelTop, Scissors, Server, Workflow  } from 'lucide-react';
 
 import { WorkspaceApiConfigDialog } from '@/components/app/workspace-api-config-dialog';
 import { LanguageSwitcher } from '@/components/app/language-switcher';
