@@ -1075,5 +1075,7 @@
   "drama.board.applyAll": "应用到全部 {count} 段",
   "drama.board.batchAsset": "挂参考图",
   "drama.board.applyAssetAll": "挂到全部 {count} 段",
-  "drama.board.removeAssetAll": "从全部 {count} 段移除"
+  "drama.board.removeAssetAll": "从全部 {count} 段移除",
+  "drama.board.promptPrefix": "全局前缀",
+  "drama.board.promptPrefixHint": "例：电影感，35mm 胶片"
 }

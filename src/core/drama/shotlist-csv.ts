@@ -29,6 +29,8 @@ const plainPrompt = (prompt: string) =>
     .trim();
 
 export const buildShotListCsv = (drama: DramaDocument) => {
+  const prefix = (drama.promptPrefix ?? '').trim();
+  const withPrefix = (prompt: string) => (prefix ? `${prefix}，${prompt}` : prompt);
   const assetName = (id: string) =>
     (drama.publicAssets ?? []).find((asset) => asset.id === id)?.name ?? '';
 
@@ -51,7 +53,7 @@ export const buildShotListCsv = (drama: DramaDocument) => {
       index + 1,
       shot.seconds ?? '',
       shot.status ?? '',
-      plainPrompt(shot.prompt ?? ''),
+      withPrefix(plainPrompt(shot.prompt ?? '')),
       dialogue,
       assets,
       refs,

@@ -1075,5 +1075,7 @@
   "drama.board.applyAll": "全 {count} 件に適用",
   "drama.board.batchAsset": "参照画像",
   "drama.board.applyAssetAll": "全 {count} 件に付与",
-  "drama.board.removeAssetAll": "全 {count} 件から外す"
+  "drama.board.removeAssetAll": "全 {count} 件から外す",
+  "drama.board.promptPrefix": "共通プレフィックス",
+  "drama.board.promptPrefixHint": "例：シネマティック、35mm フィルム"
 }

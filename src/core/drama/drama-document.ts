@@ -112,6 +112,11 @@ export type DramaDocument = {
   finalError?: string | null;
   /** 折叠起来的分段 id：40 段排一列时，折叠是唯一能一眼看完的办法。 */
   collapsedShots?: string[];
+  /**
+   * 每段提示词前统一加的一句（画质、镜头语言等）。存成独立字段而不是改每段原文，
+   * 这样随时能关掉，也不会毁掉手写的内容。
+   */
+  promptPrefix?: string;
   finalStatus: 'idle' | 'running' | 'succeeded' | 'failed';
 };
 
@@ -310,6 +315,7 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
       finalVideoUrl:
         typeof parsed.finalVideoUrl === 'string' ? parsed.finalVideoUrl : null,
       finalError: typeof parsed.finalError === 'string' ? parsed.finalError : null,
+      promptPrefix: typeof parsed.promptPrefix === 'string' ? parsed.promptPrefix : '',
       collapsedShots: Array.isArray((parsed as { collapsedShots?: unknown }).collapsedShots)
         ? ((parsed as { collapsedShots: unknown[] }).collapsedShots.filter(
             (id): id is string => typeof id === 'string'

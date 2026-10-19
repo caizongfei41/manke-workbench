@@ -80,6 +80,46 @@ describe('buildShotListCsv', () => {
     assert.ok(csv.includes('"/final.mp4"'));
   });
 
+  test('the global prefix appears in the prompt column', () => {
+    const csv = buildShotListCsv(
+      drama({
+        promptPrefix: '电影感，35mm 胶片',
+        shots: [
+          {
+            id: 's1',
+            prompt: '中景。',
+            seconds: 3,
+            publicAssetIds: [],
+            ownImageUrls: [],
+            videoUrl: null,
+            status: 'idle',
+          },
+        ],
+      })
+    );
+    assert.ok(csv.includes('"电影感，35mm 胶片，中景。"'), csv.split('\r\n')[1]);
+  });
+
+  test('no prefix leaves the prompt untouched', () => {
+    const csv = buildShotListCsv(
+      drama({
+        promptPrefix: '   ',
+        shots: [
+          {
+            id: 's1',
+            prompt: '中景。',
+            seconds: 3,
+            publicAssetIds: [],
+            ownImageUrls: [],
+            videoUrl: null,
+            status: 'idle',
+          },
+        ],
+      })
+    );
+    assert.ok(csv.includes('"中景。"'), csv.split('\r\n')[1]);
+  });
+
   test('a board with no shots still produces a valid file', () => {
     const csv = buildShotListCsv(drama());
     assert.ok(csv.includes('"合计"'));

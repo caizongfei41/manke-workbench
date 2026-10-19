@@ -807,6 +807,14 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   // Uniform pacing is the common edit: changing seconds one card at a time is busywork
   // A character usually belongs in every segment; adding it shot by shot is the same
   // busywork as per-card seconds.
+  // The prefix is a separate field, so turning it off restores the hand-written
+  // prompts exactly; rewriting every segment would be a one-way edit.
+  const composePrompt = (prompt: string) => {
+    const body = stripDialogueMarkup(prompt);
+    const prefix = (doc.promptPrefix ?? '').trim();
+    return prefix ? `${prefix}，${body}` : body;
+  };
+
   const applyAssetToAll = (assetId: string) =>
     updateDoc((current) => ({
       ...current,
@@ -876,7 +884,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             projectId,
             modelId: DRAMA_MODEL_ID,
             mode: 'video',
-            prompt: enhancePrompt(stripDialogueMarkup(shot.prompt), effectiveEnhance()) || 'short drama shot',
+            prompt: enhancePrompt(composePrompt(shot.prompt), effectiveEnhance()) || 'short drama shot',
             references: [],
             parameters: {
               aspect_ratio: DRAMA_ASPECT_RATIO,
@@ -886,7 +894,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               director_loras: activeDramaLoras(),
               director_segments: [
                 {
-                  prompt: enhancePrompt(stripDialogueMarkup(shot.prompt), effectiveEnhance()),
+                  prompt: enhancePrompt(composePrompt(shot.prompt), effectiveEnhance()),
                   seconds: shot.seconds,
                   imageUrls: images,
                   refs,
@@ -1522,6 +1530,19 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                     ? m['drama.board.removeAssetAll']({ count: doc.shots.length })
                     : m['drama.board.applyAssetAll']({ count: doc.shots.length })}
                 </button>
+              </div>
+
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className="shrink-0 text-[10px] text-[var(--beat-text-3)]">{m['drama.board.promptPrefix']()}</span>
+                <input
+                  type="text"
+                  value={doc.promptPrefix ?? ''}
+                  onChange={(event) => updateDoc((current) => ({ ...current, promptPrefix: event.target.value }))}
+                  placeholder={m['drama.board.promptPrefixHint']()}
+                  aria-label={m['drama.board.promptPrefix']()}
+                  data-prompt-prefix="true"
+                  className="h-6 min-w-0 flex-1 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1.5 text-[10px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
+                />
               </div>
           </NodeShell>
         </div>
