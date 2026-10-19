@@ -1120,5 +1120,6 @@
   "assets.library.deleting": "删除中…",
   "assets.library.cancel": "取消",
   "assets.library.deleteConfirmTitle": "删除 {count} 个素材？",
-  "assets.library.deleteConfirmBody": "文件会一并从磁盘移除，无法撤销。"
+  "assets.library.deleteConfirmBody": "文件会一并从磁盘移除，无法撤销。",
+  "assets.library.unpreviewable": "文件无法预览"
 }

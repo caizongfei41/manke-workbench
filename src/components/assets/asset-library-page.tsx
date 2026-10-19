@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Download, ExternalLink, Film, ImageIcon, Music4, Search, Trash2 } from 'lucide-react';
+import { Check, Download, ExternalLink, Film, ImageIcon, Music4, Play, Search, Trash2 } from 'lucide-react';
 
 import { BeatApiProductShell } from '@/components/marketing/beatapi-product-shell';
 import { buildLocalizedProjectDetailPath } from '@/core/projects/project-entry';
@@ -47,6 +47,154 @@ const formatDuration = (ms?: number | null) => {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 };
 
+/**
+ * Spread the media requests out instead of firing them all at once.
+ *
+ * A hundred and twenty <video preload="metadata"> in the same tick is a burst the browser
+ * cannot keep up with, and the requests it drops fire onError — which looks exactly like
+ * a broken file even though every one of them serves fine.
+ *
+ * Deliberately not IntersectionObserver: it does not fire at all while the document is
+ * hidden, so a library opened in a background tab would show nothing but placeholders
+ * until the user came back to it.
+ */
+const MOUNT_BATCH = 12;
+const MOUNT_STEP_MS = 120;
+
+function useStaggeredMount(index: number) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const delay = Math.floor(index / MOUNT_BATCH) * MOUNT_STEP_MS;
+    if (delay === 0) {
+      setReady(true);
+      return;
+    }
+    const timer = setTimeout(() => setReady(true), delay);
+    return () => clearTimeout(timer);
+  }, [index]);
+  return ready;
+}
+
+function LibraryTile({
+  asset,
+  index,
+  bucket,
+  selected,
+  onToggle,
+  onOpen,
+  onProbe,
+  durationOf,
+}: {
+  asset: LibraryAsset;
+  index: number;
+  bucket: 'image' | 'video' | 'audio';
+  selected: boolean;
+  onToggle: (id: string, additive: boolean) => void;
+  onOpen: (asset: LibraryAsset) => void;
+  onProbe: (id: string, info: { durationMs?: number; width?: number; height?: number }) => void;
+  durationOf: (asset: LibraryAsset) => number | null;
+}) {
+  const ready = useStaggeredMount(index);
+  const [failed, setFailed] = useState(false);
+  const duration = durationOf(asset);
+
+  return (
+    <div
+      data-library-asset={asset.id}
+      className={`group relative min-w-0 overflow-hidden rounded-[14px] border bg-[var(--beat-surface)] text-left transition hover:-translate-y-0.5 hover:border-ink/20 ${
+        selected
+          ? 'border-[var(--beat-accent)] ring-1 ring-[var(--beat-accent)]/40'
+          : 'border-ink/[0.08]'
+      }`}
+    >
+      <button
+        type="button"
+        onClick={(event) => onToggle(asset.id, event.shiftKey || event.metaKey || event.ctrlKey)}
+        aria-label={m['assets.library.select']()}
+        aria-pressed={selected}
+        data-library-select={asset.id}
+        className={`absolute left-2 top-2 z-10 grid size-5 place-items-center rounded-[6px] border transition ${
+          selected
+            ? 'border-[var(--beat-accent)] bg-[var(--beat-accent)] text-[var(--beat-accent-ink)]'
+            : 'border-white/70 bg-black/35 text-transparent opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        <Check className="size-3" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onOpen(asset)}
+        data-library-open={asset.id}
+        className="block w-full text-left"
+      >
+        <div className="relative aspect-[4/3] overflow-hidden bg-ink/[0.04]">
+          {ready && asset.publicUrl && !failed && bucket === 'image' ? (
+            <img
+              src={asset.publicUrl}
+              alt=""
+              loading="lazy"
+              onError={() => setFailed(true)}
+              className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            />
+          ) : ready && asset.publicUrl && !failed && bucket === 'video' ? (
+            // A still frame says what the clip looks like; an icon says nothing.
+            <video
+              src={`${asset.publicUrl}#t=0.1`}
+              preload="metadata"
+              muted
+              playsInline
+              tabIndex={-1}
+              onLoadedMetadata={(event) => {
+                const el = event.currentTarget;
+                onProbe(asset.id, {
+                  durationMs: Number.isFinite(el.duration) ? Math.round(el.duration * 1000) : undefined,
+                  width: el.videoWidth || undefined,
+                  height: el.videoHeight || undefined,
+                });
+              }}
+              onError={() => setFailed(true)}
+              className="size-full object-cover"
+            />
+          ) : (
+            <div
+              className="grid size-full place-items-center text-[var(--beat-text-3)]"
+              title={failed ? m['assets.library.unpreviewable']() : undefined}
+            >
+              {bucket === 'video' ? <Film className="size-7" /> : <Music4 className="size-7" />}
+            </div>
+          )}
+          {failed ? (
+            <span
+              data-library-broken="true"
+              className="absolute bottom-1.5 left-1.5 rounded bg-[var(--beat-warn-text)] px-1 py-0.5 text-[9px] text-[var(--beat-warn-on)]"
+            >
+              {m['assets.library.unpreviewable']()}
+            </span>
+          ) : null}
+          {bucket === 'video' && !failed ? (
+            <span className="pointer-events-none absolute inset-0 grid place-items-center">
+              <span className="grid size-8 place-items-center rounded-full bg-black/45 text-white">
+                <Play className="size-3.5" />
+              </span>
+            </span>
+          ) : null}
+          {duration ? (
+            <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1 py-0.5 text-[10px] tabular-nums text-white">
+              {formatDuration(duration)}
+            </span>
+          ) : null}
+        </div>
+        <div className="px-2.5 py-2">
+          <p className="truncate text-[11.5px] text-[var(--beat-text-1)]" title={asset.filename ?? ''}>
+            {asset.projectName ?? m['assets.library.noProject']()}
+          </p>
+          <p className="mt-0.5 text-[10px] text-[var(--beat-text-3)]">{formatDate(asset.createdAt)}</p>
+        </div>
+      </button>
+    </div>
+  );
+}
+
 export function AssetLibraryPage({ locale }: { locale: string }) {
   const [assets, setAssets] = useState<LibraryAsset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +203,9 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
   const [kind, setKind] = useState<Kind>('all');
   const [projectFilter, setProjectFilter] = useState('all');
   const [open, setOpen] = useState<LibraryAsset | null>(null);
+  // Plenty of stored assets have null duration and dimensions, so the tile reads them
+  // from the media itself once metadata loads.
+  const [probed, setProbed] = useState<Record<string, { durationMs?: number; width?: number; height?: number }>>({});
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -126,6 +277,16 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
     [assets]
   );
 
+  const rememberProbe = (id: string, info: { durationMs?: number; width?: number; height?: number }) =>
+    setProbed((current) => (current[id] ? current : { ...current, [id]: info }));
+
+  const durationOf = (asset: LibraryAsset) => asset.durationMs ?? probed[asset.id]?.durationMs ?? null;
+  const sizeOf = (asset: LibraryAsset) => {
+    const width = asset.width ?? probed[asset.id]?.width ?? null;
+    const height = asset.height ?? probed[asset.id]?.height ?? null;
+    return width && height ? `${width}×${height}` : null;
+  };
+
   const toggleSelected = (id: string, additive: boolean) => {
     setSelected((current) => {
       const next = new Set(additive ? current : new Set<string>());
@@ -161,69 +322,19 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
     }
   };
 
-  const tile = (asset: LibraryAsset) => {
-    const bucket = (asset as { assetKind?: string }).assetKind ?? 'image';
-    return (
-      <div
-        key={asset.id}
-        data-library-asset={asset.id}
-        className={`group relative min-w-0 overflow-hidden rounded-[14px] border bg-[var(--beat-surface)] text-left transition hover:-translate-y-0.5 hover:border-ink/20 ${
-          selected.has(asset.id)
-            ? 'border-[var(--beat-accent)] ring-1 ring-[var(--beat-accent)]/40'
-            : 'border-ink/[0.08]'
-        }`}
-      >
-        <button
-          type="button"
-          onClick={(event) => toggleSelected(asset.id, event.shiftKey || event.metaKey || event.ctrlKey)}
-          aria-label={m['assets.library.select']()}
-          aria-pressed={selected.has(asset.id)}
-          data-library-select={asset.id}
-          className={`absolute left-2 top-2 z-10 grid size-5 place-items-center rounded-[6px] border transition ${
-            selected.has(asset.id)
-              ? 'border-[var(--beat-accent)] bg-[var(--beat-accent)] text-[var(--beat-accent-ink)]'
-              : 'border-white/70 bg-black/35 text-transparent opacity-0 group-hover:opacity-100'
-          }`}
-        >
-          <Check className="size-3" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen(asset)}
-          data-library-open={asset.id}
-          className="block w-full text-left"
-        >
-        <div className="relative aspect-[4/3] overflow-hidden bg-ink/[0.04]">
-          {bucket === 'image' && asset.publicUrl ? (
-            <img
-              src={asset.publicUrl}
-              alt=""
-              loading="lazy"
-              className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="grid size-full place-items-center text-[var(--beat-text-3)]">
-              {bucket === 'video' ? <Film className="size-7" /> : <Music4 className="size-7" />}
-            </div>
-          )}
-          {asset.durationMs ? (
-            <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1 py-0.5 text-[10px] tabular-nums text-white">
-              {formatDuration(asset.durationMs)}
-            </span>
-          ) : null}
-        </div>
-        <div className="px-2.5 py-2">
-          <p className="truncate text-[11.5px] text-[var(--beat-text-1)]" title={asset.filename ?? ''}>
-            {asset.projectName ?? m['assets.library.noProject']()}
-          </p>
-          <p className="mt-0.5 text-[10px] text-[var(--beat-text-3)]">
-            {formatDate(asset.createdAt)}
-          </p>
-        </div>
-        </button>
-      </div>
-    );
-  };
+  const renderTile = (asset: LibraryAsset, index: number) => (
+    <LibraryTile
+      key={asset.id}
+      asset={asset}
+      index={index}
+      bucket={((asset as { assetKind?: string }).assetKind ?? 'image') as 'image' | 'video' | 'audio'}
+      selected={selected.has(asset.id)}
+      onToggle={toggleSelected}
+      onOpen={setOpen}
+      onProbe={rememberProbe}
+      durationOf={durationOf}
+    />
+  );
 
   return (
     <BeatApiProductShell active="assets" locale={locale}>
@@ -295,7 +406,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                 type="button"
                 onClick={() => setConfirming(true)}
                 data-library-delete="true"
-                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-2.5 text-[11.5px] text-white"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-2.5 text-[11.5px] text-[var(--beat-warn-on)]"
               >
                 <Trash2 className="size-3.5" />
                 {m['assets.library.delete']()}
@@ -351,7 +462,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {visible.map(tile)}
+              {visible.map((asset, index) => renderTile(asset, index))}
             </div>
           )}
         </section>
@@ -388,7 +499,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                 disabled={deleting}
                 onClick={() => void deleteSelected()}
                 data-library-delete-confirm="true"
-                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-3 text-[12px] text-white disabled:opacity-50"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-3 text-[12px] text-[var(--beat-warn-on)] disabled:opacity-50"
               >
                 <Trash2 className="size-3.5" />
                 {deleting ? m['assets.library.deleting']() : m['assets.library.delete']()}
@@ -412,7 +523,14 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
           >
             <div className="bg-black/85">
               {(open as { assetKind?: string }).assetKind === 'video' ? (
-                <video src={open.publicUrl ?? ''} controls className="max-h-[60vh] w-full" />
+                <video
+                  src={open.publicUrl ?? ''}
+                  controls
+                  className="max-h-[60vh] w-full"
+                  onError={(event) => {
+                    event.currentTarget.dataset.broken = 'true';
+                  }}
+                />
               ) : (open as { assetKind?: string }).assetKind === 'audio' ? (
                 <div className="grid h-40 place-items-center">
                   <audio src={open.publicUrl ?? ''} controls />
@@ -427,7 +545,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                   {open.filename ?? open.projectName ?? '—'}
                 </p>
                 <p className="mt-0.5 text-[10.5px] text-[var(--beat-text-3)]">
-                  {open.width && open.height ? `${open.width}×${open.height} · ` : ''}
+                  {sizeOf(open) ? `${sizeOf(open)} · ` : ''}
                   {formatDate(open.createdAt)}
                   {open.projectName ? ` · ${open.projectName}` : ''}
                 </p>

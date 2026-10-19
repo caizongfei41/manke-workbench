@@ -1120,5 +1120,6 @@
   "assets.library.deleting": "削除中…",
   "assets.library.cancel": "キャンセル",
   "assets.library.deleteConfirmTitle": "{count} 件の素材を削除しますか？",
-  "assets.library.deleteConfirmBody": "ファイルもディスクから削除されます。元に戻せません。"
+  "assets.library.deleteConfirmBody": "ファイルもディスクから削除されます。元に戻せません。",
+  "assets.library.unpreviewable": "プレビュー不可"
 }

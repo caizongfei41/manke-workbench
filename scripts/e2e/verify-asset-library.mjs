@@ -98,6 +98,28 @@ await delay(900);
 const audioOnly = await tiles();
 check('筛到音频', audioOnly >= 0 && audioOnly <= Math.max(api.audios?.length ?? 0, 1), `${audioOnly} 个`);
 
+// 1.5 视频瓦片：有画面，或者明确说「无法预览」，不能两者都不是
+await send('Page.bringToFront');
+await delay(1200);
+await ev(`document.querySelector('[data-library-kind="video"]')?.click()`);
+await delay(9000);
+const videoState = await ev(`(() => {
+  const tiles = [...document.querySelectorAll('[data-library-asset]')];
+  const vids = tiles.map((t) => t.querySelector('video')).filter(Boolean);
+  return {
+    tiles: tiles.length,
+    painted: vids.filter((v) => v.videoWidth > 0).length,
+    broken: tiles.filter((t) => t.querySelector('[data-library-broken]')).length,
+    ambiguous: tiles.filter((t) => !t.querySelector('video') && !t.querySelector('[data-library-broken]')).length,
+  };
+})()`);
+check(
+  '视频瓦片都有明确状态',
+  videoState.ambiguous === 0,
+  `有画面 ${videoState.painted} / 标注无法预览 ${videoState.broken} / 含糊 ${videoState.ambiguous}`
+);
+check('至少有一段视频真的解出了画面', videoState.painted > 0, `${videoState.painted} 段`);
+
 // 2. 搜索
 await ev(`document.querySelector('[data-library-kind="all"]')?.click()`);
 await delay(600);

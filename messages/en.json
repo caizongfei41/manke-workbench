@@ -1120,5 +1120,6 @@
   "assets.library.deleting": "Deleting…",
   "assets.library.cancel": "Cancel",
   "assets.library.deleteConfirmTitle": "Delete {count} assets?",
-  "assets.library.deleteConfirmBody": "The files are removed from disk too. This cannot be undone."
+  "assets.library.deleteConfirmBody": "The files are removed from disk too. This cannot be undone.",
+  "assets.library.unpreviewable": "Cannot preview"
 }

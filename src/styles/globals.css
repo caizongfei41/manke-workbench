@@ -488,6 +488,8 @@ button[aria-disabled="true"] {
   --beat-photo-shadow-active: 0 24px 62px rgba(0, 0, 0, 0.58), 0 0 0 2px rgba(255, 255, 255, 0.12);
   --beat-warn-text: #fcd34d;
   --beat-warn-bg: rgba(251, 191, 36, 0.14);
+  /* 深色下警告色本身很浅，压在上面的文字必须是深色 */
+  --beat-warn-on: #1a1815;
   --beat-dot: rgba(255, 255, 255, 0.16);
   --beatcanvas-grid-dot: rgba(255, 255, 255, 0.18);
   --beat-border: rgba(255, 255, 255, 0.08);
@@ -1017,6 +1019,7 @@ html[data-theme='light'] {
   /* 警告态同理：浅琥珀压在浅琥珀上会看不见，浅色主题要更深 */
   --beat-warn-text: #92400e;
   --beat-warn-bg: rgba(251, 191, 36, 0.16);
+  --beat-warn-on: #ffffff;
   --beat-dot: rgba(23, 21, 15, 0.1);
 
   /* React Flow canvas: keep the dot grid visible on a pale backdrop. */
