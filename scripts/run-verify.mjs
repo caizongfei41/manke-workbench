@@ -192,6 +192,10 @@ for (const name of suites) {
 }
 
 console.log(`\n  合计: 通过 ${totalPass} / 失败 ${totalFail}（${suites.length} 套）`);
+if (restarts > 0) {
+  // 让结果可解读：ComfyUI 在这轮里被拉起过几次，失败多半与此有关
+  console.log(`  环境: 本轮重启 ComfyUI ${restarts} 次（H3 模型单独就占 15G，20G 卡跑连续视频任务会被驱动回收）`);
+}
 if (broken.length) {
   console.log(`  需要注意: ${broken.join(', ')}`);
   process.exit(1);
