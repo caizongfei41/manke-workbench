@@ -55,6 +55,22 @@ const check = (name, ok, detail = '') => {
   else { fails.push(name + (detail ? '  ' + detail : '')); console.log(`  FAIL ${name}${detail ? '  ' + detail : ''}`); }
 };
 
+
+// 等元素出现再点：?.click() 会把"还没渲染"静默吞掉，失败信息就成了谜
+const clickWhenReady = async (selector, timeoutMs = 8000) => {
+  for (let waited = 0; waited < timeoutMs; waited += 250) {
+    const result = await ev(`(() => {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (!el) return 'missing';
+      el.click();
+      return 'ok';
+    })()`);
+    if (result === 'ok') return 'ok';
+    await delay(250);
+  }
+  return 'timeout';
+};
+
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Page.bringToFront');
@@ -153,7 +169,8 @@ await delay(900);
 check('清除筛选后恢复', (await tiles()) === shown, `${await tiles()} / ${shown}`);
 
 // 5. 打开预览
-await ev(`document.querySelector('[data-library-open]')?.click()`);
+const opened = await clickWhenReady('[data-library-open]');
+check('能点开预览瓦片', opened === 'ok', opened);
 await delay(800);
 const preview = await ev(`(() => {
   const dialog = document.querySelector('[data-library-preview]');

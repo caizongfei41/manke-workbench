@@ -244,14 +244,14 @@ export function StudioStartHere({
           <p className="text-[10.5px] font-semibold tracking-[0.16em] text-ink/30">
             {m['startHere.recent.title']()}
           </p>
-          <div className="mt-3 flex items-center justify-center gap-2">
+          <div className="mt-3 grid grid-cols-3 gap-2.5">
             {recent.map((url, index) => (
               <img
                 key={url}
                 src={url}
                 alt=""
                 data-studio-recent-item={index}
-                className="size-14 rounded-[10px] border border-ink/10 object-cover opacity-80 transition hover:opacity-100"
+                className="aspect-[4/3] w-full rounded-[12px] border border-ink/[0.1] object-cover opacity-85 transition duration-300 hover:scale-[1.02] hover:opacity-100"
               />
             ))}
           </div>

@@ -56,6 +56,22 @@ const check = (name, ok, detail = '') => {
   else { fails.push(name + (detail ? '  ' + detail : '')); console.log(`  FAIL ${name}${detail ? '  ' + detail : ''}`); }
 };
 
+
+// 等元素出现再点：?.click() 会把"还没渲染"静默吞掉，失败信息就成了谜
+const clickWhenReady = async (selector, timeoutMs = 8000) => {
+  for (let waited = 0; waited < timeoutMs; waited += 250) {
+    const result = await ev(`(() => {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (!el) return 'missing';
+      el.click();
+      return 'ok';
+    })()`);
+    if (result === 'ok') return 'ok';
+    await delay(250);
+  }
+  return 'timeout';
+};
+
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Page.bringToFront');
@@ -161,7 +177,8 @@ await ev(`(() => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 })()`);
 await delay(800);
-await ev(`document.querySelector('[data-rename-project]')?.click()`);
+const renameClicked = await clickWhenReady('[data-rename-project]');
+check('重命名按钮可点', renameClicked === 'ok', renameClicked);
 await delay(500);
 const hasInput = await ev(`!!document.querySelector('[data-rename-input]')`);
 check('重命名输入框出现', hasInput === true);
