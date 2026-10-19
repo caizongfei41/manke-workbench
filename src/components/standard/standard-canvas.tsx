@@ -74,6 +74,9 @@ export function StandardCanvas({
   onChange,
   saving,
   onUpload,
+  onGenerate,
+  generating,
+  generationError,
 }: {
   projectId: string;
   projectName: string;
@@ -81,6 +84,9 @@ export function StandardCanvas({
   onChange: (updater: (current: StandardDocument) => StandardDocument) => void;
   saving: 'idle' | 'saving' | 'saved' | 'error';
   onUpload: (nodeId: string, file: File) => Promise<string | null>;
+  onGenerate: (nodeId: string) => Promise<void>;
+  generating: string | null;
+  generationError: string | null;
 }) {
   const locale = normalizeLocale('zh');
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -680,45 +686,32 @@ export function StandardCanvas({
             <button
               type="button"
               data-standard-generate="true"
+              disabled={generating !== null}
               onClick={() => {
-                // Generation lands in the setting node first; the render call comes next
-                onChange((current) => {
-                  const prompt = current.composer.prompt.trim();
-                  if (!prompt) return current;
-                  const target = current.nodes.find((node) => node.kind === 'setting');
-                  if (target) {
-                    return {
-                      ...current,
-                      nodes: current.nodes.map((node) =>
-                        node.id === target.id
-                          ? { ...node, text: node.text ? `${node.text}\n${prompt}` : prompt }
-                          : node
-                      ),
-                    };
-                  }
-                  return {
+                const prompt = doc.composer.prompt.trim();
+                // The composer text goes into the setting card first, then the render runs
+                // on it — so what is on the board is always what was sent.
+                const target =
+                  doc.nodes.find((node) => node.id === selected) ??
+                  doc.nodes.find((node) => node.kind === 'setting');
+                if (!target) return;
+                if (prompt) {
+                  onChange((current) => ({
                     ...current,
-                    nodes: [
-                      ...current.nodes,
-                      {
-                        id: `setting-${Math.random().toString(36).slice(2, 10)}`,
-                        kind: 'setting',
-                        name: '',
-                        x: 320,
-                        y: 260,
-                        width: 580,
-                        height: 200,
-                        imageUrl: null,
-                        text: prompt,
-                      },
-                    ],
-                  };
-                });
+                    nodes: current.nodes.map((node) =>
+                      node.id === target.id
+                        ? { ...node, text: node.text ? `${node.text}\n${prompt}` : prompt }
+                        : node
+                    ),
+                  }));
+                }
+                setSelected(target.id);
+                void onGenerate(target.id);
               }}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-[12px] font-medium text-black transition hover:bg-white/90"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-[12px] font-medium text-black transition hover:bg-white/90 disabled:opacity-55"
             >
-              <Sparkles className="size-3.5" />
-              {m['standard.generate']()}
+              <Sparkles className={`size-3.5 ${generating ? 'animate-pulse' : ''}`} />
+              {generating ? m['standard.generating']() : m['standard.generate']()}
             </button>
           </div>
         </div>

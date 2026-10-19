@@ -1214,5 +1214,7 @@
   "home.workspaces.standardTitle": "標準キャンバス",
   "home.workspaces.standardBody": "キャラクター・シーン・設定を 1 枚のグリッドに並べ、線でつなぐ。",
   "home.workspaces.standardOutput": "接続できる絵コンテボード",
-  "AppShell.editor.media.backToCanvas": "キャンバスに戻る"
+  "AppShell.editor.media.backToCanvas": "キャンバスに戻る",
+  "standard.generating": "生成中…",
+  "standard.needPrompt": "まずプロンプトを入力"
 }

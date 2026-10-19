@@ -1214,5 +1214,7 @@
   "home.workspaces.standardTitle": "Standard canvas",
   "home.workspaces.standardBody": "Characters, scenes and settings on one grid; link them into a scene.",
   "home.workspaces.standardOutput": "Get a wired-up board",
-  "AppShell.editor.media.backToCanvas": "Back to canvas"
+  "AppShell.editor.media.backToCanvas": "Back to canvas",
+  "standard.generating": "Generating…",
+  "standard.needPrompt": "Write a prompt first"
 }
