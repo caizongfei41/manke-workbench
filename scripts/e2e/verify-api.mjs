@@ -1,3 +1,5 @@
+// @needs: comfyui —— 会真正提交生成任务；CI 无 GPU，跳过这一套
+
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
 
 // 全量验证：后端接口层。

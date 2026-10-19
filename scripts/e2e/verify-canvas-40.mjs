@@ -1,4 +1,6 @@
 // 画布：素材上传 / 导入分镜 / 40 段分镜提交
+// @needs: comfyui —— 会真正提交生成任务；CI 无 GPU，跳过这一套
+
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
 
 import { setTimeout as delay } from 'node:timers/promises';

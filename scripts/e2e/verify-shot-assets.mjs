@@ -1,4 +1,6 @@
 // 分镜资产图：每段有自己的图，和公共资产一起按固定顺序进入生成
+// @needs: comfyui —— 会真正提交生成任务；CI 无 GPU，跳过这一套
+
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
 // 测试图必须自己造：以前它只是运维目录里偶然留着的文件，换台机器就跑不了
 const FIXTURE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAACXBIWXMAAAABAAAAAQBPJcTWAAAAgUlEQVR4nNXOQQ0AIBDAsJHMFZqQhU9E3IOsCrr2uZRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMRJnMT5OzD1AOVGAktNnSC0AAAAAElFTkSuQmCC', 'base64');

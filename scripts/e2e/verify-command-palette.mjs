@@ -141,6 +141,12 @@ check('跳转后面板已关闭', (await openState()) === null);
 await send('Page.navigate', { url: `${APP}/zh/studio/${proj.id}` });
 for (let i = 0; i < 30; i += 1) { await delay(700); if (await ev("!!document.querySelector('textarea')")) break; }
 await delay(2000);
+// 冷页面里 focus 可能还没生效，确认焦点到位再模拟按键
+for (let i = 0; i < 20; i += 1) {
+  await ev(`document.querySelector('textarea')?.focus()`);
+  if (await ev(`document.activeElement?.tagName === 'TEXTAREA'`)) break;
+  await delay(300);
+}
 await ev(`(() => { const t = document.querySelector('textarea'); t?.focus(); })()`);
 await send('Input.dispatchKeyEvent', { type: 'keyDown', key: '/', code: 'Slash', windowsVirtualKeyCode: 191 });
 await send('Input.dispatchKeyEvent', { type: 'char', text: '/', key: '/', code: 'Slash' });

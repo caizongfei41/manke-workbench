@@ -20,11 +20,17 @@ mkdirSync(VERIFY_DIR, { recursive: true });
 const args = process.argv.slice(2);
 const listOnly = args.includes('--list');
 const includeE2e = args.includes('--e2e');
+// CI 没有 GPU：只跑明确标注了不依赖 ComfyUI 的套件
+const ciOnly = args.includes('--group=ci');
 const filter = args.find((arg) => !arg.startsWith('--')) ?? '';
 const suites = readdirSync(SUITE_DIR)
   .filter((name) => (includeE2e ? /^(verify|e2e)-.*\.mjs$/.test(name) : name.startsWith('verify-') && name.endsWith('.mjs')))
   .filter((name) => (filter ? name.includes(filter) : true))
-  .sort();
+  .sort()
+  .filter((name) => {
+    if (!ciOnly) return true;
+    return !readFileSync(join(SUITE_DIR, name), 'utf8').includes('@needs: comfyui');
+  });
 
 if (listOnly) {
   for (const name of suites) console.log(name.replace(/\.mjs$/, ''));

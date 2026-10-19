@@ -1,4 +1,6 @@
 // 多版本保留 / 采用 + 送进剪辑台
+// @needs: comfyui —— 会真正提交生成任务；CI 无 GPU，跳过这一套
+
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
 
 import { setTimeout as delay } from 'node:timers/promises';

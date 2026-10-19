@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,7 +12,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
@@ -34,4 +35,49 @@ jobs:
       - run: pnpm i18n:check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+
+      # UI suites that need no GPU: canvas wiring, drag, marquee, viewport,
+      # subtitles, cast library, command palette, contrast in both themes.
+      # Generation suites carry `@needs: comfyui` on their first line and are
+      # skipped by `verify:ci`, because a hosted runner has no local ComfyUI.
+      - name: Start the app
+        run: |
+          PORT=3020 pnpm start > /tmp/app.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3020 >/dev/null; then echo "app ready"; exit 0; fi
+            sleep 2
+          done
+          echo "app did not start"
+          tail -50 /tmp/app.log
+          exit 1
+
+      - name: Start headless Chromium with CDP
+        run: |
+          CHROME=$(node -e "console.log(require('playwright').chromium.executablePath())")
+          echo "chromium: $CHROME"
+          "$CHROME" --headless=new --remote-debugging-port=9232 \
+            --no-sandbox --disable-dev-shm-usage --disable-gpu \
+            --user-data-dir=/tmp/cdp-profile about:blank > /tmp/chrome.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:9232/json/version >/dev/null; then echo "cdp ready"; exit 0; fi
+            sleep 1
+          done
+          echo "cdp did not come up"
+          tail -30 /tmp/chrome.log
+          exit 1
+
+      - name: UI suites
+        run: pnpm verify:ci
+        env:
+          VERIFY_APP: http://127.0.0.1:3020
+          VERIFY_CDP: http://127.0.0.1:9232
+
+      - name: Upload suite artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: verify-artifacts
+          path: .verify/
+          if-no-files-found: ignore
+
       - run: pnpm audit --prod --audit-level high

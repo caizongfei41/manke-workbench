@@ -1,4 +1,6 @@
 // 画布导演台：新建生成节点 → 切视频 → 选 AICG3D → 导入剧本 → 提交 → 核对注入
+// @needs: comfyui —— 会真正提交生成任务；CI 无 GPU，跳过这一套
+
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
 
 import { setTimeout as delay } from 'node:timers/promises';

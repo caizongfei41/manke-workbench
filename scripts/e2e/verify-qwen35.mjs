@@ -1,3 +1,5 @@
+// @needs: comfyui —— 会真正提交生成任务；CI 无 GPU，跳过这一套
+
 const VERIFY_DIR = process.env.VERIFY_OUT ?? './.verify/';
 const COMFY = process.env.VERIFY_COMFY ?? 'http://127.0.0.1:8188';
 
