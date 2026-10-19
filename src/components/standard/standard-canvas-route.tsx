@@ -4,6 +4,7 @@ import {
   createDefaultDocument,
   loadStandardDocument,
   serializeStandardDocument,
+  STANDARD_EDIT_MODEL_ID,
   STANDARD_IMAGE_MODEL_ID,
   type StandardDocument,
   type StandardNode,
@@ -151,14 +152,24 @@ export function StandardCanvasRoute({
           return;
         }
 
+        // Reference plates ride along as image_urls; only the edit workflow declares an
+        // image input, so the model follows whether we actually have plates.
+        const referenceUrls = linked
+          .map((node) => node.imageUrl)
+          .filter((url): url is string => Boolean(url))
+          .map((url) => (url.startsWith('http') ? url : `${window.location.origin}${url}`));
+
         const generation = {
           version: 2,
           projectId,
-          modelId: STANDARD_IMAGE_MODEL_ID,
+          modelId: referenceUrls.length > 0 ? STANDARD_EDIT_MODEL_ID : STANDARD_IMAGE_MODEL_ID,
           mode: 'image',
           prompt,
           references: [],
-          parameters: { aspect_ratio: '16:9' },
+          parameters:
+            referenceUrls.length > 0
+              ? { aspect_ratio: '16:9', image_urls: referenceUrls }
+              : { aspect_ratio: '16:9' },
         };
 
         const precheck = await fetch('/api/effects/precheck', {

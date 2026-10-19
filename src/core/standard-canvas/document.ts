@@ -44,6 +44,9 @@ export type StandardDocument = {
 /** 图片生成用的工作流名：服务端按这个名字找模板。 */
 export const STANDARD_IMAGE_MODEL_ID = '小枫-qwen-image-2-1-文生图';
 
+/** 带参考图时用编辑工作流：它才声明了图片输入节点。 */
+export const STANDARD_EDIT_MODEL_ID = '小枫-qwen-image-2-1-图像编辑';
+
 export const NODE_SIZES: Record<StandardNodeKind, { width: number; height: number }> = {
   role: { width: 392, height: 232 },
   scene: { width: 392, height: 212 },
