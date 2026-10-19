@@ -85,7 +85,7 @@ export function EnvironmentPanel() {
             className={`rounded-full border px-2 py-0.5 text-[11px] ${
               ready
                 ? 'border-[var(--beat-success-text)]/30 bg-[var(--beat-success-bg)] text-[var(--beat-success-text)]'
-                : 'border-amber-400/30 bg-amber-400/10 text-amber-300'
+                : 'border-[var(--beat-warn-text)]/30 bg-[var(--beat-warn-bg)] text-[var(--beat-warn-text)]'
             }`}
           >
             {m['services.envSummary']({
@@ -147,7 +147,7 @@ export function EnvironmentPanel() {
 
       {data ? (
         <p
-          className={`mt-4 text-xs ${ready ? 'text-[var(--beat-success-text)]' : 'text-amber-600'}`}
+          className={`mt-4 text-xs ${ready ? 'text-[var(--beat-success-text)]' : 'text-[var(--beat-warn-text)]'}`}
         >
           {ready ? m['services.envReady']() : m['services.envNotReady']()}
         </p>

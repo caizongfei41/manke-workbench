@@ -1070,5 +1070,7 @@
   "cmd.mode.assets": "素材",
   "drama.board.exportList": "ショットリストを CSV 出力",
   "drama.board.collapseAll": "全ショットを折りたたむ",
-  "drama.board.expandAll": "全ショットを展開"
+  "drama.board.expandAll": "全ショットを展開",
+  "drama.board.batchSeconds": "秒数統一",
+  "drama.board.applyAll": "全 {count} 件に適用"
 }

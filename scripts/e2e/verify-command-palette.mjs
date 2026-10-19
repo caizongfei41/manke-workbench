@@ -99,6 +99,13 @@ const opened = await openState();
 check('斜杠打开面板', !!opened, JSON.stringify(opened));
 check('有导航项', (opened?.items ?? 0) >= 4, `${opened?.items ?? 0} 项`);
 
+// 项目行来自一次请求：等它回来再输入，否则过滤的是空列表
+for (let i = 0; i < 30; i += 1) {
+  const rows = await ev(`document.querySelectorAll('[data-command]').length`);
+  if (Number(rows) > 4) break;
+  await delay(400);
+}
+
 // ── 2. 过滤 ──────────────────────────────────────────
 await ev(`(() => {
   const input = document.querySelector('[role="dialog"] input');
@@ -147,15 +154,22 @@ for (let i = 0; i < 20; i += 1) {
   if (await ev(`document.activeElement?.tagName === 'TEXTAREA'`)) break;
   await delay(300);
 }
-await ev(`(() => { const t = document.querySelector('textarea'); t?.focus(); })()`);
+await ev(`(() => {
+  document.querySelector('textarea')?.focus();
+  window.__slash = { fired: false, prevented: null };
+  window.addEventListener('keydown', (event) => {
+    if (event.key === '/') window.__slash = { fired: true, prevented: event.defaultPrevented };
+  }, { once: true });
+})()`);
 await send('Input.dispatchKeyEvent', { type: 'keyDown', key: '/', code: 'Slash', windowsVirtualKeyCode: 191 });
-await send('Input.dispatchKeyEvent', { type: 'char', text: '/', key: '/', code: 'Slash' });
 await send('Input.dispatchKeyEvent', { type: 'keyUp', key: '/', code: 'Slash', windowsVirtualKeyCode: 191 });
 await delay(600);
 const typing = await openState();
-const textareaValue = await ev(`document.querySelector('textarea')?.value ?? ''`);
+const slash = await ev('window.__slash');
 check('输入框内按斜杠不打开面板', typing === null, JSON.stringify(typing));
-check('斜杠进了输入框', String(textareaValue).includes('/'), JSON.stringify(textareaValue));
+// 后台标签下字符插不进输入框（页面无键盘焦点），所以验的是契约：
+// 斜杠的 keydown 没有被面板吞掉
+check('斜杠事件未被吞掉', slash?.fired === true && slash?.prevented === false, JSON.stringify(slash));
 
 const shot = await send('Page.captureScreenshot', { format: 'png' });
 const shotFile = OUT + 'command-palette.png';

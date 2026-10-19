@@ -612,6 +612,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
   // ---- Selection --------------------------------------------------------
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [batchSeconds, setBatchSeconds] = useState(3);
   const viewportApi = useRef<{ centerOn: (x: number, y: number) => void } | null>(null);
   const FIXED_NODES = ['script', 'board', 'assets', 'params', 'final'];
 
@@ -802,6 +803,13 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   };
 
   /** Set a public asset's portrait, e.g. after picking one from the cast library. */
+  // Uniform pacing is the common edit: changing seconds one card at a time is busywork
+  const applySecondsToAll = (seconds: number) =>
+    updateDoc((current) => ({
+    ...current,
+    shots: current.shots.map((shot) => ({ ...shot, seconds })),
+    }));
+
   const collapseAllShots = () =>
     updateDoc((current) => ({ ...current, collapsedShots: current.shots.map((shot) => shot.id) }));
 
@@ -1442,6 +1450,27 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 {(doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
                 {(doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? m['drama.board.expandAll']() : m['drama.board.collapseAll']()}
               </button>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="shrink-0 text-[10px] text-[var(--beat-text-3)]">{m['drama.board.batchSeconds']()}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={batchSeconds}
+                  onChange={(event) => setBatchSeconds(Math.max(1, Math.min(30, Number(event.target.value) || 1)))}
+                  aria-label={m['drama.board.batchSeconds']()}
+                  data-batch-seconds="true"
+                  className="h-6 w-12 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1.5 text-[10.5px] tabular-nums text-[var(--beat-text-1)] outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => applySecondsToAll(batchSeconds)}
+                  disabled={doc.shots.length === 0}
+                  className="h-6 flex-1 rounded-[6px] border border-ink/[0.12] text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                >
+                  {m['drama.board.applyAll']({ count: doc.shots.length })}
+                </button>
+              </div>
           </NodeShell>
         </div>
 

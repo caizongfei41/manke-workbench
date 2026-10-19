@@ -1070,5 +1070,7 @@
   "cmd.mode.assets": "Assets",
   "drama.board.exportList": "Export shot list (CSV)",
   "drama.board.collapseAll": "Collapse all segments",
-  "drama.board.expandAll": "Expand all segments"
+  "drama.board.expandAll": "Expand all segments",
+  "drama.board.batchSeconds": "Seconds",
+  "drama.board.applyAll": "Apply to all {count}"
 }

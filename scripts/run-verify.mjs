@@ -125,15 +125,8 @@ const settle = async () => {
     body: JSON.stringify({ unload_models: true, free_memory: true }),
   }).catch(() => {});
 
-  // 关掉多余页面，但一定留一个 3020 页面：套件靠「找现有标签」启动
-  const tabs = await fetch(`${CDP}/json`).then((r) => r.json()).catch(() => []);
-  const appTabs = tabs.filter((tab) => tab.type === 'page' && /:3020/.test(tab.url ?? ''));
-  for (const extra of appTabs.slice(1)) {
-    await fetch(`${CDP}/json/close/${extra.id}`).catch(() => {});
-  }
-  if (!appTabs.length) {
-    await fetch(`${CDP}/json/new?${encodeURIComponent(APP)}/zh`, { method: 'PUT' }).catch(() => {});
-  }
+  // 标签页交给各个套件自己处理：runner 插手会关掉当前有焦点的那个，
+  // 而 CDP 的按键与指针事件只在获得焦点的页面上才生效。
 };
 const runOne = (name) =>
   new Promise((resolve) => {
@@ -198,7 +191,11 @@ for (const name of suites) {
     totalFail += result.fail;
     const mark = result.fail === 0 ? 'ok  ' : 'FAIL';
     console.log(`  ${mark}  ${result.name.padEnd(28)} 通过 ${String(result.pass).padStart(3)} / 失败 ${result.fail}`);
-    if (result.fail > 0) broken.push(result.name);
+    if (result.fail > 0) {
+      broken.push(result.name);
+      // 失败时把该套件最后几行打出来：否则只知道「红了」，不知道红在哪一条
+      console.log('        ' + result.tail.split('\n').join('\n        '));
+    }
   }
 }
 
