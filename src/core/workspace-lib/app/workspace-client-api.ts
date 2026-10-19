@@ -1,6 +1,6 @@
 import type { WorkspaceMode } from '@/config/workspace-modes';
 import type { ProjectGenerationItem } from '@/core/effects/project-generations';
-import { apiJsonDelete, apiJsonGet } from '@/lib/api-client';
+import { apiJsonDelete, apiJsonGet, apiJsonPatch } from '@/lib/api-client';
 
 export type WorkspaceProjectCardItem = {
   id: string;
@@ -44,6 +44,13 @@ export async function fetchWorkspaceProjects(): Promise<{
 }> {
   return apiJsonGet<{ projects: WorkspaceProjectCardItem[] }>(
     '/api/app/projects'
+  );
+}
+
+export async function renameWorkspaceProject(projectId: string, name: string) {
+  return apiJsonPatch<{ id: string; name: string }>(
+    `/api/app/projects/${encodeURIComponent(projectId)}`,
+    { name }
   );
 }
 

@@ -1079,5 +1079,19 @@
   "drama.board.promptPrefix": "Prefix",
   "drama.board.promptPrefixHint": "e.g. cinematic, 35mm film",
   "drama.final.attachList": "Attach shot list",
-  "drama.final.downloadList": "Download shot list (CSV)"
+  "drama.final.downloadList": "Download shot list (CSV)",
+  "product.history.searchProjects": "Search projects",
+  "product.history.filterMode": "Filter by workspace",
+  "product.history.filterAll": "All",
+  "product.history.modeStudio": "Studio",
+  "product.history.modeCanvas": "Canvas",
+  "product.history.modeEditor": "Editor",
+  "product.history.modeAssets": "Assets",
+  "product.history.sortBy": "Sort",
+  "product.history.sortRecent": "Recent",
+  "product.history.sortName": "Name",
+  "product.history.resultCount": "{count}",
+  "product.history.noMatch": "No project matches",
+  "product.history.clearFilter": "Clear filters",
+  "product.history.renameProject": "Rename"
 }

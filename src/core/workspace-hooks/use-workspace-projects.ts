@@ -1,6 +1,7 @@
 import {
   deleteWorkspaceProjects,
   fetchWorkspaceProjects,
+  renameWorkspaceProject,
   type WorkspaceProjectCardItem,
 } from '@/core/workspace-lib/app/workspace-client-api';
 import { invalidateWorkspaceAfterProjectMutation } from '@/core/workspace-lib/app/workspace-query-invalidation';
@@ -52,6 +53,20 @@ export function useWorkspaceProjects({
     })
   );
 
+  const renameProjectMutation = useMutation({
+    mutationFn: ({ projectId, name }: { projectId: string; name: string }) =>
+      renameWorkspaceProject(projectId, name),
+    onSuccess: (result) => {
+      // 立刻改本地缓存，界面不用等一次完整刷新
+      queryClient.setQueryData<WorkspaceProjectCardItem[]>(queryKey, (current) =>
+        (current ?? []).map((project) =>
+          project.id === result.id ? { ...project, name: result.name } : project
+        )
+      );
+    },
+    onSettled: () => invalidateWorkspaceAfterProjectMutation(queryClient),
+  });
+
   const deleteProjectsMutation = useMutation({
     mutationFn: deleteWorkspaceProjects,
     onMutate: async (ids) => {
@@ -79,6 +94,10 @@ export function useWorkspaceProjects({
     isLoading: projectsQuery.isLoading,
     isFetching: projectsQuery.isFetching,
     error: projectsQuery.error,
+    renameProject: async (projectId: string, name: string) => {
+      await renameProjectMutation.mutateAsync({ projectId, name });
+    },
+    isRenaming: renameProjectMutation.isPending,
     deleteProjects: async (ids: string[]) => {
       await deleteProjectsMutation.mutateAsync(ids);
     },

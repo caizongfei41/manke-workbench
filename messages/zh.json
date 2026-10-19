@@ -1079,5 +1079,19 @@
   "drama.board.promptPrefix": "全局前缀",
   "drama.board.promptPrefixHint": "例：电影感，35mm 胶片",
   "drama.final.attachList": "附带分镜表",
-  "drama.final.downloadList": "下载分镜表 CSV"
+  "drama.final.downloadList": "下载分镜表 CSV",
+  "product.history.searchProjects": "搜索项目",
+  "product.history.filterMode": "按工作空间筛选",
+  "product.history.filterAll": "全部",
+  "product.history.modeStudio": "创作台",
+  "product.history.modeCanvas": "画布",
+  "product.history.modeEditor": "剪辑",
+  "product.history.modeAssets": "素材",
+  "product.history.sortBy": "排序方式",
+  "product.history.sortRecent": "最近使用",
+  "product.history.sortName": "按名称",
+  "product.history.resultCount": "{count} 个",
+  "product.history.noMatch": "没有符合条件的项目",
+  "product.history.clearFilter": "清除筛选",
+  "product.history.renameProject": "重命名"
 }

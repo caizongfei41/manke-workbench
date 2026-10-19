@@ -1,11 +1,12 @@
 import {
   FolderClock,
   PanelsTopLeft,
+  Pencil,
   Plus,
   Trash2,
   Workflow,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { BeatApiProductShell } from '@/components/marketing/beatapi-product-shell';
 import { normalizeLocale } from '@/config/locale';
@@ -49,6 +50,21 @@ function getHistoryCopy(locale: string) {
       { locale: messageLocale }
     ),
     untitled: m['product.history.untitled']({}, { locale: messageLocale }),
+    searchProjects: m['product.history.searchProjects']({}, { locale: messageLocale }),
+    filterMode: m['product.history.filterMode']({}, { locale: messageLocale }),
+    filterAll: m['product.history.filterAll']({}, { locale: messageLocale }),
+    modeStudio: m['product.history.modeStudio']({}, { locale: messageLocale }),
+    modeCanvas: m['product.history.modeCanvas']({}, { locale: messageLocale }),
+    modeEditor: m['product.history.modeEditor']({}, { locale: messageLocale }),
+    modeAssets: m['product.history.modeAssets']({}, { locale: messageLocale }),
+    sortBy: m['product.history.sortBy']({}, { locale: messageLocale }),
+    sortRecent: m['product.history.sortRecent']({}, { locale: messageLocale }),
+    sortName: m['product.history.sortName']({}, { locale: messageLocale }),
+    resultCount: (count: number) =>
+      m['product.history.resultCount']({ count: String(count) }, { locale: messageLocale }),
+    noMatch: m['product.history.noMatch']({}, { locale: messageLocale }),
+    clearFilter: m['product.history.clearFilter']({}, { locale: messageLocale }),
+    renameProject: m['product.history.renameProject']({}, { locale: messageLocale }),
     deleteConfirm: (projectName: string) =>
       m['product.history.deleteConfirm'](
         { projectName },
@@ -159,13 +175,44 @@ export function WorkspacePage({
 }) {
   const copy = getHistoryCopy(locale);
   const [createOpen, setCreateOpen] = useState(false);
+  // Twenty-odd projects in a flat wall means finding last week film is an eye scan
+  const [projectQuery, setProjectQuery] = useState('');
+  const [projectMode, setProjectMode] = useState<'all' | 'studio' | 'canvas' | 'editor' | 'assets'>('all');
+  const [projectSort, setProjectSort] = useState<'recent' | 'name'>('recent');
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
+
   const [deleteTarget, setDeleteTarget] =
     useState<WorkspaceProjectCardItem | null>(null);
-  const { projects: liveProjects, deleteProjects } = useWorkspaceProjects({
+
+  const { projects: liveProjects, deleteProjects, renameProject } = useWorkspaceProjects({
     locale,
     initialProjects: projects,
     enabled: true,
   });
+
+  const visibleProjects = useMemo(() => {
+    const needle = projectQuery.trim().toLowerCase();
+    const filtered = liveProjects.filter((project) => {
+      if (projectMode !== 'all' && project.lastWorkspaceMode !== projectMode) return false;
+      if (!needle) return true;
+      return projectName(project.name, copy.untitled).toLowerCase().includes(needle);
+    });
+    if (projectSort === 'name') {
+      return [...filtered].sort((a, b) =>
+        projectName(a.name, copy.untitled).localeCompare(projectName(b.name, copy.untitled), locale)
+      );
+    }
+    return filtered;
+  }, [liveProjects, projectQuery, projectMode, projectSort, copy.untitled, locale]);
+
+  const commitRename = async () => {
+    if (!renaming) return;
+    const next = renaming.name.trim();
+    const target = { ...renaming };
+    setRenaming(null);
+    if (!next) return;
+    await renameProject(target.id, next);
+  };
 
   async function removeProject(project: WorkspaceProjectCardItem) {
     setDeleteTarget(project);
@@ -205,11 +252,104 @@ export function WorkspacePage({
 
         <section className="mt-12">
           {liveProjects.length > 0 ? (
+            <div className="mb-6 flex flex-wrap items-center gap-2" data-project-toolbar="true">
+              <input
+                type="search"
+                value={projectQuery}
+                onChange={(event) => setProjectQuery(event.target.value)}
+                placeholder={copy.searchProjects}
+                aria-label={copy.searchProjects}
+                data-project-search="true"
+                className="h-9 min-w-[180px] flex-1 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-3 text-[12.5px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
+              />
+              <select
+                value={projectMode}
+                onChange={(event) => setProjectMode(event.target.value as typeof projectMode)}
+                aria-label={copy.filterMode}
+                data-project-filter="true"
+                className="h-9 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-2 text-[12px] text-[var(--beat-text-2)] outline-none"
+              >
+                <option value="all">{copy.filterAll}</option>
+                <option value="studio">{copy.modeStudio}</option>
+                <option value="canvas">{copy.modeCanvas}</option>
+                <option value="editor">{copy.modeEditor}</option>
+                <option value="assets">{copy.modeAssets}</option>
+              </select>
+              <select
+                value={projectSort}
+                onChange={(event) => setProjectSort(event.target.value as typeof projectSort)}
+                aria-label={copy.sortBy}
+                data-project-sort="true"
+                className="h-9 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-2 text-[12px] text-[var(--beat-text-2)] outline-none"
+              >
+                <option value="recent">{copy.sortRecent}</option>
+                <option value="name">{copy.sortName}</option>
+              </select>
+              <span className="text-[11px] tabular-nums text-[var(--beat-text-3)]" data-project-count="true">
+                {copy.resultCount(visibleProjects.length)}
+              </span>
+            </div>
+          ) : null}
+
+          {liveProjects.length === 0 ? (
+            <div className="flex min-h-[330px] flex-col items-center justify-center rounded-[var(--beat-radius)] border border-dashed border-ink/[0.1] bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.6),transparent_70%)]">
+              <span className="grid size-14 place-items-center rounded-[var(--beat-radius-sm)] border border-ink/[0.1] bg-[var(--beat-surface)] text-[var(--beat-text-3)]">
+                <FolderClock className="size-6" />
+              </span>
+              <h2 className="beat-product-display mt-5 text-[21px] font-semibold tracking-[-0.03em]">
+                {copy.startFirst}
+              </h2>
+              <p className="mt-2 max-w-md text-[13px] font-normal leading-6 text-[var(--beat-text-2)]">
+                {copy.emptyDescription}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCreateOpen(true)}
+                className="mt-6 inline-flex h-10 items-center gap-2 rounded-[var(--beat-radius-sm)] bg-[var(--beat-accent)] px-4 text-[13px] font-medium text-[var(--beat-accent-ink)]"
+              >
+                <Plus className="size-4" />
+                {copy.newProject}
+              </button>
+            </div>
+          ) : visibleProjects.length === 0 ? (
+            <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[var(--beat-radius)] border border-dashed border-ink/[0.1]">
+              <p className="text-[13px] text-[var(--beat-text-2)]" data-project-empty="true">
+                {copy.noMatch}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setProjectQuery('');
+                  setProjectMode('all');
+                }}
+                className="mt-3 text-[12px] text-[var(--beat-accent)] underline-offset-4 hover:underline"
+              >
+                {copy.clearFilter}
+              </button>
+            </div>
+          ) : (
             <div className="grid gap-x-4 gap-y-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {liveProjects.map((project) => {
+              {visibleProjects.map((project) => {
                 const name = projectName(project.name, copy.untitled);
                 return (
-                  <article key={project.id} className="group relative min-w-0">
+                  <article key={project.id} className="group relative min-w-0" data-project-card="true">
+                    {renaming?.id === project.id ? (
+                      <div className="flex aspect-[16/10] items-center justify-center rounded-[var(--beat-radius)] border border-[var(--beat-accent)]/45 bg-[var(--beat-surface)] p-3">
+                        <input
+                          autoFocus
+                          value={renaming.name}
+                          onChange={(event) => setRenaming({ id: project.id, name: event.target.value })}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') void commitRename();
+                            if (event.key === 'Escape') setRenaming(null);
+                          }}
+                          onBlur={() => void commitRename()}
+                          aria-label={copy.renameProject}
+                          data-rename-input="true"
+                          className="w-full rounded-[8px] border border-ink/[0.14] bg-transparent px-2 py-1 text-[13px] text-[var(--beat-text-1)] outline-none"
+                        />
+                      </div>
+                    ) : (
                     <Link
                       href={buildLocalizedProjectDetailPath({
                         locale,
@@ -237,7 +377,19 @@ export function WorkspacePage({
                         {name}
                       </h2>
                     </Link>
+                    )}
 
+                    {renaming?.id === project.id ? null : (
+                      <button
+                        type="button"
+                        onClick={() => setRenaming({ id: project.id, name: name })}
+                        aria-label={copy.renameProject}
+                        data-rename-project="true"
+                        className="absolute right-12 top-3 grid size-8 place-items-center rounded-full border border-ink/[0.1] bg-[var(--beat-surface)]/90 text-[var(--beat-text-3)] opacity-0 transition hover:text-ink group-hover:opacity-100"
+                      >
+                        <Pencil className="size-3.5" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => void removeProject(project)}
@@ -249,26 +401,6 @@ export function WorkspacePage({
                   </article>
                 );
               })}
-            </div>
-          ) : (
-            <div className="flex min-h-[330px] flex-col items-center justify-center rounded-[var(--beat-radius)] border border-dashed border-ink/[0.1] bg-[radial-gradient(circle_at_50%_24%,rgba(56,189,248,0.045),transparent_38%),#0e0e10] px-6 text-center">
-              <span className="grid size-14 place-items-center rounded-[var(--beat-radius-sm)] border border-ink/[0.1] bg-[var(--beat-surface)] text-[var(--beat-accent)] shadow-[0_12px_36px_rgba(0,0,0,0.22)]">
-                <FolderClock className="size-6" />
-              </span>
-              <h2 className="beat-product-display mt-5 text-[21px] font-semibold tracking-[-0.03em] text-ink">
-                {copy.startFirst}
-              </h2>
-              <p className="mt-2 max-w-md text-[13px] font-normal leading-6 text-[var(--beat-text-2)]">
-                {copy.emptyDescription}
-              </p>
-              <button
-                type="button"
-                onClick={() => setCreateOpen(true)}
-                className="mt-6 inline-flex h-10 items-center gap-2 rounded-[var(--beat-radius-sm)] bg-[var(--beat-accent)] px-4 text-[12px] font-semibold text-[var(--beat-accent-ink)] shadow-[0_8px_24px_rgba(56,189,248,0.24)] transition hover:bg-[#4cc2ff]"
-              >
-                <Plus className="size-4" />
-                {copy.newProject}
-              </button>
             </div>
           )}
         </section>

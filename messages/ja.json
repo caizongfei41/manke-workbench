@@ -1079,5 +1079,19 @@
   "drama.board.promptPrefix": "共通プレフィックス",
   "drama.board.promptPrefixHint": "例：シネマティック、35mm フィルム",
   "drama.final.attachList": "ショットリストを添付",
-  "drama.final.downloadList": "ショットリストを CSV 保存"
+  "drama.final.downloadList": "ショットリストを CSV 保存",
+  "product.history.searchProjects": "プロジェクトを検索",
+  "product.history.filterMode": "ワークスペースで絞り込む",
+  "product.history.filterAll": "すべて",
+  "product.history.modeStudio": "スタジオ",
+  "product.history.modeCanvas": "キャンバス",
+  "product.history.modeEditor": "編集",
+  "product.history.modeAssets": "素材",
+  "product.history.sortBy": "並び順",
+  "product.history.sortRecent": "最近",
+  "product.history.sortName": "名前",
+  "product.history.resultCount": "{count} 件",
+  "product.history.noMatch": "条件に合うプロジェクトがありません",
+  "product.history.clearFilter": "絞り込みを解除",
+  "product.history.renameProject": "名前を変更"
 }
