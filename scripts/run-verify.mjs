@@ -43,6 +43,8 @@ const APP = process.env.VERIFY_APP ?? 'http://127.0.0.1:3020';
 const COMFY_PYTHON = process.env.VERIFY_COMFY_PYTHON ?? 'E:\\ComfyUI\\python_embeded\\python.exe';
 const COMFY_SCRIPT = process.env.VERIFY_COMFY_SCRIPT ?? 'E:\\ComfyUI\\ComfyUI\\main.py';
 
+let restarts = 0;
+
 const comfyAlive = async () => {
   try {
     const res = await fetch(`${COMFY}/queue`, { signal: AbortSignal.timeout(3000) });
@@ -54,6 +56,7 @@ const comfyAlive = async () => {
 
 const ensureComfy = async () => {
   if (await comfyAlive()) return true;
+  restarts += 1;
   console.log('  ComfyUI 未响应，尝试拉起…');
   try {
     // detached + unref：父进程退出后它仍然活着
@@ -152,7 +155,18 @@ await ensureComfy();
 console.log(`跑 ${suites.length} 套（产物写入 .verify/）` + String.fromCharCode(10));
 for (const name of suites) {
   await ensureComfy();
-  const result = await runOne(name);
+  await settle();
+  const restartsBefore = restarts;
+  let result = await runOne(name);
+  // 只有「跑这一套期间 ComfyUI 重启过」才重试一次：那是基础设施塌了，不是产品坏了
+  if (result.fail > 0 && restarts > restartsBefore) {
+    console.log(`  ..   ${result.name} 失败时 ComfyUI 正在重启，重试一次`);
+    await ensureComfy();
+    await settle();
+    result = await runOne(name);
+    result.retried = true;
+  }
+  await settle();
   totalPass += result.pass;
   if (result.fail < 0) {
     broken.push(result.name);
