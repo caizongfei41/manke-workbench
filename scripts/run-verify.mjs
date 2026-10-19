@@ -7,7 +7,7 @@
 // 前置：本地工作台在 3020（或 VERIFY_APP），浏览器调试端口在 9232（或 VERIFY_CDP），
 // ComfyUI 在 8188（或 VERIFY_COMFY，只有生成类套件需要）。
 import { spawn } from 'node:child_process';
-import { mkdirSync, openSync, readdirSync } from 'node:fs';
+import { mkdirSync, openSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
