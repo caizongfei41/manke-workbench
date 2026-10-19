@@ -7,20 +7,32 @@
 // 设计取向：宁可跳过，也不要和正在渲染的任务抢显卡。ComfyUI 在忙时直接跳过这一轮，
 // 并在结果里写明原因 —— 一个安静的跳过比一次互相拖慢的失败有用。
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import {
+  buildAlertMessage,
+  parseFailingSuites,
+  shouldAlert,
+  trailingFailureStreak,
+} from '../src/core/ops/watchdog.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
 const VERIFY_DIR = process.env.VERIFY_OUT ?? join(ROOT, '.verify');
 const RESULT_FILE = join(VERIFY_DIR, 'gpu-latest.json');
+const HISTORY_FILE = join(VERIFY_DIR, 'gpu-history.json');
+const ALERT_FILE = join(VERIFY_DIR, 'GPU-ALERT.txt');
+const NOTIFY_SCRIPT = join(HERE, 'notify.ps1');
 const COMFY = process.env.VERIFY_COMFY ?? 'http://127.0.0.1:8188';
 const APP = process.env.VERIFY_APP ?? 'http://127.0.0.1:3020';
 const CDP = process.env.VERIFY_CDP ?? 'http://127.0.0.1:9232';
 
 const args = process.argv.slice(2);
 const once = args.includes('--once');
+const only = args.find((arg) => arg.startsWith('--only='))?.split('=')[1] ?? null;
+
 const intervalMinutes = Number(
   args.find((arg) => arg.startsWith('--interval='))?.split('=')[1] ?? 720
 );
@@ -45,13 +57,44 @@ const queueBusy = async () => {
   }
 };
 
+const readHistory = () => {
+  try {
+    const raw = readFileSync(HISTORY_FILE, 'utf8').replace(/^\uFEFF/, '');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+// 只留最近 60 轮：历史是给人看趋势的，不是日志
 const record = (payload) => {
   writeFileSync(RESULT_FILE, JSON.stringify(payload, null, 2) + '\n', 'utf8');
+  const history = [...readHistory(), payload].slice(-60);
+  writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2) + '\n', 'utf8');
+  return history;
+};
+
+const alert = ({ history, payload }) => {
+  if (!shouldAlert(history)) return;
+  const streak = trailingFailureStreak(history);
+  const message = buildAlertMessage({ run: payload, streak });
+  console.log('  ! 触发告警：' + message.split('\n')[0]);
+  // 文件是可靠载体：先同步写掉，再让 PowerShell 只管弹窗
+  writeFileSync(
+    ALERT_FILE,
+    [new Date().toISOString(), '漫客工作台：GPU 套件连续失败', message].join('\n') + '\n',
+    'utf8'
+  );
+  // 通知尽力而为，文件一定写；notify.ps1 自己负责这两件事
+  spawn('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', NOTIFY_SCRIPT,
+    '-Title', '漫客工作台：GPU 套件连续失败', '-Message', message],
+    { cwd: ROOT, stdio: 'ignore', windowsHide: true, detached: true }).unref();
 };
 
 const runSuites = () =>
   new Promise((resolve) => {
-    const child = spawn(process.execPath, [join(HERE, 'run-verify.mjs'), '--group=gpu'], {
+    const child = spawn(process.execPath, [join(HERE, 'run-verify.mjs'), '--group=gpu', ...(only ? [only] : [])], {
       cwd: ROOT,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -68,6 +111,7 @@ const runSuites = () =>
         code,
         pass: summary ? Number(summary[1]) : 0,
         fail: summary ? Number(summary[2]) : -1,
+        failing: parseFailingSuites(out),
       });
     });
   });
@@ -106,10 +150,17 @@ const tick = async () => {
     status: result.fail === 0 && result.code === 0 ? 'passed' : 'failed',
     pass: result.pass,
     fail: result.fail,
+    failing: result.failing,
     exitCode: result.code,
   };
-  record(payload);
+  const history = record(payload);
   console.log(`  结果：${payload.status}（通过 ${payload.pass} / 失败 ${payload.fail}）`);
+  if (payload.status === 'passed') {
+    // 恢复了就把告警撤掉，别让一个旧文件一直挂着吓人
+    try { rmSync(ALERT_FILE, { force: true }); } catch {}
+  } else {
+    alert({ history, payload });
+  }
   return payload;
 };
 

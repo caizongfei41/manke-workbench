@@ -456,6 +456,28 @@ pnpm verify:list   # 枚举
 
 self-hosted 作业开跑前会先检查 app / ComfyUI / CDP 三者是否可达，缺哪个直接报名字。
 
+### 本机自动化
+
+```bash
+pnpm stack:up          # 拉起浏览器 / ComfyUI / 工作台（缺哪个起哪个）
+pnpm stack:restart     # 全部重启
+pnpm verify:vigil      # GPU 套件守护：手动跑一轮
+node --import tsx scripts/vigil.mjs   # 常驻，默认 12 小时一轮
+```
+
+守护的取向是**不和渲染抢卡**：ComfyUI 在忙或缺席时直接跳过，并在 `.verify/gpu-latest.json` 写明原因。
+
+**连续失败才会提醒**：第一轮失败不吵，第二轮开始弹桌面通知并写 `.verify/GPU-ALERT.txt`，之后每 6 轮再提醒一次；恢复后告警文件自动清掉。
+
+开机自启：
+
+```powershell
+.\scripts\install-vigil.ps1              # 登录触发，每 12 小时
+.\scripts\install-vigil.ps1 -Hours 6
+.\scripts\install-vigil.ps1 -Uninstall
+```
+
+
 ## 验证
 
 这个仓库的改动都带可重跑的验证，不是「看着对就行」：
