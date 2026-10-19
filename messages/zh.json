@@ -1054,5 +1054,18 @@
   "drama.final.needShots": "还没有要合成的分段",
   "fail.serverDown": "ComfyUI 掉线了",
   "fail.hint.serverDown": "服务进程不在了：先重启 ComfyUI，再重跑这一段",
-  "monitor.checking": "读取中…"
+  "monitor.checking": "读取中…",
+  "cmd.title": "命令面板",
+  "cmd.placeholder": "搜索页面或项目…",
+  "cmd.empty": "没有匹配项",
+  "cmd.hint": "回车打开",
+  "cmd.footer": "上下选择 · 回车打开 · Esc 关闭",
+  "cmd.home": "首页",
+  "cmd.projects": "全部项目",
+  "cmd.services": "服务状态",
+  "cmd.newProject": "新建项目",
+  "cmd.mode.studio": "创作台",
+  "cmd.mode.canvas": "画布",
+  "cmd.mode.editor": "剪辑",
+  "cmd.mode.assets": "素材"
 }

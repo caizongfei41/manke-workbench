@@ -1054,5 +1054,18 @@
   "drama.final.needShots": "合成するショットがまだありません",
   "fail.serverDown": "ComfyUI が停止しています",
   "fail.hint.serverDown": "サービスが落ちています。ComfyUI を再起動してから再実行してください",
-  "monitor.checking": "確認中…"
+  "monitor.checking": "確認中…",
+  "cmd.title": "コマンドパレット",
+  "cmd.placeholder": "ページやプロジェクトを検索…",
+  "cmd.empty": "一致する項目がありません",
+  "cmd.hint": "↵ で開く",
+  "cmd.footer": "↑↓ 選択 · ↵ 開く · Esc 閉じる",
+  "cmd.home": "ホーム",
+  "cmd.projects": "すべてのプロジェクト",
+  "cmd.services": "サービス状態",
+  "cmd.newProject": "新規プロジェクト",
+  "cmd.mode.studio": "スタジオ",
+  "cmd.mode.canvas": "キャンバス",
+  "cmd.mode.editor": "編集",
+  "cmd.mode.assets": "素材"
 }

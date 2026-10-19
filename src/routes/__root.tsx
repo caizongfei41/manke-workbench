@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import { CommandPalette } from '@/components/app/command-palette';
 import {
   createRootRoute,
   HeadContent,
@@ -55,6 +56,7 @@ function RootComponent() {
         disableTransitionOnChange
       >
         <Outlet />
+        <CommandPalette />
         <Toaster position="top-center" richColors />
       </ThemeProvider>
       {false && import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}

@@ -45,6 +45,15 @@ const COMFY_SCRIPT = process.env.VERIFY_COMFY_SCRIPT ?? 'E:\\ComfyUI\\ComfyUI\\m
 
 let restarts = 0;
 
+const browserAlive = async () => {
+  try {
+    const tabs = await fetch(`${CDP}/json`, { signal: AbortSignal.timeout(3000) }).then((r) => r.json());
+    return tabs.some((tab) => tab.type === 'page');
+  } catch {
+    return false;
+  }
+};
+
 const comfyAlive = async () => {
   try {
     const res = await fetch(`${COMFY}/queue`, { signal: AbortSignal.timeout(3000) });
@@ -158,9 +167,12 @@ for (const name of suites) {
   await settle();
   const restartsBefore = restarts;
   let result = await runOne(name);
+  const browserWasLost = !(await browserAlive());
   // 只有「跑这一套期间 ComfyUI 重启过」才重试一次：那是基础设施塌了，不是产品坏了
-  if (result.fail > 0 && restarts > restartsBefore) {
-    console.log(`  ..   ${result.name} 失败时 ComfyUI 正在重启，重试一次`);
+  if (result.fail > 0 && (restarts > restartsBefore || browserWasLost)) {
+    console.log(
+      `  ..   ${result.name} 失败时${browserWasLost ? '浏览器丢了页面' : 'ComfyUI 正在重启'}，重试一次`
+    );
     await ensureComfy();
     await settle();
     result = await runOne(name);

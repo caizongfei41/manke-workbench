@@ -1054,5 +1054,18 @@
   "drama.final.needShots": "No segments are in the final cut yet",
   "fail.serverDown": "ComfyUI is offline",
   "fail.hint.serverDown": "The service is gone: start ComfyUI again, then re-run this shot",
-  "monitor.checking": "Checking…"
+  "monitor.checking": "Checking…",
+  "cmd.title": "Command palette",
+  "cmd.placeholder": "Search pages or projects…",
+  "cmd.empty": "Nothing matches",
+  "cmd.hint": "↵ to open",
+  "cmd.footer": "↑↓ select · ↵ open · Esc close",
+  "cmd.home": "Home",
+  "cmd.projects": "All projects",
+  "cmd.services": "Service status",
+  "cmd.newProject": "New project",
+  "cmd.mode.studio": "Studio",
+  "cmd.mode.canvas": "Canvas",
+  "cmd.mode.editor": "Editor",
+  "cmd.mode.assets": "Assets"
 }
