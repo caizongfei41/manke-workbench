@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { HintTip } from '@/components/app/hint-tip';
 import { cn } from '@/lib/utils';
@@ -73,8 +73,18 @@ const MODE_DESCS = {
   analysis: () => m['startHere.analysis.desc'](),
 };
 
+const STYLE_STARTERS = [
+  { key: 'cinematic', label: () => m['startHere.style.cinematic'](), prompt: () => m['startHere.style.cinematicPrompt']() },
+  { key: 'ink', label: () => m['startHere.style.ink'](), prompt: () => m['startHere.style.inkPrompt']() },
+  { key: 'product', label: () => m['startHere.style.product'](), prompt: () => m['startHere.style.productPrompt']() },
+  { key: 'arch', label: () => m['startHere.style.arch'](), prompt: () => m['startHere.style.archPrompt']() },
+  { key: 'neon', label: () => m['startHere.style.neon'](), prompt: () => m['startHere.style.neonPrompt']() },
+  { key: 'film', label: () => m['startHere.style.film'](), prompt: () => m['startHere.style.filmPrompt']() },
+];
+
 export function StudioStartHere({
   onPickMode,
+  projectId,
 }: {
   /**
    * Runs the entry. The studio switches its media tab; the canvas opens a draft
@@ -82,8 +92,39 @@ export function StudioStartHere({
    * case the cards only show their selected state.
    */
   onPickMode?: (mode: StartMode, prompt: string) => void;
+  /** Shows this project recent output; omitted when there is no project */
+  projectId?: string;
 } = {}) {
   const [selected, setSelected] = useState<StartMode | null>(null);
+  const [pickedStyle, setPickedStyle] = useState<string | null>(null);
+  const [recent, setRecent] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/app/recent-assets?projectId=${encodeURIComponent(projectId)}&limit=8`,
+          { headers: { 'x-beatapi-workspace-request': '1' } }
+        );
+        if (!response.ok) return;
+        const payload = (await response.json()) as { images?: { publicUrl: string | null }[] };
+        if (cancelled) return;
+        setRecent(
+          (payload.images ?? [])
+            .map((asset) => asset.publicUrl)
+            .filter((url): url is string => Boolean(url))
+            .slice(0, 6)
+        );
+      } catch {
+        // Recent output is a nicety: if it cannot be read, show nothing
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
 
   return (
     <div className="pointer-events-auto w-[min(94vw,620px)] text-center">
@@ -169,6 +210,53 @@ export function StudioStartHere({
       <p className="mx-auto mt-3 max-w-[390px] text-[13px] leading-6 text-ink/35 sm:text-sm">
         {m['startHere.subheading']()}
       </p>
+
+      {/* Style starters: one click fills the prompt instead of an empty box */}
+      <div className="mx-auto mt-7 max-w-[620px]">
+        <p className="text-[10.5px] font-semibold tracking-[0.16em] text-ink/30">
+          {m['startHere.styles.title']()}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2" data-style-starters="true">
+          {STYLE_STARTERS.map((style) => (
+            <button
+              key={style.key}
+              type="button"
+              data-style-starter={style.key}
+              onClick={() => {
+                setPickedStyle(style.key);
+                onPickMode?.('image', style.prompt());
+              }}
+              className={cn(
+                'rounded-full border px-3 py-1.5 text-[11.5px] transition',
+                pickedStyle === style.key
+                  ? 'border-[var(--beat-accent)]/60 bg-[var(--beat-accent)]/12 text-[var(--beat-text-1)]'
+                  : 'border-ink/[0.12] text-[var(--beat-text-2)] hover:border-ink/30 hover:text-ink'
+              )}
+            >
+              {style.label()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {recent.length > 0 ? (
+        <div className="mx-auto mt-8 max-w-[620px]" data-studio-recent="true">
+          <p className="text-[10.5px] font-semibold tracking-[0.16em] text-ink/30">
+            {m['startHere.recent.title']()}
+          </p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            {recent.map((url, index) => (
+              <img
+                key={url}
+                src={url}
+                alt=""
+                data-studio-recent-item={index}
+                className="size-14 rounded-[10px] border border-ink/10 object-cover opacity-80 transition hover:opacity-100"
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

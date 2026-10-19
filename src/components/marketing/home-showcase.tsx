@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Pause, Play, Sparkles } from 'lucide-react';
 
 import { normalizeLocale } from '@/config/locale';
+import { orderShowcase } from '@/core/showcase/curation';
 import { m } from '@/paraglide/messages.js';
 
 /**
@@ -169,9 +170,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
           videos?: { id: string; publicUrl: string | null; projectName?: string | null }[];
         };
 
-        const imageCandidates = (payload.images ?? [])
-          .filter((asset) => asset.publicUrl)
-          .slice(0, CANDIDATES);
+        const imageCandidates = orderShowcase(
+          (payload.images ?? []).filter((asset) => asset.publicUrl)
+        ).slice(0, CANDIDATES);
         const checked = await Promise.all(
           imageCandidates.map(async (asset) => ({
             asset,
@@ -218,7 +219,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
         }
 
         setImages(stills);
-        const clipRows = (payload.videos ?? []).filter((asset) => asset.publicUrl).slice(0, CLIP_CANDIDATES);
+        const clipRows = orderShowcase(
+          (payload.videos ?? []).filter((asset) => asset.publicUrl)
+        ).slice(0, CLIP_CANDIDATES);
         const withPoster = await Promise.all(
           clipRows.map(async (asset) => {
             const grabbed = await grabFrame(asset.publicUrl as string);
@@ -323,17 +326,25 @@ export function HomeShowcase({ locale }: { locale: string }) {
           <div className="relative aspect-[16/9] max-h-[440px] w-full overflow-hidden rounded-[20px] bg-[var(--beat-surface-2)]">
             {heroShot ? (
               <>
-                {images.map((shot, index) => (
-                  <img
-                    key={shot.id}
-                    src={shot.url}
-                    alt=""
-                    data-showcase-frame={index === active ? 'active' : 'idle'}
-                    className={`absolute inset-0 size-full object-cover transition-opacity duration-[900ms] ease-out ${
-                      index === active ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  />
-                ))}
+                {images.map((shot, index) =>
+                  index === active ? (
+                    <img
+                      key={`${shot.id}-${active}`}
+                      src={shot.url}
+                      alt=""
+                      data-showcase-frame="active"
+                      className="beat-flip absolute inset-0 size-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      key={shot.id}
+                      src={shot.url}
+                      alt=""
+                      data-showcase-frame="idle"
+                      className="absolute inset-0 size-full object-cover opacity-0"
+                    />
+                  )
+                )}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 sm:p-5">
                   <span

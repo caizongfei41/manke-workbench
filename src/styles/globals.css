@@ -1134,3 +1134,26 @@ html[data-theme] body {
   );
   filter: blur(46px);
 }
+
+/* A page turn rather than a crossfade: the frame comes up from behind the glass */
+@keyframes beat-flip-in {
+  from {
+    transform: perspective(1400px) rotateY(-6deg) translateZ(-40px);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(1400px) rotateY(0deg) translateZ(0);
+    opacity: 1;
+  }
+}
+
+.beat-flip {
+  animation: beat-flip-in 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beat-flip {
+    animation: none;
+  }
+}

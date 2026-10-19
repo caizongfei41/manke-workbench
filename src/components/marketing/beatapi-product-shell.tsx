@@ -33,6 +33,11 @@ function getShellCopy(locale: string) {
       { locale: messageLocale }
     ),
     tagline: m['product.shell.tagline']({}, { locale: messageLocale }),
+    footerWorkspaces: m['product.shell.footerWorkspaces']({}, { locale: messageLocale }),
+    footerRuntime: m['product.shell.footerRuntime']({}, { locale: messageLocale }),
+    footerLocal: m['product.shell.footerLocal']({}, { locale: messageLocale }),
+    footerNoAccount: m['product.shell.footerNoAccount']({}, { locale: messageLocale }),
+    footerGpu: m['product.shell.footerGpu']({}, { locale: messageLocale }),
     terms: m['product.shell.terms']({}, { locale: messageLocale }),
     privacy: m['product.shell.privacy']({}, { locale: messageLocale }),
   };
@@ -122,7 +127,7 @@ export function BeatApiProductShell({
       className="beat-product-shell min-h-[100dvh] bg-[var(--beat-bg)] pt-4 text-[var(--beat-text-1)] selection:bg-[var(--beat-accent)]/35 sm:pt-5"
     >
       <header className="sticky top-3 z-40 px-4 sm:top-4 sm:px-6">
-        <div className="mx-auto flex h-[60px] w-full min-w-0 max-w-[1280px] items-center gap-3 rounded-full border border-ink/[0.08] bg-[var(--beat-surface)]/90 px-3.5 shadow-[0_18px_60px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:px-5">
+        <div className="beat-glass mx-auto flex h-[60px] w-full min-w-0 max-w-[1280px] items-center gap-3 rounded-full px-3 text-[var(--beat-text-1)] sm:px-4">
           <Brand />
 
           <CapsuleNav active={active} items={navItems} />
@@ -173,18 +178,50 @@ export function BeatApiProductShell({
 
       {children}
 
-      <footer className="px-5 pb-8 pt-16 text-center text-[11px] font-[500] text-[var(--beat-text-3)]">
-        <div className="flex flex-wrap items-center justify-center gap-x-3">
-          <span className="inline-flex items-center gap-2 text-[var(--beat-text-2)]">
-            <img
-              src={appConfig.app_logo}
-              alt=""
-              className="size-4 shrink-0 rounded-[4px] object-contain"
-            />
-            {appConfig.app_name}
+      <footer className="mt-24 border-t border-ink/[0.07] px-5 pb-10 pt-14 sm:px-6" data-site-footer="true">
+        <div className="mx-auto grid w-full max-w-[1280px] gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="lg:col-span-2">
+            <span className="inline-flex items-center gap-2.5 text-[14px] font-semibold text-[var(--beat-text-1)]">
+              <img src={appConfig.app_logo} alt="" className="size-6 shrink-0 rounded-[7px] object-contain" />
+              {appConfig.app_name}
+            </span>
+            <p className="mt-3 max-w-xs text-[12px] leading-6 text-[var(--beat-text-2)]">{copy.tagline}</p>
+          </div>
+          <div>
+            <h3 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
+              {copy.footerWorkspaces}
+            </h3>
+            <ul className="mt-3 space-y-2">
+              {navItems.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-[12px] text-[var(--beat-text-2)] transition hover:text-ink"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
+              {copy.footerRuntime}
+            </h3>
+            <ul className="mt-3 space-y-2 text-[12px] text-[var(--beat-text-2)]">
+              <li>{copy.footerLocal}</li>
+              <li>{copy.footerNoAccount}</li>
+              <li>{copy.footerGpu}</li>
+            </ul>
+          </div>
+        </div>
+        <div className="mx-auto mt-10 flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-3 border-t border-ink/[0.07] pt-5 text-[11px] text-[var(--beat-text-3)]">
+          <span>{appConfig.app_name} · {copy.tagline}</span>
+          <span className="flex items-center gap-3">
+            <span>{copy.terms}</span>
+            <span aria-hidden="true">·</span>
+            <span>{copy.privacy}</span>
           </span>
-          <span aria-hidden="true">·</span>
-          <span>{copy.tagline}</span>
         </div>
       </footer>
     </div>

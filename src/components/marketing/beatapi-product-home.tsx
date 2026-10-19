@@ -2,9 +2,11 @@ import {
   ArrowRight,
   ArrowUp,
   Clapperboard,
+  FolderClock,
   Layers,
   Sparkles,
   Wand2,
+  Workflow,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
@@ -28,6 +30,13 @@ function getCopy(locale: string) {
     projectsDescription: m['product.home.projectsDescription']({}, { locale: messageLocale }),
     open: m['product.home.openWorkspace']({}, { locale: messageLocale }),
     composerHint: m['home.composer.hint']({}, { locale: messageLocale }),
+    workspacesTitle: m['home.workspaces.title']({}, { locale: messageLocale }),
+    workspacesSubtitle: m['home.workspaces.subtitle']({}, { locale: messageLocale }),
+    workspaceStudioTitle: m['home.workspaces.studioTitle']({}, { locale: messageLocale }),
+    workspaceStudioOutput: m['home.workspaces.studioOutput']({}, { locale: messageLocale }),
+    workspaceCanvasTitle: m['home.workspaces.canvasTitle']({}, { locale: messageLocale }),
+    workspaceCanvasOutput: m['home.workspaces.canvasOutput']({}, { locale: messageLocale }),
+    workspaceProjectsOutput: m['home.workspaces.projectsOutput']({}, { locale: messageLocale }),
     capabilitiesTitle: m['home.capabilities.title']({}, { locale: messageLocale }),
     capabilitiesSubtitle: m['home.capabilities.subtitle']({}, { locale: messageLocale }),
     cap1Title: m['home.capabilities.directorTitle']({}, { locale: messageLocale }),
@@ -172,25 +181,78 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
           </section>
 
           {/* Workspace entries */}
-          <section className="mt-16">
+          <section className="mt-20">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="beat-product-display text-[20px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)] sm:text-[24px]">
+                  {copy.workspacesTitle}
+                </h2>
+                <p className="mt-2 max-w-xl text-[12.5px] leading-6 text-[var(--beat-text-2)]">
+                  {copy.workspacesSubtitle}
+                </p>
+              </div>
+              <Link
+                href="/projects"
+                className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--beat-text-2)] transition hover:text-ink"
+              >
+                {copy.projects}
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+
             <div className="grid gap-3.5 md:grid-cols-3">
               {[
-                { title: 'Studio', href: '/studio', body: copy.studioDescription },
-                { title: 'Canvas', href: '/canvas', body: copy.canvasDescription },
-                { title: copy.projectsTitle, href: '/projects', body: copy.projectsDescription },
+                {
+                  title: copy.workspaceStudioTitle,
+                  href: '/studio',
+                  body: copy.studioDescription,
+                  output: copy.workspaceStudioOutput,
+                  icon: <Wand2 className="size-5" />,
+                  tint: 'radial-gradient(circle, rgba(56,189,248,0.5), transparent 70%)',
+                },
+                {
+                  title: copy.workspaceCanvasTitle,
+                  href: '/canvas',
+                  body: copy.canvasDescription,
+                  output: copy.workspaceCanvasOutput,
+                  icon: <Workflow className="size-5" />,
+                  tint: 'radial-gradient(circle, rgba(168,85,247,0.45), transparent 70%)',
+                },
+                {
+                  title: copy.projectsTitle,
+                  href: '/projects',
+                  body: copy.projectsDescription,
+                  output: copy.workspaceProjectsOutput,
+                  icon: <FolderClock className="size-5" />,
+                  tint: 'radial-gradient(circle, rgba(251,146,60,0.4), transparent 70%)',
+                },
               ].map((entry, index) => (
                 <Link key={entry.href} href={entry.href} className="group block">
-                  <article className="beat-glass flex h-full min-h-[132px] flex-col justify-between rounded-[20px] p-5 transition hover:-translate-y-0.5">
-                    <div className="flex items-start justify-between">
-                      <h3 className="beat-product-display text-[15.5px] font-semibold tracking-[-0.02em] text-[var(--beat-text-1)]">
-                        {entry.title}
-                      </h3>
+                  <article className="beat-glass relative flex h-full min-h-[224px] flex-col overflow-hidden rounded-[22px] p-5 transition duration-300 hover:-translate-y-1">
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute -right-8 -top-10 size-32 rounded-full opacity-50 blur-2xl transition-opacity duration-500 group-hover:opacity-90"
+                      style={{ background: entry.tint }}
+                    />
+                    <div className="relative flex items-start justify-between">
+                      <span className="grid size-10 place-items-center rounded-[13px] border border-white/12 bg-[var(--beat-glass-sheen)] text-[var(--beat-text-1)] backdrop-blur-md">
+                        {entry.icon}
+                      </span>
                       <span className="beat-product-display text-[10.5px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                     </div>
-                    <p className="mt-3 truncate text-[12px] text-[var(--beat-text-2)]">{entry.body}</p>
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--beat-text-2)] transition-colors group-hover:text-ink">
+                    <h3 className="beat-product-display relative mt-5 text-[16px] font-semibold tracking-[-0.02em] text-[var(--beat-text-1)]">
+                      {entry.title}
+                    </h3>
+                    <p className="relative mt-2 text-[12.5px] leading-[1.75] text-[var(--beat-text-2)]">
+                      {entry.body}
+                    </p>
+                    <p className="relative mt-3 inline-flex items-center gap-1.5 text-[11.5px] text-[var(--beat-text-3)]">
+                      <span className="size-1 rounded-full bg-[var(--beat-accent)]" />
+                      {entry.output}
+                    </p>
+                    <span className="relative mt-auto inline-flex items-center gap-1.5 pt-5 text-[12.5px] font-medium text-[var(--beat-text-1)]">
                       {copy.open}
                       <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                     </span>
