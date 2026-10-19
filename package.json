@@ -56,7 +56,10 @@
     "verify:list": "node scripts/run-verify.mjs --list",
     "verify:e2e": "node scripts/run-verify.mjs --e2e",
     "verify:ci": "node scripts/run-verify.mjs --group=ci",
-    "verify:gpu": "node scripts/run-verify.mjs --group=gpu"
+    "verify:gpu": "node scripts/run-verify.mjs --group=gpu",
+    "stack:up": "node scripts/stack-up.mjs",
+    "stack:restart": "node scripts/stack-up.mjs --restart",
+    "verify:vigil": "node scripts/vigil.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1069.0",

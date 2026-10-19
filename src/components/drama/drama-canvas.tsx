@@ -2136,6 +2136,20 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   className="size-3"
                 />
               </label>
+                <label className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-[var(--beat-text-2)]">
+                    {m['drama.final.attachList']()}
+                  </span>
+                  <input
+                    type="checkbox"
+                    data-attach-shotlist="true"
+                    checked={doc.attachShotList !== false}
+                    onChange={(event) =>
+                      setDoc((current) => ({ ...current, attachShotList: event.target.checked }))
+                    }
+                    className="size-3"
+                  />
+                </label>
 
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-[10px] text-[var(--beat-text-2)]">
@@ -2245,7 +2259,21 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               </button>
             ) : null}
             {doc.finalVideoUrl ? (
+              <>
               <video src={doc.finalVideoUrl} controls className="mt-2 w-full rounded-[8px]" />
+              {doc.attachShotList !== false ? (
+                <a
+                  href={`/api/app/projects/${projectId}/shotlist`}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-shotlist-download="true"
+                  className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+                >
+                  <Table2 className="size-3" />
+                  {m['drama.final.downloadList']()}
+                </a>
+              ) : null}
+              </>
             ) : null}
           </NodeShell>
         </div>

@@ -1077,5 +1077,7 @@
   "drama.board.applyAssetAll": "挂到全部 {count} 段",
   "drama.board.removeAssetAll": "从全部 {count} 段移除",
   "drama.board.promptPrefix": "全局前缀",
-  "drama.board.promptPrefixHint": "例：电影感，35mm 胶片"
+  "drama.board.promptPrefixHint": "例：电影感，35mm 胶片",
+  "drama.final.attachList": "附带分镜表",
+  "drama.final.downloadList": "下载分镜表 CSV"
 }

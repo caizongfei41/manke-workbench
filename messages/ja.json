@@ -1077,5 +1077,7 @@
   "drama.board.applyAssetAll": "全 {count} 件に付与",
   "drama.board.removeAssetAll": "全 {count} 件から外す",
   "drama.board.promptPrefix": "共通プレフィックス",
-  "drama.board.promptPrefixHint": "例：シネマティック、35mm フィルム"
+  "drama.board.promptPrefixHint": "例：シネマティック、35mm フィルム",
+  "drama.final.attachList": "ショットリストを添付",
+  "drama.final.downloadList": "ショットリストを CSV 保存"
 }

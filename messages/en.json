@@ -1077,5 +1077,7 @@
   "drama.board.applyAssetAll": "Attach to all {count}",
   "drama.board.removeAssetAll": "Detach from all {count}",
   "drama.board.promptPrefix": "Prefix",
-  "drama.board.promptPrefixHint": "e.g. cinematic, 35mm film"
+  "drama.board.promptPrefixHint": "e.g. cinematic, 35mm film",
+  "drama.final.attachList": "Attach shot list",
+  "drama.final.downloadList": "Download shot list (CSV)"
 }

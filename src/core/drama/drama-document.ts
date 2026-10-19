@@ -117,6 +117,8 @@ export type DramaDocument = {
    * 这样随时能关掉，也不会毁掉手写的内容。
    */
   promptPrefix?: string;
+  /** 成片旁边是否同时提供分镜表下载（默认提供）。 */
+  attachShotList?: boolean;
   finalStatus: 'idle' | 'running' | 'succeeded' | 'failed';
 };
 
@@ -316,6 +318,7 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
         typeof parsed.finalVideoUrl === 'string' ? parsed.finalVideoUrl : null,
       finalError: typeof parsed.finalError === 'string' ? parsed.finalError : null,
       promptPrefix: typeof parsed.promptPrefix === 'string' ? parsed.promptPrefix : '',
+      attachShotList: parsed.attachShotList !== false,
       collapsedShots: Array.isArray((parsed as { collapsedShots?: unknown }).collapsedShots)
         ? ((parsed as { collapsedShots: unknown[] }).collapsedShots.filter(
             (id): id is string => typeof id === 'string'
