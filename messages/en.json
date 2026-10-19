@@ -1068,5 +1068,7 @@
   "cmd.mode.canvas": "Canvas",
   "cmd.mode.editor": "Editor",
   "cmd.mode.assets": "Assets",
-  "drama.board.exportList": "Export shot list (CSV)"
+  "drama.board.exportList": "Export shot list (CSV)",
+  "drama.board.collapseAll": "Collapse all segments",
+  "drama.board.expandAll": "Expand all segments"
 }

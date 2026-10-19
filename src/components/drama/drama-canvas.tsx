@@ -10,6 +10,8 @@ import {
   Upload,
   Wand2,
   Table2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -117,6 +119,8 @@ function NodeShell({
   width = NODE_WIDTH,
   helpId,
   ports,
+  collapsed,
+  onToggleCollapse,
 }: {
   title: string;
   subtitle?: string;
@@ -124,6 +128,9 @@ function NodeShell({
   accent?: boolean;
   children: React.ReactNode;
   width?: number;
+  /** Hides the body and keeps only the header row. */
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
   /** Shows the floating usage notes button in the header. */
   helpId?: HelpId;
   /** Wiring handles: an input on the left edge, an output on the right. */
@@ -151,6 +158,21 @@ function NodeShell({
         >
           {icon}
         </span>
+        {onToggleCollapse ? (
+          <button
+            type="button"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleCollapse();
+            }}
+            aria-label={collapsed ? 'expand' : 'collapse'}
+            aria-expanded={!collapsed}
+            className="ml-auto grid size-5 shrink-0 place-items-center rounded-[5px] text-[var(--beat-text-3)] transition hover:bg-ink/[0.06] hover:text-ink"
+          >
+            {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
+          </button>
+        ) : null}
         {helpId ? <HelpPopover id={helpId} className="ml-auto" /> : null}
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-[12px] font-medium leading-none text-[var(--beat-text-1)]">
@@ -163,7 +185,7 @@ function NodeShell({
           ) : null}
         </div>
       </div>
-        <div className="p-3">{children}</div>
+        {collapsed ? null : <div className="p-3">{children}</div>}
       </div>
       {ports?.inputId ? (
         <span
@@ -780,6 +802,24 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   };
 
   /** Set a public asset's portrait, e.g. after picking one from the cast library. */
+  const collapseAllShots = () =>
+    updateDoc((current) => ({ ...current, collapsedShots: current.shots.map((shot) => shot.id) }));
+
+  const expandAllShots = () => updateDoc((current) => ({ ...current, collapsedShots: [] }));
+
+  const isShotCollapsed = (shotId: string) => (doc.collapsedShots ?? []).includes(shotId);
+
+  const toggleShotCollapsed = (shotId: string) =>
+    updateDoc((current) => {
+      const collapsed = current.collapsedShots ?? [];
+      return {
+        ...current,
+        collapsedShots: collapsed.includes(shotId)
+          ? collapsed.filter((id) => id !== shotId)
+          : [...collapsed, shotId],
+      };
+    });
+
   const setAssetImage = (assetId: string, url: string) =>
     updateDoc((current) => ({
       ...current,
@@ -1393,6 +1433,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               <Table2 className="size-3" />
               {m['drama.board.exportList']()}
             </button>
+              <button
+                type="button"
+                onClick={() => ((doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? expandAllShots() : collapseAllShots())}
+                disabled={doc.shots.length === 0}
+                className="mt-1 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+              >
+                {(doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
+                {(doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? m['drama.board.expandAll']() : m['drama.board.collapseAll']()}
+              </button>
           </NodeShell>
         </div>
 
@@ -1695,6 +1744,8 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           >
             <NodeShell
               title={m['drama.shot.title']({ index: index + 1 })}
+              collapsed={isShotCollapsed(shot.id)}
+              onToggleCollapse={() => toggleShotCollapsed(shot.id)}
               subtitle={`${shot.seconds}s · ${shotStatusLabel(shot.status)}`}
               icon={<Film className="size-3.5" />}
               helpId="shot"

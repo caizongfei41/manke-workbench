@@ -1068,5 +1068,7 @@
   "cmd.mode.canvas": "画布",
   "cmd.mode.editor": "剪辑",
   "cmd.mode.assets": "素材",
-  "drama.board.exportList": "导出分镜表 CSV"
+  "drama.board.exportList": "导出分镜表 CSV",
+  "drama.board.collapseAll": "折叠所有分段",
+  "drama.board.expandAll": "展开所有分段"
 }

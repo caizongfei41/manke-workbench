@@ -1068,5 +1068,7 @@
   "cmd.mode.canvas": "キャンバス",
   "cmd.mode.editor": "編集",
   "cmd.mode.assets": "素材",
-  "drama.board.exportList": "ショットリストを CSV 出力"
+  "drama.board.exportList": "ショットリストを CSV 出力",
+  "drama.board.collapseAll": "全ショットを折りたたむ",
+  "drama.board.expandAll": "全ショットを展開"
 }

@@ -110,6 +110,8 @@ export type DramaDocument = {
   finalVideoUrl?: string | null;
   /** Why the last compose did not start, so the panel can say it plainly. */
   finalError?: string | null;
+  /** 折叠起来的分段 id：40 段排一列时，折叠是唯一能一眼看完的办法。 */
+  collapsedShots?: string[];
   finalStatus: 'idle' | 'running' | 'succeeded' | 'failed';
 };
 
@@ -308,6 +310,11 @@ export const loadDramaDocument = (raw: string | undefined | null): DramaDocument
       finalVideoUrl:
         typeof parsed.finalVideoUrl === 'string' ? parsed.finalVideoUrl : null,
       finalError: typeof parsed.finalError === 'string' ? parsed.finalError : null,
+      collapsedShots: Array.isArray((parsed as { collapsedShots?: unknown }).collapsedShots)
+        ? ((parsed as { collapsedShots: unknown[] }).collapsedShots.filter(
+            (id): id is string => typeof id === 'string'
+          ))
+        : [],
       finalStatus: (parsed.finalStatus ?? 'idle') as DramaDocument['finalStatus'],
     };
   } catch {
