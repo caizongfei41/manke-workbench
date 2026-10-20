@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Pause, Play, Sparkles } from 'lucide-react';
 
 import { normalizeLocale } from '@/config/locale';
-import { orderShowcase } from '@/core/showcase/curation';
+import { SHOWCASE_PROJECT_NAME, orderShowcase } from '@/core/showcase/curation';
+
+/** The curated set is hand-picked, so it skips the variance filter the raw library needs. */
+const isCuratedEntry = (asset: { projectName?: string | null }) =>
+  asset.projectName === SHOWCASE_PROJECT_NAME;
 import { m } from '@/paraglide/messages.js';
 
 /**
@@ -152,10 +156,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
   const text = copy(locale);
   const [images, setImages] = useState<Shot[]>([]);
   const [clips, setClips] = useState<Shot[]>([]);
+  const [brokenIds, setBrokenIds] = useState<Record<string, true>>({});
   const [active, setActive] = useState(0);
-  // No auto-rotation: the front page should show one settled piece, not a slideshow that
-  // is already somewhere else when you look back at it.
-  const paused = true;
+  const [paused, setPaused] = useState(false);
   const [ready, setReady] = useState(false);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
@@ -172,10 +175,12 @@ export function HomeShowcase({ locale }: { locale: string }) {
           videos?: { id: string; publicUrl: string | null; projectName?: string | null }[];
         };
 
-        // Pin the running order. A gallery that reshuffles on every visit is not something
-        // you can point at, so the selection is stable and only changes when the library does.
+        // The carousel rotates a fixed curated set, not the whole library. Only the
+        // showcase project qualifies; everything else here is somebody's test output.
         const imageCandidates = orderShowcase(
-          (payload.images ?? []).filter((asset) => asset.publicUrl)
+          (payload.images ?? []).filter(
+            (asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME
+          )
         ).slice(0, CANDIDATES);
         const checked = await Promise.all(
           imageCandidates.map(async (asset) => ({
@@ -187,7 +192,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
 
         // Show the most detailed frames first rather than whichever row happened to be newest.
         const stills: Shot[] = checked
-          .filter((entry) => entry.ok && entry.ok.variance >= MIN_VARIANCE)
+          .filter((entry) => entry.ok && (isCuratedEntry(entry.asset) || entry.ok.variance >= MIN_VARIANCE))
           .sort((a, b) => (b.ok?.variance ?? 0) - (a.ok?.variance ?? 0))
           .slice(0, MAX_IMAGES)
           .map(({ asset }) => ({
@@ -201,7 +206,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
         // Fill the remainder from real clips: the frames are earned, not stock.
         if (stills.length < MAX_IMAGES) {
           const spare = (payload.videos ?? [])
-            .filter((asset) => asset.publicUrl)
+            .filter(
+              (asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME
+            )
             .slice(0, MAX_IMAGES - stills.length + 2);
           const frames = await Promise.all(
             spare.map(async (asset) => ({
@@ -223,8 +230,10 @@ export function HomeShowcase({ locale }: { locale: string }) {
         }
 
         setImages(stills);
+        // Same rule as the stills: the clip row is a fixed curated set, not a sample of
+        // everything the library holds.
         const clipRows = orderShowcase(
-          (payload.videos ?? []).filter((asset) => asset.publicUrl)
+          (payload.videos ?? []).filter((asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME)
         ).slice(0, CLIP_CANDIDATES);
         const withPoster = await Promise.all(
           clipRows.map(async (asset) => {
@@ -241,14 +250,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
           })
         );
         if (cancelled) return;
-        const uniqueClips: typeof withPoster = [];
-        for (const clip of withPoster) {
-          const signature = clip.signature;
-          if (!clip.poster || !signature) continue;
-          if (uniqueClips.some((kept) => kept.signature && looksSame(kept.signature, signature))) continue;
-          uniqueClips.push(clip);
-          if (uniqueClips.length >= MAX_CLIPS) break;
-        }
+        // The curated row is already hand-picked and distinct, so it is not deduped: doing so
+        // silently shrank four chosen clips down to two.
+        const uniqueClips = withPoster.slice(0, MAX_CLIPS);
         setClips(uniqueClips);
         setReady(true);
       } catch {
@@ -280,7 +284,23 @@ export function HomeShowcase({ locale }: { locale: string }) {
     if (el) el.pause();
   }, []);
 
-  const heroShot = images[active] ?? null;
+  // The set can shrink between loads (a broken frame dropping out), so never trust the
+  // stored index to still be in range.
+  // Keep every curated frame in the rotation. A frame that fails to decode is skipped by
+  // the strip, but removing it here made the count wobble between renders.
+  const visible = images;
+
+  // The curated set loops on a timer. All frames stay mounted; only the index moves.
+  useEffect(() => {
+    if (visible.length < 2 || paused) return;
+    const id = setInterval(() => {
+      setActive((current) => (current + 1) % Math.max(visible.length, 1));
+    }, ROTATE_MS);
+    return () => clearInterval(id);
+  }, [visible.length, paused]);
+
+  const safeActive = visible.length ? Math.min(active, visible.length - 1) : 0;
+  const heroShot = visible[safeActive] ?? null;
   const strip = useMemo(() => images.filter((_, index) => index !== active).slice(0, 4), [images, active]);
 
   return (
@@ -303,59 +323,8 @@ export function HomeShowcase({ locale }: { locale: string }) {
           className="beat-glass relative overflow-hidden rounded-[24px] p-2"
           data-showcase-stage="true"
         >
-          <div className="relative h-[clamp(360px,42vw,620px)] w-full overflow-hidden rounded-[18px] bg-[var(--beat-surface-2)]">
-            {heroShot ? (
-              <>
-                {images.map((shot, index) =>
-                  index === active ? (
-                    <img
-                      key={`${shot.id}-${active}`}
-                      src={shot.url}
-                      alt=""
-                      data-showcase-frame="active"
-                      onError={(event) => {
-                        event.currentTarget.style.visibility = 'hidden';
-                      }}
-                      className="beat-flip absolute inset-0 size-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      key={shot.id}
-                      src={shot.url}
-                      alt=""
-                      data-showcase-frame="idle"
-                      onError={(event) => {
-                        event.currentTarget.style.visibility = 'hidden';
-                      }}
-                      className="absolute inset-0 size-full object-cover opacity-0"
-                    />
-                  )
-                )}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-7">
-                  <span
-                    className="rounded-full border border-white/25 bg-black/55 px-3.5 py-1.5 text-[14px] font-medium text-white backdrop-blur-md"
-                    data-showcase-caption="true"
-                  >
-                    {heroShot.label}
-                  </span>
-                  <span className="flex items-center gap-1.5" data-showcase-dots="true">
-                    {images.map((shot, index) => (
-                      <button
-                        key={shot.id}
-                        type="button"
-                        onClick={() => setActive(index)}
-                        aria-label={`${index + 1}`}
-                        aria-current={index === active}
-                        className={`h-2 rounded-full transition-all ${
-                          index === active ? 'w-7 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
-                        }`}
-                      />
-                    ))}
-                  </span>
-                </div>
-              </>
-            ) : (
+          <div className="relative aspect-[16/7] max-h-[520px] w-full overflow-hidden rounded-[18px] bg-[var(--beat-surface-2)]">
+            {images.length === 0 ? (
               <div className="grid size-full place-items-center">
                 <div className="text-center">
                   <Sparkles className="mx-auto size-6 text-[var(--beat-text-3)]" />
@@ -364,12 +333,66 @@ export function HomeShowcase({ locale }: { locale: string }) {
                   </p>
                 </div>
               </div>
-            )}
+            ) : null}
+            <>
+                {visible.map((shot, index) => (
+                  <img
+                    key={shot.id}
+                    src={shot.url}
+                    alt=""
+                    data-showcase-frame={index === safeActive ? 'active' : 'idle'}
+                    onError={() => {
+                      setBrokenIds((current) => ({ ...current, [shot.id]: true }));
+                    }}
+                    style={
+                      index === safeActive
+                        ? { animation: 'beat-flip-in 640ms cubic-bezier(0.22, 1, 0.36, 1) both' }
+                        : undefined
+                    }
+                    className={`absolute inset-0 h-full w-full object-cover ${
+                      index === safeActive ? '' : 'opacity-0'
+                    }`}
+                  />
+                ))}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-7">
+                  <span
+                    className="rounded-full border border-white/25 bg-black/55 px-3.5 py-1.5 text-[14px] font-medium text-white backdrop-blur-md"
+                    data-showcase-caption="true"
+                  >
+                    {heroShot?.label ?? ''}
+                  </span>
+                  <span className="flex items-center gap-1.5" data-showcase-dots="true">
+                    {visible.map((shot, index) => (
+                      <button
+                        key={shot.id}
+                        type="button"
+                        onClick={() => setActive(index)}
+                        aria-label={`${index + 1}`}
+                        aria-current={index === safeActive}
+                        className={`h-2 rounded-full transition-all ${
+                          index === safeActive ? 'w-7 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
+                        }`}
+                      />
+                    ))}
+                  </span>
+                </div>
+              </>
+            {images.length === 0 ? (
+              <div className="grid size-full place-items-center">
+                <div className="text-center">
+                  <Sparkles className="mx-auto size-6 text-[var(--beat-text-3)]" />
+                  <p className="mt-3 text-[14px] text-[var(--beat-text-2)]" data-showcase-empty="true">
+                    {ready ? text.empty : ' '}
+                  </p>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {strip.length > 0 ? (
             <div className="mt-3 grid grid-cols-4 gap-3" data-showcase-strip="true">
-              {strip.map((shot) => (
+              {strip.filter((shot) => !brokenIds[shot.id]).map((shot) => (
                 <button
                   key={shot.id}
                   type="button"
@@ -380,15 +403,13 @@ export function HomeShowcase({ locale }: { locale: string }) {
                     src={shot.url}
                     alt=""
                     data-showcase-thumb="true"
-                    onError={(event) => {
-                      const tile = event.currentTarget.closest('button');
-                      if (tile) tile.remove();
+                    onError={() => {
+                      setBrokenIds((current) => ({ ...current, [shot.id]: true }));
                     }}
                     onLoad={(event) => {
                       const img = event.currentTarget;
-                      const tile = img.closest('button');
-                      if (!img.naturalWidth) {
-                        tile?.remove();
+                      if (img.complete && img.naturalWidth === 0) {
+                        setBrokenIds((current) => ({ ...current, [shot.id]: true }));
                         return;
                       }
                       // A frame of one flat colour is a failed render, not a picture.
@@ -407,7 +428,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
                           if (luma < min) min = luma;
                           if (luma > max) max = luma;
                         }
-                        if (max - min < 2) tile?.remove();
+                        if (max - min < 0.5) {
+                          setBrokenIds((current) => ({ ...current, [shot.id]: true }));
+                        }
                       } catch {
                         // Canvas readback can be blocked; keep the tile in that case.
                       }

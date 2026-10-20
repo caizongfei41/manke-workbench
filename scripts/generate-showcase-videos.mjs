@@ -52,6 +52,20 @@ const STYLES = [
     sound: 'birds at distance, dripping water',
     music: 'sparse piano',
   },
+  {
+    name: 'concrete-shadow',
+    shot: 'Brutalist concrete stairwell at harsh midday sun, deep geometric shadows cutting across pale walls',
+    beat: 'the camera tilts up along the stairs, shadow edges slide across the concrete',
+    sound: 'dry echo in an empty stairwell',
+    music: 'staccato strings',
+  },
+  {
+    name: 'ink-water',
+    shot: 'Macro shot of black ink blooming through clear water against a white background, curling filaments of colour',
+    beat: 'ink plumes spread and fold slowly, the camera holds still',
+    sound: 'muffled underwater tone',
+    music: 'single sustained cello',
+  },
 ];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
