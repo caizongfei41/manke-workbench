@@ -94,3 +94,7 @@ public/*.bak
 
 # UI 套件产物（截图、临时文件）
 .verify/
+
+# scratch scripts created while driving the browser
+/_*.mjs
+/_*.cjs
