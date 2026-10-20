@@ -5,6 +5,7 @@ import { normalizeLocale } from '@/config/locale';
 import {
   SHOWCASE_PROJECT_NAME,
   orderShowcase,
+  showcaseClipOrderOf,
   showcaseOrderOf,
 } from '@/core/showcase/curation';
 
@@ -181,7 +182,12 @@ export function HomeShowcase({ locale }: { locale: string }) {
             filename?: string | null;
             projectName?: string | null;
           }[];
-          videos?: { id: string; publicUrl: string | null; projectName?: string | null }[];
+          videos?: {
+            id: string;
+            publicUrl: string | null;
+            filename?: string | null;
+            projectName?: string | null;
+          }[];
         };
 
         // The carousel rotates a fixed curated set, not the whole library. Only the
@@ -241,9 +247,14 @@ export function HomeShowcase({ locale }: { locale: string }) {
         setImages(stills);
         // Same rule as the stills: the clip row is a fixed curated set, not a sample of
         // everything the library holds.
-        const clipRows = orderShowcase(
-          (payload.videos ?? []).filter((asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME)
-        ).slice(0, CLIP_CANDIDATES);
+        // The clip row is these six, in this order — landscapes on top, people below.
+        const clipRows = (payload.videos ?? [])
+          .filter((asset) => asset.publicUrl && showcaseClipOrderOf(asset.filename) >= 0)
+          .sort(
+            (left, right) =>
+              showcaseClipOrderOf(left.filename) - showcaseClipOrderOf(right.filename)
+          )
+          .slice(0, MAX_CLIPS);
         const withPoster = await Promise.all(
           clipRows.map(async (asset) => {
             const grabbed = await grabFrame(asset.publicUrl as string);

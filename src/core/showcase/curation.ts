@@ -79,3 +79,25 @@ export const showcaseOrderOf = (filename: string | null | undefined) => {
   if (!filename) return -1;
   return (SHOWCASE_WIDE_ORDER as readonly string[]).indexOf(filename);
 };
+
+/**
+ * The six clips the front page shows, in grid order.
+ *
+ * Top row is landscape and abstract — establishing shots. Bottom row is people, shot with
+ * deliberate camera language, because "can this thing make a professional clip" is the
+ * question a visitor is actually asking.
+ */
+export const SHOWCASE_CLIP_ORDER = [
+  'concrete-shadow.mp4',
+  'forest-mist.mp4',
+  'ink-water.mp4',
+  'portrait-shallow-track.mp4',
+  'portrait-low-angle-walk.mp4',
+  'portrait-orbit-backlight.mp4',
+] as const;
+
+/** -1 for anything that is not one of the six. */
+export const showcaseClipOrderOf = (filename: string | null | undefined) => {
+  if (!filename) return -1;
+  return (SHOWCASE_CLIP_ORDER as readonly string[]).indexOf(filename);
+};
