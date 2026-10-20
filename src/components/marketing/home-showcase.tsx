@@ -296,10 +296,10 @@ export function HomeShowcase({ locale }: { locale: string }) {
       <section className="relative mt-12" aria-label={text.galleryTitle}>
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="beat-product-display text-[20px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)] sm:text-[24px]">
+            <h2 className="beat-product-display text-[28px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)] sm:text-[24px]">
               {text.galleryTitle}
             </h2>
-            <p className="mt-1.5 max-w-xl text-[12.5px] leading-6 text-[var(--beat-text-2)]">
+            <p className="mt-2 max-w-xl text-[16px] leading-7 text-[var(--beat-text-2)]">
               {text.gallerySubtitle}
             </p>
           </div>
@@ -309,21 +309,21 @@ export function HomeShowcase({ locale }: { locale: string }) {
               onClick={() => setPaused((value) => !value)}
               aria-label={paused ? text.play : text.pause}
               data-showcase-toggle="true"
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-ink/[0.12] bg-[var(--beat-glass-bg)] px-3 text-[11.5px] text-[var(--beat-text-2)] backdrop-blur-xl transition hover:text-ink"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-ink/[0.12] px-4 text-[14px] bg-[var(--beat-glass-bg)] px-3 text-[11.5px] text-[var(--beat-text-2)] backdrop-blur-xl transition hover:text-ink"
             >
-              {paused ? <Play className="size-3" /> : <Pause className="size-3" />}
+              {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
               {paused ? text.play : text.pause}
             </button>
           ) : null}
         </div>
 
         <div
-          className="beat-glass relative overflow-hidden rounded-[26px] p-2.5"
+          className="beat-glass relative overflow-hidden rounded-[24px] p-2"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           data-showcase-stage="true"
         >
-          <div className="relative aspect-[16/9] max-h-[440px] w-full overflow-hidden rounded-[20px] bg-[var(--beat-surface-2)]">
+          <div className="relative h-[clamp(360px,42vw,620px)] w-full overflow-hidden rounded-[18px] bg-[var(--beat-surface-2)]">
             {heroShot ? (
               <>
                 {images.map((shot, index) =>
@@ -351,10 +351,10 @@ export function HomeShowcase({ locale }: { locale: string }) {
                     />
                   )
                 )}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 sm:p-5">
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-7">
                   <span
-                    className="rounded-full border border-white/20 bg-black/35 px-2.5 py-1 text-[11px] text-white backdrop-blur-md"
+                    className="rounded-full border border-white/25 bg-black/55 px-3.5 py-1.5 text-[14px] font-medium text-white backdrop-blur-md"
                     data-showcase-caption="true"
                   >
                     {heroShot.label}
@@ -367,8 +367,8 @@ export function HomeShowcase({ locale }: { locale: string }) {
                         onClick={() => setActive(index)}
                         aria-label={`${index + 1}`}
                         aria-current={index === active}
-                        className={`h-1.5 rounded-full transition-all ${
-                          index === active ? 'w-5 bg-white' : 'w-1.5 bg-white/45 hover:bg-white/70'
+                        className={`h-2 rounded-full transition-all ${
+                          index === active ? 'w-7 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
                         }`}
                       />
                     ))}
@@ -379,7 +379,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
               <div className="grid size-full place-items-center">
                 <div className="text-center">
                   <Sparkles className="mx-auto size-6 text-[var(--beat-text-3)]" />
-                  <p className="mt-3 text-[12.5px] text-[var(--beat-text-2)]" data-showcase-empty="true">
+                  <p className="mt-3 text-[14px] text-[var(--beat-text-2)]" data-showcase-empty="true">
                     {ready ? text.empty : ' '}
                   </p>
                 </div>
@@ -388,13 +388,13 @@ export function HomeShowcase({ locale }: { locale: string }) {
           </div>
 
           {strip.length > 0 ? (
-            <div className="mt-2.5 grid grid-cols-4 gap-2" data-showcase-strip="true">
+            <div className="mt-3 grid grid-cols-4 gap-3" data-showcase-strip="true">
               {strip.map((shot) => (
                 <button
                   key={shot.id}
                   type="button"
                   onClick={() => setActive(images.findIndex((item) => item.id === shot.id))}
-                  className="group relative h-[62px] overflow-hidden rounded-[12px] border border-white/10 sm:h-[74px]"
+                  className="group relative h-[104px] overflow-hidden rounded-[14px] border border-ink/[0.1] sm:h-[74px]"
                 >
                   <img
                     src={shot.url}
@@ -402,7 +402,35 @@ export function HomeShowcase({ locale }: { locale: string }) {
                     data-showcase-thumb="true"
                     onError={(event) => {
                       const tile = event.currentTarget.closest('button');
-                      if (tile) tile.style.display = 'none';
+                      if (tile) tile.remove();
+                    }}
+                    onLoad={(event) => {
+                      const img = event.currentTarget;
+                      const tile = img.closest('button');
+                      if (!img.naturalWidth) {
+                        tile?.remove();
+                        return;
+                      }
+                      // A frame of one flat colour is a failed render, not a picture.
+                      try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 32;
+                        canvas.height = 32;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+                        ctx.drawImage(img, 0, 0, 32, 32);
+                        const { data } = ctx.getImageData(0, 0, 32, 32);
+                        let min = 255;
+                        let max = 0;
+                        for (let i = 0; i < data.length; i += 4) {
+                          const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                          if (luma < min) min = luma;
+                          if (luma > max) max = luma;
+                        }
+                        if (max - min < 2) tile?.remove();
+                      } catch {
+                        // Canvas readback can be blocked; keep the tile in that case.
+                      }
                     }}
                     className="size-full object-cover opacity-80 transition duration-500 group-hover:scale-[1.05] group-hover:opacity-100"
                   />
