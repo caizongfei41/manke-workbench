@@ -1222,5 +1222,6 @@
   "standard.generateVideo": "動画を生成",
   "standard.videoHint": "動画は H3 で 3〜5 分ほどかかります",
   "standard.openEditor": "編集を開く",
-  "standard.backToProjects": "プロジェクト"
+  "standard.backToProjects": "プロジェクト",
+  "startHere.galleryTitle": "この端末で作られたもの"
 }

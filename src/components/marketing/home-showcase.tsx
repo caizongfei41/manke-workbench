@@ -153,7 +153,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
   const [images, setImages] = useState<Shot[]>([]);
   const [clips, setClips] = useState<Shot[]>([]);
   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
+  // No auto-rotation: the front page should show one settled piece, not a slideshow that
+  // is already somewhere else when you look back at it.
+  const paused = true;
   const [ready, setReady] = useState(false);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
@@ -170,6 +172,8 @@ export function HomeShowcase({ locale }: { locale: string }) {
           videos?: { id: string; publicUrl: string | null; projectName?: string | null }[];
         };
 
+        // Pin the running order. A gallery that reshuffles on every visit is not something
+        // you can point at, so the selection is stable and only changes when the library does.
         const imageCandidates = orderShowcase(
           (payload.images ?? []).filter((asset) => asset.publicUrl)
         ).slice(0, CANDIDATES);
@@ -259,17 +263,6 @@ export function HomeShowcase({ locale }: { locale: string }) {
   }, []);
 
   // Rotation stops while the pointer is over the frame, and for reduced-motion users.
-  useEffect(() => {
-    if (images.length < 2 || paused) return;
-    const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) return;
-    const timer = setInterval(() => {
-      setActive((current) => (current + 1) % images.length);
-    }, ROTATE_MS);
-    return () => clearInterval(timer);
-  }, [images.length, paused]);
 
   const playClip = useCallback(async (id: string) => {
     const el = videoRefs.current[id];
@@ -303,24 +296,11 @@ export function HomeShowcase({ locale }: { locale: string }) {
               {text.gallerySubtitle}
             </p>
           </div>
-          {images.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => setPaused((value) => !value)}
-              aria-label={paused ? text.play : text.pause}
-              data-showcase-toggle="true"
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-ink/[0.12] px-4 text-[14px] bg-[var(--beat-glass-bg)] px-3 text-[13px] text-[var(--beat-text-2)] backdrop-blur-xl transition hover:text-ink"
-            >
-              {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-              {paused ? text.play : text.pause}
-            </button>
-          ) : null}
+
         </div>
 
         <div
           className="beat-glass relative overflow-hidden rounded-[24px] p-2"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
           data-showcase-stage="true"
         >
           <div className="relative h-[clamp(360px,42vw,620px)] w-full overflow-hidden rounded-[18px] bg-[var(--beat-surface-2)]">

@@ -1222,5 +1222,6 @@
   "standard.generateVideo": "生成视频",
   "standard.videoHint": "视频 take 走 H3，约 3–5 分钟",
   "standard.openEditor": "去剪辑台",
-  "standard.backToProjects": "项目"
+  "standard.backToProjects": "项目",
+  "startHere.galleryTitle": "这台机器刚刚做出来的"
 }

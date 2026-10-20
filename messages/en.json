@@ -1222,5 +1222,6 @@
   "standard.generateVideo": "Video take",
   "standard.videoHint": "Video takes run H3; about 3–5 minutes",
   "standard.openEditor": "Open editor",
-  "standard.backToProjects": "Projects"
+  "standard.backToProjects": "Projects",
+  "startHere.galleryTitle": "Just made on this machine"
 }

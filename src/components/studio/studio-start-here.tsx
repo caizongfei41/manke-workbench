@@ -126,8 +126,67 @@ export function StudioStartHere({
     };
   }, [projectId]);
 
+  // The empty studio is mostly blank space. Fill it with what this machine has actually
+  // made, so a new project starts next to evidence rather than next to nothing.
+  const [galleryShots, setGalleryShots] = useState<{ id: string; url: string }[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+    const response = await fetch('/api/app/recent-assets?limit=60', {
+      headers: { 'x-beatapi-workspace-request': '1' },
+    }).catch(() => null);
+    const payload = (response?.ok
+      ? await response.json().catch(() => null)
+      : null) as { images?: { id: string; publicUrl: string | null }[] } | null;
+    {
+        if (cancelled || !payload) return;
+        const shots = (payload.images ?? [])
+          .filter((asset) => asset.publicUrl)
+          .map((asset) => ({ id: asset.id, url: String(asset.publicUrl) }));
+
+        // Drop frames that are one flat colour: this renderer emits them on failure and
+        // they are not what "made on this machine" should advertise.
+        const keep: { id: string; url: string }[] = [];
+        for (const shot of shots) {
+          if (keep.length >= 5) break;
+          const ok = await new Promise<boolean>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 24;
+                canvas.height = 24;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return resolve(true);
+                ctx.drawImage(img, 0, 0, 24, 24);
+                const { data } = ctx.getImageData(0, 0, 24, 24);
+                let min = 255;
+                let max = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                  const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                  if (luma < min) min = luma;
+                  if (luma > max) max = luma;
+                }
+                resolve(max - min >= 3);
+              } catch {
+                resolve(true);
+              }
+            };
+            img.onerror = () => resolve(false);
+            img.src = shot.url;
+          });
+          if (ok) keep.push(shot);
+        }
+        if (!cancelled) setGalleryShots(keep);
+    }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
-    <div className="pointer-events-auto w-[min(94vw,620px)] text-center">
+    <div className="pointer-events-auto w-[min(94vw,860px)] text-center">
       <div
         aria-label={m['startHere.groupLabel']()}
         className="relative mx-auto h-[122px] w-[min(88vw,350px)] sm:h-[148px] sm:w-[500px]"
@@ -211,8 +270,36 @@ export function StudioStartHere({
         {m['startHere.subheading']()}
       </p>
 
+      {/* What this machine has made, so the empty state is not just whitespace */}
+      {galleryShots.length > 0 ? (
+        <div className="mt-9" data-start-gallery="true">
+          <p className="text-[13px] font-semibold tracking-[0.16em] text-ink/30">
+            {m['startHere.galleryTitle']()}
+          </p>
+          <div className="mt-3 flex items-stretch justify-center gap-3">
+            {galleryShots.map((shot) => (
+              <div
+                key={shot.id}
+                className="beat-glass relative h-[92px] flex-1 overflow-hidden rounded-[14px] sm:h-[112px]"
+              >
+                <img
+                  src={shot.url}
+                  alt=""
+                  loading="lazy"
+                  onError={(event) => {
+                    const frame = event.currentTarget.parentElement;
+                    if (frame) frame.style.display = 'none';
+                  }}
+                  className="size-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {/* Style starters: one click fills the prompt instead of an empty box */}
-      <div className="mx-auto mt-7 max-w-[620px]">
+      <div className="mx-auto mt-7 max-w-[720px]">
         <p className="text-[14px] font-semibold tracking-[0.16em] text-ink/30">
           {m['startHere.styles.title']()}
         </p>
