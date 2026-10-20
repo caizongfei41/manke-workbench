@@ -4,7 +4,7 @@ import type {
   CanvasGenerationCard,
 } from '@/core/beatcanvas/canvas-types';
 import { getDraftDefaultsFromModel } from '@/core/beatcanvas/draft-defaults';
-import type { ProjectGenerationItem } from '@/core/effects/project-generations';
+import type { ProjectGenerationItem } from '@/core/effects/project-generation-types';
 import {
   findWorkspaceModelOption,
   type WorkspaceModelOption,

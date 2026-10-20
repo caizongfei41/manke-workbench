@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { ProjectGenerationItem } from '@/core/effects/project-generations';
+import type { ProjectGenerationItem } from '@/core/effects/project-generation-types';
 
 import { applyStudioHistoryItem } from './studio-draft';
 import { getStudioModels } from './studio-runtime';

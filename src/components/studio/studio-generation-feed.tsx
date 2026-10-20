@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { ProjectGenerationItem } from '@/core/effects/project-generations';
+import type { ProjectGenerationItem } from '@/core/effects/project-generation-types';
 import { formatStudioHistoryDateTime } from '@/core/studio/studio-history';
 import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
 import { cn } from '@/lib/utils';

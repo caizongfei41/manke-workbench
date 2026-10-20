@@ -17,33 +17,9 @@ import {
 import { getDb } from '@/core/workspace-lib/db-adapter';
 
 import type { GenerationStatus } from './record-generation';
+export type { ProjectGenerationItem } from './project-generation-types';
+import type { ProjectGenerationItem } from './project-generation-types';
 
-export type ProjectGenerationItem = {
-  id: string;
-  status: GenerationStatus;
-  prompt: string | null;
-  modelId: string | null;
-  modelName: string | null;
-  mediaType: 'image' | 'video' | 'analysis' | 'audio';
-  resultUrl: string | null;
-  resultText: string | null;
-  paramsLabel: string | null;
-  aspectRatio: string | null;
-  outputQuality: string | null;
-  mode: string | null;
-  duration: string | null;
-  referenceImages: string[];
-  referenceVideos: string[];
-  error: string | null;
-  createdAt: string;
-  /**
-   * Live step progress for locally-run jobs, read from ComfyUI's WebSocket.
-   *
-   * Optional so existing construction sites keep compiling; absent, null and
-   * "not started yet" all mean the same to the UI.
-   */
-  progress?: ComfyUiPromptProgress | null;
-};
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
   value && typeof value === 'object' ? (value as Record<string, unknown>) : null;

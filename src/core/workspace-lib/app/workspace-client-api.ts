@@ -1,5 +1,5 @@
 import type { WorkspaceMode } from '@/config/workspace-modes';
-import type { ProjectGenerationItem } from '@/core/effects/project-generations';
+import type { ProjectGenerationItem } from '@/core/effects/project-generation-types';
 import { apiJsonDelete, apiJsonGet, apiJsonPatch } from '@/lib/api-client';
 
 export type WorkspaceProjectCardItem = {
