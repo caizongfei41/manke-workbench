@@ -35,3 +35,27 @@ export const orderShowcase = <T extends ShowcaseCandidate>(items: T[]) => {
 
 /** True when the candidate belongs to the curated set. */
 export const isCurated = (item: ShowcaseCandidate) => item.projectName === SHOWCASE_PROJECT_NAME;
+
+/**
+ * The nine wide frames the front page rotates, in the order they should appear.
+ *
+ * Naming beats counting: the project also holds older test renders, so the rotation asks for
+ * these filenames by name instead of taking whatever happens to be newest.
+ */
+export const SHOWCASE_WIDE_ORDER = [
+  'brutalist-light.png',
+  'mist-forest.png',
+  'crystal-still.png',
+  'neon-rain.png',
+  'desert-dusk.png',
+  'ink-water.png',
+  'steel-macro.png',
+  'fractal-flow.png',
+  'quiet-interior.png',
+] as const;
+
+/** -1 for anything that is not part of the rotation. */
+export const showcaseOrderOf = (filename: string | null | undefined) => {
+  if (!filename) return -1;
+  return (SHOWCASE_WIDE_ORDER as readonly string[]).indexOf(filename);
+};

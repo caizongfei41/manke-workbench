@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Pause, Play, Sparkles } from 'lucide-react';
 
 import { normalizeLocale } from '@/config/locale';
-import { SHOWCASE_PROJECT_NAME, orderShowcase } from '@/core/showcase/curation';
+import {
+  SHOWCASE_PROJECT_NAME,
+  orderShowcase,
+  showcaseOrderOf,
+} from '@/core/showcase/curation';
 
 /** The curated set is hand-picked, so it skips the variance filter the raw library needs. */
 const isCuratedEntry = (asset: { projectName?: string | null }) =>
@@ -171,17 +175,22 @@ export function HomeShowcase({ locale }: { locale: string }) {
         });
         if (!response.ok) throw new Error(String(response.status));
         const payload = (await response.json()) as {
-          images?: { id: string; publicUrl: string | null; projectName?: string | null }[];
+          images?: {
+            id: string;
+            publicUrl: string | null;
+            filename?: string | null;
+            projectName?: string | null;
+          }[];
           videos?: { id: string; publicUrl: string | null; projectName?: string | null }[];
         };
 
         // The carousel rotates a fixed curated set, not the whole library. Only the
         // showcase project qualifies; everything else here is somebody's test output.
-        const imageCandidates = orderShowcase(
-          (payload.images ?? []).filter(
-            (asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME
-          )
-        ).slice(0, CANDIDATES);
+        // The rotation is the nine named wide frames, in a fixed order — not whatever
+        // happens to be newest in the project.
+        const imageCandidates = (payload.images ?? [])
+          .filter((asset) => asset.publicUrl && showcaseOrderOf(asset.filename) >= 0)
+          .sort((left, right) => showcaseOrderOf(left.filename) - showcaseOrderOf(right.filename));
         const checked = await Promise.all(
           imageCandidates.map(async (asset) => ({
             asset,
@@ -390,57 +399,6 @@ export function HomeShowcase({ locale }: { locale: string }) {
             ) : null}
           </div>
 
-          {strip.length > 0 ? (
-            <div className="mt-3 grid grid-cols-4 gap-3" data-showcase-strip="true">
-              {strip.filter((shot) => !brokenIds[shot.id]).map((shot) => (
-                <button
-                  key={shot.id}
-                  type="button"
-                  onClick={() => setActive(images.findIndex((item) => item.id === shot.id))}
-                  className="group relative h-[104px] overflow-hidden rounded-[14px] border border-ink/[0.1] sm:h-[74px]"
-                >
-                  <img
-                    src={shot.url}
-                    alt=""
-                    data-showcase-thumb="true"
-                    onError={() => {
-                      setBrokenIds((current) => ({ ...current, [shot.id]: true }));
-                    }}
-                    onLoad={(event) => {
-                      const img = event.currentTarget;
-                      if (img.complete && img.naturalWidth === 0) {
-                        setBrokenIds((current) => ({ ...current, [shot.id]: true }));
-                        return;
-                      }
-                      // A frame of one flat colour is a failed render, not a picture.
-                      try {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 32;
-                        canvas.height = 32;
-                        const ctx = canvas.getContext('2d');
-                        if (!ctx) return;
-                        ctx.drawImage(img, 0, 0, 32, 32);
-                        const { data } = ctx.getImageData(0, 0, 32, 32);
-                        let min = 255;
-                        let max = 0;
-                        for (let i = 0; i < data.length; i += 4) {
-                          const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                          if (luma < min) min = luma;
-                          if (luma > max) max = luma;
-                        }
-                        if (max - min < 0.5) {
-                          setBrokenIds((current) => ({ ...current, [shot.id]: true }));
-                        }
-                      } catch {
-                        // Canvas readback can be blocked; keep the tile in that case.
-                      }
-                    }}
-                    className="size-full object-cover opacity-80 transition duration-500 group-hover:scale-[1.05] group-hover:opacity-100"
-                  />
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
       </section>
 
