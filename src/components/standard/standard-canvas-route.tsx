@@ -10,6 +10,7 @@ import {
   type StandardDocument,
   type StandardNode,
 } from '@/core/standard-canvas/document';
+import { formatGenerationFailure } from '@/core/effects/generation-failure';
 import type { ProjectSnapshotDocument } from '@/core/projects/project-snapshot';
 import { StandardCanvas } from './standard-canvas';
 
@@ -231,6 +232,7 @@ export function StandardCanvasRoute({
               response.json() as Promise<{
                 status?: string;
                 error?: string;
+                failure?: { title?: string; hint?: string; raw?: string } | null;
                 progress?: { percent?: number | null; value?: number; max?: number; phase?: string } | null;
               }>
           );
@@ -239,7 +241,12 @@ export function StandardCanvasRoute({
           if (status.progress) {
             setProgress({ nodeId, percent: status.progress.percent ?? null, phase: status.progress.phase ?? '' });
           }
-          if (status.status === 'failed') throw new Error(status.error ?? 'generation failed');
+          if (status.status === 'failed') {
+            // Say what went wrong in terms the user can act on.
+            const failure = status.failure;
+            const message = formatGenerationFailure(failure, status.error);
+            throw new Error(message);
+          }
           if (status.status !== 'succeeded') continue;
 
           const gens = await fetch(`/api/app/projects/${projectId}/generations`).then(

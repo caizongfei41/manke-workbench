@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getComfyUiPromptProgress } from '@/core/effects/comfyui-progress';
+import { classifyGenerationFailure } from '@/core/effects/generation-failure';
 import { getGenerationById } from '@/core/effects/record-generation';
 import { startBackendPollingForGeneration } from '@/core/effects/server-poller';
 
@@ -30,6 +31,11 @@ async function GET({ request }: { request: Request }) {
       status: generation.status,
       output: generation.output,
       error: generation.status === 'failed' ? generation.error ?? 'Generation failed.' : null,
+    // A classified version: the raw text is still there, this says what to do about it.
+    failure:
+      generation.status === 'failed'
+        ? classifyGenerationFailure(generation.error)
+        : null,
       progress: isBusy ? getComfyUiPromptProgress(providerTaskId) : null,
     });
   } catch (cause) {
