@@ -266,6 +266,19 @@ export function StandardCanvas({
 
   const nodeById = useMemo(() => new Map(doc.nodes.map((node) => [node.id, node])), [doc.nodes]);
 
+  // A board nobody has panned yet is still in its default viewport; fit it once so the
+  // content uses the panel instead of sitting in the top-left corner.
+  const fittedOnce = useRef(false);
+  useEffect(() => {
+    if (fittedOnce.current || doc.nodes.length === 0) return;
+    const pristine = doc.viewport.x === 0 && doc.viewport.y === 0 && doc.viewport.zoom === 1;
+    if (!pristine) { fittedOnce.current = true; return; }
+    fittedOnce.current = true;
+    const timer = setTimeout(() => fit(), 120);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc.nodes.length]);
+
 
   const savedLabel =
     saving === 'saving'
@@ -275,7 +288,7 @@ export function StandardCanvas({
         : m['standard.saved']();
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--beat-bg)] text-[var(--beat-text-1)]">
+    <div className="relative flex h-full min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden bg-[var(--beat-bg)] p-3 text-[var(--beat-text-1)] sm:p-4">
       <input
         ref={fileRef}
         type="file"
@@ -308,25 +321,25 @@ export function StandardCanvas({
       {/* Floating capsule bar */}
       {/* Canvas tools only: the shell above already carries the project name, the tabs and
           the monitor. One slim row, readable size, no second navigation. */}
-      <div className="pointer-events-none absolute inset-x-0 top-3 z-30 flex items-start gap-2 px-4">
-        <div className="beat-glass pointer-events-auto flex h-10 items-center gap-1 rounded-full pl-1.5 pr-1 text-[12.5px]">
+      <div className="relative z-30 flex shrink-0 flex-wrap items-center gap-2">
+        <div className="beat-glass flex h-11 min-w-0 flex-1 items-center gap-1 rounded-[14px] pl-1.5 pr-1.5 text-[13px]">
           <button
             type="button"
             data-standard-add-button="true"
             onClick={() => setMenu((current) => (current === 'assets' ? null : 'assets'))}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[var(--beat-text-2)] transition hover:bg-ink/[0.07] hover:text-ink"
+            className="flex items-center gap-2 rounded-full px-3 py-2 text-[13px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.07] hover:text-ink"
           >
             <Plus className="size-3.5" />
             {m['standard.addNode']()}
           </button>
           <span className="mx-0.5 h-5 w-px bg-ink/[0.1]" />
-          <span className="flex items-center gap-1.5 px-1.5 text-[11.5px] text-[var(--beat-text-3)]">
+          <span className="flex items-center gap-1.5 px-2 text-[12.5px] text-[var(--beat-text-2)]">
             <Save className="size-3" />
             <span data-standard-save-state="true">{savedLabel}</span>
           </span>
         </div>
 
-        <div className="beat-glass pointer-events-auto ml-auto flex h-10 items-center gap-0.5 rounded-full px-1 text-[12px]">
+        <div className="beat-glass flex h-11 shrink-0 items-center gap-0.5 rounded-[14px] px-1.5 text-[13px]">
           <button
             type="button"
             data-standard-zoom="out"
@@ -336,7 +349,7 @@ export function StandardCanvas({
           >
             <Minus className="size-3.5" />
           </button>
-          <span className="min-w-[38px] text-center text-[11.5px] tabular-nums text-[var(--beat-text-2)]">
+          <span className="min-w-[44px] text-center text-[12.5px] tabular-nums text-[var(--beat-text-2)]">
             {Math.round(zoom * 100)}%
           </span>
           <button
@@ -409,7 +422,7 @@ export function StandardCanvas({
       <div
         ref={rootRef}
         data-standard-surface="true"
-        className="relative flex-1 overflow-hidden"
+        className="relative min-h-0 flex-1 overflow-hidden rounded-[20px] border border-ink/[0.08] bg-[var(--beat-surface-2)] shadow-[0_1px_0_rgba(255,255,255,0.6)_inset]"
         onPointerDown={(event) => {
           if (event.target !== event.currentTarget) return;
           setSelected(null);
@@ -491,7 +504,7 @@ export function StandardCanvas({
                   });
                 }}
               >
-                <div className="mb-2 flex items-center gap-1.5 text-[11.5px] text-[var(--beat-text-2)]">
+                <div className="mb-2 flex items-center gap-1.5 text-[12.5px] text-[var(--beat-text-2)]">
                   <Icon className="size-3.5" />
                   <span>{KIND_LABEL[node.kind]()}</span>
                   <span className="text-[var(--beat-text-3)]">·</span>
@@ -500,7 +513,7 @@ export function StandardCanvas({
                     onChange={(event) => patchNode(node.id, { name: event.target.value })}
                     placeholder={UNTITLED[node.kind]()}
                     data-standard-name={node.id}
-                    className="min-w-0 flex-1 bg-transparent text-[11.5px] text-white/80 outline-none placeholder:text-[var(--beat-text-3)]"
+                    className="min-w-0 flex-1 bg-transparent text-[12.5px] text-white/80 outline-none placeholder:text-[var(--beat-text-3)]"
                   />
                   <button
                     type="button"
@@ -522,7 +535,7 @@ export function StandardCanvas({
                 >
                   {node.kind === 'setting' ? (
                     <>
-                      <p className="absolute left-3 top-2.5 text-[10.5px] text-[var(--beat-text-3)]">
+                      <p className="absolute left-3 top-2.5 text-[12px] text-[var(--beat-text-3)]">
                         {m['standard.settingHint']()}
                       </p>
                       <textarea
@@ -568,14 +581,14 @@ export function StandardCanvas({
                                 setHandedOver((current) => ({ ...current, [node.id]: editorProjectId }));
                               }
                             }}
-                            className="rounded-full bg-[#7dd3fc] px-2.5 py-1 text-[10.5px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-[#a5e3ff]"
+                            className="rounded-full bg-[#7dd3fc] px-2.5 py-1 text-[12px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-[#a5e3ff]"
                           >
                             {handedOver[node.id] ? m['standard.sentToEditor']() : m['standard.sendToEditor']()}
                           </button>
                           {handedOver[node.id] ? (
                             <a
                               href={`/zh/editor/${handedOver[node.id]}`}
-                              className="rounded-full bg-[var(--beat-accent)] px-2.5 py-1 text-[10.5px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-white"
+                              className="rounded-full bg-[var(--beat-accent)] px-2.5 py-1 text-[12px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-white"
                             >
                               {m['standard.openEditor']()}
                             </a>
@@ -588,7 +601,7 @@ export function StandardCanvas({
                             uploadTarget.current = node.id;
                             fileRef.current?.click();
                           }}
-                          className="rounded-full bg-black/60 px-2.5 py-1 text-[10.5px] text-[var(--beat-text-1)] backdrop-blur transition hover:bg-black/80"
+                          className="rounded-full bg-black/60 px-2.5 py-1 text-[12px] text-[var(--beat-text-1)] backdrop-blur transition hover:bg-black/80"
                         >
                           {m['standard.replace']()}
                         </button>
@@ -598,8 +611,8 @@ export function StandardCanvas({
                     <div className="grid size-full place-items-center">
                       <div className="text-center">
                         <ImageIcon className="mx-auto size-5 text-[var(--beat-text-3)]" />
-                        <p className="mt-1.5 text-[11px] text-[var(--beat-text-3)]">{UNTITLED[node.kind]()}</p>
-                        <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-[var(--beat-text-2)]">
+                        <p className="mt-1.5 text-[12px] text-[var(--beat-text-3)]">{UNTITLED[node.kind]()}</p>
+                        <div className="mt-3 flex items-center justify-center gap-3 text-[12px] text-[var(--beat-text-2)]">
                           <button
                             type="button"
                             data-standard-upload-for={node.id}
@@ -654,8 +667,8 @@ export function StandardCanvas({
       </div>
 
       {/* Composer */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-4 z-30 flex justify-center px-4">
-        <div className="pointer-events-auto w-full max-w-[820px] rounded-[18px] border border-ink/[0.1] bg-[var(--beat-surface)] p-2.5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:p-3">
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex justify-center px-3">
+        <div className="beat-glass pointer-events-auto w-full max-w-[780px] rounded-[16px] p-2.5 sm:p-3">
           <textarea
             value={doc.composer.prompt}
             onChange={(event) =>
@@ -666,9 +679,9 @@ export function StandardCanvas({
             }
             placeholder={m['standard.composerPlaceholder']()}
             data-standard-composer="true"
-            className="min-h-[54px] w-full resize-none bg-transparent text-[13px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
+            className="min-h-[56px] w-full resize-none bg-transparent text-[13.5px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
           />
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--beat-text-2)]">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] text-[var(--beat-text-2)]">
             <button
               type="button"
               data-standard-add-button="true"
@@ -744,7 +757,7 @@ export function StandardCanvas({
 
       {/* Status line */}
       <p
-        className="absolute bottom-1 left-1/2 z-20 hidden -translate-x-1/2 text-[10.5px] text-[var(--beat-text-3)] sm:block"
+        className="absolute bottom-1 left-1/2 z-20 hidden -translate-x-1/2 text-[12px] text-[var(--beat-text-3)] sm:block"
         data-standard-status="true"
       >
         {m['standard.status']({
