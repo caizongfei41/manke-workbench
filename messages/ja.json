@@ -1223,5 +1223,11 @@
   "standard.videoHint": "動画は H3 で 3〜5 分ほどかかります",
   "standard.openEditor": "編集を開く",
   "standard.backToProjects": "プロジェクト",
-  "startHere.galleryTitle": "この端末で作られたもの"
+  "startHere.galleryTitle": "この端末で作られたもの",
+  "startHere.capability.image": "画像",
+  "startHere.capability.imageBody": "テキストから生成、参照画像での編集。1枚約1分。",
+  "startHere.capability.video": "動画",
+  "startHere.capability.videoBody": "H3 長尺ワークフロー。区間ごとに生成し、再開できます。",
+  "startHere.capability.music": "音楽",
+  "startHere.capability.musicBody": "ローカル YuE2 モデル。そのまま編集に載せられます。"
 }

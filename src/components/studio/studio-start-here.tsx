@@ -186,7 +186,7 @@ export function StudioStartHere({
   }, []);
 
   return (
-    <div className="pointer-events-auto w-[min(94vw,860px)] text-center">
+    <div className="pointer-events-auto w-[min(94vw,1080px)] text-center" data-start-here="true">
       <div
         aria-label={m['startHere.groupLabel']()}
         className="relative mx-auto h-[122px] w-[min(88vw,350px)] sm:h-[148px] sm:w-[500px]"
@@ -344,6 +344,36 @@ export function StudioStartHere({
           </div>
         </div>
       ) : null}
+
+      {/* What this machine can do — the empty state had a slab of dead space below the
+          starters, and this is the honest thing to put there. */}
+      <div className="mx-auto mt-10 grid max-w-[900px] gap-3 text-left sm:grid-cols-3" data-start-capabilities="true">
+        {[
+          {
+            key: 'image',
+            title: m['startHere.capability.image'](),
+            body: m['startHere.capability.imageBody'](),
+          },
+          {
+            key: 'video',
+            title: m['startHere.capability.video'](),
+            body: m['startHere.capability.videoBody'](),
+          },
+          {
+            key: 'music',
+            title: m['startHere.capability.music'](),
+            body: m['startHere.capability.musicBody'](),
+          },
+        ].map((item) => (
+          <div
+            key={item.key}
+            className="rounded-[14px] border border-ink/[0.08] bg-[var(--beat-surface)]/60 px-4 py-3.5"
+          >
+            <p className="text-[13.5px] font-semibold text-[var(--beat-text-1)]">{item.title}</p>
+            <p className="mt-1 text-[13px] leading-6 text-[var(--beat-text-2)]">{item.body}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

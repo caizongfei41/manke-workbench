@@ -1223,5 +1223,11 @@
   "standard.videoHint": "Video takes run H3; about 3–5 minutes",
   "standard.openEditor": "Open editor",
   "standard.backToProjects": "Projects",
-  "startHere.galleryTitle": "Just made on this machine"
+  "startHere.galleryTitle": "Just made on this machine",
+  "startHere.capability.image": "Stills",
+  "startHere.capability.imageBody": "Text to image and reference-guided edits, about a minute each.",
+  "startHere.capability.video": "Clips",
+  "startHere.capability.videoBody": "H3 long-form workflow, generated in segments, resumable.",
+  "startHere.capability.music": "Score",
+  "startHere.capability.musicBody": "Local YuE2 model, ready to drop onto the cut."
 }

@@ -370,7 +370,7 @@ export function BeatStudioWorkspace({
             />
           </div>
         ) : (
-          <div className="flex flex-1 items-center justify-center">
+          <div className="flex min-h-[calc(100vh-200px)] flex-1 items-center justify-center pb-[120px]">
             <StudioStartHere
               projectId={projectId}
               onPickMode={(mode, prompt) => {
