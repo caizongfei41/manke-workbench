@@ -1237,7 +1237,7 @@
   "product.history.closeDialog": "閉じる",
   "canvasStart.title": "ここはボードです",
   "canvasStart.subtitle": "カードを置いて接続すると、その線が生成対象を決めます。",
-  "canvasStart.hint": "空白をダブルクリックでも追加できます",
+  "canvasStart.hint": "上のカード、または左下のボタンからも追加できます",
   "canvasStart.image": "画像カード",
   "canvasStart.imageBody": "プロンプトと参照画像を保持します。",
   "canvasStart.video": "映像カード",

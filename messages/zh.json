@@ -1237,7 +1237,7 @@
   "product.history.closeDialog": "关闭",
   "canvasStart.title": "这是一块画板",
   "canvasStart.subtitle": "把卡片拖上来，连线决定谁参与生成。适合反复调整同一个场景。",
-  "canvasStart.hint": "双击空白处也能新建卡片",
+  "canvasStart.hint": "也可以点上面的卡片，或从左下角新建",
   "canvasStart.image": "图片卡片",
   "canvasStart.imageBody": "放提示词和参考图，连线后生成。",
   "canvasStart.video": "影片卡片",
