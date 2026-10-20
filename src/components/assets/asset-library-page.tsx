@@ -119,7 +119,7 @@ function LibraryTile({
             : 'border-white/70 bg-black/35 text-transparent opacity-0 group-hover:opacity-100'
         }`}
       >
-        <Check className="size-3" />
+        <Check className="size-3.5" />
       </button>
       <button
         type="button"
@@ -166,7 +166,7 @@ function LibraryTile({
           {failed ? (
             <span
               data-library-broken="true"
-              className="absolute bottom-1.5 left-1.5 rounded bg-[var(--beat-warn-text)] px-1 py-0.5 text-[9px] text-[var(--beat-warn-on)]"
+              className="absolute bottom-1.5 left-1.5 rounded bg-[var(--beat-warn-text)] px-1 py-0.5 text-[13px] text-[var(--beat-warn-on)]"
             >
               {m['assets.library.unpreviewable']()}
             </span>
@@ -179,16 +179,16 @@ function LibraryTile({
             </span>
           ) : null}
           {duration ? (
-            <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1 py-0.5 text-[10px] tabular-nums text-white">
+            <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1 py-0.5 text-[13.5px] tabular-nums text-white">
               {formatDuration(duration)}
             </span>
           ) : null}
         </div>
         <div className="px-2.5 py-2">
-          <p className="truncate text-[11.5px] text-[var(--beat-text-1)]" title={asset.filename ?? ''}>
+          <p className="truncate text-[13px] text-[var(--beat-text-1)]" title={asset.filename ?? ''}>
             {asset.projectName ?? m['assets.library.noProject']()}
           </p>
-          <p className="mt-0.5 text-[10px] text-[var(--beat-text-3)]">{formatDate(asset.createdAt)}</p>
+          <p className="mt-0.5 text-[13.5px] text-[var(--beat-text-3)]">{formatDate(asset.createdAt)}</p>
         </div>
       </button>
     </div>
@@ -341,7 +341,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
       <div className="beat-aurora pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
       <main className="relative mx-auto w-full max-w-[2040px] px-5 pb-10 pt-14 sm:px-6">
         <section>
-          <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[11px]">
+          <p className="text-[13.5px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[13px]">
             {m['assets.library.eyebrow']()}
           </p>
           <h1 className="beat-product-display mt-4 max-w-3xl text-[clamp(2rem,4vw,2.75rem)] font-semibold leading-[1.1] tracking-[-0.04em] text-[var(--beat-text-1)]">
@@ -354,7 +354,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
 
         <section className="mt-8 flex flex-wrap items-center gap-2" data-library-toolbar="true">
           <div className="relative min-w-[200px] flex-1">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--beat-text-3)]" />
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--beat-text-3)]" />
             <input
               type="search"
               value={query}
@@ -362,7 +362,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
               placeholder={m['assets.library.search']()}
               aria-label={m['assets.library.search']()}
               data-library-search="true"
-              className="h-9 w-full rounded-full border border-[var(--beat-glass-border)] bg-[var(--beat-glass-bg)] pl-8 pr-3 text-[12.5px] text-[var(--beat-text-1)] outline-none backdrop-blur-xl placeholder:text-[var(--beat-text-3)]"
+              className="h-9 w-full rounded-full border border-[var(--beat-glass-border)] bg-[var(--beat-glass-bg)] pl-8 pr-3 text-[14px] text-[var(--beat-text-1)] outline-none backdrop-blur-xl placeholder:text-[var(--beat-text-3)]"
             />
           </div>
           <div className="beat-glass flex items-center gap-1 rounded-full p-1">
@@ -373,7 +373,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                 onClick={() => setKind(value)}
                 data-library-kind={value}
                 aria-pressed={kind === value}
-                className={`h-7 rounded-[7px] px-2.5 text-[11.5px] transition ${
+                className={`h-9 rounded-[7px] px-2.5 text-[13px] transition ${
                   kind === value
                     ? 'bg-[var(--beat-accent)] text-[var(--beat-accent-ink)]'
                     : 'text-[var(--beat-text-2)] hover:text-ink'
@@ -386,20 +386,20 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
           </div>
           {selected.size > 0 ? (
             <div className="flex items-center gap-1.5" data-library-selection="true">
-              <span className="text-[11.5px] tabular-nums text-[var(--beat-text-2)]">
+              <span className="text-[13px] tabular-nums text-[var(--beat-text-2)]">
                 {m['assets.library.selected']({ count: String(selected.size) })}
               </span>
               <button
                 type="button"
                 onClick={selectAllVisible}
-                className="h-8 rounded-[8px] border border-ink/[0.12] px-2 text-[11.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+                className="h-9 rounded-[8px] border border-ink/[0.12] px-2 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
               >
                 {m['assets.library.selectAll']()}
               </button>
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
-                className="h-8 rounded-[8px] px-2 text-[11.5px] text-[var(--beat-text-3)] transition hover:text-ink"
+                className="h-9 rounded-[8px] px-2 text-[13px] text-[var(--beat-text-3)] transition hover:text-ink"
               >
                 {m['assets.library.clear']()}
               </button>
@@ -407,7 +407,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                 type="button"
                 onClick={() => setConfirming(true)}
                 data-library-delete="true"
-                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-2.5 text-[11.5px] text-[var(--beat-warn-on)]"
+                className="inline-flex h-9 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-2.5 text-[13px] text-[var(--beat-warn-on)]"
               >
                 <Trash2 className="size-3.5" />
                 {m['assets.library.delete']()}
@@ -420,7 +420,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
               onChange={(event) => setProjectFilter(event.target.value)}
               aria-label={m['assets.library.filterProject']()}
               data-library-project="true"
-              className="h-9 max-w-[200px] rounded-full border border-[var(--beat-glass-border)] bg-[var(--beat-glass-bg)] px-3 text-[12px] text-[var(--beat-text-2)] outline-none backdrop-blur-xl"
+              className="h-9 max-w-[200px] rounded-full border border-[var(--beat-glass-border)] bg-[var(--beat-glass-bg)] px-3 text-[13.5px] text-[var(--beat-text-2)] outline-none backdrop-blur-xl"
             >
               <option value="all">{m['assets.library.allProjects']()}</option>
               {projectOptions.map(([id, name]) => (
@@ -455,7 +455,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                     setKind('all');
                     setProjectFilter('all');
                   }}
-                  className="mt-3 text-[12px] text-[var(--beat-accent)] underline-offset-4 hover:underline"
+                  className="mt-3 text-[13.5px] text-[var(--beat-accent)] underline-offset-4 hover:underline"
                 >
                   {m['assets.library.clear']()}
                 </button>
@@ -483,7 +483,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
             <h2 className="text-[15px] font-semibold text-[var(--beat-text-1)]">
               {m['assets.library.deleteConfirmTitle']({ count: String(selected.size) })}
             </h2>
-            <p className="mt-2 text-[12.5px] leading-5 text-[var(--beat-text-2)]">
+            <p className="mt-2 text-[14px] leading-6 text-[var(--beat-text-2)]">
               {m['assets.library.deleteConfirmBody']()}
             </p>
             <div className="mt-4 flex justify-end gap-2">
@@ -491,7 +491,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                 type="button"
                 disabled={deleting}
                 onClick={() => setConfirming(false)}
-                className="h-8 rounded-[8px] border border-ink/[0.12] px-3 text-[12px] text-[var(--beat-text-2)] disabled:opacity-50"
+                className="h-9 rounded-[8px] border border-ink/[0.12] px-3 text-[13.5px] text-[var(--beat-text-2)] disabled:opacity-50"
               >
                 {m['assets.library.cancel']()}
               </button>
@@ -500,7 +500,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                 disabled={deleting}
                 onClick={() => void deleteSelected()}
                 data-library-delete-confirm="true"
-                className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-3 text-[12px] text-[var(--beat-warn-on)] disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-1.5 rounded-[8px] bg-[var(--beat-warn-text)] px-3 text-[13.5px] text-[var(--beat-warn-on)] disabled:opacity-50"
               >
                 <Trash2 className="size-3.5" />
                 {deleting ? m['assets.library.deleting']() : m['assets.library.delete']()}
@@ -542,10 +542,10 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
               <div className="min-w-0">
-                <p className="truncate text-[12.5px] text-[var(--beat-text-1)]">
+                <p className="truncate text-[14px] text-[var(--beat-text-1)]">
                   {open.filename ?? open.projectName ?? '—'}
                 </p>
-                <p className="mt-0.5 text-[10.5px] text-[var(--beat-text-3)]">
+                <p className="mt-0.5 text-[14px] text-[var(--beat-text-3)]">
                   {sizeOf(open) ? `${sizeOf(open)} · ` : ''}
                   {formatDate(open.createdAt)}
                   {open.projectName ? ` · ${open.projectName}` : ''}
@@ -559,7 +559,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                       projectId: open.projectId,
                       mode: 'canvas',
                     })}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-[8px] border border-ink/[0.12] px-2.5 text-[11.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-[8px] border border-ink/[0.12] px-2.5 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
                     data-library-open-project="true"
                   >
                     <ExternalLink className="size-3.5" />
@@ -570,7 +570,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
                   <a
                     href={open.publicUrl}
                     download
-                    className="inline-flex h-8 items-center gap-1.5 rounded-[8px] bg-[var(--beat-accent)] px-2.5 text-[11.5px] text-[var(--beat-accent-ink)]"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-[8px] bg-[var(--beat-accent)] px-2.5 text-[13px] text-[var(--beat-accent-ink)]"
                   >
                     <Download className="size-3.5" />
                     {m['assets.library.download']()}

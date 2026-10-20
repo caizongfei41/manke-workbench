@@ -92,15 +92,15 @@ export function BeatCanvasComposerModelPicker({
             />
           </span>
         ) : (
-          <Sparkles className="size-3.5 shrink-0 text-ink/50" />
+          <Sparkles className="size-4 shrink-0 text-ink/50" />
         )}
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12px] font-medium text-[var(--beat-text-1)]">
+          <span className="block truncate text-[13.5px] font-medium text-[var(--beat-text-1)]">
             {model.name}
           </span>
         </span>
         {isSelected ? (
-          <Check className="size-3.5 shrink-0 text-[var(--beat-accent)]" />
+          <Check className="size-4 shrink-0 text-[var(--beat-accent)]" />
         ) : null}
       </button>
     );
@@ -161,7 +161,7 @@ export function BeatCanvasComposerModelPicker({
                 'block line-clamp-1 min-w-0',
                 isBatchTone
                   ? 'text-[18px] font-semibold tracking-[-0.04em] text-ink'
-                  : 'text-[12px] font-semibold text-ink'
+                  : 'text-[13.5px] font-semibold text-ink'
               )}
             >
               {selectedModelLabel}
@@ -170,7 +170,7 @@ export function BeatCanvasComposerModelPicker({
         </span>
         <ChevronDown
           className={cn(
-            'pointer-events-none size-3.5 shrink-0 transition-transform duration-200',
+            'pointer-events-none size-4 shrink-0 transition-transform duration-200',
             isBatchTone ? 'text-[var(--beat-text-2)]' : 'text-ink/45',
             isOpen ? 'rotate-180' : ''
           )}
@@ -197,18 +197,18 @@ export function BeatCanvasComposerModelPicker({
                     event.stopPropagation();
                     setPaidOpenOverride(!paidOpen);
                   }}
-                  className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[11px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-ink/5"
+                  className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[13px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-ink/5"
                 >
                   <ChevronDown
                     className={cn(
-                      'size-3 shrink-0 transition-transform duration-200',
+                      'size-4 shrink-0 transition-transform duration-200',
                       paidOpen ? 'rotate-0' : '-rotate-90'
                     )}
                   />
                   <span className="min-w-0 flex-1 truncate">
                     {labels.paidModelsLabel}
                   </span>
-                  <span className="shrink-0 rounded-[4px] bg-ink/10 px-1.5 py-0.5 text-[10px] tabular-nums text-[var(--beat-text-2)]">
+                  <span className="shrink-0 rounded-[4px] bg-ink/10 px-1.5 py-0.5 text-[13.5px] tabular-nums text-[var(--beat-text-2)]">
                     {paidModels.length}
                   </span>
                 </button>

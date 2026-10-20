@@ -347,7 +347,7 @@ export function GenerationCardNode({
             {hasResult ? (
               isAnalysis && latestOutputText ? (
                 <div className="nodrag nopan nowheel flex h-full cursor-default flex-col p-4 text-left">
-                  <div className="mb-2 flex shrink-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--beat-graph)]">
+                  <div className="mb-2 flex shrink-0 items-center gap-1.5 text-[13.5px] font-semibold uppercase tracking-[0.12em] text-[var(--beat-graph)]">
                     <ScanSearch className="size-3.5" />
                     {displayLabel}
                   </div>
@@ -356,7 +356,7 @@ export function GenerationCardNode({
                     readOnly
                     spellCheck={false}
                     value={latestOutputText}
-                    className="nodrag nopan nowheel min-h-0 flex-1 cursor-text resize-none overflow-y-auto border-0 bg-transparent p-0 text-[12px] leading-5 text-[var(--beat-text-2)] outline-none selection:bg-[rgba(127,176,242,0.28)] selection:text-[var(--beat-text-1)] focus-visible:ring-0"
+                    className="nodrag nopan nowheel min-h-0 flex-1 cursor-text resize-none overflow-y-auto border-0 bg-transparent p-0 text-[13.5px] leading-6 text-[var(--beat-text-2)] outline-none selection:bg-[rgba(127,176,242,0.28)] selection:text-[var(--beat-text-1)] focus-visible:ring-0"
                     onPointerDown={(event) => event.stopPropagation()}
                     onDoubleClick={(event) => event.stopPropagation()}
                   />
@@ -370,7 +370,7 @@ export function GenerationCardNode({
                     <div className="text-[13px] font-semibold text-[var(--beat-text-1)]">
                       {shapeCopy.analysisComplete}
                     </div>
-                    <div className="mt-1 text-[11px] leading-4 text-[var(--beat-text-3)]">
+                    <div className="mt-1 text-[13px] leading-6 text-[var(--beat-text-3)]">
                       {shapeCopy.analysisReportReady}
                     </div>
                   </div>

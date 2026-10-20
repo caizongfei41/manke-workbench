@@ -116,7 +116,7 @@ function ApiConfigForm({
       <div className="flex items-center gap-2">
         <p className="text-[13px] font-medium text-ink">{providerLabel}</p>
         {isDefault ? (
-          <span className="rounded-full border border-[#38bdf8]/30 bg-[#38bdf8]/10 px-2 py-0.5 text-[11px] font-semibold tracking-[0.04em] text-[#7dd3fc]">
+          <span className="rounded-full border border-[#38bdf8]/30 bg-[#38bdf8]/10 px-2 py-0.5 text-[13px] font-semibold tracking-[0.04em] text-[#7dd3fc]">
             {t('defaultBadge')}
           </span>
         ) : null}
@@ -125,7 +125,7 @@ function ApiConfigForm({
       <div>
         <label
           htmlFor="beatapi-key"
-          className="mb-2 block text-[12px] font-medium text-ink/45"
+          className="mb-2 block text-[13.5px] font-medium text-ink/45"
         >
           {t('keyLabel')}
         </label>
@@ -172,7 +172,7 @@ function ApiConfigForm({
         href="https://beatapi.io/dashboard/apikeys"
         target="_blank"
         rel="noreferrer"
-        className="inline-flex text-[12px] font-semibold text-[#7dd3fc] transition hover:text-[#ffa26b]"
+        className="inline-flex text-[13.5px] font-semibold text-[#7dd3fc] transition hover:text-[#ffa26b]"
       >
         {t('getKey')}
       </a>
@@ -278,7 +278,7 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
           } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:text-ink/40`}
         >
           <Cloud
-            className={`size-3.5 ${mode === 'beatapi' ? 'text-[#7dd3fc]' : ''}`}
+            className={`size-4 ${mode === 'beatapi' ? 'text-[#7dd3fc]' : ''}`}
           />
           {t('managedTitle')}
         </button>
@@ -292,14 +292,14 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
           }`}
         >
           <Database
-            className={`size-3.5 ${mode === 's3' ? 'text-[#7dd3fc]' : ''}`}
+            className={`size-4 ${mode === 's3' ? 'text-[#7dd3fc]' : ''}`}
           />
           {t('customTitle')}
         </button>
       </div>
 
       {mode === 'beatapi' ? (
-        <p className="text-[12px] leading-5 text-ink/40">{t('managedHint')}</p>
+        <p className="text-[13.5px] leading-6 text-ink/40">{t('managedHint')}</p>
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-[110px_1fr] gap-3">
@@ -360,7 +360,7 @@ function StorageConfigForm({ onSaved }: { onSaved: () => void }) {
               className={inputClassName}
             />
           </div>
-          <label className="flex items-center gap-2 text-[12px] text-ink/45">
+          <label className="flex items-center gap-2 text-[13.5px] text-ink/45">
             <input
               type="checkbox"
               checked={forcePathStyle}
@@ -451,7 +451,7 @@ export function WorkspaceApiConfigDialog({
               <DialogTitle className="beat-product-display text-[17px] font-semibold tracking-[-0.02em] text-ink">
                 {t('title')}
               </DialogTitle>
-              <DialogDescription className="text-[12px] leading-5 text-ink/45">
+              <DialogDescription className="text-[13.5px] leading-6 text-ink/45">
                 {section === 'provider' ? t('description') : t('storage.intro')}
               </DialogDescription>
             </DialogHeader>

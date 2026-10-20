@@ -63,7 +63,7 @@ export function AiExpandControl({
   return (
     <div className={cn('flex items-center gap-1.5', className)}>
       {mediaType === 'image' ? (
-        <div className="flex items-center rounded-full border border-ink/[0.1] bg-ink/[0.04] p-0.5 text-[11px] leading-none">
+        <div className="flex items-center rounded-full border border-ink/[0.1] bg-ink/[0.04] p-0.5 text-[13px] leading-none">
           <button
             type="button"
             onClick={() => setLanguage('zh')}
@@ -94,12 +94,12 @@ export function AiExpandControl({
         type="button"
         onClick={handleExpand}
         disabled={!canExpand}
-        className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] disabled:opacity-40"
+        className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-0.5 text-[13px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] disabled:opacity-40"
       >
         {isEnhancing ? (
-          <Loader2 className="size-3 animate-spin" />
+          <Loader2 className="size-4 animate-spin" />
         ) : (
-          <Sparkles className="size-3" />
+          <Sparkles className="size-3.5" />
         )}
         {isEnhancing ? t('aiExpanding') : t('aiExpand')}
       </button>

@@ -309,7 +309,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
               onClick={() => setPaused((value) => !value)}
               aria-label={paused ? text.play : text.pause}
               data-showcase-toggle="true"
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-ink/[0.12] px-4 text-[14px] bg-[var(--beat-glass-bg)] px-3 text-[11.5px] text-[var(--beat-text-2)] backdrop-blur-xl transition hover:text-ink"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-ink/[0.12] px-4 text-[14px] bg-[var(--beat-glass-bg)] px-3 text-[13px] text-[var(--beat-text-2)] backdrop-blur-xl transition hover:text-ink"
             >
               {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
               {paused ? text.play : text.pause}
@@ -448,7 +448,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
             <h2 className="beat-product-display text-[20px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)] sm:text-[24px]">
               {text.videoTitle}
             </h2>
-            <p className="mt-1.5 max-w-xl text-[12.5px] leading-6 text-[var(--beat-text-2)]">
+            <p className="mt-1.5 max-w-xl text-[14px] leading-6 text-[var(--beat-text-2)]">
               {text.videoSubtitle}
             </p>
           </div>
@@ -483,7 +483,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
                       <Play className="size-4" />
                     </span>
                   </span>
-                  <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/60 to-transparent px-2.5 pb-1.5 pt-6 text-[10.5px] text-white">
+                  <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/60 to-transparent px-2.5 pb-1.5 pt-6 text-[14px] text-white">
                     {clip.label}
                   </figcaption>
                 </div>
@@ -492,7 +492,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
           </div>
         ) : (
           <div className="beat-glass flex min-h-[160px] items-center justify-center rounded-[18px]">
-            <p className="flex items-center gap-2 text-[12.5px] text-[var(--beat-text-2)]" data-showcase-clips-empty="true">
+            <p className="flex items-center gap-2 text-[14px] text-[var(--beat-text-2)]" data-showcase-clips-empty="true">
               <ImageIcon className="size-4" />
               {ready ? text.empty : ' '}
             </p>

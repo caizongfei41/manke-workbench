@@ -105,11 +105,11 @@ export function HintTip({
               }}
               className="pointer-events-none z-[9999] w-max max-w-[280px] rounded-[10px] border border-ink/12 bg-[var(--beat-surface-2)] px-3 py-2 text-left shadow-[0_18px_48px_rgba(0,0,0,0.6)]"
             >
-              <span className="block text-[12px] font-medium leading-5 text-[var(--beat-text-1)]">
+              <span className="block text-[13.5px] font-medium leading-6 text-[var(--beat-text-1)]">
                 {label}
               </span>
               {description ? (
-                <span className="mt-0.5 block text-[11px] leading-[18px] text-[var(--beat-text-2)]">
+                <span className="mt-0.5 block text-[13px] leading-[18px] text-[var(--beat-text-2)]">
                   {description}
                 </span>
               ) : null}

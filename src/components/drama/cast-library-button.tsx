@@ -130,7 +130,7 @@ export function CastLibraryButton({
         aria-label={m['cast.open']()}
         aria-expanded={open}
         title={m['cast.open']()}
-        className="inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 text-[9px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] hover:text-ink"
+        className="inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 text-[13px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] hover:text-ink"
       >
         <Library className="size-2.5" />
         {m['cast.button']()}
@@ -146,17 +146,17 @@ export function CastLibraryButton({
               className="z-[80] overflow-hidden rounded-[12px] border border-ink/[0.12] bg-[var(--beat-surface)] shadow-[0_20px_48px_rgba(0,0,0,0.28)]"
             >
               <div className="flex items-center justify-between border-b border-ink/[0.08] px-3 py-2">
-                <span className="text-[12px] font-medium text-[var(--beat-text-1)]">
+                <span className="text-[13.5px] font-medium text-[var(--beat-text-1)]">
                   {m['cast.title']()}
                 </span>
-                <span className="text-[10px] text-[var(--beat-text-3)]">
+                <span className="text-[13.5px] text-[var(--beat-text-3)]">
                   {items === null ? m['cast.loading']() : m['cast.count']({ count: items.length })}
                 </span>
               </div>
 
               <div className="max-h-[200px] overflow-y-auto p-2">
                 {items !== null && items.length === 0 ? (
-                  <p className="px-1 py-3 text-center text-[10.5px] text-[var(--beat-text-3)]">
+                  <p className="px-1 py-3 text-center text-[14px] text-[var(--beat-text-3)]">
                     {m['cast.empty']()}
                   </p>
                 ) : null}
@@ -171,7 +171,7 @@ export function CastLibraryButton({
                       className="group overflow-hidden rounded-[8px] border border-ink/[0.1] transition hover:border-[var(--beat-accent)]/50 disabled:opacity-50"
                     >
                       <img src={item.url} alt={item.name} className="aspect-square w-full object-cover" />
-                      <span className="block truncate px-1 py-0.5 text-[9px] text-[var(--beat-text-2)]">
+                      <span className="block truncate px-1 py-0.5 text-[13px] text-[var(--beat-text-2)]">
                         {item.name}
                       </span>
                     </button>
@@ -185,13 +185,13 @@ export function CastLibraryButton({
                   disabled={!hasImage || busy}
                   onClick={() => void saveCurrent()}
                   className={cn(
-                    'flex w-full items-center justify-center gap-1.5 rounded-[7px] py-1.5 text-[10.5px] transition',
+                    'flex w-full items-center justify-center gap-1.5 rounded-[7px] py-1.5 text-[14px] transition',
                     hasImage
                       ? 'bg-[var(--beat-accent)]/10 text-[var(--beat-accent)] hover:bg-[var(--beat-accent)]/18'
                       : 'cursor-not-allowed text-[var(--beat-text-3)]'
                   )}
                 >
-                  <Save className="size-3" />
+                  <Save className="size-3.5" />
                   {hasImage ? m['cast.saveCurrent']() : m['cast.saveDisabled']()}
                 </button>
                 {notice ? (

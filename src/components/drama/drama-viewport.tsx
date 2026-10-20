@@ -472,7 +472,7 @@ export function DramaViewport({
         <button
           type="button"
           onClick={() => setView((current) => ({ ...current, k: 1 }))}
-          className="min-w-[46px] rounded-full px-1 py-0.5 text-[11px] tabular-nums text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
+          className="min-w-[46px] rounded-full px-1 py-0.5 text-[13px] tabular-nums text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
           title={m['drama.view.resetZoom']()}
         >
           {Math.round(view.k * 100)}%
@@ -502,7 +502,7 @@ export function DramaViewport({
               type="button"
               onClick={onAutoArrange}
               title={m['drama.view.autoArrange']()}
-              className="rounded-full px-2 py-0.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
+              className="rounded-full px-2 py-0.5 text-[14px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
             >
               {m['drama.view.autoArrange']()}
             </button>
@@ -515,7 +515,7 @@ export function DramaViewport({
               type="button"
               onClick={onResetLayout}
               title={m['drama.view.resetLayout']()}
-              className="rounded-full px-2 py-0.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
+              className="rounded-full px-2 py-0.5 text-[14px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.08] hover:text-ink"
             >
               {m['drama.view.resetLayout']()}
             </button>

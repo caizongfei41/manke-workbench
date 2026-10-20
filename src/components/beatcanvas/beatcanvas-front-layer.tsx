@@ -893,7 +893,7 @@ export function BeatCanvasFrontLayer() {
           </button>
           <button
             type="button"
-            className="inline-flex h-8 min-w-[54px] items-center justify-center rounded-xl bg-ink/[0.05] px-2 text-[12px] font-medium tabular-nums text-[var(--beat-text-2)] transition duration-150 hover:text-ink"
+            className="inline-flex h-9 min-w-[54px] items-center justify-center rounded-xl bg-ink/[0.05] px-2 text-[13.5px] font-medium tabular-nums text-[var(--beat-text-2)] transition duration-150 hover:text-ink"
             onClick={() => {
               if (typeof editor.resetZoom === 'function') {
                 editor.resetZoom(undefined, { animation: { duration: 180 } });

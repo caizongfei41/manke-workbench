@@ -68,7 +68,7 @@ export function DramaCanvasRoute({
     <div className="relative h-full w-full">
       <DramaCanvas projectId={projectId} initialDocument={dramaJson} onPersist={persist} />
       {notice ? (
-        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-[var(--beat-surface-2)] px-3 py-1.5 text-[11px] text-[var(--beat-text-2)] shadow-lg">
+        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-[var(--beat-surface-2)] px-3 py-1.5 text-[13px] text-[var(--beat-text-2)] shadow-lg">
           {notice}
         </div>
       ) : null}

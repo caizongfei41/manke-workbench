@@ -14,7 +14,7 @@ import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
 import { cn } from '@/lib/utils';
 
 const chipClassName =
-  'inline-flex h-6 items-center rounded-full border border-ink/[0.09] bg-ink/[0.035] px-2 text-[11px] font-medium text-[var(--beat-text-1)]';
+  'inline-flex h-6 items-center rounded-full border border-ink/[0.09] bg-ink/[0.035] px-2 text-[13px] font-medium text-[var(--beat-text-1)]';
 
 function StudioHistoryItem({
   item,
@@ -68,7 +68,7 @@ function StudioHistoryItem({
         <span className={chipClassName}>
           {item.modelName || item.modelId || t('result')}
         </span>
-        <span className="text-[12px] text-[var(--beat-text-3)]">
+        <span className="text-[13.5px] text-[var(--beat-text-3)]">
           {formatStudioHistoryDateTime(new Date(item.createdAt))}
         </span>
       </button>
@@ -109,10 +109,10 @@ function StudioHistoryItem({
             )
             )
           ) : (
-            <div className="flex h-full items-center justify-center text-[12px] text-[var(--beat-text-3)]">
+            <div className="flex h-full items-center justify-center text-[13.5px] text-[var(--beat-text-3)]">
               {isBusy ? (
                 <div className="flex w-full max-w-[280px] flex-col items-center gap-3 px-6">
-                  <div className="flex items-center gap-2 text-[12px] text-[var(--beat-text-2)]">
+                  <div className="flex items-center gap-2 text-[13.5px] text-[var(--beat-text-2)]">
                     <Loader2 className="size-4 animate-spin" />
                     <span>{phaseLabel}</span>
                     {progress?.percent !== null && progress?.percent !== undefined ? (
@@ -128,7 +128,7 @@ function StudioHistoryItem({
                     />
                   </div>
                   {progress && progress.max > 0 ? (
-                    <span className="text-[11px] tabular-nums text-[var(--beat-text-3)]">
+                    <span className="text-[13px] tabular-nums text-[var(--beat-text-3)]">
                       {t('progressStep', { value: progress.value, max: progress.max })}
                     </span>
                   ) : null}

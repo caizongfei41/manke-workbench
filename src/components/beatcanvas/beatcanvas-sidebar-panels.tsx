@@ -46,18 +46,18 @@ export function HistoryPanel({
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center gap-2 px-2 py-6 text-[12px] text-[var(--beat-text-3)]">
+        <div className="flex items-center justify-center gap-2 px-2 py-6 text-[13.5px] text-[var(--beat-text-3)]">
           <Loader2 size={14} className="animate-spin" />
           {t('sidebar.loading')}
         </div>
       ) : null}
 
       {error ? (
-        <div className="px-2 py-3 text-[12px] text-[var(--beatcanvas-error)]">{error}</div>
+        <div className="px-2 py-3 text-[13.5px] text-[var(--beatcanvas-error)]">{error}</div>
       ) : null}
 
       {!loading && !error && !hasContent ? (
-        <div className="px-2 py-3 text-[12px] text-[var(--beat-text-3)]">
+        <div className="px-2 py-3 text-[13.5px] text-[var(--beat-text-3)]">
           {t('sidebar.emptyAssets')}
         </div>
       ) : null}
@@ -100,7 +100,7 @@ export function HistoryPanel({
               title={audio.filename || t('sidebar.recentAudioAlt')}
             >
               <AudioLines className="size-5 text-[var(--beat-graph)]" />
-              <span className="max-w-full truncate px-1 text-[9px]">
+              <span className="max-w-full truncate px-1 text-[13px]">
                 {audio.filename || t('sidebar.recentAudioAlt')}
               </span>
             </button>

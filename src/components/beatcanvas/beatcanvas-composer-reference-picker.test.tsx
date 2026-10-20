@@ -27,11 +27,11 @@ test('row variant renders an icon-only compact reference upload control', () => 
   );
 
   assert.match(html, /aria-label="Upload image"/);
-  assert.match(html, /h-7 w-7/);
+  assert.match(html, /h-9 w-7/);
   assert.match(html, /border-dashed/);
   assert.doesNotMatch(html, />Upload image</);
   assert.doesNotMatch(html, />3</);
-  assert.doesNotMatch(html, /h-8 w-8/);
+  assert.doesNotMatch(html, /h-9 w-8/);
 });
 
 test('open picker lists attached and canvas reference cards', () => {

@@ -170,16 +170,16 @@ function NodeShell({
             aria-expanded={!collapsed}
             className="ml-auto grid size-5 shrink-0 place-items-center rounded-[5px] text-[var(--beat-text-3)] transition hover:bg-ink/[0.06] hover:text-ink"
           >
-            {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
+            {collapsed ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
           </button>
         ) : null}
         {helpId ? <HelpPopover id={helpId} className="ml-auto" /> : null}
         <div className="flex min-w-0 flex-col">
-          <span className="truncate text-[12px] font-medium leading-none text-[var(--beat-text-1)]">
+          <span className="truncate text-[13.5px] font-medium leading-none text-[var(--beat-text-1)]">
             {title}
           </span>
           {subtitle ? (
-            <span className="mt-1 truncate text-[10px] leading-none text-[var(--beat-text-3)]">
+            <span className="mt-1 truncate text-[13.5px] leading-none text-[var(--beat-text-3)]">
               {subtitle}
             </span>
           ) : null}
@@ -191,14 +191,14 @@ function NodeShell({
         <span
           data-drama-input-port={ports.inputId}
           title={m['drama.wire.drop']()}
-          className="absolute -left-[7px] top-1/2 size-3 -translate-y-1/2 rounded-full border-2 border-[var(--beat-accent)] bg-[var(--beat-surface)] transition hover:scale-125"
+          className="absolute -left-[7px] top-1/2 size-4 -translate-y-1/2 rounded-full border-2 border-[var(--beat-accent)] bg-[var(--beat-surface)] transition hover:scale-125"
         />
       ) : null}
       {ports?.onStartLink ? (
         <span
           onPointerDown={ports.onStartLink}
           title={m['drama.wire.drag']()}
-          className="absolute -right-[7px] top-1/2 size-3 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-[var(--beat-accent)] bg-[var(--beat-surface)] transition hover:scale-125"
+          className="absolute -right-[7px] top-1/2 size-4 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-[var(--beat-accent)] bg-[var(--beat-surface)] transition hover:scale-125"
         />
       ) : null}
     </div>
@@ -1399,20 +1399,20 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 updateDoc((current) => ({ ...current, script: e.target.value }))
               }
               placeholder={m['drama.script.placeholder']()}
-              className="h-40 w-full resize-none rounded-[10px] border border-ink/[0.08] bg-ink/[0.03] px-2.5 py-2 text-[11.5px] leading-5 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
+              className="h-40 w-full resize-none rounded-[10px] border border-ink/[0.08] bg-ink/[0.03] px-2.5 py-2 text-[13px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
             />
             <div className="mt-2 flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => updateDoc((c) => ({ ...c, script: dramaTemplate() }))}
-                className="rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:text-ink"
+                className="rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[14px] text-[var(--beat-text-2)] transition hover:text-ink"
               >
                 {m['drama.script.useTemplate']()}
               </button>
               <button
                 type="button"
                 onClick={splitScript}
-                className="rounded-full bg-[var(--beat-accent)] px-2.5 py-1 text-[10.5px] font-medium text-white transition hover:opacity-90"
+                className="rounded-full bg-[var(--beat-accent)] px-2.5 py-1 text-[14px] font-medium text-white transition hover:opacity-90"
               >
                 {m['drama.script.toBoard']()}
               </button>
@@ -1442,7 +1442,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             ports={{ inputId: 'board', onStartLink: beginLink('board') }}
             accent
           >
-            <div className="flex flex-col gap-1.5 text-[11px] text-[var(--beat-text-2)]">
+            <div className="flex flex-col gap-1.5 text-[13px] text-[var(--beat-text-2)]">
               <div className="flex items-center justify-between rounded-[8px] bg-ink/[0.04] px-2 py-1.5">
                 <span>{m['drama.board.segments']()}</span>
                 <span className="tabular-nums">{analysis.segments.length}</span>
@@ -1456,7 +1456,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 <span className="tabular-nums">{doc.shots.length}</span>
               </div>
             </div>
-            <p className="mt-2 text-[10px] leading-4 text-[var(--beat-text-3)]">
+            <p className="mt-2 text-[13.5px] leading-6 text-[var(--beat-text-3)]">
               {m['drama.board.hint']()}
             </p>
 
@@ -1466,22 +1466,22 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 // A producer wants something they can diff, not a screenshot
                 window.open(`/api/app/projects/${projectId}/shotlist`, '_blank');
               }}
-              className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+              className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1.5 text-[14px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
             >
-              <Table2 className="size-3" />
+              <Table2 className="size-3.5" />
               {m['drama.board.exportList']()}
             </button>
               <button
                 type="button"
                 onClick={() => ((doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? expandAllShots() : collapseAllShots())}
                 disabled={doc.shots.length === 0}
-                className="mt-1 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1.5 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                className="mt-1 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1.5 text-[14px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
               >
-                {(doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
+                {(doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
                 {(doc.collapsedShots ?? []).length > 0 && (doc.collapsedShots ?? []).length === doc.shots.length ? m['drama.board.expandAll']() : m['drama.board.collapseAll']()}
               </button>
               <div className="mt-2 flex items-center gap-1.5">
-                <span className="shrink-0 text-[10px] text-[var(--beat-text-3)]">{m['drama.board.batchSeconds']()}</span>
+                <span className="shrink-0 text-[13.5px] text-[var(--beat-text-3)]">{m['drama.board.batchSeconds']()}</span>
                 <input
                   type="number"
                   min={1}
@@ -1490,13 +1490,13 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   onChange={(event) => setBatchSeconds(Math.max(1, Math.min(30, Number(event.target.value) || 1)))}
                   aria-label={m['drama.board.batchSeconds']()}
                   data-batch-seconds="true"
-                  className="h-6 w-12 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1.5 text-[10.5px] tabular-nums text-[var(--beat-text-1)] outline-none"
+                  className="h-6 w-12 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1.5 text-[14px] tabular-nums text-[var(--beat-text-1)] outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => applySecondsToAll(batchSeconds)}
                   disabled={doc.shots.length === 0}
-                  className="h-6 flex-1 rounded-[6px] border border-ink/[0.12] text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                  className="h-6 flex-1 rounded-[6px] border border-ink/[0.12] text-[13.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
                 >
                   {m['drama.board.applyAll']({ count: doc.shots.length })}
                 </button>
@@ -1508,7 +1508,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   onChange={(event) => setBatchAssetId(event.target.value)}
                   aria-label={m['drama.board.batchAsset']()}
                   data-batch-asset="true"
-                  className="h-6 min-w-0 flex-1 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1 text-[10px] text-[var(--beat-text-1)] outline-none"
+                  className="h-6 min-w-0 flex-1 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1 text-[13.5px] text-[var(--beat-text-1)] outline-none"
                 >
                   <option value="">{m['drama.board.batchAsset']()}</option>
                   {doc.publicAssets.map((asset) => (
@@ -1524,7 +1524,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                     if (everywhere) removeAssetFromAll(batchAssetId);
                     else applyAssetToAll(batchAssetId);
                   }}
-                  className="h-6 shrink-0 rounded-[6px] border border-ink/[0.12] px-1.5 text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                  className="h-6 shrink-0 rounded-[6px] border border-ink/[0.12] px-1.5 text-[13.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
                 >
                   {batchAssetId && doc.shots.every((shot) => shot.publicAssetIds.includes(batchAssetId))
                     ? m['drama.board.removeAssetAll']({ count: doc.shots.length })
@@ -1533,7 +1533,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               </div>
 
               <div className="mt-1.5 flex items-center gap-1.5">
-                <span className="shrink-0 text-[10px] text-[var(--beat-text-3)]">{m['drama.board.promptPrefix']()}</span>
+                <span className="shrink-0 text-[13.5px] text-[var(--beat-text-3)]">{m['drama.board.promptPrefix']()}</span>
                 <input
                   type="text"
                   value={doc.promptPrefix ?? ''}
@@ -1541,7 +1541,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   placeholder={m['drama.board.promptPrefixHint']()}
                   aria-label={m['drama.board.promptPrefix']()}
                   data-prompt-prefix="true"
-                  className="h-6 min-w-0 flex-1 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1.5 text-[10px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
+                  className="h-6 min-w-0 flex-1 rounded-[6px] border border-ink/[0.1] bg-ink/[0.03] px-1.5 text-[13.5px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
                 />
               </div>
           </NodeShell>
@@ -1571,7 +1571,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
           >
             <div className="flex max-h-[320px] flex-col gap-1.5 overflow-y-auto">
               {doc.publicAssets.length === 0 ? (
-                <p className="py-2 text-center text-[10.5px] text-[var(--beat-text-3)]">
+                <p className="py-2 text-center text-[14px] text-[var(--beat-text-3)]">
                   {m['drama.assets.empty']()}
                 </p>
               ) : (
@@ -1587,15 +1587,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                           {asset.imageUrl ? (
                             <img src={asset.imageUrl} alt="" className="h-full w-full object-cover" />
                           ) : (
-                            <ImagePlus className="size-3 text-[var(--beat-text-3)]" />
+                            <ImagePlus className="size-4 text-[var(--beat-text-3)]" />
                           )}
                         </span>
                       </ImageHoverPreview>
                       <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-[10.5px] text-[var(--beat-text-1)]">
+                        <span className="truncate text-[14px] text-[var(--beat-text-1)]">
                           {ASSET_KIND_LABELS[asset.kind]?.slice(0, 1)} · {asset.name}
                         </span>
-                        <span className="truncate text-[9px] text-[var(--beat-text-3)]">
+                        <span className="truncate text-[13px] text-[var(--beat-text-3)]">
                           {m['drama.assets.usedIn']({ count: used })}
                         </span>
                       </div>
@@ -1605,7 +1605,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                           setPublicUploadTarget(asset.id);
                           requestAnimationFrame(() => publicFileRef.current?.click());
                         }}
-                        className="rounded-full border border-ink/[0.1] px-1.5 py-0.5 text-[9px] text-[var(--beat-text-2)] hover:text-ink"
+                        className="rounded-full border border-ink/[0.1] px-1.5 py-0.5 text-[13px] text-[var(--beat-text-2)] hover:text-ink"
                       >
                         {m['drama.assets.replace']()}
                       </button>
@@ -1663,7 +1663,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             <div className="flex max-h-[340px] flex-col gap-2 overflow-y-auto pr-1">
               {(['output', 'motion', 'sampling', 'memory'] as const).map((group) => (
                 <div key={group} className="flex flex-col gap-1">
-                  <span className="text-[9px] uppercase tracking-wider text-[var(--beat-text-3)]">
+                  <span className="text-[13px] uppercase tracking-wider text-[var(--beat-text-3)]">
                     {DIRECTOR_GROUP_LABELS[group]}
                   </span>
                   {DIRECTOR_FIELDS.filter((field) => field.group === group).map((field) => {
@@ -1671,14 +1671,14 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                     if (field.type === 'boolean') {
                       return (
                         <label key={field.key} className="flex items-center justify-between gap-2">
-                          <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                          <span className="truncate text-[13.5px] text-[var(--beat-text-2)]">
                             {field.label}
                           </span>
                           <input
                             type="checkbox"
                             checked={current === true}
                             onChange={(event) => setParam(field.key, event.target.checked)}
-                            className="size-3 shrink-0"
+                            className="size-4 shrink-0"
                           />
                         </label>
                       );
@@ -1686,7 +1686,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                     if (field.type === 'number') {
                       return (
                         <label key={field.key} className="flex items-center justify-between gap-2">
-                          <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                          <span className="truncate text-[13.5px] text-[var(--beat-text-2)]">
                             {field.label}
                           </span>
                           <input
@@ -1698,20 +1698,20 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                             onChange={(event) =>
                               setParam(field.key, Number(event.target.value) || 0)
                             }
-                            className="w-[62px] shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-right text-[10px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
+                            className="w-[62px] shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-right text-[13.5px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
                           />
                         </label>
                       );
                     }
                     return (
                       <label key={field.key} className="flex items-center justify-between gap-2">
-                        <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                        <span className="truncate text-[13.5px] text-[var(--beat-text-2)]">
                           {field.label}
                         </span>
                         <select
                           value={String(current)}
                           onChange={(event) => setParam(field.key, event.target.value)}
-                          className="w-[104px] shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-[10px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
+                          className="w-[104px] shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-[13.5px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
                         >
                           {(field.options ?? []).map((option) => (
                             <option key={option} value={option}>
@@ -1727,7 +1727,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
               <div className="flex flex-col gap-1 border-t border-ink/[0.08] pt-1.5">
                 <label className="flex items-center justify-between gap-2">
-                  <span className="text-[9px] uppercase tracking-wider text-[var(--beat-text-3)]">
+                  <span className="text-[13px] uppercase tracking-wider text-[var(--beat-text-3)]">
                     {m['drama.enhance.title']()}
                   </span>
                   <input
@@ -1739,7 +1739,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                         enhance: { ...current.enhance, enabled: event.target.checked },
                       }))
                     }
-                    className="size-3"
+                    className="size-3.5"
                   />
                 </label>
                 {doc.enhance.enabled ? (
@@ -1764,7 +1764,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                               }))
                             }
                             className={cn(
-                              'rounded-full border px-1.5 py-0.5 text-[9px] transition',
+                              'rounded-full border px-1.5 py-0.5 text-[13px] transition',
                               active
                                 ? 'border-[var(--beat-accent)]/50 bg-[var(--beat-accent)]/12 text-[var(--beat-accent)]'
                                 : 'border-ink/[0.12] text-[var(--beat-text-2)] hover:border-ink/25 hover:text-ink'
@@ -1791,7 +1791,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               </div>
 
               <div className="flex flex-col gap-1">
-                <span className="text-[9px] uppercase tracking-wider text-[var(--beat-text-3)]">
+                <span className="text-[13px] uppercase tracking-wider text-[var(--beat-text-3)]">
                   LoRA
                 </span>
                 {Array.from({ length: 3 }, (_, index) => {
@@ -1801,7 +1801,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                       <select
                         value={entry.file}
                         onChange={(event) => setLora(index, { file: event.target.value })}
-                        className="min-w-0 flex-1 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-[9px] text-[var(--beat-text-1)] outline-none"
+                        className="min-w-0 flex-1 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-[13px] text-[var(--beat-text-1)] outline-none"
                       >
                         {COMMON_LORAS.map((file) => (
                           <option key={file} value={file}>
@@ -1818,7 +1818,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                         onChange={(event) =>
                           setLora(index, { strength: Number(event.target.value) })
                         }
-                        className="w-11 shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-right text-[9px] outline-none"
+                        className="w-11 shrink-0 rounded-[5px] border border-ink/[0.08] bg-ink/[0.03] px-1 py-0.5 text-right text-[13px] outline-none"
                       />
                     </div>
                   );
@@ -1857,10 +1857,10 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 value={shot.prompt}
                 onChange={(e) => setShot(shot.id, { prompt: e.target.value })}
                 placeholder={m['drama.shot.placeholder']()}
-                className="h-16 w-full resize-none rounded-[8px] border border-ink/[0.08] bg-ink/[0.03] px-2 py-1.5 text-[11px] leading-4 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
+                className="h-16 w-full resize-none rounded-[8px] border border-ink/[0.08] bg-ink/[0.03] px-2 py-1.5 text-[13px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
               />
               {!usesSharedAssets(shot.id) ? (
-                <p className="mt-1 text-[9px] text-[var(--beat-text-3)]">
+                <p className="mt-1 text-[13px] text-[var(--beat-text-3)]">
                   {m['drama.wire.detached']()}
                 </p>
               ) : null}
@@ -1872,10 +1872,10 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   step={0.5}
                   value={shot.seconds}
                   onChange={(e) => setShot(shot.id, { seconds: Number(e.target.value) || 3 })}
-                  className="w-14 rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-0.5 text-right text-[10.5px] text-[var(--beat-text-1)] outline-none"
+                  className="w-14 rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-0.5 text-right text-[14px] text-[var(--beat-text-1)] outline-none"
                 />
-                <span className="text-[9px] text-[var(--beat-text-3)]">{m['drama.shot.seconds']()}</span>
-                <span className="ml-auto text-[9px] text-[var(--beat-text-3)]">
+                <span className="text-[13px] text-[var(--beat-text-3)]">{m['drama.shot.seconds']()}</span>
+                <span className="ml-auto text-[13px] text-[var(--beat-text-3)]">
                   {m['drama.shot.refs']({ count: resolveImages(shot).length })}
                 </span>
               </div>
@@ -1894,7 +1894,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                         })
                       }
                       className={cn(
-                        'max-w-[92px] truncate rounded-full border px-1.5 py-0.5 text-[9px] transition',
+                        'max-w-[92px] truncate rounded-full border px-1.5 py-0.5 text-[13px] transition',
                         on
                           ? 'border-[var(--beat-accent)]/50 bg-[var(--beat-accent)]/15 text-[var(--beat-accent)]'
                           : 'border-ink/[0.1] text-[var(--beat-text-3)] hover:text-ink'
@@ -1910,7 +1910,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                     setShotUploadTarget(shot.id);
                     requestAnimationFrame(() => shotFileRef.current?.click());
                   }}
-                  className="rounded-full border border-dashed border-ink/[0.15] px-1.5 py-0.5 text-[9px] text-[var(--beat-text-3)] hover:text-ink"
+                  className="rounded-full border border-dashed border-ink/[0.15] px-1.5 py-0.5 text-[13px] text-[var(--beat-text-3)] hover:text-ink"
                 >
                   {m['drama.shot.upload']()}
                 </button>
@@ -1919,15 +1919,15 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               {/* Per-shot assets: images that belong to this shot only. */}
               <div className="mt-1.5 rounded-[8px] border border-ink/[0.07] bg-ink/[0.02] p-1.5">
                 <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[9px] text-[var(--beat-text-3)]">
+                  <span className="text-[13px] text-[var(--beat-text-3)]">
                     {m['drama.shot.assets']()}
                   </span>
-                  <span className="text-[9px] tabular-nums text-[var(--beat-text-3)]">
+                  <span className="text-[13px] tabular-nums text-[var(--beat-text-3)]">
                     {shot.ownImageUrls.length}
                   </span>
                 </div>
                 {shot.ownImageUrls.length === 0 ? (
-                  <p className="text-[9px] text-[var(--beat-text-3)]/75">
+                  <p className="text-[13px] text-[var(--beat-text-3)]/75">
                     {m['drama.shot.assetsEmpty']()}
                   </p>
                 ) : (
@@ -1944,7 +1944,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                               })
                             }
                             aria-label={m['drama.shot.assetRemove']()}
-                            className="absolute inset-0 grid place-items-center bg-black/60 text-[11px] text-white opacity-0 transition group-hover/own:opacity-100"
+                            className="absolute inset-0 grid place-items-center bg-black/60 text-[13px] text-white opacity-0 transition group-hover/own:opacity-100"
                           >
                             ×
                           </button>
@@ -1959,7 +1959,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   type="button"
                   disabled={busyShot === shot.id}
                   onClick={() => void generateShot(shot)}
-                  className="flex-1 rounded-[8px] bg-[var(--beat-accent)] py-1 text-[10.5px] font-medium text-white transition hover:opacity-90 disabled:opacity-45"
+                  className="flex-1 rounded-[8px] bg-[var(--beat-accent)] py-1 text-[14px] font-medium text-white transition hover:opacity-90 disabled:opacity-45"
                 >
                   {busyShot === shot.id ? m['drama.shot.generating']() : m['drama.shot.generate']()}
                 </button>
@@ -1974,7 +1974,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   className="grid size-6 place-items-center rounded-[6px] text-[var(--beat-text-3)] hover:bg-ink/[0.07] hover:text-ink"
                   aria-label={m['drama.shot.remove']()}
                 >
-                  <Trash2 className="size-3" />
+                  <Trash2 className="size-3.5" />
                 </button>
               </div>
               {shot.error
@@ -1982,7 +1982,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                     const kind = classifyGenerationFailure(shot.error);
                     return (
                       <div className="mt-1 flex flex-col gap-0.5">
-                        <p className="text-[9px] font-medium text-red-400">
+                        <p className="text-[13px] font-medium text-red-400">
                           {FAILURE_LABELS[kind]()}
                           <span className="ml-1 font-normal text-[var(--beat-text-3)]">
                             {FAILURE_HINTS[kind]()}
@@ -2014,7 +2014,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                               [shot.id]: (previewIndex - 1 + versions.length) % versions.length,
                             }))
                           }
-                          className="grid size-5 place-items-center rounded-[5px] border border-ink/[0.12] text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+                          className="grid size-5 place-items-center rounded-[5px] border border-ink/[0.12] text-[13.5px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
                         >
                           ‹
                         </button>
@@ -2030,7 +2030,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                               [shot.id]: (previewIndex + 1) % versions.length,
                             }))
                           }
-                          className="grid size-5 place-items-center rounded-[5px] border border-ink/[0.12] text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+                          className="grid size-5 place-items-center rounded-[5px] border border-ink/[0.12] text-[13.5px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
                         >
                           ›
                         </button>
@@ -2038,7 +2038,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                           type="button"
                           disabled={isAdopted}
                           onClick={() => adoptVersion(shot.id, shown.id)}
-                          className="ml-auto rounded-[5px] px-1.5 py-0.5 text-[9px] text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/10 disabled:text-[var(--beat-text-3)] disabled:hover:bg-transparent"
+                          className="ml-auto rounded-[5px] px-1.5 py-0.5 text-[13px] text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/10 disabled:text-[var(--beat-text-3)] disabled:hover:bg-transparent"
                         >
                           {isAdopted ? m['drama.version.adopted']() : m['drama.version.adopt']()}
                         </button>
@@ -2057,9 +2057,9 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             type="button"
             onClick={addShot}
             style={{ width: NODE_WIDTH }}
-            className="flex items-center justify-center gap-1 rounded-[12px] border border-dashed border-ink/[0.15] py-2 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+            className="flex items-center justify-center gap-1 rounded-[12px] border border-dashed border-ink/[0.15] py-2 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
           >
-            <Plus className="size-3" />
+            <Plus className="size-3.5" />
             {m['drama.add']()}
           </button>
         </div>
@@ -2086,24 +2086,24 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             ports={{ inputId: 'final' }}
             accent
           >
-            <p className="mb-2 text-[10px] leading-4 text-[var(--beat-text-3)]">
+            <p className="mb-2 text-[13.5px] leading-6 text-[var(--beat-text-3)]">
               {m['drama.final.hint']()}
             </p>
             <button
               type="button"
               disabled={doc.shots.length === 0 || doc.finalStatus === 'running'}
               onClick={() => void generateFinal()}
-              className="flex w-full items-center justify-center gap-1.5 rounded-[8px] bg-[var(--beat-accent)] py-1.5 text-[11px] font-medium text-white transition hover:opacity-90 disabled:opacity-45"
+              className="flex w-full items-center justify-center gap-1.5 rounded-[8px] bg-[var(--beat-accent)] py-1.5 text-[13px] font-medium text-white transition hover:opacity-90 disabled:opacity-45"
             >
-              <Wand2 className="size-3" />
+              <Wand2 className="size-3.5" />
               {doc.finalStatus === 'running' ? m['drama.final.running']() : m['drama.final.run']()}
             </button>
             {doc.finalStatus === 'failed' ? (
-              <p className="mt-1.5 text-[9px] text-red-400">{doc.finalError ?? m['drama.final.failed']()}</p>
+              <p className="mt-1.5 text-[13px] text-red-400">{doc.finalError ?? m['drama.final.failed']()}</p>
             ) : null}
             <div className="mt-2 flex flex-col gap-1.5">
               <label className="flex items-center justify-between gap-2">
-                <span className="text-[10px] text-[var(--beat-text-2)]">
+                <span className="text-[13.5px] text-[var(--beat-text-2)]">
                   {m['drama.final.preset']()}
                 </span>
                 <select
@@ -2124,7 +2124,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                 </select>
               </label>
               <label className="flex items-center justify-between gap-2">
-                <span className="text-[10px] text-[var(--beat-text-2)]">
+                <span className="text-[13.5px] text-[var(--beat-text-2)]">
                   {m['drama.final.subtitles']()}
                 </span>
                 <input
@@ -2133,11 +2133,11 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   onChange={(event) =>
                     setDoc((current) => ({ ...current, subtitles: event.target.checked }))
                   }
-                  className="size-3"
+                  className="size-3.5"
                 />
               </label>
                 <label className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] text-[var(--beat-text-2)]">
+                  <span className="text-[13.5px] text-[var(--beat-text-2)]">
                     {m['drama.final.attachList']()}
                   </span>
                   <input
@@ -2147,19 +2147,19 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                     onChange={(event) =>
                       setDoc((current) => ({ ...current, attachShotList: event.target.checked }))
                     }
-                    className="size-3"
+                    className="size-3.5"
                   />
                 </label>
 
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[10px] text-[var(--beat-text-2)]">
+                <span className="truncate text-[13.5px] text-[var(--beat-text-2)]">
                   {doc.bgmName ?? m['drama.final.bgmNone']()}
                 </span>
                 <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     onClick={() => bgmFileRef.current?.click()}
-                    className="rounded-[5px] border border-ink/[0.12] px-1.5 py-0.5 text-[9px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+                    className="rounded-[5px] border border-ink/[0.12] px-1.5 py-0.5 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
                   >
                     {m['drama.final.bgmPick']()}
                   </button>
@@ -2173,7 +2173,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                           bgmName: null,
                         }))
                       }
-                      className="rounded-[5px] px-1 py-0.5 text-[9px] text-[var(--beat-text-3)] transition hover:text-ink"
+                      className="rounded-[5px] px-1 py-0.5 text-[13px] text-[var(--beat-text-3)] transition hover:text-ink"
                     >
                       ×
                     </button>
@@ -2183,7 +2183,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
               {doc.bgmAssetId ? (
                 <label className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] text-[var(--beat-text-2)]">
+                  <span className="text-[13.5px] text-[var(--beat-text-2)]">
                     {m['drama.final.bgmVolume']()}
                   </span>
                   <input
@@ -2206,7 +2206,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
 
             {pipeline.running ? (
               <div className="mt-1.5 flex items-center gap-1.5">
-                <span className="flex-1 text-[10px] tabular-nums text-[var(--beat-accent)]">
+                <span className="flex-1 text-[13.5px] tabular-nums text-[var(--beat-accent)]">
                   {m['drama.final.progress']({
                     done: pipeline.done + 1,
                     total: pipeline.total,
@@ -2217,7 +2217,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   onClick={() => {
                     stopPipelineRef.current = true;
                   }}
-                  className="rounded-[6px] border border-ink/[0.14] px-2 py-0.5 text-[10px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+                  className="rounded-[6px] border border-ink/[0.14] px-2 py-0.5 text-[13.5px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
                 >
                   {m['drama.final.stop']()}
                 </button>
@@ -2226,14 +2226,14 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
               <button
                 type="button"
                 onClick={() => void runPipeline({ retry: true })}
-                className="mt-1.5 w-full rounded-[8px] bg-[var(--beat-accent)] py-1.5 text-[10.5px] font-medium text-white transition hover:opacity-90"
+                className="mt-1.5 w-full rounded-[8px] bg-[var(--beat-accent)] py-1.5 text-[14px] font-medium text-white transition hover:opacity-90"
               >
                 {doc.shots.some((s) => isInFinal(s.id) && s.status === 'failed')
                   ? m['drama.final.rerun']()
                   : m['drama.final.resume']({ count: pendingShots().length })}
               </button>
             ) : doc.shots.length > 0 ? (
-              <p className="mt-1.5 text-[10px] text-[var(--beat-text-3)]">
+              <p className="mt-1.5 text-[13.5px] text-[var(--beat-text-3)]">
                 {m['drama.final.allDone']({ count: doc.shots.length })}
               </p>
             ) : null}
@@ -2242,18 +2242,18 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             <button
               type="button"
               onClick={autoWire}
-              className="mt-1.5 w-full rounded-[8px] border border-ink/[0.12] py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+              className="mt-1.5 w-full rounded-[8px] border border-ink/[0.12] py-1 text-[14px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
             >
               {m['drama.wire.auto']()}
             </button>
-            <p className="mt-1.5 text-[9px] leading-4 text-[var(--beat-text-3)]">
+            <p className="mt-1.5 text-[13px] leading-6 text-[var(--beat-text-3)]">
               {m['drama.wire.hint']({ count: doc.links.length })}
             </p>
             {doc.finalVideoUrl ? (
               <button
                 type="button"
                 onClick={() => void sendToEditor()}
-                className="mt-1.5 w-full rounded-[8px] border border-ink/[0.14] py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+                className="mt-1.5 w-full rounded-[8px] border border-ink/[0.14] py-1 text-[14px] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
               >
                 {m['drama.final.toEditor']()}
               </button>
@@ -2267,9 +2267,9 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
                   target="_blank"
                   rel="noreferrer"
                   data-shotlist-download="true"
-                  className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+                  className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-ink/[0.12] py-1 text-[14px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
                 >
-                  <Table2 className="size-3" />
+                  <Table2 className="size-3.5" />
                   {m['drama.final.downloadList']()}
                 </a>
               ) : null}

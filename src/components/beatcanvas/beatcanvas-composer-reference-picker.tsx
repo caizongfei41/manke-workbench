@@ -118,7 +118,7 @@ export function BeatCanvasComposerReferencePicker({
                 onPointerDownCapture={stopComposerEvent}
                 title={`${card.alias ?? ''} · ${card.name}`}
                 className={cn(
-                  'group/reference inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border bg-ink/[0.035] pl-1 pr-1.5 text-[11px] font-semibold text-[var(--beat-text-1)] transition',
+                  'group/reference inline-flex h-9 shrink-0 items-center gap-1 rounded-lg border bg-ink/[0.035] pl-1 pr-1.5 text-[13px] font-semibold text-[var(--beat-text-1)] transition',
                   draggedReferenceId === card.id
                     ? 'border-[var(--beat-graph)] opacity-55'
                     : 'border-ink/[0.09] hover:border-ink/[0.18] hover:bg-ink/[0.07]'
@@ -141,9 +141,9 @@ export function BeatCanvasComposerReferencePicker({
                       className="size-full object-cover"
                     />
                   ) : card.type === 'video' ? (
-                    <Video className="m-auto size-3 text-ink/70" />
+                    <Video className="m-auto size-4 text-ink/70" />
                   ) : (
-                    <ImagePlus className="m-auto size-3 text-ink/70" />
+                    <ImagePlus className="m-auto size-4 text-ink/70" />
                   )}
                   {card.type === 'video' ? (
                     <Video className="pointer-events-none absolute bottom-0 right-0 size-2.5 rounded-sm bg-black/65 p-0.5 text-ink" />
@@ -152,7 +152,7 @@ export function BeatCanvasComposerReferencePicker({
                 <span className="whitespace-nowrap font-mono tracking-[-0.02em] text-[var(--beat-graph)]">
                   {card.alias}
                 </span>
-                <GripVertical className="size-3 text-ink/20 transition group-hover/reference:text-ink/45" />
+                <GripVertical className="size-4 text-ink/20 transition group-hover/reference:text-ink/45" />
               </button>
             ))}
           </div>
@@ -168,8 +168,8 @@ export function BeatCanvasComposerReferencePicker({
           className={cn(
             'relative inline-flex shrink-0 items-center justify-center text-[var(--beat-text-3)] transition-all duration-200 hover:bg-ink/[0.06] hover:text-ink disabled:cursor-not-allowed disabled:opacity-60',
             isRow
-              ? 'h-7 w-7 rounded-lg border border-dashed border-ink/[0.12] bg-ink/[0.025]'
-              : 'h-8 w-8 rounded-lg'
+              ? 'h-9 w-7 rounded-lg border border-dashed border-ink/[0.12] bg-ink/[0.025]'
+              : 'h-9 w-8 rounded-lg'
           )}
           aria-label={primaryLabel}
           aria-expanded={isOpen}
@@ -180,14 +180,14 @@ export function BeatCanvasComposerReferencePicker({
             <ImagePlus className="size-4" />
           )}
           {!isRow && attachedCount > 0 ? (
-            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--beat-graph)] px-1 text-[9px] font-bold leading-none text-ink">
+            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--beat-graph)] px-1 text-[13px] font-bold leading-none text-ink">
               {attachedCount}
             </span>
           ) : null}
           {!isRow && options.length > 1 ? (
             <ChevronDown
               className={cn(
-                'pointer-events-none size-3 text-[var(--beatcanvas-ink-faint)] transition-transform duration-200',
+                'pointer-events-none size-4 text-[var(--beatcanvas-ink-faint)] transition-transform duration-200',
                 'absolute bottom-2 right-2',
                 isOpen ? 'rotate-180' : ''
               )}
@@ -221,9 +221,9 @@ export function BeatCanvasComposerReferencePicker({
                 >
                   <span className="flex items-center gap-2">
                     {option.intent === 'video' ? (
-                      <Video className="size-3.5 text-[var(--beat-text-2)]" />
+                      <Video className="size-4 text-[var(--beat-text-2)]" />
                     ) : (
-                      <ImagePlus className="size-3.5 text-[var(--beat-text-2)]" />
+                      <ImagePlus className="size-4 text-[var(--beat-text-2)]" />
                     )}
                     <span>
                       {option.intent === 'video'
@@ -232,7 +232,7 @@ export function BeatCanvasComposerReferencePicker({
                     </span>
                   </span>
                   {option.remaining !== null ? (
-                    <span className="text-[11px] font-medium tabular-nums text-[var(--beat-text-3)]">
+                    <span className="text-[13px] font-medium tabular-nums text-[var(--beat-text-3)]">
                       {option.remaining}
                     </span>
                   ) : null}
@@ -261,7 +261,7 @@ export function BeatCanvasComposerReferencePicker({
                             preload="metadata"
                             className="size-full object-cover"
                           />
-                          <Video className="pointer-events-none absolute inset-0 m-auto size-3.5 text-ink drop-shadow" />
+                          <Video className="pointer-events-none absolute inset-0 m-auto size-4 text-ink drop-shadow" />
                         </span>
                       ) : card.thumbnailUrl ? (
                         <img
@@ -280,10 +280,10 @@ export function BeatCanvasComposerReferencePicker({
                         </span>
                       )}
                       <span className="min-w-0">
-                        <span className="block font-mono text-[11px] font-semibold text-[var(--beat-graph)]">
+                        <span className="block font-mono text-[13px] font-semibold text-[var(--beat-graph)]">
                           {card.alias}
                         </span>
-                        <span className="block truncate text-[12px] font-medium">
+                        <span className="block truncate text-[13.5px] font-medium">
                           {card.name}
                         </span>
                       </span>

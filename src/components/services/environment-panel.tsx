@@ -82,7 +82,7 @@ export function EnvironmentPanel() {
 
         {summary ? (
           <span
-            className={`rounded-full border px-2 py-0.5 text-[11px] ${
+            className={`rounded-full border px-2 py-0.5 text-[13px] ${
               ready
                 ? 'border-[var(--beat-success-text)]/30 bg-[var(--beat-success-bg)] text-[var(--beat-success-text)]'
                 : 'border-[var(--beat-warn-text)]/30 bg-[var(--beat-warn-bg)] text-[var(--beat-warn-text)]'
@@ -103,7 +103,7 @@ export function EnvironmentPanel() {
           className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-ink/[0.09] bg-ink/[0.035] px-3 py-1.5 text-xs text-[var(--beat-text-2)] transition hover:bg-ink/[0.075] hover:text-ink disabled:opacity-50"
         >
           {loading ? (
-            <Loader2 className="size-3.5 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
           ) : (
             <RefreshCw className="size-3.5" />
           )}
@@ -111,7 +111,7 @@ export function EnvironmentPanel() {
         </button>
       </div>
 
-      <p className="mt-2 text-xs leading-5 text-[var(--beat-text-3)]">
+      <p className="mt-2 text-xs leading-6 text-[var(--beat-text-3)]">
         {m['services.envSubtitle']()}
       </p>
 
@@ -127,7 +127,7 @@ export function EnvironmentPanel() {
             const Icon = ICON[check.status];
             return (
               <li key={check.id} className="flex items-start gap-2 text-xs">
-                <Icon className={`mt-0.5 size-3.5 shrink-0 ${TONE[check.status]}`} />
+                <Icon className={`mt-0.5 size-4 shrink-0 ${TONE[check.status]}`} />
                 <span className="w-[104px] shrink-0 text-[var(--beat-text-3)]">
                   {check.label}
                 </span>

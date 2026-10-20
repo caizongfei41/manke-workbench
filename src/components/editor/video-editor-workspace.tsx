@@ -1569,7 +1569,7 @@ export function VideoEditorWorkspace({
             <a
               href={`/canvas/${projectId}`}
               data-editor-back-to-canvas="true"
-              className="mb-1 inline-flex h-7 items-center gap-1.5 rounded-full border border-ink/[0.12] px-2.5 text-[11px] text-ink/60 transition hover:border-ink/30 hover:text-ink"
+              className="mb-1 inline-flex h-9 items-center gap-1.5 rounded-full border border-ink/[0.12] px-2.5 text-[13px] text-ink/60 transition hover:border-ink/30 hover:text-ink"
             >
               <Workflow className="size-3.5" />
               {t('media.backToCanvas')}
@@ -1591,7 +1591,7 @@ export function VideoEditorWorkspace({
           <div className="border-b border-ink/[0.07] p-4">
             <div className="flex gap-2">
               <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg bg-ink/[0.065] px-3 text-ink/38 ring-1 ring-inset ring-ink/[0.04] focus-within:ring-ink/14">
-                <Search className="size-3.5 shrink-0" />
+                <Search className="size-4 shrink-0" />
                 <input
                   value={mediaSearch}
                   onChange={(event) => setMediaSearch(event.target.value)}
@@ -1710,10 +1710,10 @@ export function VideoEditorWorkspace({
                       </span>
                     </span>
                     <span className={`block min-w-0 ${mediaView === 'grid' ? 'px-1 pb-1 pt-2' : 'flex-1'}`}>
-                      <span className="block truncate text-[11px] font-[550] text-ink/86">
+                      <span className="block truncate text-[13px] font-[550] text-ink/86">
                         {clip.name}
                       </span>
-                      <span className="mt-0.5 block text-[9px] capitalize text-ink/34">
+                      <span className="mt-0.5 block text-[13px] capitalize text-ink/34">
                         {t(`clipInspector.type.${clip.sourceType}`)}
                       </span>
                     </span>
@@ -1732,7 +1732,7 @@ export function VideoEditorWorkspace({
                 <span className="text-xs font-[560] text-ink/72">
                   {mediaSearch ? t('media.noResults') : t('media.empty')}
                 </span>
-                <span className="mt-2 max-w-44 text-[11px] leading-5">
+                <span className="mt-2 max-w-44 text-[13px] leading-6">
                   {t('media.drop')}
                 </span>
               </button>
@@ -1800,7 +1800,7 @@ export function VideoEditorWorkspace({
                 disabled={
                   !isExporting && !clips.some((clip) => clip.sourceType !== 'audio')
                 }
-                className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                className={`inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 ${
                   isExporting
                     ? 'border border-ink/12 bg-ink/[0.06] text-ink hover:bg-ink/[0.1]'
                     : 'bg-[var(--beat-accent)] text-[var(--beat-accent-ink)] hover:brightness-110'
@@ -1938,7 +1938,7 @@ export function VideoEditorWorkspace({
                       className="block h-auto w-full select-none"
                     />
                     {selected ? (
-                      <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-ink/12 bg-[var(--beat-surface)]/92 px-2 py-1 text-[9px] font-[560] text-ink/72 shadow-lg backdrop-blur-md">
+                      <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-ink/12 bg-[var(--beat-surface)]/92 px-2.5 py-1.5 text-[13px] font-[560] text-ink/72 shadow-lg backdrop-blur-md">
                         {t('overlay.dragHint')}
                       </span>
                     ) : null}
@@ -1988,7 +1988,7 @@ export function VideoEditorWorkspace({
                 <span className="text-sm font-semibold text-ink">
                   {isInspecting ? t('status.reading') : t('empty.title')}
                 </span>
-                <span className="mt-2 text-xs leading-5 text-ink/40">
+                <span className="mt-2 text-xs leading-6 text-ink/40">
                   {t('empty.description')}
                 </span>
               </button>
@@ -1999,7 +1999,7 @@ export function VideoEditorWorkspace({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-ink">{t('redo.title')}</p>
-                    <p className="mt-1 text-[11px] leading-4 text-ink/42">
+                    <p className="mt-1 text-[13px] leading-6 text-ink/42">
                       {t('redo.description')}
                     </p>
                   </div>
@@ -2013,18 +2013,18 @@ export function VideoEditorWorkspace({
                   </button>
                 </div>
                 <div className="mt-4 rounded-xl border border-ink/[0.08] bg-ink/[0.035] px-3 py-2.5">
-                  <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center justify-between text-[13px]">
                     <span className="font-medium text-ink/75">Seedance 2</span>
                     <span className="font-[520] tabular-nums tracking-[-0.01em] text-ink/42">{selectedClip.duration.toFixed(2)}s</span>
                   </div>
-                  <p className="mt-1 text-[10px] text-ink/35">{t('redo.billingNotice')}</p>
+                  <p className="mt-1 text-[13.5px] text-ink/35">{t('redo.billingNotice')}</p>
                 </div>
                 <textarea
                   value={redoPrompt}
                   onChange={(event) => setRedoPrompt(event.target.value)}
                   placeholder={t('redo.placeholder')}
                   maxLength={5000}
-                  className="mt-3 min-h-24 resize-none rounded-xl border border-ink/10 bg-[var(--beat-panel)] px-3 py-2.5 text-xs leading-5 text-ink outline-none placeholder:text-ink/25 focus:border-[var(--beat-accent)]/55"
+                  className="mt-3 min-h-24 resize-none rounded-xl border border-ink/10 bg-[var(--beat-panel)] px-3 py-2.5 text-xs leading-6 text-ink outline-none placeholder:text-ink/25 focus:border-[var(--beat-accent)]/55"
                 />
                 <button
                   type="button"
@@ -2036,16 +2036,16 @@ export function VideoEditorWorkspace({
                   {isRedoing ? t('redo.running') : t('redo.confirm')}
                 </button>
                 {redoStatus ? (
-                  <p className="mt-2 text-center text-[10px] text-ink/42">{redoStatus}</p>
+                  <p className="mt-2 text-center text-[13.5px] text-ink/42">{redoStatus}</p>
                 ) : null}
                 <div className="mt-4 min-h-0 flex-1 overflow-y-auto border-t border-ink/[0.07] pt-3">
-                  <p className="mb-2 text-[10px] font-[540] tracking-[-0.01em] text-ink/36">
+                  <p className="mb-2 text-[13.5px] font-[540] tracking-[-0.01em] text-ink/36">
                     {t('redo.takes')}
                   </p>
                   <button
                     type="button"
                     onClick={() => activateTake(null)}
-                    className={`mb-2 flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-[11px] ${
+                    className={`mb-2 flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-[13px] ${
                       !selectedClip.activeTakeId
                         ? 'border-[var(--beat-graph)]/50 bg-[var(--beat-graph)]/10 text-ink'
                         : 'border-ink/[0.08] text-ink/55 hover:bg-ink/[0.04]'
@@ -2059,7 +2059,7 @@ export function VideoEditorWorkspace({
                       key={take.id}
                       type="button"
                       onClick={() => activateTake(take.id)}
-                      className={`mb-2 flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-[11px] ${
+                      className={`mb-2 flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-[13px] ${
                         selectedClip.activeTakeId === take.id
                           ? 'border-[var(--beat-accent)]/55 bg-[var(--beat-accent)]/10 text-white'
                           : 'border-ink/[0.08] text-ink/55 hover:bg-ink/[0.04]'
@@ -2073,9 +2073,9 @@ export function VideoEditorWorkspace({
                     <button
                       type="button"
                       onClick={() => activateTake(null)}
-                      className="mt-1 inline-flex items-center gap-1.5 text-[10px] text-ink/45 hover:text-ink"
+                      className="mt-1 inline-flex items-center gap-1.5 text-[13.5px] text-ink/45 hover:text-ink"
                     >
-                      <RotateCcw className="size-3" />
+                      <RotateCcw className="size-3.5" />
                       {t('redo.rollback')}
                     </button>
                   ) : null}
@@ -2086,7 +2086,7 @@ export function VideoEditorWorkspace({
 
           <div className="shrink-0 border-t border-ink/[0.07] bg-[var(--beat-surface)]">
             <div className="flex h-12 items-center justify-center gap-3 border-b border-ink/[0.07] px-4">
-              <span className="w-16 text-right text-[11px] font-[520] tabular-nums tracking-[-0.01em] text-ink/48">
+              <span className="w-16 text-right text-[13px] font-[520] tabular-nums tracking-[-0.01em] text-ink/48">
                 {formatTime(timelineCurrentTime)}
               </span>
               <button
@@ -2123,7 +2123,7 @@ export function VideoEditorWorkspace({
               >
                 <SkipForward className="size-3.5" />
               </button>
-              <span className="w-16 text-[11px] font-[520] tabular-nums tracking-[-0.01em] text-ink/48">
+              <span className="w-16 text-[13px] font-[520] tabular-nums tracking-[-0.01em] text-ink/48">
                 {formatTime(document.duration)}
               </span>
             </div>
@@ -2153,7 +2153,7 @@ export function VideoEditorWorkspace({
                 type="button"
                 onClick={splitAtPlayhead}
                 disabled={!canSplitAtPlayhead}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[11px] font-[520] text-ink/48 transition hover:bg-ink/[0.06] hover:text-ink disabled:opacity-25"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-[13px] font-[520] text-ink/48 transition hover:bg-ink/[0.06] hover:text-ink disabled:opacity-25"
                 title={`${t('actions.split')} · ⌘/Ctrl+B`}
               >
                 <Scissors className="size-3.5" />
@@ -2169,14 +2169,14 @@ export function VideoEditorWorkspace({
               >
                 <Trash2 className="size-3.5" />
               </button>
-              <span className="ml-auto rounded-md border border-ink/[0.07] bg-ink/[0.025] px-2 py-1 text-[9px] font-[520] text-ink/30">
+              <span className="ml-auto rounded-md border border-ink/[0.07] bg-ink/[0.025] px-2.5 py-1.5 text-[13px] font-[520] text-ink/30">
                 {t('timeline.dragHint')}
               </span>
             </div>
 
             <div className="max-h-56 min-h-44 overflow-auto">
               <div className="grid min-w-[720px] grid-cols-[104px_1fr]">
-                <div className="flex h-8 items-center border-b border-r border-ink/[0.07] px-3 text-[10px] font-[540] tracking-[-0.01em] text-ink/36">
+                <div className="flex h-9 items-center border-b border-r border-ink/[0.07] px-3 text-[13.5px] font-[540] tracking-[-0.01em] text-ink/36">
                   {t('timeline.title')}
                 </div>
                 <button
@@ -2194,12 +2194,12 @@ export function VideoEditorWorkspace({
                       })
                     );
                   }}
-                  className="relative h-8 border-b border-ink/[0.07] bg-black/[0.08] text-left"
+                  className="relative h-9 border-b border-ink/[0.07] bg-black/[0.08] text-left"
                 >
                   {[0, 0.25, 0.5, 0.75, 1].map((point) => (
                     <span
                       key={point}
-                      className="absolute top-2 text-[9px] font-[500] tabular-nums tracking-[-0.01em] text-ink/28"
+                      className="absolute top-2 text-[13px] font-[500] tabular-nums tracking-[-0.01em] text-ink/28"
                       style={{ left: `${point * 100}%` }}
                     >
                       {formatTime(timelineDisplayDuration * point)}
@@ -2216,7 +2216,7 @@ export function VideoEditorWorkspace({
                 </button>
                 {document.tracks.map((track) => (
                   <div key={track.id} className="contents">
-                    <div className="flex h-16 items-center gap-2.5 border-b border-r border-ink/[0.07] px-3 text-[11px] font-[520] text-ink/55">
+                    <div className="flex h-16 items-center gap-2.5 border-b border-r border-ink/[0.07] px-3 text-[13px] font-[520] text-ink/55">
                       {track.kind === 'audio' ? (
                         <Volume2 className="size-3.5" />
                       ) : track.kind === 'caption' ? (
@@ -2332,7 +2332,7 @@ export function VideoEditorWorkspace({
                     <span className="block truncate text-xs font-[580] text-ink/90">
                       {selectedClip.name}
                     </span>
-                    <span className="mt-1 block text-[10px] text-ink/38">
+                    <span className="mt-1 block text-[13.5px] text-ink/38">
                       {t(
                         `clipInspector.type.${
                           selectedIsOverlay ? 'overlay' : selectedClip.sourceType
@@ -2346,20 +2346,20 @@ export function VideoEditorWorkspace({
 
                 <div className="py-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="text-[10px] font-[600] uppercase tracking-[0.08em] text-ink/34">
+                    <p className="text-[13.5px] font-[600] uppercase tracking-[0.08em] text-ink/34">
                       {t('panel.properties')}
                     </p>
                     <button
                       type="button"
                       onClick={() => setExactControlsOpen((value) => !value)}
                       aria-expanded={exactControlsOpen}
-                      className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-[10px] transition ${
+                      className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-2 text-[13.5px] transition ${
                         exactControlsOpen
                           ? 'border-ink/18 bg-ink/[0.08] text-ink/78'
                           : 'border-ink/10 text-ink/42 hover:text-ink/72'
                       }`}
                     >
-                      <SlidersHorizontal className="size-3" />
+                      <SlidersHorizontal className="size-3.5" />
                       {t('clipInspector.exactControls')}
                     </button>
                   </div>
@@ -2367,7 +2367,7 @@ export function VideoEditorWorkspace({
                   {selectedClip.sourceType === 'caption' ? (
                     <div className="space-y-3 rounded-xl border border-ink/[0.07] bg-black/15 p-3.5">
                       <label className="block">
-                        <span className="mb-2 block text-[10px] font-[520] text-ink/45">
+                        <span className="mb-2 block text-[13.5px] font-[520] text-ink/45">
                           {t('captions.text')}
                         </span>
                         <textarea
@@ -2398,11 +2398,11 @@ export function VideoEditorWorkspace({
                             );
                             if (!text.trim()) setSelectedClipId(null);
                           }}
-                          className="w-full resize-none rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-3 py-2 text-[12px] text-ink/88 outline-none focus:border-ink/24"
+                          className="w-full resize-none rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-3 py-2 text-[13.5px] text-ink/88 outline-none focus:border-ink/24"
                         />
                       </label>
                       <div>
-                        <span className="mb-2 block text-[10px] font-[520] text-ink/45">
+                        <span className="mb-2 block text-[13.5px] font-[520] text-ink/45">
                           {t('captions.style')}
                         </span>
                         <div className="grid grid-cols-2 gap-2">
@@ -2424,11 +2424,11 @@ export function VideoEditorWorkspace({
                                   : 'border-ink/10 bg-[var(--beat-panel)] text-ink/55 hover:border-ink/20 hover:text-ink/82'
                               }`}
                             >
-                              <span className="text-[10px] font-[560]">
+                              <span className="text-[13.5px] font-[560]">
                                 {t(`captions.styles.${preset}`)}
                               </span>
                               <span
-                                className={`grid h-7 min-w-8 place-items-center rounded px-1.5 text-[10px] ${
+                                className={`grid h-9 min-w-8 place-items-center rounded px-1.5 text-[13.5px] ${
                                   preset === 'boxed' ? 'bg-black/80' : ''
                                 }`}
                                 style={{
@@ -2452,10 +2452,10 @@ export function VideoEditorWorkspace({
                       {selectedCaptionStyle ? (
                         <div className="space-y-3 border-t border-ink/[0.07] pt-3">
                           <div className="flex items-center justify-between gap-3">
-                            <span className="text-[10px] font-[560] text-ink/56">
+                            <span className="text-[13.5px] font-[560] text-ink/56">
                               {t('captions.currentCue')}
                             </span>
-                            <span className="text-[9px] text-ink/30">
+                            <span className="text-[13px] text-ink/30">
                               {t('captions.currentCueHint')}
                             </span>
                           </div>
@@ -2483,7 +2483,7 @@ export function VideoEditorWorkspace({
                             ],
                           ] as const).map(([field, min, max, step, value]) => (
                             <label key={field} className="block">
-                              <span className="mb-2 flex items-center justify-between text-[10px] font-[520] text-ink/45">
+                              <span className="mb-2 flex items-center justify-between text-[13.5px] font-[520] text-ink/45">
                                 <span>{t(`captions.${field}`)}</span>
                                 <span className="tabular-nums text-ink/62">
                                   {field === 'fontScale'
@@ -2529,7 +2529,7 @@ export function VideoEditorWorkspace({
                         ['fadeOut', 0, selectedClip.duration, 0.01, selectedClip.fadeOut],
                       ] as const).map(([field, min, max, step, value]) => (
                         <label key={field} className="block">
-                          <span className="mb-2 flex items-center justify-between text-[10px] font-[520] text-ink/45">
+                          <span className="mb-2 flex items-center justify-between text-[13.5px] font-[520] text-ink/45">
                             <span>{t(`overlay.${field}`)}</span>
                             <span className="tabular-nums text-ink/62">
                               {field === 'fadeIn' || field === 'fadeOut'
@@ -2562,7 +2562,7 @@ export function VideoEditorWorkspace({
                       ))}
                       <div className="grid grid-cols-2 gap-2 border-t border-ink/[0.07] pt-3">
                         <label className="block">
-                          <span className="mb-2 block text-[10px] text-ink/38">
+                          <span className="mb-2 block text-[13.5px] text-ink/38">
                             {t('clipInspector.timelinePosition')}
                           </span>
                           <input
@@ -2573,11 +2573,11 @@ export function VideoEditorWorkspace({
                             onChange={(event) =>
                               moveSelectedClip(Number(event.target.value))
                             }
-                            className="h-8 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[11px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-graph)]/55"
+                            className="h-9 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[13px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-graph)]/55"
                           />
                         </label>
                         <label className="block">
-                          <span className="mb-2 block text-[10px] text-ink/38">
+                          <span className="mb-2 block text-[13.5px] text-ink/38">
                             {t('clipInspector.stillDuration')}
                           </span>
                           <input
@@ -2588,7 +2588,7 @@ export function VideoEditorWorkspace({
                             onChange={(event) =>
                               resizeSelectedImage(Number(event.target.value))
                             }
-                            className="h-8 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[11px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-graph)]/55"
+                            className="h-9 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[13px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-graph)]/55"
                           />
                         </label>
                       </div>
@@ -2601,7 +2601,7 @@ export function VideoEditorWorkspace({
                         ['fadeOut', 0, selectedClip.duration, 0.01, selectedClip.fadeOut],
                       ] as const).map(([field, min, max, step, value]) => (
                         <label key={field} className="block">
-                          <span className="mb-2 flex items-center justify-between text-[10px] font-[520] text-ink/45">
+                          <span className="mb-2 flex items-center justify-between text-[13.5px] font-[520] text-ink/45">
                             <span>{t(`audio.${field}`)}</span>
                             <span className="tabular-nums text-ink/62">
                               {field === 'volume'
@@ -2645,7 +2645,7 @@ export function VideoEditorWorkspace({
                             ]).document
                           )
                         }
-                        className={`inline-flex h-8 w-full items-center justify-center gap-2 rounded-lg border text-[11px] font-[550] transition ${
+                        className={`inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border text-[13px] font-[550] transition ${
                           selectedClip.muted
                             ? 'border-red-400/25 bg-red-400/10 text-red-100'
                             : 'border-ink/10 bg-ink/[0.035] text-ink/62 hover:bg-ink/[0.07] hover:text-ink'
@@ -2654,7 +2654,7 @@ export function VideoEditorWorkspace({
                         <Volume2 className="size-3.5" />
                         {selectedClip.muted ? t('audio.unmute') : t('audio.mute')}
                       </button>
-                      <p className="text-[10px] leading-4 text-ink/30">
+                      <p className="text-[13.5px] leading-6 text-ink/30">
                         {selectedClip.muted
                           ? t('audio.mutedHint')
                           : t('audio.activeHint')}
@@ -2664,7 +2664,7 @@ export function VideoEditorWorkspace({
                     <div className="space-y-3 rounded-xl border border-ink/[0.07] bg-black/15 p-3.5">
                       {selectedClip.sourceType === 'video' && !selectedClip.activeTakeId ? (
                         <label className="block">
-                          <span className="mb-2 block text-[10px] text-ink/38">
+                          <span className="mb-2 block text-[13.5px] text-ink/38">
                             {t('clipInspector.sourceRange')}
                           </span>
                           <span className="flex items-center gap-2">
@@ -2675,7 +2675,7 @@ export function VideoEditorWorkspace({
                               step={0.01}
                               value={Number(selectedClip.inPoint.toFixed(2))}
                               onChange={(event) => updateTrim('in', Number(event.target.value))}
-                              className="h-8 min-w-0 flex-1 rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[11px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
+                              className="h-9 min-w-0 flex-1 rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[13px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
                             />
                             <span className="text-ink/25">→</span>
                             <input
@@ -2685,13 +2685,13 @@ export function VideoEditorWorkspace({
                               step={0.01}
                               value={Number(selectedClip.outPoint.toFixed(2))}
                               onChange={(event) => updateTrim('out', Number(event.target.value))}
-                              className="h-8 min-w-0 flex-1 rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[11px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
+                              className="h-9 min-w-0 flex-1 rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[13px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
                             />
                           </span>
                         </label>
                       ) : selectedClip.sourceType === 'image' ? (
                         <label className="block">
-                          <span className="mb-2 block text-[10px] text-ink/38">
+                          <span className="mb-2 block text-[13.5px] text-ink/38">
                             {t('clipInspector.stillDuration')}
                           </span>
                           <input
@@ -2700,12 +2700,12 @@ export function VideoEditorWorkspace({
                             step={0.1}
                             value={Number(selectedClip.duration.toFixed(2))}
                             onChange={(event) => resizeSelectedImage(Number(event.target.value))}
-                            className="h-8 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[11px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
+                            className="h-9 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[13px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
                           />
                         </label>
                       ) : null}
                       <label className="block">
-                        <span className="mb-2 block text-[10px] text-ink/38">
+                        <span className="mb-2 block text-[13.5px] text-ink/38">
                           {t('clipInspector.timelinePosition')}
                         </span>
                         <input
@@ -2714,19 +2714,19 @@ export function VideoEditorWorkspace({
                           step={0.01}
                           value={Number(selectedClip.startTime.toFixed(2))}
                           onChange={(event) => moveSelectedClip(Number(event.target.value))}
-                          className="h-8 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[11px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
+                          className="h-9 w-full rounded-lg border border-ink/10 bg-[var(--beat-panel)] px-2 text-[13px] tabular-nums text-ink/80 outline-none focus:border-[var(--beat-accent)]/55"
                         />
                       </label>
                     </div>
                   ) : (
-                    <p className="rounded-xl border border-ink/[0.07] bg-ink/[0.025] px-3 py-3 text-[10px] leading-4 text-ink/38">
+                    <p className="rounded-xl border border-ink/[0.07] bg-ink/[0.025] px-3 py-3 text-[13.5px] leading-6 text-ink/38">
                       {t('panel.exactHint')}
                     </p>
                   )}
                 </div>
 
                 <div className="border-t border-ink/[0.07] pt-4">
-                  <p className="mb-3 text-[10px] font-[600] uppercase tracking-[0.08em] text-ink/34">
+                  <p className="mb-3 text-[13.5px] font-[600] uppercase tracking-[0.08em] text-ink/34">
                     {t('panel.quickActions')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -2734,7 +2734,7 @@ export function VideoEditorWorkspace({
                       type="button"
                       onClick={() => void createDerivedSelection()}
                       disabled={selectedClip.sourceType !== 'video' || isExporting}
-                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-ink/10 bg-ink/[0.035] text-[11px] font-[540] text-ink/62 transition hover:bg-ink/[0.07] hover:text-ink disabled:opacity-30"
+                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-ink/10 bg-ink/[0.035] text-[13px] font-[540] text-ink/62 transition hover:bg-ink/[0.07] hover:text-ink disabled:opacity-30"
                     >
                       <Scissors className="size-3.5" />
                       {t('actions.extract')}
@@ -2743,7 +2743,7 @@ export function VideoEditorWorkspace({
                       type="button"
                       onClick={() => setRedoOpen((current) => !current)}
                       disabled={selectedClip.sourceType !== 'video' || isRedoing}
-                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-ink/10 bg-ink/[0.035] text-[11px] font-[540] text-ink/62 transition hover:bg-ink/[0.07] hover:text-ink disabled:opacity-30"
+                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-ink/10 bg-ink/[0.035] text-[13px] font-[540] text-ink/62 transition hover:bg-ink/[0.07] hover:text-ink disabled:opacity-30"
                     >
                       <Sparkles className="size-3.5" />
                       {t('actions.redo')}
@@ -2751,7 +2751,7 @@ export function VideoEditorWorkspace({
                     <button
                       type="button"
                       onClick={() => deleteSelectedClip(false)}
-                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-ink/10 text-[11px] font-[540] text-ink/48 transition hover:border-red-400/25 hover:bg-red-400/10 hover:text-red-100"
+                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-ink/10 text-[13px] font-[540] text-ink/48 transition hover:border-red-400/25 hover:bg-red-400/10 hover:text-red-100"
                     >
                       <Trash2 className="size-3.5" />
                       {t('timeline.delete')}
@@ -2759,7 +2759,7 @@ export function VideoEditorWorkspace({
                     <button
                       type="button"
                       onClick={() => deleteSelectedClip(true)}
-                      className="inline-flex h-9 items-center justify-center rounded-lg border border-ink/10 text-[11px] font-[540] text-ink/48 transition hover:bg-ink/[0.06] hover:text-ink"
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-ink/10 text-[13px] font-[540] text-ink/48 transition hover:bg-ink/[0.06] hover:text-ink"
                     >
                       {t('timeline.rippleDelete')}
                     </button>
@@ -2777,26 +2777,26 @@ export function VideoEditorWorkspace({
                       <p className="text-sm font-[600] text-ink/88">
                         {t('panel.welcomeTitle')}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-ink/38">
+                      <p className="mt-0.5 text-[13.5px] text-ink/38">
                         {t('panel.subtitle')}
                       </p>
                     </div>
                   </div>
-                  <p className="mt-4 text-[11px] leading-5 text-ink/52">
+                  <p className="mt-4 text-[13px] leading-6 text-ink/52">
                     {t('panel.welcomeDescription')}
                   </p>
                 </div>
                 <div className="mt-5 space-y-3">
                   {(['studio', 'canvas', 'edit', 'assets'] as const).map((step, index) => (
                     <div key={step} className="flex gap-3">
-                      <span className="grid size-6 shrink-0 place-items-center rounded-full border border-ink/10 bg-ink/[0.035] text-[10px] font-[600] text-ink/55">
+                      <span className="grid size-6 shrink-0 place-items-center rounded-full border border-ink/10 bg-ink/[0.035] text-[13.5px] font-[600] text-ink/55">
                         {index + 1}
                       </span>
                       <div>
-                        <p className="text-[11px] font-[570] text-ink/76">
+                        <p className="text-[13px] font-[570] text-ink/76">
                           {t(`panel.workflow.${step}.title`)}
                         </p>
-                        <p className="mt-1 text-[10px] leading-4 text-ink/34">
+                        <p className="mt-1 text-[13.5px] leading-6 text-ink/34">
                           {t(`panel.workflow.${step}.description`)}
                         </p>
                       </div>

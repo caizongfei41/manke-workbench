@@ -89,16 +89,16 @@ export function TimelineClipBlock({
         ) : null}
         <span className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/38 to-black/10" />
         <span className="relative flex h-full min-w-0 flex-col justify-between px-2.5 py-2">
-          <span className="block truncate text-[11px] font-[560] tracking-[-0.01em] text-ink/95">
+          <span className="block truncate text-[13px] font-[560] tracking-[-0.01em] text-ink/95">
             {clip.sourceType === 'caption' ? clip.text || clip.name : clip.name}
           </span>
-          <span className="flex items-center gap-1.5 text-[10px] font-[500] tabular-nums text-ink/62">
+          <span className="flex items-center gap-1.5 text-[13.5px] font-[500] tabular-nums text-ink/62">
             {clip.sourceType === 'image' ? (
-              <ImageIcon className="size-3" />
+              <ImageIcon className="size-3.5" />
             ) : clip.sourceType === 'video' ? (
-              <FileVideo2 className="size-3" />
+              <FileVideo2 className="size-3.5" />
             ) : (
-              <Volume2 className="size-3" />
+              <Volume2 className="size-3.5" />
             )}
             {clip.duration.toFixed(2)}s
           </span>

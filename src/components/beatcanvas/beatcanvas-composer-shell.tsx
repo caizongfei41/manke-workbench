@@ -169,7 +169,7 @@ export function BeatCanvasComposerShell({
             {renderedPromptAccessory ? (
               <div
                 data-composer-reference-row
-                className="mb-1.5 flex min-h-7 min-w-0 items-center pl-2"
+                className="mb-1.5 flex min-h-9 min-w-0 items-center pl-2"
               >
                 {renderedPromptAccessory}
               </div>
@@ -289,14 +289,14 @@ export function BeatCanvasComposerShell({
                           )}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block font-mono text-[11px] font-semibold text-[var(--beat-graph)]">
+                          <span className="block font-mono text-[13px] font-semibold text-[var(--beat-graph)]">
                             {mention.alias}
                           </span>
-                          <span className="block truncate text-[12px] font-medium">
+                          <span className="block truncate text-[13.5px] font-medium">
                             {mention.name}
                           </span>
                         </span>
-                        <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink/30">
+                        <span className="text-[13.5px] font-medium uppercase tracking-[0.08em] text-ink/30">
                           {mention.type}
                         </span>
                       </button>
@@ -310,7 +310,7 @@ export function BeatCanvasComposerShell({
           <div className="flex shrink-0 items-center gap-2 pt-0.5">
             <span
               className={cn(
-                'text-[10px] font-medium tabular-nums',
+                'text-[13.5px] font-medium tabular-nums',
                 promptCharacterCount >= promptCharacterLimit
                   ? 'text-[var(--beatcanvas-warning)]'
                   : 'text-[var(--beat-text-3)]'
@@ -349,7 +349,7 @@ export function BeatCanvasComposerShell({
               )}
             >
               {isDraftBusy ? (
-                <Loader2 className="size-3.5 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
                 <ArrowUp className="size-3.5" />
               )}

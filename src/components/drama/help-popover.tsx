@@ -115,7 +115,7 @@ export function HelpPopover({
           className
         )}
       >
-        <HelpCircle className="size-3" />
+        <HelpCircle className="size-3.5" />
       </button>
 
       {open
@@ -128,18 +128,18 @@ export function HelpPopover({
               className="z-[80] overflow-hidden rounded-[12px] border border-ink/[0.12] bg-[var(--beat-surface)] shadow-[0_20px_48px_rgba(0,0,0,0.28)]"
             >
               <div className="flex items-center justify-between gap-2 border-b border-ink/[0.08] px-3 py-2">
-                <span className="text-[12px] font-medium text-[var(--beat-text-1)]">{title}</span>
+                <span className="text-[13.5px] font-medium text-[var(--beat-text-1)]">{title}</span>
                 <button
                   type="button"
                   aria-label={m['help.close']()}
                   onClick={() => setOpen(false)}
                   className="grid size-4 place-items-center rounded-full text-[var(--beat-text-3)] transition hover:bg-ink/[0.08] hover:text-[var(--beat-text-1)]"
                 >
-                  <X className="size-3" />
+                  <X className="size-3.5" />
                 </button>
               </div>
               <div className="max-h-[46vh] overflow-y-auto px-3 py-2.5">
-                <p className="whitespace-pre-line text-[11px] leading-[1.7] text-[var(--beat-text-2)]">
+                <p className="whitespace-pre-line text-[13px] leading-[1.7] text-[var(--beat-text-2)]">
                   {body}
                 </p>
               </div>

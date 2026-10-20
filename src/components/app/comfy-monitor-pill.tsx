@@ -75,7 +75,7 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
         .join('\n')}
       data-comfy-monitor={pending ? 'pending' : monitor?.reachable ? 'live' : 'offline'}
       className={cn(
-        'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-[11px] tabular-nums transition',
+        'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-[13px] tabular-nums transition',
         pending
           ? 'border-ink/[0.09] bg-ink/[0.035] text-[var(--beat-text-3)]'
           : monitor?.reachable

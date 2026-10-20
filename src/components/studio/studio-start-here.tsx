@@ -187,7 +187,7 @@ export function StudioStartHere({
       </div>
 
       {/* Names under the stack: four thumbnails alone do not say what they open. */}
-      <ul className="mx-auto mt-4 flex max-w-[560px] flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] text-ink/45">
+      <ul className="mx-auto mt-4 flex max-w-[560px] flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[13px] text-ink/45">
         {START_ENTRIES.map((entry) => (
           <li key={`label-${entry.mode}`} className="flex items-center gap-1.5">
             <span
@@ -202,7 +202,7 @@ export function StudioStartHere({
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[11px] text-ink/30">{m['startHere.caption']()}</p>
+      <p className="mt-2 text-[13px] text-ink/30">{m['startHere.caption']()}</p>
 
       <h1 className="mt-6 text-[1.7rem] font-semibold leading-none tracking-[-0.035em] text-ink sm:text-[2.15rem]">
         {m['startHere.heading']()}
@@ -213,7 +213,7 @@ export function StudioStartHere({
 
       {/* Style starters: one click fills the prompt instead of an empty box */}
       <div className="mx-auto mt-7 max-w-[620px]">
-        <p className="text-[10.5px] font-semibold tracking-[0.16em] text-ink/30">
+        <p className="text-[14px] font-semibold tracking-[0.16em] text-ink/30">
           {m['startHere.styles.title']()}
         </p>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2" data-style-starters="true">
@@ -227,7 +227,7 @@ export function StudioStartHere({
                 onPickMode?.('image', style.prompt());
               }}
               className={cn(
-                'rounded-full border px-3 py-1.5 text-[11.5px] transition',
+                'rounded-full border px-3 py-1.5 text-[13px] transition',
                 pickedStyle === style.key
                   ? 'border-[var(--beat-accent)]/60 bg-[var(--beat-accent)]/12 text-[var(--beat-text-1)]'
                   : 'border-ink/[0.12] text-[var(--beat-text-2)] hover:border-ink/30 hover:text-ink'
@@ -241,7 +241,7 @@ export function StudioStartHere({
 
       {recent.length > 0 ? (
         <div className="mx-auto mt-8 max-w-[620px]" data-studio-recent="true">
-          <p className="text-[10.5px] font-semibold tracking-[0.16em] text-ink/30">
+          <p className="text-[14px] font-semibold tracking-[0.16em] text-ink/30">
             {m['startHere.recent.title']()}
           </p>
           <div className="mt-3 grid grid-cols-3 gap-2.5">

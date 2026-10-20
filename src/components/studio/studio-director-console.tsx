@@ -126,10 +126,10 @@ export function StudioDirectorConsole({
           <Clapperboard className="size-3.5" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="text-[12px] font-medium leading-none text-[var(--beat-text-1)]">
+          <span className="text-[13.5px] font-medium leading-none text-[var(--beat-text-1)]">
             {m['studio.director.title']()}
           </span>
-          <span className="mt-1 truncate text-[11px] leading-none text-[var(--beat-text-3)]">
+          <span className="mt-1 truncate text-[13px] leading-none text-[var(--beat-text-3)]">
             {segments.length > 0
               ? m['studio.director.summary']({
                   shots: segments.length,
@@ -138,7 +138,7 @@ export function StudioDirectorConsole({
               : m['studio.director.summaryEmpty']()}
           </span>
           {segments.length > 0 ? (
-            <span className="mt-0.5 truncate text-[10px] leading-none text-[var(--beat-text-3)]">
+            <span className="mt-0.5 truncate text-[13.5px] leading-none text-[var(--beat-text-3)]">
               {m['studio.director.stitchHint']()}
             </span>
           ) : null}
@@ -148,13 +148,13 @@ export function StudioDirectorConsole({
           disabled={disabled}
           onClick={() => setScriptOpen((v) => !v)}
           className={cn(
-            'flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40',
+            'flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] transition disabled:opacity-40',
             scriptOpen
               ? 'border-[var(--beat-accent)]/45 bg-[var(--beat-accent)]/12 text-ink'
               : 'border-ink/[0.1] bg-ink/[0.04] text-[var(--beat-text-2)] hover:border-ink/25 hover:text-ink'
           )}
         >
-          <Scissors className="size-3" />
+          <Scissors className="size-3.5" />
           {m['studio.director.importScript']()}
         </button>
       </div>
@@ -162,21 +162,21 @@ export function StudioDirectorConsole({
       {/* Script import. */}
       {scriptOpen ? (
         <div className="border-b border-ink/[0.07] px-3 py-2.5">
-          <p className="mb-2 text-[10.5px] text-[var(--beat-text-3)]">
+          <p className="mb-2 text-[14px] text-[var(--beat-text-3)]">
             {m['studio.director.scriptHint']()}
           </p>
           <textarea
             value={script}
             onChange={(e) => setScript(e.target.value)}
             placeholder={m['studio.director.scriptPlaceholder']()}
-            className="mb-2 h-32 w-full resize-none rounded-[10px] border border-ink/[0.08] bg-ink/[0.03] px-2.5 py-2 text-[12px] leading-5 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
+            className="mb-2 h-32 w-full resize-none rounded-[10px] border border-ink/[0.08] bg-ink/[0.03] px-2.5 py-2 text-[13.5px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
           />
           <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={disabled || !script.trim()}
               onClick={applyScript}
-              className="rounded-full bg-[var(--beat-accent)] px-3 py-1 text-[11px] font-medium text-white transition disabled:opacity-40"
+              className="rounded-full bg-[var(--beat-accent)] px-3 py-1 text-[13px] font-medium text-white transition disabled:opacity-40"
             >
               {m['studio.director.splitButton']()}
             </button>
@@ -184,16 +184,16 @@ export function StudioDirectorConsole({
               type="button"
               disabled={disabled}
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+              className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
             >
-              <Upload className="size-3" />
+              <Upload className="size-3.5" />
               {m['studio.director.uploadScript']()}
             </button>
             <button
               type="button"
               disabled={disabled}
               onClick={() => setScript(SCRIPT_TEMPLATE)}
-              className="rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+              className="rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
             >
               {m['studio.director.useTemplate']()}
             </button>
@@ -228,7 +228,7 @@ export function StudioDirectorConsole({
             type="button"
             onClick={() => setTab(key)}
             className={cn(
-              'flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] transition',
+              'flex items-center gap-1 rounded-full px-2.5 py-1 text-[13px] transition',
               tab === key
                 ? 'bg-ink/[0.1] text-ink shadow-[inset_0_0_0_1px_rgba(127,127,127,0.2)]'
                 : 'text-[var(--beat-text-3)] hover:bg-ink/[0.05] hover:text-[var(--beat-text-1)]'
@@ -236,7 +236,7 @@ export function StudioDirectorConsole({
           >
             {label}
             {badge ? (
-              <span className="rounded-full bg-ink/[0.12] px-1 text-[10px] tabular-nums">{badge}</span>
+              <span className="rounded-full bg-ink/[0.12] px-1 text-[13.5px] tabular-nums">{badge}</span>
             ) : null}
           </button>
         ))}
@@ -245,14 +245,14 @@ export function StudioDirectorConsole({
       {tab === 'shots' ? (
         <div className="flex flex-col gap-2 px-3 py-2.5">
           {segments.length === 0 ? (
-            <p className="py-3 text-center text-[11px] text-[var(--beat-text-3)]">
+            <p className="py-3 text-center text-[13px] text-[var(--beat-text-3)]">
               {m['studio.director.noShots']()}
             </p>
           ) : (
             segments.map((seg, index) => (
               <div key={index} className="rounded-[10px] border border-ink/[0.07] bg-ink/[0.02] p-2">
                 <div className="mb-1.5 flex items-center gap-2">
-                  <span className="rounded-full bg-ink/[0.1] px-1.5 py-0.5 text-[10px] tabular-nums text-[var(--beat-text-1)]">
+                  <span className="rounded-full bg-ink/[0.1] px-1.5 py-0.5 text-[13.5px] tabular-nums text-[var(--beat-text-1)]">
                     {m['studio.director.shotLabel']({ index: index + 1 })}
                   </span>
                   <label className="ml-auto flex items-center gap-1">
@@ -266,9 +266,9 @@ export function StudioDirectorConsole({
                       onChange={(e) =>
                         updateSegment(index, { seconds: Number(e.target.value) || 4 })
                       }
-                      className="w-14 rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-1 text-right text-[11px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
+                      className="w-14 rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-1 text-right text-[13px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
                     />
-                    <span className="text-[10px] text-[var(--beat-text-3)]">
+                    <span className="text-[13.5px] text-[var(--beat-text-3)]">
                       {m['studio.director.seconds']()}
                     </span>
                   </label>
@@ -279,7 +279,7 @@ export function StudioDirectorConsole({
                     aria-label={m['studio.director.removeShot']()}
                     className="grid size-6 place-items-center rounded-full text-[var(--beat-text-3)] transition hover:bg-ink/[0.08] hover:text-ink disabled:opacity-40"
                   >
-                    <Trash2 className="size-3" />
+                    <Trash2 className="size-3.5" />
                   </button>
                 </div>
                 <textarea
@@ -287,7 +287,7 @@ export function StudioDirectorConsole({
                   disabled={disabled}
                   onChange={(e) => updateSegment(index, { prompt: e.target.value })}
                   placeholder={m['studio.director.shotPlaceholder']()}
-                  className="mb-1.5 h-16 w-full resize-none rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2 py-1.5 text-[12px] leading-5 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
+                  className="mb-1.5 h-16 w-full resize-none rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2 py-1.5 text-[13.5px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20"
                 />
                 <div className="flex flex-wrap items-center gap-1.5">
                   {/* Consistency: the same character/scene image in every shot it appears in. */}
@@ -310,7 +310,7 @@ export function StudioDirectorConsole({
                             }}
                             title={asset.description || asset.name}
                             className={cn(
-                              'max-w-[110px] truncate rounded-full border px-1.5 py-0.5 text-[10px] transition disabled:opacity-40',
+                              'max-w-[110px] truncate rounded-full border px-1.5 py-0.5 text-[13.5px] transition disabled:opacity-40',
                               on
                                 ? 'border-[var(--beat-accent)]/50 bg-[var(--beat-accent)]/15 text-[var(--beat-accent)]'
                                 : 'border-ink/[0.1] bg-ink/[0.03] text-[var(--beat-text-3)] hover:text-ink'
@@ -337,7 +337,7 @@ export function StudioDirectorConsole({
                           })
                         }
                         aria-label={m['studio.director.removeImage']()}
-                        className="absolute inset-0 grid place-items-center bg-black/55 text-[10px] text-white opacity-0 transition hover:opacity-100"
+                        className="absolute inset-0 grid place-items-center bg-black/55 text-[13.5px] text-white opacity-0 transition hover:opacity-100"
                       >
                         ×
                       </button>
@@ -355,7 +355,7 @@ export function StudioDirectorConsole({
                         });
                         e.currentTarget.value = '';
                       }}
-                      className="h-8 max-w-[150px] rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 text-[11px] text-[var(--beat-text-2)] outline-none"
+                      className="h-9 max-w-[150px] rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 text-[13px] text-[var(--beat-text-2)] outline-none"
                     >
                       <option value="">{m['studio.director.pickAsset']()}</option>
                       {assetUrls.slice(0, 40).map((url) => (
@@ -373,9 +373,9 @@ export function StudioDirectorConsole({
                         setUploadShotIndex(index);
                         requestAnimationFrame(() => shotFileRef.current?.click());
                       }}
-                      className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                      className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1.5 text-[14px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
                     >
-                      <Upload className="size-3" />
+                      <Upload className="size-3.5" />
                       {m['studio.director.assetUpload']()}
                     </button>
                   ) : null}
@@ -388,9 +388,9 @@ export function StudioDirectorConsole({
                         type="button"
                         disabled={disabled || !seg.prompt.trim()}
                         onClick={() => onRequestGenerateImage(index, seg.prompt)}
-                        className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)]/40 hover:text-ink disabled:opacity-40"
+                        className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1.5 text-[14px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)]/40 hover:text-ink disabled:opacity-40"
                       >
-                        <ImageIcon className="size-3" />
+                        <ImageIcon className="size-3.5" />
                         {m['studio.director.generateImage']()}
                       </button>
                     </HintTip>
@@ -403,9 +403,9 @@ export function StudioDirectorConsole({
             type="button"
             disabled={disabled}
             onClick={addSegment}
-            className="flex items-center justify-center gap-1 rounded-[8px] border border-dashed border-ink/[0.12] py-1.5 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+            className="flex items-center justify-center gap-1 rounded-[8px] border border-dashed border-ink/[0.12] py-1.5 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
           >
-            <Plus className="size-3" />
+            <Plus className="size-3.5" />
             {m['studio.director.addShot']()}
           </button>
             <input
@@ -431,7 +431,7 @@ export function StudioDirectorConsole({
             if (items.length === 0) return null;
             return (
               <div key={kind} className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--beat-text-3)]">
+                <span className="text-[13.5px] font-medium uppercase tracking-wider text-[var(--beat-text-3)]">
                   {ASSET_KIND_LABELS[kind]}
                 </span>
                 {items.map((asset) => (
@@ -444,21 +444,21 @@ export function StudioDirectorConsole({
                         {asset.imageUrl ? (
                           <img src={asset.imageUrl} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <ImageIcon className="size-3.5 text-[var(--beat-text-3)]" />
+                          <ImageIcon className="size-4 text-[var(--beat-text-3)]" />
                         )}
                       </span>
                     </ImageHoverPreview>
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-[11.5px] text-[var(--beat-text-1)]">{asset.name}</span>
+                      <span className="truncate text-[13px] text-[var(--beat-text-1)]">{asset.name}</span>
                       {asset.description ? (
-                        <span className="truncate text-[10px] text-[var(--beat-text-3)]">{asset.description}</span>
+                        <span className="truncate text-[13.5px] text-[var(--beat-text-3)]">{asset.description}</span>
                       ) : null}
                     </div>
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={() => onGenerateAssetImage?.(asset.id, buildAssetPrompt(asset))}
-                      className="shrink-0 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)]/40 hover:text-ink disabled:opacity-40"
+                      className="shrink-0 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1.5 text-[14px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)]/40 hover:text-ink disabled:opacity-40"
                     >
                       {m['studio.director.assetGenerate']()}
                     </button>
@@ -469,7 +469,7 @@ export function StudioDirectorConsole({
                         setUploadAsset(asset);
                         requestAnimationFrame(() => assetFileRef.current?.click());
                       }}
-                      className="shrink-0 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2 py-1 text-[10.5px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+                      className="shrink-0 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1.5 text-[14px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
                     >
                       {m['studio.director.assetUpload']()}
                     </button>
@@ -478,7 +478,7 @@ export function StudioDirectorConsole({
                       disabled={disabled}
                       onClick={() => onImportAssetToShots?.(asset)}
                       title={m['studio.director.assetImportHint']()}
-                      className="shrink-0 rounded-full bg-[var(--beat-accent)]/15 px-2 py-1 text-[10.5px] text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/25 disabled:opacity-40"
+                      className="shrink-0 rounded-full bg-[var(--beat-accent)]/15 px-2.5 py-1.5 text-[14px] text-[var(--beat-accent)] transition hover:bg-[var(--beat-accent)]/25 disabled:opacity-40"
                     >
                       {m['studio.director.assetImport']()}
                     </button>
@@ -488,7 +488,7 @@ export function StudioDirectorConsole({
             );
           })}
           {settings.assets.length === 0 ? (
-            <p className="py-3 text-center text-[11px] text-[var(--beat-text-3)]">
+            <p className="py-3 text-center text-[13px] text-[var(--beat-text-3)]">
               {m['studio.director.noAssets']()}
             </p>
           ) : null}
@@ -512,7 +512,7 @@ export function StudioDirectorConsole({
         <div className="flex flex-col gap-2 px-3 py-2.5">
           {GROUPS.map((group) => (
             <div key={group} className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--beat-text-3)]">
+              <span className="text-[13.5px] font-medium uppercase tracking-wider text-[var(--beat-text-3)]">
                 {DIRECTOR_GROUP_LABELS[group]}
               </span>
               <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -520,7 +520,7 @@ export function StudioDirectorConsole({
                   const current = settings.global[field.key] ?? field.default;
                   return (
                     <div key={field.key} className="flex min-w-0 flex-col gap-1">
-                      <span className="truncate text-[10px] leading-none text-[var(--beat-text-3)]">
+                      <span className="truncate text-[13.5px] leading-none text-[var(--beat-text-3)]">
                         {field.label}
                       </span>
                       <HintTip label={field.label} description={field.hint} className="min-w-0">
@@ -538,7 +538,7 @@ export function StudioDirectorConsole({
                             disabled={disabled}
                             onClick={() => setGlobal(field.key, current !== true)}
                             className={cn(
-                              'h-8 rounded-[8px] border px-2 text-[11px] transition',
+                              'h-9 rounded-[8px] border px-2 text-[13px] transition',
                               current === true
                                 ? 'border-[var(--beat-accent)]/45 bg-[var(--beat-accent)]/12 text-ink'
                                 : 'border-ink/[0.07] bg-ink/[0.03] text-[var(--beat-text-2)]'
@@ -557,7 +557,7 @@ export function StudioDirectorConsole({
                             step={field.step}
                             disabled={disabled}
                             onChange={(e) => setGlobal(field.key, Number(e.target.value) || 0)}
-                            className="h-8 w-full rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 text-[12px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
+                            className="h-9 w-full rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 text-[13.5px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
                           />
                         )}
                       </HintTip>
@@ -572,14 +572,14 @@ export function StudioDirectorConsole({
 
       {tab === 'lora' ? (
         <div className="flex flex-col gap-1.5 px-3 py-2.5">
-          <p className="mb-1 text-[10.5px] text-[var(--beat-text-3)]">
+          <p className="mb-1 text-[14px] text-[var(--beat-text-3)]">
             {m['studio.director.loraHint']()}
           </p>
           {Array.from({ length: LORA_SLOT_COUNT }, (_, i) => {
             const entry = settings.loras[i] ?? { file: 'none', strength: 1 };
             return (
               <div key={i} className="flex items-center gap-1.5">
-                <span className="w-10 shrink-0 text-[10px] tabular-nums text-[var(--beat-text-3)]">
+                <span className="w-10 shrink-0 text-[13.5px] tabular-nums text-[var(--beat-text-3)]">
                   {m['studio.director.loraLabel']({ index: i + 1 })}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -604,7 +604,7 @@ export function StudioDirectorConsole({
                   step={0.05}
                   disabled={disabled}
                   onChange={(e) => setLora(i, { strength: Number(e.target.value) })}
-                  className="w-16 shrink-0 rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-1 text-right text-[11px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
+                  className="w-16 shrink-0 rounded-[6px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-1 text-right text-[13px] text-[var(--beat-text-1)] outline-none focus:border-ink/20"
                 />
               </div>
             );

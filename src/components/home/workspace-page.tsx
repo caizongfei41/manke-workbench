@@ -141,7 +141,7 @@ function CreateProjectDialog({
             <h2 className="beat-product-display mt-8 text-[18px] font-semibold tracking-[-0.025em] text-ink">
               {copy.newStudio}
             </h2>
-            <p className="mt-2 max-w-[220px] text-[12px] leading-5 text-ink/45">
+            <p className="mt-2 max-w-[220px] text-[13.5px] leading-6 text-ink/45">
               {copy.studioDescription}
             </p>
           </Link>
@@ -156,7 +156,7 @@ function CreateProjectDialog({
             <h2 className="beat-product-display mt-8 text-[18px] font-semibold tracking-[-0.025em] text-ink">
               {copy.newCanvas}
             </h2>
-            <p className="mt-2 max-w-[220px] text-[12px] leading-5 text-ink/45">
+            <p className="mt-2 max-w-[220px] text-[13.5px] leading-6 text-ink/45">
               {copy.canvasDescription}
             </p>
           </Link>
@@ -230,7 +230,7 @@ export function WorkspacePage({
       <main className="relative mx-auto w-full max-w-[2040px] px-5 pb-10 pt-14 sm:px-6">
         <section className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[11px]">
+            <p className="text-[13.5px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[13px]">
               {copy.eyebrow}
             </p>
             <h1 className="beat-product-display beat-product-page-title mt-4 max-w-3xl text-balance text-[clamp(2.25rem,4.5vw,3.25rem)] font-semibold leading-[1.1] tracking-[-0.04em] text-[var(--beat-text-1)]">
@@ -261,14 +261,14 @@ export function WorkspacePage({
                 placeholder={copy.searchProjects}
                 aria-label={copy.searchProjects}
                 data-project-search="true"
-                className="h-9 min-w-[180px] flex-1 rounded-full border border-[var(--beat-glass-border)] bg-transparent px-3 text-[12.5px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
+                className="h-9 min-w-[180px] flex-1 rounded-full border border-[var(--beat-glass-border)] bg-transparent px-3 text-[14px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
               />
               <select
                 value={projectMode}
                 onChange={(event) => setProjectMode(event.target.value as typeof projectMode)}
                 aria-label={copy.filterMode}
                 data-project-filter="true"
-                className="h-9 rounded-full border border-[var(--beat-glass-border)] bg-transparent px-2 text-[12px] text-[var(--beat-text-2)] outline-none"
+                className="h-9 rounded-full border border-[var(--beat-glass-border)] bg-transparent px-2 text-[13.5px] text-[var(--beat-text-2)] outline-none"
               >
                 <option value="all">{copy.filterAll}</option>
                 <option value="studio">{copy.modeStudio}</option>
@@ -281,12 +281,12 @@ export function WorkspacePage({
                 onChange={(event) => setProjectSort(event.target.value as typeof projectSort)}
                 aria-label={copy.sortBy}
                 data-project-sort="true"
-                className="h-9 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-2 text-[12px] text-[var(--beat-text-2)] outline-none"
+                className="h-9 rounded-[10px] border border-ink/[0.1] bg-[var(--beat-surface)] px-2 text-[13.5px] text-[var(--beat-text-2)] outline-none"
               >
                 <option value="recent">{copy.sortRecent}</option>
                 <option value="name">{copy.sortName}</option>
               </select>
-              <span className="text-[11px] tabular-nums text-[var(--beat-text-3)]" data-project-count="true">
+              <span className="text-[13px] tabular-nums text-[var(--beat-text-3)]" data-project-count="true">
                 {copy.resultCount(visibleProjects.length)}
               </span>
             </div>
@@ -323,7 +323,7 @@ export function WorkspacePage({
                   setProjectQuery('');
                   setProjectMode('all');
                 }}
-                className="mt-3 text-[12px] text-[var(--beat-accent)] underline-offset-4 hover:underline"
+                className="mt-3 text-[13.5px] text-[var(--beat-accent)] underline-offset-4 hover:underline"
               >
                 {copy.clearFilter}
               </button>
@@ -347,7 +347,7 @@ export function WorkspacePage({
                           onBlur={() => void commitRename()}
                           aria-label={copy.renameProject}
                           data-rename-input="true"
-                          className="w-full rounded-[8px] border border-ink/[0.14] bg-transparent px-2 py-1 text-[13px] text-[var(--beat-text-1)] outline-none"
+                          className="w-full rounded-[8px] border border-ink/[0.14] bg-transparent px-2.5 py-1.5 text-[13px] text-[var(--beat-text-1)] outline-none"
                         />
                       </div>
                     ) : (

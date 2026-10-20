@@ -221,7 +221,7 @@ export function StudioComposer({
         <img
           src={getModelIconPathByModelId(option.modelId) || '/logo.png'}
           alt=""
-          className="size-3 rounded-[2px]"
+          className="size-4 rounded-[2px]"
         />
       </span>
     ),
@@ -313,7 +313,7 @@ export function StudioComposer({
                 description={m['studio.hint.segments.desc']()}
                 side="bottom"
               >
-                <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--beat-text-2)]">
+                <span className="text-[13px] font-medium uppercase tracking-wide text-[var(--beat-text-2)]">
                   {t('segmentPanelTitle')}
                 </span>
               </HintTip>
@@ -330,7 +330,7 @@ export function StudioComposer({
                       ],
                     })
                   }
-                  className="rounded-full border border-ink/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] disabled:opacity-40"
+                  className="rounded-full border border-ink/[0.1] px-2 py-0.5 text-[13px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] disabled:opacity-40"
                 >
                   {t('segmentAdd')}
                 </button>
@@ -343,7 +343,7 @@ export function StudioComposer({
                       segments: (draft.segments ?? []).slice(0, -1),
                     })
                   }
-                  className="rounded-full border border-ink/[0.1] px-2 py-0.5 text-[11px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] disabled:opacity-40"
+                  className="rounded-full border border-ink/[0.1] px-2 py-0.5 text-[13px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] disabled:opacity-40"
                 >
                   {t('segmentRemove')}
                 </button>
@@ -354,7 +354,7 @@ export function StudioComposer({
                 key={index}
                 className="mb-1.5 flex items-center gap-2 last:mb-0"
               >
-                <span className="w-11 shrink-0 text-[11px] tabular-nums text-[var(--beat-text-3)]">
+                <span className="w-11 shrink-0 text-[13px] tabular-nums text-[var(--beat-text-3)]">
                   {t('segmentIndex', { index: index + 1 })}
                 </span>
                 <input
@@ -366,7 +366,7 @@ export function StudioComposer({
                   }}
                   placeholder={t('segmentPromptPlaceholder')}
                   disabled={isBusy}
-                  className="min-w-0 flex-1 rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 py-1.5 text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/30 focus:border-ink/20"
+                  className="min-w-0 flex-1 rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 py-1.5 text-[13.5px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/30 focus:border-ink/20"
                 />
                 <input
                   type="number"
@@ -397,9 +397,9 @@ export function StudioComposer({
                     )
                   )}
                   disabled={isBusy}
-                  className="w-14 shrink-0 rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-1.5 text-center text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/30 focus:border-ink/20"
+                  className="w-14 shrink-0 rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-1.5 py-1.5 text-center text-[13.5px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/30 focus:border-ink/20"
                 />
-                <span className="w-4 shrink-0 text-[10px] text-[var(--beat-text-3)]">
+                <span className="w-4 shrink-0 text-[13.5px] text-[var(--beat-text-3)]">
                   {t('segmentSeconds')}
                 </span>
               </div>
@@ -438,7 +438,7 @@ export function StudioComposer({
               type="button"
               disabled={isBusy}
               onClick={() => audioFileInputRef.current?.click()}
-              className="flex items-center gap-1.5 rounded-full border border-dashed border-ink/[0.13] bg-ink/[0.03] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-full border border-dashed border-ink/[0.13] bg-ink/[0.03] px-2.5 py-1 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
             >
               <Music2 className="size-3.5" />
               {m['studio.music.uploadAudio']()}
@@ -449,7 +449,7 @@ export function StudioComposer({
                 type="button"
                 onClick={() => onRemoveAudio?.(url)}
                 title={m['studio.music.removeAudio']()}
-                className="max-w-[200px] truncate rounded-full border border-ink/[0.1] bg-ink/[0.05] px-2.5 py-1 text-[11px] text-[var(--beat-text-1)]"
+                className="max-w-[200px] truncate rounded-full border border-ink/[0.1] bg-ink/[0.05] px-2.5 py-1 text-[13px] text-[var(--beat-text-1)]"
               >
                 {decodeURIComponent(url.split('/').pop() ?? url).slice(0, 40)}
               </button>
@@ -570,28 +570,28 @@ export function StudioComposer({
                   value: 'image',
                   label: labels.imageModeLabel,
                   leading: (
-                    <ImageIcon className="size-3.5 shrink-0 text-[var(--beat-text-2)]" />
+                    <ImageIcon className="size-4 shrink-0 text-[var(--beat-text-2)]" />
                   ),
                 },
                 {
                   value: 'video',
                   label: labels.videoModeLabel,
                   leading: (
-                    <Film className="size-3.5 shrink-0 text-[var(--beat-text-2)]" />
+                    <Film className="size-4 shrink-0 text-[var(--beat-text-2)]" />
                   ),
                 },
                 {
                   value: 'audio',
                   label: m['studio.mediaMusic'](),
                   leading: (
-                    <Music2 className="size-3.5 shrink-0 text-[var(--beat-text-2)]" />
+                    <Music2 className="size-4 shrink-0 text-[var(--beat-text-2)]" />
                   ),
                 },
                 {
                   value: 'analysis',
                   label: t('modeLabel'),
                   leading: (
-                    <ScanSearch className="size-3.5 shrink-0 text-[var(--beat-text-2)]" />
+                    <ScanSearch className="size-4 shrink-0 text-[var(--beat-text-2)]" />
                   ),
                 },
               ]}
@@ -623,7 +623,7 @@ export function StudioComposer({
                   <button
                     type="button"
                     onClick={onClearAnalysisFile}
-                    className="max-w-[220px] truncate rounded-full border border-ink/[0.09] bg-ink/[0.035] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)]"
+                    className="max-w-[220px] truncate rounded-full border border-ink/[0.09] bg-ink/[0.035] px-2.5 py-1 text-[13px] text-[var(--beat-text-2)]"
                     title={t('removeVideo')}
                   >
                     {analysisFileName}
@@ -650,14 +650,14 @@ export function StudioComposer({
                     <img
                       src={getModelIconPathByModelId(model.id) || '/logo.png'}
                       alt=""
-                      className="size-3 rounded-[2px]"
+                      className="size-4 rounded-[2px]"
                     />
                   </span>
                 ),
               }))}
               onChange={(modelId) => onDraftChange({ ...draft, modelId })}
               leadingIcon={
-                <Sparkles className="size-3.5 shrink-0 text-[var(--beat-text-2)]" />
+                <Sparkles className="size-4 shrink-0 text-[var(--beat-text-2)]" />
               }
             />
             )}
@@ -728,7 +728,7 @@ export function StudioComposer({
           <div className="flex shrink-0 items-center justify-end gap-2">
             <span
               className={cn(
-                'text-[10px] font-medium tabular-nums',
+                'text-[13.5px] font-medium tabular-nums',
                 promptCharacterCount >= promptCharacterLimit
                   ? 'text-[var(--beatcanvas-warning)]'
                   : 'text-[var(--beat-text-3)]'
@@ -757,7 +757,7 @@ export function StudioComposer({
                 aria-label={primaryButtonLabel}
               >
                 {isBusy ? (
-                  <Loader2 className="size-3.5 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" />
                 ) : (
                   <ArrowUp className="size-3.5" />
                 )}

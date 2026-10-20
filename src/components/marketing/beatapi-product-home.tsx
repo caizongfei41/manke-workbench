@@ -78,7 +78,7 @@ function PromptComposer({ copy }: { copy: HomeCopy }) {
         className="min-h-16 w-full resize-none border-0 bg-transparent text-[16px] leading-7 text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)] sm:text-base"
       />
       <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-        <span className="text-[11px] text-[var(--beat-text-3)]">{copy.composerHint}</span>
+        <span className="text-[13px] text-[var(--beat-text-3)]">{copy.composerHint}</span>
         <button
           type="submit"
           aria-label={copy.create}
@@ -135,7 +135,7 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
 
         <main className="relative mx-auto w-full max-w-[2040px] px-5 sm:px-6">
           <section className="relative pb-2 pt-[56px] text-center sm:pt-[72px]">
-            <p className="beat-glass inline-flex items-center gap-2.5 rounded-full px-3.5 py-1.5 text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-text-2)] sm:text-[11px]">
+            <p className="beat-glass inline-flex items-center gap-2.5 rounded-full px-3.5 py-1.5 text-[13.5px] font-semibold tracking-[0.18em] text-[var(--beat-text-2)] sm:text-[13px]">
               <span className="size-1.5 rounded-full bg-[var(--beat-accent)]" />
               {copy.eyebrow}
             </p>
@@ -190,13 +190,13 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
                 <h2 className="beat-product-display text-[20px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)] sm:text-[24px]">
                   {copy.workspacesTitle}
                 </h2>
-                <p className="mt-2 max-w-xl text-[12.5px] leading-6 text-[var(--beat-text-2)]">
+                <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--beat-text-2)]">
                   {copy.workspacesSubtitle}
                 </p>
               </div>
               <Link
                 href="/projects"
-                className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--beat-text-2)] transition hover:text-ink"
+                className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-[var(--beat-text-2)] transition hover:text-ink"
               >
                 {copy.projects}
                 <ArrowRight className="size-3.5" />
@@ -249,23 +249,23 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
                       <span className="grid size-10 place-items-center rounded-[13px] border border-white/12 bg-[var(--beat-glass-sheen)] text-[var(--beat-text-1)] backdrop-blur-md">
                         {entry.icon}
                       </span>
-                      <span className="beat-product-display text-[10.5px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
+                      <span className="beat-product-display text-[14px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                     </div>
                     <h3 className="beat-product-display relative mt-5 text-[16px] font-semibold tracking-[-0.02em] text-[var(--beat-text-1)]">
                       {entry.title}
                     </h3>
-                    <p className="relative mt-2 text-[12.5px] leading-[1.75] text-[var(--beat-text-2)]">
+                    <p className="relative mt-2 text-[14px] leading-[1.75] text-[var(--beat-text-2)]">
                       {entry.body}
                     </p>
-                    <p className="relative mt-3 inline-flex items-center gap-1.5 text-[11.5px] text-[var(--beat-text-3)]">
+                    <p className="relative mt-3 inline-flex items-center gap-1.5 text-[13px] text-[var(--beat-text-3)]">
                       <span className="size-1 rounded-full bg-[var(--beat-accent)]" />
                       {entry.output}
                     </p>
-                    <span className="relative mt-auto inline-flex items-center gap-1.5 pt-5 text-[12.5px] font-medium text-[var(--beat-text-1)]">
+                    <span className="relative mt-auto inline-flex items-center gap-1.5 pt-5 text-[14px] font-medium text-[var(--beat-text-1)]">
                       {copy.open}
-                      <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                     </span>
                   </article>
                 </Link>

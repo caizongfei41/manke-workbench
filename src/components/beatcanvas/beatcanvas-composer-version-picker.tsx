@@ -47,7 +47,7 @@ export function BeatCanvasComposerVersionPicker({
           onOpenChange(!isOpen);
         }}
         onPointerDownCapture={stopComposerEvent}
-        className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-semibold text-[var(--beat-text-3)] transition hover:bg-ink/[0.06] hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-semibold text-[var(--beat-text-3)] transition hover:bg-ink/[0.06] hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
         aria-label={labels.historyLabel}
         aria-expanded={isOpen}
       >
@@ -94,7 +94,7 @@ export function BeatCanvasComposerVersionPicker({
                       className="size-10 shrink-0 rounded-md object-cover"
                     />
                   ) : (
-                    <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-ink/[0.06] text-[11px] font-semibold text-[var(--beat-text-3)]">
+                    <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-ink/[0.06] text-[13px] font-semibold text-[var(--beat-text-3)]">
                       {outputs.length - index}
                     </span>
                   )}
@@ -104,7 +104,7 @@ export function BeatCanvasComposerVersionPicker({
                         ? labels.latestResultLabel
                         : `${labels.historyLabel} ${outputs.length - index}`}
                     </span>
-                    <span className="block truncate text-[11px] text-[var(--beat-text-3)]">
+                    <span className="block truncate text-[13px] text-[var(--beat-text-3)]">
                       {output.status === 'succeeded'
                         ? labels.readyStatusLabel
                         : output.status === 'failed'

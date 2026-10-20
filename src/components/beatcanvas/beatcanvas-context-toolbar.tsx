@@ -33,7 +33,7 @@ export function BeatCanvasContextToolbar({
   onContinueVideo?: () => void;
 }) {
   const actionClassName =
-    'inline-flex h-8 items-center gap-1.5 rounded-[11px] px-2.5 text-[12px] font-semibold text-[var(--beatcanvas-ink-soft)] transition-all duration-150 hover:bg-black/[0.045] hover:text-[var(--beatcanvas-ink)]';
+    'inline-flex h-9 items-center gap-1.5 rounded-[11px] px-2.5 text-[13.5px] font-semibold text-[var(--beatcanvas-ink-soft)] transition-all duration-150 hover:bg-black/[0.045] hover:text-[var(--beatcanvas-ink)]';
 
   return (
     <section

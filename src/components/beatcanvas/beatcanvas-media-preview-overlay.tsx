@@ -32,7 +32,7 @@ export function BeatCanvasMediaPreviewOverlay({
           type="button"
           aria-label={closeLabel}
           className={cn(
-            'absolute -right-3 -top-3 z-10 inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-full border border-ink/15 bg-black/75 px-2.5 text-[12px] font-semibold text-ink shadow-lg transition hover:bg-black'
+            'absolute -right-3 -top-3 z-10 inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-full border border-ink/15 bg-black/75 px-2.5 text-[13.5px] font-semibold text-ink shadow-lg transition hover:bg-black'
           )}
           onClick={onClose}
         >
@@ -58,7 +58,7 @@ export function BeatCanvasMediaPreviewOverlay({
             draggable={false}
           />
         )}
-        <div className="mt-3 max-w-full truncate rounded-full bg-black/65 px-3 py-1.5 text-[12px] font-medium text-ink">
+        <div className="mt-3 max-w-full truncate rounded-full bg-black/65 px-3 py-1.5 text-[13.5px] font-medium text-ink">
           {media.title}
         </div>
       </div>

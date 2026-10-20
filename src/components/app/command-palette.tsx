@@ -201,12 +201,12 @@ export function CommandPalette() {
             aria-label={m['cmd.placeholder']()}
             className="h-12 w-full bg-transparent text-[13.5px] text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
           />
-          <span className="shrink-0 text-[10px] text-[var(--beat-text-3)]">{m['cmd.hint']()}</span>
+          <span className="shrink-0 text-[13.5px] text-[var(--beat-text-3)]">{m['cmd.hint']()}</span>
         </div>
 
         <div ref={listRef} className="max-h-[46vh] overflow-y-auto p-1.5">
           {filtered.length === 0 ? (
-            <p className="px-3 py-6 text-center text-[11.5px] text-[var(--beat-text-3)]">{m['cmd.empty']()}</p>
+            <p className="px-3 py-6 text-center text-[13px] text-[var(--beat-text-3)]">{m['cmd.empty']()}</p>
           ) : (
             filtered.map((command, index) => (
               <button
@@ -221,23 +221,23 @@ export function CommandPalette() {
                   index === active ? 'bg-ink/[0.06]' : 'hover:bg-ink/[0.04]'
                 )}
               >
-                <span className="min-w-0 flex-1 truncate text-[12.5px] text-[var(--beat-text-1)]">
+                <span className="min-w-0 flex-1 truncate text-[14px] text-[var(--beat-text-1)]">
                   {command.label}
                 </span>
                 {command.hint ? (
-                  <span className="shrink-0 text-[10px] text-[var(--beat-text-3)]">{command.hint}</span>
+                  <span className="shrink-0 text-[13.5px] text-[var(--beat-text-3)]">{command.hint}</span>
                 ) : null}
                 {index === active ? (
-                  <CornerDownLeft className="size-3 shrink-0 text-[var(--beat-text-3)]" />
+                  <CornerDownLeft className="size-4 shrink-0 text-[var(--beat-text-3)]" />
                 ) : (
-                  <ArrowRight className="size-3 shrink-0 text-transparent" />
+                  <ArrowRight className="size-4 shrink-0 text-transparent" />
                 )}
               </button>
             ))
           )}
         </div>
 
-        <div className="flex items-center gap-3 border-t border-ink/[0.07] px-3.5 py-2 text-[10px] text-[var(--beat-text-3)]">
+        <div className="flex items-center gap-3 border-t border-ink/[0.07] px-3.5 py-2 text-[13.5px] text-[var(--beat-text-3)]">
           <span className="inline-flex items-center gap-1">
             <Command className="size-2.5" />K
           </span>

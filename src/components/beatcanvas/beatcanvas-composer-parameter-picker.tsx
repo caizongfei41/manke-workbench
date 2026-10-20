@@ -166,7 +166,7 @@ export function BeatCanvasComposerParameterPicker({
                   'min-w-0',
                   isBatchTone
                     ? 'text-[18px] font-semibold tracking-[-0.04em] text-ink'
-                    : 'text-[12px] font-medium',
+                    : 'text-[13.5px] font-medium',
                   index === visibleParameterSummaryTokens.length - 1
                     ? 'truncate'
                     : 'shrink-0'
@@ -179,7 +179,7 @@ export function BeatCanvasComposerParameterPicker({
         </span>
         <ChevronDown
           className={cn(
-            'pointer-events-none size-3.5 shrink-0 transition-transform duration-200',
+            'pointer-events-none size-4 shrink-0 transition-transform duration-200',
             isBatchTone ? 'text-[var(--beat-text-2)]' : 'text-ink/45',
             isOpen ? 'rotate-180' : ''
           )}
@@ -271,7 +271,7 @@ export function BeatCanvasComposerParameterPicker({
                           activeDraftCard.customHeight ?? null
                         );
                       }}
-                      className="w-full min-w-0 rounded-md border border-ink/15 bg-[var(--beat-panel)] px-2 py-1 text-[12px] text-ink outline-none placeholder:text-ink/35"
+                      className="w-full min-w-0 rounded-md border border-ink/15 bg-[var(--beat-panel)] px-2.5 py-1.5 text-[13.5px] text-ink outline-none placeholder:text-ink/35"
                     />
                     <span className="shrink-0 text-ink/40">×</span>
                     <input
@@ -290,7 +290,7 @@ export function BeatCanvasComposerParameterPicker({
                           Number.isFinite(value) ? value : null
                         );
                       }}
-                      className="w-full min-w-0 rounded-md border border-ink/15 bg-[var(--beat-panel)] px-2 py-1 text-[12px] text-ink outline-none placeholder:text-ink/35"
+                      className="w-full min-w-0 rounded-md border border-ink/15 bg-[var(--beat-panel)] px-2.5 py-1.5 text-[13.5px] text-ink outline-none placeholder:text-ink/35"
                     />
                   </div>
                 ) : null}

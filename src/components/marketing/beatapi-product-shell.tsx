@@ -2,7 +2,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import { LanguageSwitcher } from '@/components/app/language-switcher';
 import { ThemeToggle } from '@/components/app/theme-toggle';
@@ -117,6 +117,26 @@ export function BeatApiProductShell({
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerVariant, setHeaderVariant] = useState<'a' | 'b' | 'c'>('a');
+  useEffect(() => {
+    const read = () => {
+      const value = new URLSearchParams(window.location.search).get('hdr');
+      setHeaderVariant(value === 'b' || value === 'c' ? value : 'a');
+    };
+    read();
+  }, []);
+  const headerClassName =
+    headerVariant === 'a'
+      ? 'sticky top-3 z-40 px-4 sm:top-4 sm:px-6'
+      : headerVariant === 'b'
+        ? 'sticky top-0 z-40 border-b border-ink/[0.07] bg-[var(--beat-bg)]/85 px-4 backdrop-blur-xl sm:px-6'
+        : 'sticky top-0 z-40 bg-gradient-to-b from-[var(--beat-bg)] to-transparent px-4 pb-3 pt-3 sm:px-6';
+  const barClassName =
+    headerVariant === 'a'
+      ? 'beat-glass mx-auto flex h-[64px] w-full min-w-0 max-w-[2040px] items-center gap-3 rounded-full px-5'
+      : headerVariant === 'b'
+        ? 'mx-auto flex h-[68px] w-full min-w-0 max-w-[2040px] items-center gap-8'
+        : 'beat-glass mx-auto flex h-[56px] w-full min-w-0 max-w-[1180px] items-center gap-3 rounded-full px-5 shadow-[0_10px_30px_-18px_rgba(23,25,29,0.35)]';
   const currentLocale = normalizeLocale(locale);
   const copy = getShellCopy(currentLocale);
   const navItems = getNavItems(copy);
@@ -126,8 +146,11 @@ export function BeatApiProductShell({
       lang={currentLocale}
       className="beat-product-shell min-h-[100dvh] bg-[var(--beat-bg)] pt-4 text-[var(--beat-text-1)] selection:bg-[var(--beat-accent)]/35 sm:pt-5"
     >
-      <header className="sticky top-3 z-40 px-4 sm:top-4 sm:px-6">
-        <div className="beat-glass mx-auto flex h-[60px] w-full min-w-0 max-w-[2040px] items-center gap-3 rounded-full px-3 text-[var(--beat-text-1)] sm:px-4">
+      <header
+        className={headerClassName}
+        data-header-variant={headerVariant}
+      >
+        <div className={barClassName} data-header-bar="true">
           <Brand />
 
           <CapsuleNav active={active} items={navItems} />
@@ -167,7 +190,7 @@ export function BeatApiProductShell({
               </Link>
             ))}
             <div className="mt-2 flex items-center justify-between border-t border-ink/10 px-2 pt-3">
-              <span className="text-[11px] font-medium text-[var(--beat-text-3)]">
+              <span className="text-[13px] font-medium text-[var(--beat-text-3)]">
                 {copy.switchLanguage}
               </span>
               <LanguageSwitcher />
@@ -185,10 +208,10 @@ export function BeatApiProductShell({
               <img src={appConfig.app_logo} alt="" className="size-6 shrink-0 rounded-[7px] object-contain" />
               {appConfig.app_name}
             </span>
-            <p className="mt-3 max-w-xs text-[12px] leading-6 text-[var(--beat-text-2)]">{copy.tagline}</p>
+            <p className="mt-3 max-w-xs text-[13.5px] leading-6 text-[var(--beat-text-2)]">{copy.tagline}</p>
           </div>
           <div>
-            <h3 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
+            <h3 className="text-[13px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
               {copy.footerWorkspaces}
             </h3>
             <ul className="mt-3 space-y-2">
@@ -196,7 +219,7 @@ export function BeatApiProductShell({
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-[12px] text-[var(--beat-text-2)] transition hover:text-ink"
+                    className="text-[13.5px] text-[var(--beat-text-2)] transition hover:text-ink"
                   >
                     {item.label}
                   </Link>
@@ -205,17 +228,17 @@ export function BeatApiProductShell({
             </ul>
           </div>
           <div>
-            <h3 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
+            <h3 className="text-[13px] font-semibold tracking-[0.14em] text-[var(--beat-text-3)]">
               {copy.footerRuntime}
             </h3>
-            <ul className="mt-3 space-y-2 text-[12px] text-[var(--beat-text-2)]">
+            <ul className="mt-3 space-y-2 text-[13.5px] text-[var(--beat-text-2)]">
               <li>{copy.footerLocal}</li>
               <li>{copy.footerNoAccount}</li>
               <li>{copy.footerGpu}</li>
             </ul>
           </div>
         </div>
-        <div className="mx-auto mt-10 flex w-full max-w-[2040px] flex-wrap items-center justify-between gap-3 border-t border-ink/[0.07] pt-5 text-[11px] text-[var(--beat-text-3)]">
+        <div className="mx-auto mt-10 flex w-full max-w-[2040px] flex-wrap items-center justify-between gap-3 border-t border-ink/[0.07] pt-5 text-[13px] text-[var(--beat-text-3)]">
           <span>{appConfig.app_name} · {copy.tagline}</span>
           <span className="flex items-center gap-3">
             <span>{copy.terms}</span>

@@ -116,7 +116,7 @@ function AssetTile({
             src={asset.publicUrl}
             controls
             preload="metadata"
-            className="h-8 w-full opacity-75"
+            className="h-9 w-full opacity-75"
             onPointerDown={(event) => event.stopPropagation()}
           />
         </div>
@@ -141,7 +141,7 @@ function AssetTile({
         </span>
       ) : null}
       {badgeLabel ? (
-        <span className="pointer-events-none absolute left-2 top-2 rounded-md border border-[#38bdf8]/25 bg-black/65 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#7dd3fc] backdrop-blur">
+        <span className="pointer-events-none absolute left-2 top-2 rounded-md border border-[#38bdf8]/25 bg-black/65 px-2.5 py-1.5 text-[13px] font-semibold uppercase tracking-[0.1em] text-[#7dd3fc] backdrop-blur">
           {badgeLabel}
         </span>
       ) : null}
@@ -152,10 +152,10 @@ function AssetTile({
             <button
               type="button"
               onClick={addToCanvas}
-              className="inline-flex h-7 items-center gap-1 rounded-full border border-ink/15 bg-ink/12 px-2.5 text-[10px] font-semibold text-ink shadow-lg backdrop-blur-md"
+              className="inline-flex h-9 items-center gap-1 rounded-full border border-ink/15 bg-ink/12 px-2.5 text-[13.5px] font-semibold text-ink shadow-lg backdrop-blur-md"
               aria-label={`${addLabel}: ${asset.filename || asset.id}`}
             >
-              <Plus className="size-3" />
+              <Plus className="size-3.5" />
               {addLabel}
             </button>
           ) : null}
@@ -171,15 +171,15 @@ function AssetTile({
                   .catch((error: Error) => toast.error(error.message))
                   .finally(() => setIsAddingToTimeline(false));
               }}
-              className="inline-flex h-7 items-center gap-1 rounded-full border border-ink/15 bg-ink/12 px-2.5 text-[10px] font-semibold text-ink shadow-lg backdrop-blur-md disabled:cursor-wait disabled:opacity-55"
+              className="inline-flex h-9 items-center gap-1 rounded-full border border-ink/15 bg-ink/12 px-2.5 text-[13.5px] font-semibold text-ink shadow-lg backdrop-blur-md disabled:cursor-wait disabled:opacity-55"
               aria-label={`${addTimelineLabel}: ${asset.filename || asset.id}`}
             >
               {isAddingToTimeline ? (
-                <Loader2 className="size-3 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : mediaType === 'image' ? (
-                  <Images className="size-3" />
+                  <Images className="size-3.5" />
                 ) : (
-                  <Video className="size-3" />
+                  <Video className="size-3.5" />
               )}
               {addTimelineLabel}
             </button>
@@ -268,14 +268,14 @@ export function ProjectAssetsLibrary({
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
             <Link
               href={`/studio/${projectId}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--beat-radius-sm)] bg-[var(--beat-accent)] px-4 text-[12px] font-semibold text-[var(--beat-accent-ink)] transition hover:bg-[#4cc2ff]"
+              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--beat-radius-sm)] bg-[var(--beat-accent)] px-4 text-[13.5px] font-semibold text-[var(--beat-accent-ink)] transition hover:bg-[#4cc2ff]"
             >
               <Plus className="size-3.5" />
               {t('emptyGoStudio')}
             </Link>
             <Link
               href={`/editor/${projectId}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--beat-radius-sm)] border border-ink/[0.12] px-4 text-[12px] font-medium text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
+              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--beat-radius-sm)] border border-ink/[0.12] px-4 text-[13.5px] font-medium text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink"
             >
               {t('emptyGoEditor')}
             </Link>
@@ -396,11 +396,11 @@ export function ProjectAssetsDialog({
           <DialogTitle className="text-[21px] font-semibold tracking-[-0.03em] text-ink">
             {t('title')}
           </DialogTitle>
-          <DialogDescription className="max-w-xl text-[13px] leading-5 text-ink/48">
+          <DialogDescription className="max-w-xl text-[13px] leading-6 text-ink/48">
             {t('description')}
           </DialogDescription>
           {canAddToCanvas ? (
-            <div className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-[#38bdf8]/18 bg-[#38bdf8]/[0.07] px-3 py-1.5 text-[11px] font-medium text-[#7dd3fc]">
+            <div className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-[#38bdf8]/18 bg-[#38bdf8]/[0.07] px-3 py-1.5 text-[13px] font-medium text-[#7dd3fc]">
               <MousePointer2 className="size-3.5" />
               {t('canvasHint')}
             </div>

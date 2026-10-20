@@ -419,7 +419,7 @@ export function CardConnectorOverlay() {
             <button
               type="button"
               aria-label={labels.createImageGenerationCardLabel}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[12px] font-semibold text-[var(--beat-text-1)] transition hover:bg-[var(--beat-accent)]/10 hover:text-[#7dd3fc]"
+              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[13.5px] font-semibold text-[var(--beat-text-1)] transition hover:bg-[var(--beat-accent)]/10 hover:text-[#7dd3fc]"
               onClick={() => handleCreateFromMenu('image')}
             >
               <ImageIcon aria-hidden="true" size={15} strokeWidth={2} />
@@ -428,7 +428,7 @@ export function CardConnectorOverlay() {
             <button
               type="button"
               aria-label={labels.createVideoGenerationCardLabel}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[12px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-ink/[0.06]"
+              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[13.5px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-ink/[0.06]"
               onClick={() => handleCreateFromMenu('video')}
             >
               <Video aria-hidden="true" size={15} strokeWidth={2} />
@@ -437,7 +437,7 @@ export function CardConnectorOverlay() {
             <button
               type="button"
               aria-label={labels.uploadImageLabel}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[12px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-ink/[0.06]"
+              className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] px-2 text-[13.5px] font-semibold text-[var(--beatcanvas-ink)] transition hover:bg-ink/[0.06]"
               onClick={() => {
                 onUploadImage();
                 setCreateMenu(null);

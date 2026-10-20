@@ -64,14 +64,14 @@ export function LanguageSwitcher({
         className={
           workspace
             ? 'inline-flex h-9 items-center gap-1.5 rounded-xl border border-ink/[0.09] bg-ink/[0.035] px-2.5 text-xs font-medium text-[var(--beat-text-2)] transition hover:border-ink/[0.16] hover:bg-ink/[0.075] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--beat-graph)]/70'
-            : 'inline-flex h-8 items-center gap-1 rounded-full px-2 text-[13px] font-medium text-ink/45 transition hover:bg-ink/[0.06] hover:text-ink'
+            : 'inline-flex h-9 items-center gap-1 rounded-full px-2 text-[13px] font-medium text-ink/45 transition hover:bg-ink/[0.06] hover:text-ink'
         }
       >
         <Globe2 className="size-3.5" aria-hidden="true" />
         {locale.toUpperCase()}
         <ChevronDown
           aria-hidden="true"
-          className={`size-3 opacity-70 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`size-4 opacity-70 transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -97,7 +97,7 @@ export function LanguageSwitcher({
               {localeNames[option]}
               {option === locale ? (
                 <Check
-                  className="size-3.5 text-[var(--beat-accent)]"
+                  className="size-4 text-[var(--beat-accent)]"
                   aria-hidden="true"
                 />
               ) : null}

@@ -134,6 +134,13 @@ check('完整落在视口内', panel?.inView === true, `${panel?.w}x${panel?.h}`
 const shot = await send('Page.captureScreenshot', { format: 'png' });
 writeFileSync(OUT + 'help-open.png', Buffer.from(shot.data, 'base64'));
 
+// Baseline before zooming, so the check compares like with like instead of a fixed px value.
+const base = await ev(`(() => {
+  const p = document.querySelector('[role="dialog"]');
+  const para = p?.querySelector('p');
+  return para ? { fontSize: parseFloat(getComputedStyle(para).fontSize) } : null;
+})()`);
+
 // 3) 缩放到 50% 后，说明窗字号不变（因为挂在 body 上）
 await ev(`(() => { const b=[...document.querySelectorAll('button')].find(x => (x.getAttribute('aria-label')||'') === '缩小'); b?.click(); b?.click(); b?.click(); })()`);
 await delay(900);
@@ -145,7 +152,7 @@ const zoomed = await ev(`(() => {
   return { width: Math.round(p.getBoundingClientRect().width), fontSize: parseFloat(getComputedStyle(para).fontSize) };
 })()`);
 check('缩放后说明窗尺寸不变', zoomed?.width === 268, `${zoomed?.width}px`);
-check('缩放后字号不变', zoomed?.fontSize === 11, `${zoomed?.fontSize}px`);
+check('缩放后字号不变', zoomed?.fontSize === base?.fontSize, `${base?.fontSize}px → ${zoomed?.fontSize}px`);
 
 // 4) 点外面关闭
 await ev(`document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))`);

@@ -143,7 +143,7 @@ export function WorkspaceSelect({
           {selected?.leading ?? leadingIcon}
           <span className="min-w-0 truncate text-left">{selected?.label}</span>
           <ChevronDown
-            className={`size-3.5 shrink-0 text-ink/40 transition-transform ${open ? 'rotate-180' : ''}`}
+            className={`size-4 shrink-0 text-ink/40 transition-transform ${open ? 'rotate-180' : ''}`}
           />
         </button>
       </HintTip>
@@ -180,13 +180,13 @@ export function WorkspaceSelect({
                     <span className="min-w-0 flex-1">
                       <span className="block truncate">{option.label}</span>
                       {option.description ? (
-                        <span className="mt-0.5 block text-[10.5px] leading-[15px] text-[var(--beat-text-3)]">
+                        <span className="mt-0.5 block text-[14px] leading-[15px] text-[var(--beat-text-3)]">
                           {option.description}
                         </span>
                       ) : null}
                     </span>
                     {isSelected ? (
-                      <Check className="size-3.5 shrink-0 text-[var(--beat-accent)]" />
+                      <Check className="size-4 shrink-0 text-[var(--beat-accent)]" />
                     ) : null}
                   </button>
                 );
@@ -197,15 +197,15 @@ export function WorkspaceSelect({
                   <button
                     type="button"
                     onClick={() => setGroupOpenOverride(!groupOpen)}
-                    className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[11px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-ink/5"
+                    className="flex w-full items-center gap-1.5 rounded-[6px] px-2 py-1.5 text-left text-[13px] font-medium text-[var(--beat-text-2)] transition-colors hover:bg-ink/5"
                   >
                     <ChevronDown
-                      className={`size-3 shrink-0 transition-transform duration-200 ${groupOpen ? 'rotate-0' : '-rotate-90'}`}
+                      className={`size-4 shrink-0 transition-transform duration-200 ${groupOpen ? 'rotate-0' : '-rotate-90'}`}
                     />
                     <span className="min-w-0 flex-1 truncate">
                       {groupedOptions[0]?.groupLabel ?? 'Group'}
                     </span>
-                    <span className="shrink-0 rounded-[4px] bg-ink/10 px-1.5 py-0.5 text-[10px] tabular-nums text-[var(--beat-text-2)]">
+                    <span className="shrink-0 rounded-[4px] bg-ink/10 px-1.5 py-0.5 text-[13.5px] tabular-nums text-[var(--beat-text-2)]">
                       {groupedOptions.length}
                     </span>
                   </button>
@@ -228,13 +228,13 @@ export function WorkspaceSelect({
                             <span className="min-w-0 flex-1">
                               <span className="block truncate">{option.label}</span>
                               {option.description ? (
-                                <span className="mt-0.5 block text-[10.5px] leading-[15px] text-[var(--beat-text-3)]">
+                                <span className="mt-0.5 block text-[14px] leading-[15px] text-[var(--beat-text-3)]">
                                   {option.description}
                                 </span>
                               ) : null}
                             </span>
                             {isSelected ? (
-                              <Check className="size-3.5 shrink-0 text-[var(--beat-accent)]" />
+                              <Check className="size-4 shrink-0 text-[var(--beat-accent)]" />
                             ) : null}
                           </button>
                         );

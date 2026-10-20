@@ -130,7 +130,7 @@ function ToolBtn({
       aria-pressed={active}
     >
       {icon}
-      <span className="pointer-events-none absolute left-[calc(100%+11px)] top-1/2 z-[90] -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-[8px] border border-ink/10 bg-[var(--beat-surface-2)]/95 px-2.5 py-1.5 text-[11px] font-medium text-[var(--beat-text-1)] opacity-0 shadow-[0_10px_28px_rgba(0,0,0,0.42)] backdrop-blur-xl transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100">
+      <span className="pointer-events-none absolute left-[calc(100%+11px)] top-1/2 z-[90] -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-[8px] border border-ink/10 bg-[var(--beat-surface-2)]/95 px-2.5 py-1.5 text-[13px] font-medium text-[var(--beat-text-1)] opacity-0 shadow-[0_10px_28px_rgba(0,0,0,0.42)] backdrop-blur-xl transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100">
         {title}
       </span>
     </button>

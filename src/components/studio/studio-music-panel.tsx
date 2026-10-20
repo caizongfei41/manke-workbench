@@ -40,7 +40,7 @@ function FieldCell({
   const isLocked = disabled || locked;
   return (
     <div className={cn('flex min-w-0 flex-col gap-1.5', locked && 'opacity-45')}>
-      <span className="truncate text-[11px] leading-none text-[var(--beat-text-2)]">
+      <span className="truncate text-[13px] leading-none text-[var(--beat-text-2)]">
         {field.label}
       </span>
       <HintTip label={field.label} description={field.hint} className="min-w-0">
@@ -64,7 +64,7 @@ function FieldCell({
             step={field.step}
             disabled={isLocked}
             onChange={(event) => onChange(Number(event.target.value) || 0)}
-            className="h-8 w-full rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 text-[12px] text-[var(--beat-text-1)] outline-none focus:border-ink/20 disabled:opacity-40"
+            className="h-9 w-full rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 text-[13.5px] text-[var(--beat-text-1)] outline-none focus:border-ink/20 disabled:opacity-40"
           />
         ) : (
           <input
@@ -72,7 +72,7 @@ function FieldCell({
             disabled={isLocked}
             onChange={(event) => onChange(event.target.value)}
             placeholder={field.label}
-            className="h-8 w-full rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 text-[12px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20 disabled:opacity-40"
+            className="h-9 w-full rounded-[8px] border border-ink/[0.07] bg-ink/[0.03] px-2.5 text-[13.5px] text-[var(--beat-text-1)] outline-none placeholder:text-ink/25 focus:border-ink/20 disabled:opacity-40"
           />
         )}
       </HintTip>
@@ -128,10 +128,10 @@ export function StudioMusicPanel({
           <Music2 className="size-3.5" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="text-[12px] font-medium leading-none text-[var(--beat-text-1)]">
+          <span className="text-[13.5px] font-medium leading-none text-[var(--beat-text-1)]">
             {m['studio.music.panelTitle']()}
           </span>
-          <span className="mt-1 truncate text-[11px] leading-none text-[var(--beat-text-3)]">
+          <span className="mt-1 truncate text-[13px] leading-none text-[var(--beat-text-3)]">
             {summary || m['studio.music.summaryEmpty']()}
           </span>
         </div>
@@ -139,25 +139,25 @@ export function StudioMusicPanel({
           type="button"
           disabled={disabled}
           onClick={onInsertLyricsTemplate}
-          className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[11px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
+          className="flex items-center gap-1 rounded-full border border-ink/[0.1] bg-ink/[0.04] px-2.5 py-1 text-[13px] text-[var(--beat-text-2)] transition hover:border-ink/25 hover:text-ink disabled:opacity-40"
         >
-          <FileText className="size-3" />
+          <FileText className="size-3.5" />
           {m['studio.music.insertLyricsTemplate']()}
         </button>
         <button
           type="button"
           onClick={() => setShowExamples((current) => !current)}
           className={cn(
-            'flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition',
+            'flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] transition',
             showExamples
               ? 'border-[var(--beat-accent)]/45 bg-[var(--beat-accent)]/12 text-white'
               : 'border-ink/[0.1] bg-ink/[0.04] text-[var(--beat-text-2)] hover:border-ink/25 hover:text-ink'
           )}
         >
-          <Sparkles className="size-3" />
+          <Sparkles className="size-3.5" />
           {m['studio.music.examples']()}
           <ChevronDown
-            className={cn('size-3 transition-transform', showExamples && 'rotate-180')}
+            className={cn('size-4 transition-transform', showExamples && 'rotate-180')}
           />
         </button>
       </div>
@@ -170,7 +170,7 @@ export function StudioMusicPanel({
             type="button"
             onClick={() => setGroup(item)}
             className={cn(
-              'rounded-full px-2.5 py-1 text-[11px] transition',
+              'rounded-full px-2.5 py-1 text-[13px] transition',
               group === item
                 ? 'bg-ink/[0.1] text-ink shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]'
                 : 'text-[var(--beat-text-3)] hover:bg-ink/[0.05] hover:text-[var(--beat-text-1)]'
@@ -179,7 +179,7 @@ export function StudioMusicPanel({
             {MUSIC_STYLE_GROUP_LABELS[item]}
           </button>
         ))}
-        <span className="ml-auto hidden truncate pl-2 text-[10.5px] text-[var(--beat-text-3)] sm:block">
+        <span className="ml-auto hidden truncate pl-2 text-[14px] text-[var(--beat-text-3)] sm:block">
           {MUSIC_GROUP_BLURB[group]}
         </span>
       </div>
@@ -187,8 +187,8 @@ export function StudioMusicPanel({
       {/* Recipe active: the node overwrites these fields server-side. */}
       {recipeActive ? (
         <div className="mx-3 mb-1 flex items-start gap-1.5 rounded-[9px] border border-[var(--beat-accent)]/30 bg-[var(--beat-accent)]/[0.08] px-2.5 py-2">
-          <AlertTriangle className="mt-px size-3 shrink-0 text-[var(--beat-accent)]" />
-          <span className="text-[10.5px] leading-[15px] text-[var(--beat-text-2)]">
+          <AlertTriangle className="mt-px size-4 shrink-0 text-[var(--beat-accent)]" />
+          <span className="text-[14px] leading-[15px] text-[var(--beat-text-2)]">
             {m['studio.music.recipeNotice']()}
           </span>
         </div>
@@ -211,7 +211,7 @@ export function StudioMusicPanel({
       {/* Lyric examples. Picking one fills both the lyric box and the matching style. */}
       {showExamples ? (
         <div className="border-t border-ink/[0.07] px-3 py-2.5">
-          <p className="mb-2 text-[10.5px] text-[var(--beat-text-3)]">
+          <p className="mb-2 text-[14px] text-[var(--beat-text-3)]">
             {m['studio.music.examplesHint']()}
           </p>
           <div className="flex flex-col gap-1.5">
@@ -223,13 +223,13 @@ export function StudioMusicPanel({
                 onClick={() => onInsertLyricsExample?.(example)}
                 className="group flex items-center gap-2 rounded-[10px] border border-ink/[0.08] bg-ink/[0.02] px-2.5 py-2 text-left transition hover:border-[var(--beat-accent)]/40 hover:bg-ink/[0.05] disabled:opacity-40"
               >
-                <span className="shrink-0 rounded-full bg-ink/[0.07] px-2 py-0.5 text-[10.5px] text-[var(--beat-text-1)]">
+                <span className="shrink-0 rounded-full bg-ink/[0.07] px-2 py-0.5 text-[14px] text-[var(--beat-text-1)]">
                   {example.label}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[11px] text-[var(--beat-text-3)]">
+                <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--beat-text-3)]">
                   {example.text.replace(/\[[^\]]+\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 46)}
                 </span>
-                <span className="shrink-0 text-[10.5px] text-[var(--beat-accent)] opacity-0 transition group-hover:opacity-100">
+                <span className="shrink-0 text-[14px] text-[var(--beat-accent)] opacity-0 transition group-hover:opacity-100">
                   {m['studio.music.useExample']()}
                 </span>
               </button>

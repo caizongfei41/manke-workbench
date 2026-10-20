@@ -156,16 +156,16 @@ export function AssetCardNode({
           <div className="flex size-full flex-col justify-between px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-[12px] font-semibold text-ink">{title}</p>
-                <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-ink/38">
+                <p className="truncate text-[13.5px] font-semibold text-ink">{title}</p>
+                <p className="mt-0.5 text-[13.5px] uppercase tracking-[0.12em] text-ink/38">
                   {audioRole?.replace('_', ' ') || 'audio'}
                 </p>
               </div>
-              <span className="font-mono text-[10px] tabular-nums text-ink/45">
+              <span className="font-mono text-[13.5px] tabular-nums text-ink/45">
                 {typeof durationSec === 'number' ? `${durationSec.toFixed(2)}s` : '—'}
               </span>
             </div>
-            <div className="flex h-7 items-center gap-[3px]" aria-hidden="true">
+            <div className="flex h-9 items-center gap-[3px]" aria-hidden="true">
               {Array.from({ length: 28 }, (_, index) => (
                 <span
                   key={index}
@@ -179,7 +179,7 @@ export function AssetCardNode({
                 src={thumbnailUrl}
                 controls
                 preload="metadata"
-                className="nodrag nopan nowheel h-7 w-full opacity-80"
+                className="nodrag nopan nowheel h-9 w-full opacity-80"
                 onLoadedMetadata={() => setMediaStatus('ready')}
                 onError={() => setMediaStatus('error')}
                 onPointerDown={(event) => event.stopPropagation()}
@@ -205,18 +205,18 @@ export function AssetCardNode({
                   onError={() => setMediaStatus('error')}
                 />
               ) : (
-                <div className="grid size-full place-items-center text-[11px] uppercase tracking-[0.18em] text-ink/28">
+                <div className="grid size-full place-items-center text-[13px] uppercase tracking-[0.18em] text-ink/28">
                   Timeline
                 </div>
               )}
-              <span className="absolute left-3 top-3 rounded-md border border-ink/10 bg-black/55 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-ink/65">
+              <span className="absolute left-3 top-3 rounded-md border border-ink/10 bg-black/55 px-2.5 py-1.5 text-[13px] font-semibold uppercase tracking-[0.14em] text-ink/65">
                 Timeline
               </span>
             </div>
             <div className="border-t border-ink/10 px-3 py-2.5">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-[12px] font-semibold text-ink">{title}</p>
-                <span className="font-mono text-[10px] tabular-nums text-ink/40">
+                <p className="truncate text-[13.5px] font-semibold text-ink">{title}</p>
+                <span className="font-mono text-[13.5px] tabular-nums text-ink/40">
                   {typeof durationSec === 'number' ? `${durationSec.toFixed(1)}s` : '0.0s'}
                 </span>
               </div>
@@ -316,7 +316,7 @@ export function AssetCardNode({
         )}
         {thumbnailUrl && mediaStatus === 'loading' ? (
           <div
-            className="pointer-events-none absolute inset-0 grid place-items-center bg-black/25 px-3 text-center text-[11px] text-ink/80"
+            className="pointer-events-none absolute inset-0 grid place-items-center bg-black/25 px-3 text-center text-[13px] text-ink/80"
             role="status"
           >
             {shapeCopy.previewLoading}
