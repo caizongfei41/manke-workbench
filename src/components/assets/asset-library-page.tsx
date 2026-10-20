@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Download, ExternalLink, Film, ImageIcon, Music4, Play, Search, Trash2 } from 'lucide-react';
 
 import { BeatApiProductShell } from '@/components/marketing/beatapi-product-shell';
@@ -253,6 +253,8 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
     return [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1], locale));
   }, [assets, locale]);
 
+  const [shown, setShown] = useState(48);
+
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return assets.filter((asset) => {
@@ -266,6 +268,34 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
       );
     });
   }, [assets, query, kind, projectFilter]);
+
+  // A new filter starts from the top again.
+  useEffect(() => {
+    setShown(48);
+  }, [query, kind, projectFilter]);
+
+  // Only the first batch is mounted; the rest streams in as you scroll.
+  const shownAssets = useMemo(() => visible.slice(0, shown), [visible, shown]);
+
+  const hasMore = shown < visible.length;
+
+  // Load the next batch when the sentinel below the grid comes into view.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasMore) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShown((current) => current + 48);
+        }
+      },
+      { rootMargin: '600px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, shown]);
 
   const counts = useMemo(
     () => ({
@@ -463,7 +493,10 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {visible.map((asset, index) => renderTile(asset, index))}
+              {shownAssets.map((asset, index) => renderTile(asset, index))}
+            {hasMore ? (
+              <div ref={sentinelRef} className="col-span-full h-8" data-library-sentinel="true" />
+            ) : null}
             </div>
           )}
         </section>
