@@ -65,7 +65,7 @@ export function Brand({ href = '/' }: { href?: string }) {
     <Link
       href={href}
       aria-label={`${appConfig.app_name} home`}
-      className="beat-product-display inline-flex min-w-0 items-center gap-2.5 text-[15px] font-semibold tracking-[-0.02em] text-[var(--beat-text-1)] sm:text-base"
+      className="beat-product-display inline-flex min-w-0 items-center gap-2.5 text-[16.5px] font-semibold tracking-[-0.02em] text-[var(--beat-text-1)] sm:text-base"
     >
       <img
         src={appConfig.app_logo}
@@ -86,7 +86,7 @@ function CapsuleNav({
 }) {
   const activeHref = activeNavHref[active];
   return (
-    <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 text-sm font-medium md:flex lg:gap-8">
+    <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 text-[15px] font-medium md:flex lg:gap-9">
       {items.map((item) => {
         const isActive = item.href === activeHref;
         return (
@@ -127,7 +127,7 @@ export function BeatApiProductShell({
       className="beat-product-shell min-h-[100dvh] bg-[var(--beat-bg)] pt-4 text-[var(--beat-text-1)] selection:bg-[var(--beat-accent)]/35 sm:pt-5"
     >
       <header className="sticky top-3 z-40 px-4 sm:top-4 sm:px-6">
-        <div className="beat-glass mx-auto flex h-[60px] w-full min-w-0 max-w-[1280px] items-center gap-3 rounded-full px-3 text-[var(--beat-text-1)] sm:px-4">
+        <div className="beat-glass mx-auto flex h-[60px] w-full min-w-0 max-w-[2040px] items-center gap-3 rounded-full px-3 text-[var(--beat-text-1)] sm:px-4">
           <Brand />
 
           <CapsuleNav active={active} items={navItems} />
@@ -179,7 +179,7 @@ export function BeatApiProductShell({
       {children}
 
       <footer className="mt-24 border-t border-ink/[0.07] px-5 pb-10 pt-14 sm:px-6" data-site-footer="true">
-        <div className="mx-auto grid w-full max-w-[1280px] gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid w-full max-w-[2040px] gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <span className="inline-flex items-center gap-2.5 text-[14px] font-semibold text-[var(--beat-text-1)]">
               <img src={appConfig.app_logo} alt="" className="size-6 shrink-0 rounded-[7px] object-contain" />
@@ -215,7 +215,7 @@ export function BeatApiProductShell({
             </ul>
           </div>
         </div>
-        <div className="mx-auto mt-10 flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-3 border-t border-ink/[0.07] pt-5 text-[11px] text-[var(--beat-text-3)]">
+        <div className="mx-auto mt-10 flex w-full max-w-[2040px] flex-wrap items-center justify-between gap-3 border-t border-ink/[0.07] pt-5 text-[11px] text-[var(--beat-text-3)]">
           <span>{appConfig.app_name} · {copy.tagline}</span>
           <span className="flex items-center gap-3">
             <span>{copy.terms}</span>

@@ -333,6 +333,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
                       src={shot.url}
                       alt=""
                       data-showcase-frame="active"
+                      onError={(event) => {
+                        event.currentTarget.style.visibility = 'hidden';
+                      }}
                       className="beat-flip absolute inset-0 size-full object-cover"
                     />
                   ) : (
@@ -341,6 +344,9 @@ export function HomeShowcase({ locale }: { locale: string }) {
                       src={shot.url}
                       alt=""
                       data-showcase-frame="idle"
+                      onError={(event) => {
+                        event.currentTarget.style.visibility = 'hidden';
+                      }}
                       className="absolute inset-0 size-full object-cover opacity-0"
                     />
                   )
@@ -393,6 +399,11 @@ export function HomeShowcase({ locale }: { locale: string }) {
                   <img
                     src={shot.url}
                     alt=""
+                    data-showcase-thumb="true"
+                    onError={(event) => {
+                      const tile = event.currentTarget.closest('button');
+                      if (tile) tile.style.display = 'none';
+                    }}
                     className="size-full object-cover opacity-80 transition duration-500 group-hover:scale-[1.05] group-hover:opacity-100"
                   />
                 </button>

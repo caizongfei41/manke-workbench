@@ -66,7 +66,7 @@ function PromptComposer({ copy }: { copy: HomeCopy }) {
     <form
       action="/studio"
       method="get"
-      className="beat-glass mx-auto mt-8 flex min-h-[150px] w-full max-w-[720px] flex-col rounded-[24px] p-5 text-left sm:p-6"
+      className="beat-glass mx-auto mt-8 flex min-h-[150px] w-full max-w-[860px] flex-col rounded-[24px] p-5 text-left sm:p-6"
       data-composer="true"
     >
       <textarea
@@ -75,7 +75,7 @@ function PromptComposer({ copy }: { copy: HomeCopy }) {
         onChange={(event) => setPrompt(event.target.value)}
         placeholder={copy.prompt}
         aria-label={copy.prompt}
-        className="min-h-16 w-full resize-none border-0 bg-transparent text-[15px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)] sm:text-base"
+        className="min-h-16 w-full resize-none border-0 bg-transparent text-[16px] leading-7 text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)] sm:text-base"
       />
       <div className="mt-auto flex items-center justify-between gap-3 pt-3">
         <span className="text-[11px] text-[var(--beat-text-3)]">{copy.composerHint}</span>
@@ -115,7 +115,7 @@ function Capability({
       <h3 className="beat-product-display relative mt-5 text-[16.5px] font-semibold tracking-[-0.02em] text-[var(--beat-text-1)]">
         {title}
       </h3>
-      <p className="relative mt-2 text-[12.5px] leading-[1.75] text-[var(--beat-text-2)]">{body}</p>
+      <p className="relative mt-2 text-[13.5px] leading-[1.75] text-[var(--beat-text-2)]">{body}</p>
     </article>
   );
 }
@@ -133,7 +133,7 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
           className="beat-ring pointer-events-none absolute left-1/2 top-[-160px] h-[300px] w-[720px] -translate-x-1/2 opacity-40"
         />
 
-        <main className="relative mx-auto w-full max-w-[1280px] px-5 sm:px-6">
+        <main className="relative mx-auto w-full max-w-[2040px] px-5 sm:px-6">
           <section className="relative pb-2 pt-[56px] text-center sm:pt-[72px]">
             <p className="beat-glass inline-flex items-center gap-2.5 rounded-full px-3.5 py-1.5 text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-text-2)] sm:text-[11px]">
               <span className="size-1.5 rounded-full bg-[var(--beat-accent)]" />
@@ -151,7 +151,7 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
               <h2 className="beat-product-display text-[20px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)] sm:text-[24px]">
                 {copy.capabilitiesTitle}
               </h2>
-              <p className="mt-2 text-[12.5px] leading-6 text-[var(--beat-text-2)]">
+              <p className="mt-2 text-[13.5px] leading-6 text-[var(--beat-text-2)]">
                 {copy.capabilitiesSubtitle}
               </p>
             </div>

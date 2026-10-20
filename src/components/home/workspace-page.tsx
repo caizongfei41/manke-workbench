@@ -227,7 +227,7 @@ export function WorkspacePage({
   return (
     <BeatApiProductShell active="projects" locale={locale}>
       <div className="beat-aurora pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
-      <main className="relative mx-auto w-full max-w-[1280px] px-5 pb-10 pt-14 sm:px-6">
+      <main className="relative mx-auto w-full max-w-[2040px] px-5 pb-10 pt-14 sm:px-6">
         <section className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--beat-accent)] sm:text-[11px]">
