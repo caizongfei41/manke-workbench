@@ -77,6 +77,7 @@ export function StandardCanvas({
   onGenerate,
   generating,
   generationError,
+  progress,
   onSendToEditor,
 }: {
   projectId: string;
@@ -88,6 +89,7 @@ export function StandardCanvas({
   onGenerate: (nodeId: string, mode?: 'image' | 'video') => Promise<void>;
   generating: string | null;
   generationError: string | null;
+  progress: { nodeId: string; percent: number | null; phase: string } | null;
   onSendToEditor: (assetId: string, name: string) => Promise<string | null>;
 }) {
   const locale = normalizeLocale('zh');
@@ -488,6 +490,7 @@ export function StandardCanvas({
                 key={node.id}
                 data-standard-node={node.id}
                 data-standard-kind={node.kind}
+                data-standard-node-generating={generating === node.id ? 'true' : undefined}
                 className="absolute"
                 style={{ left: node.x, top: node.y, width: node.width }}
                 onPointerDown={(event) => {
@@ -533,6 +536,19 @@ export function StandardCanvas({
                   }`}
                   style={{ height: node.height }}
                 >
+                  {generating === node.id ? (
+                    <div
+                      className="absolute inset-x-0 top-0 z-10 h-[3px] bg-white/15"
+                      data-standard-progress={node.id}
+                    >
+                      <div
+                        className={`h-full bg-[var(--beat-accent)] transition-[width] duration-500 ${
+                          progress?.percent == null ? 'w-1/3 animate-pulse' : ''
+                        }`}
+                        style={progress?.percent == null ? undefined : { width: `${progress.percent}%` }}
+                      />
+                    </div>
+                  ) : null}
                   {node.kind === 'setting' ? (
                     <>
                       <p className="absolute left-3 top-2.5 text-[13.5px] text-[var(--beat-text-3)]">
@@ -731,7 +747,11 @@ export function StandardCanvas({
               className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[var(--beat-accent)] px-4 py-1.5 text-[13.5px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-[var(--beat-accent-hover)] disabled:opacity-55"
             >
               <Sparkles className={`size-4 ${generating ? 'animate-pulse' : ''}`} />
-              {generating ? m['standard.generating']() : m['standard.generate']()}
+              {generating
+                ? progress?.percent != null
+                  ? `${m['standard.generating']()} ${progress.percent}%`
+                  : m['standard.generating']()
+                : m['standard.generate']()}
             </button>
             <button
               type="button"

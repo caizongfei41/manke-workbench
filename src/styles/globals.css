@@ -614,6 +614,20 @@ button[aria-disabled="true"] {
   If we ever want to remove these styles, we need to add an explicit border
   color utility to any element that depends on these defaults.
 */
+
+/* Keyboard focus is not optional. Every interactive control gets the same visible ring on
+   :focus-visible only, so mouse users never see it and keyboard users always do. */
+:where(a, button, [role="button"], [tabindex]:not([tabindex="-1"]), input, select, textarea):focus-visible {
+  outline: 2px solid var(--beat-accent);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* A dark surface needs a lighter ring to stay visible. */
+[data-theme="dark"] :where(a, button, [role="button"], [tabindex]:not([tabindex="-1"]), input, select, textarea):focus-visible {
+  outline-color: var(--beat-accent-highlight, #ffd9a8);
+}
+
 @layer base {
   *,
   ::after,

@@ -46,6 +46,7 @@ export function StandardCanvasRoute({
   );
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [generating, setGenerating] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ nodeId: string; percent: number | null; phase: string } | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const versionRef = useRef(snapshotVersion);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -148,6 +149,7 @@ export function StandardCanvasRoute({
       const target = doc.nodes.find((node) => node.id === nodeId);
       if (!target) return;
       setGenerating(nodeId);
+      setProgress({ nodeId, percent: null, phase: 'queued' });
       setGenerationError(null);
 
       try {
@@ -165,6 +167,7 @@ export function StandardCanvasRoute({
         if (!prompt) {
           setGenerationError('empty');
           setGenerating(null);
+      setProgress(null);
           return;
         }
 
@@ -224,8 +227,18 @@ export function StandardCanvasRoute({
         for (let round = 0; round < POLL_ROUNDS; round += 1) {
           await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
           const status = await fetch(`/api/effects/status?wmTaskId=${submitted.wmTaskId}`).then(
-            (response) => response.json() as Promise<{ status?: string; error?: string }>
+            (response) =>
+              response.json() as Promise<{
+                status?: string;
+                error?: string;
+                progress?: { percent?: number | null; value?: number; max?: number; phase?: string } | null;
+              }>
           );
+          // Surface what the renderer is actually doing; a spinner for 90 seconds tells
+          // the user nothing about whether anything is happening.
+          if (status.progress) {
+            setProgress({ nodeId, percent: status.progress.percent ?? null, phase: status.progress.phase ?? '' });
+          }
           if (status.status === 'failed') throw new Error(status.error ?? 'generation failed');
           if (status.status !== 'succeeded') continue;
 
@@ -301,6 +314,7 @@ export function StandardCanvasRoute({
       onUpload={onUpload}
       onGenerate={generate}
       generating={generating}
+      progress={progress}
       generationError={generationError}
       onSendToEditor={sendToEditor}
     />
