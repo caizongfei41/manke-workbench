@@ -28,9 +28,52 @@
 我没有验证过。如果 `onInit` 没跑，代码会在 `if (!instance) return;` 那里静默返回 —— 
 这与「无异常、无卡片」的现象完全吻合。
 
-**下一步该做的**：在监听器里直接 `console.log(instanceRef.current)`，看它是不是 null。
-如果是，改用 `useReactFlow()` 拿到实例，或者把坐标转换换成手算（用容器的
-`getBoundingClientRect` + viewport 的 `x/y/zoom`）。
+## 第二轮：这个假设被推翻了
+
+在容器上暴露 `data-probe-init={instanceRef.current ? 'ready' : 'null'}` 之后实测：
+
+```
+空白板时   instanceRef: ready
+有卡片时   instanceRef: ready
+```
+
+**实例是好的**，所以 `if (!instance) return;` 不是卡点。但紧接着发现的第二件事更根本：
+
+```
+在纯 pane 上双击 → 连 console.log('[dbl] ...') 都没有输出
+```
+
+也就是 **handler 一次都没有执行**。继续测：
+
+| 验证 | 结果 |
+|---|---|
+| 事件到达 document | ✅ 捕获监听记录到 `doc:react-flow__pane sel` |
+| 落点在容器边界内 | ✅ 容器 `{x:0,y:57,w:2400,h:1293}`，点 `(1200,177)` |
+| 容器上的 React `onDoubleClick` | ❌ 不触发 |
+| 容器上的原生 `addEventListener` | ❌ 不触发 |
+| document 上的原生 `addEventListener` | ❌ 不触发 |
+
+最后一条是关键：事件**确实**能到 document（捕获阶段看到了），但挂在 document 上的
+冒泡监听器没跑。这说明 `dblclick` 在冒泡途中被 `stopPropagation()` 拦掉了 —— 
+最可能是 ReactFlow 内部的 d3-zoom 双击处理器。
+
+## 第三轮该试的
+
+**不要**再依赖冒泡。用**捕获阶段**：
+
+```js
+document.addEventListener('dblclick', handler, true)   // 注意第三个参数
+```
+
+捕获阶段在目标之前执行，`stopPropagation` 拦不住它。
+
+如果捕获也不生效，下一个怀疑对象是 `onPaneClick` / `onPanePointerDown` 之外的
+`onDoubleClick` prop —— ReactFlow 有 `onDoubleClick` 自己的回调，值得直接用它
+而不是绕过它：
+
+```jsx
+<ReactFlow onDoubleClick={(event) => { /* 这里 */ }} />
+```
 
 ## 不要重复的路
 
