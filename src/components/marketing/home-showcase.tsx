@@ -31,8 +31,8 @@ type Shot = {
 };
 
 const ROTATE_MS = 4200;
-const MAX_IMAGES = 10;
-const CANDIDATES = 24;
+const MAX_IMAGES = 40;
+const CANDIDATES = 40;
 const MAX_CLIPS = 6;
 const CLIP_CANDIDATES = 8;
 
@@ -355,7 +355,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
                     }}
                     style={
                       index === safeActive
-                        ? { animation: 'beat-flip-in 640ms cubic-bezier(0.22, 1, 0.36, 1) both' }
+                        ? { animation: 'beat-page-turn 720ms cubic-bezier(0.22, 1, 0.36, 1) both' }
                         : undefined
                     }
                     className={`absolute inset-0 h-full w-full object-cover ${

@@ -75,6 +75,106 @@ const STYLES = [
     prompt:
       'Minimal interior at golden hour, warm sunlight across a bare plaster wall and a single wooden bench, long shadows, wide cinematic composition, architectural photography, 8k',
   },
+  {
+    name: 'aurora-lake',
+    prompt:
+      'Arctic lake at night with green aurora borealis rippling overhead, black mountains mirrored in still water, wide panoramic composition, astro landscape photography, 8k',
+  },
+  {
+    name: 'autumn-road',
+    prompt:
+      'Forest road in autumn, tunnel of red and gold foliage, soft overcast light, wet leaves on asphalt, wide cinematic composition, landscape photography, 8k',
+  },
+  {
+    name: 'marble-vein',
+    prompt:
+      'Extreme macro of white marble veined with thin gold fissures, raking light across the polished surface, minimal wide crop, fine art photography, 8k',
+  },
+  {
+    name: 'oil-rainbow',
+    prompt:
+      'Thin film of oil on wet asphalt creating rainbow interference, shallow focus band across the frame, urban macro photography, wide cinematic composition, 8k',
+  },
+  {
+    name: 'snow-ridge',
+    prompt:
+      'Snow-covered mountain ridge at blue hour, wind sculpting spindrift off the crest, cold minimal sky, wide panoramic composition, alpine photography, 8k',
+  },
+  {
+    name: 'copper-dust',
+    prompt:
+      'Sculpted copper powder disturbed by a puff of air, warm metallic dust suspended against deep shadow, high speed macro, wide cinematic crop, 8k',
+  },
+  {
+    name: 'paper-fold',
+    prompt:
+      'Giant white paper folded into sharp origami planes in a bright studio, hard directional light casting crisp geometric shadows, minimal wide composition, still life photography, 8k',
+  },
+  {
+    name: 'tide-pool',
+    prompt:
+      'Tide pool at low tide with layered turquoise water, sand ripples and scattered shells, sunlight refracting in the shallows, wide cinematic composition, nature photography, 8k',
+  },
+  {
+    name: 'city-rain-lights',
+    prompt:
+      'Long exposure of city traffic at night, streaks of red and white light through a rain-soaked intersection, wide cinematic composition, urban photography, 8k',
+  },
+  {
+    name: 'silk-shadow',
+    prompt:
+      'Flowing black silk caught mid-motion against a warm off-white backdrop, single soft light revealing folds and sheen, wide cinematic composition, fashion still life, 8k',
+  },
+  {
+    name: 'model-studio-portrait',
+    prompt:
+      'Editorial studio portrait of a young woman, soft beauty dish from the front, deep grey seamless background, sharp catchlights in her eyes, natural skin texture, wide cinematic crop, high fashion photography, 8k',
+  },
+  {
+    name: 'model-window-light',
+    prompt:
+      'Portrait of a man in profile by a tall window, hard afternoon sunlight striping across his face, dark interior, wide cinematic composition, film photography, 8k',
+  },
+  {
+    name: 'model-street-night',
+    prompt:
+      'Street portrait at night under neon signage, subject lit by a magenta rim light, shallow depth of field with bokeh city behind, wide cinematic composition, editorial photography, 8k',
+  },
+  {
+    name: 'model-golden-hour',
+    prompt:
+      'Backlit portrait at golden hour, warm rim light through hair, soft field behind, natural expression, wide cinematic composition, outdoor portrait photography, 8k',
+  },
+  {
+    name: 'model-monochrome',
+    prompt:
+      'Black and white studio portrait, high contrast single hard light, dramatic shadow across half the face, plain dark backdrop, wide cinematic crop, fine art portrait photography, 8k',
+  },
+  {
+    name: 'model-wind-coast',
+    prompt:
+      'Portrait of a woman on a windy coast, hair blown across her face, overcast diffused light, muted blue-grey sea behind, wide cinematic composition, editorial photography, 8k',
+  },
+  {
+    name: 'model-studio-color',
+    prompt:
+      'Fashion portrait in a coloured studio, saturated teal backdrop, sharp hard key light with a crisp shadow onto the wall, bold styling, wide cinematic composition, editorial photography, 8k',
+  },
+  {
+    name: 'model-rain-glass',
+    prompt:
+      'Portrait seen through rain-streaked glass, face softly in focus behind the droplets, cool blue tones, wide cinematic composition, cinematic portrait photography, 8k',
+  },
+  {
+    name: 'model-soft-smoke',
+    prompt:
+      'Portrait in drifting smoke, single warm side light carving out the silhouette, dark background, wide cinematic composition, moody editorial photography, 8k',
+  },
+  {
+    name: 'model-daylight-close',
+    prompt:
+      'Tight beauty portrait in flat daylight, minimal makeup, fine skin detail and individual lashes visible, neutral background, wide cinematic crop, commercial beauty photography, 8k',
+  },
 ];
 
 const comfyPost = async (path, body) => {

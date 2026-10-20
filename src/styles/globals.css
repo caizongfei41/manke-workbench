@@ -1159,3 +1159,27 @@ html[data-theme] body {
     animation: none;
   }
 }
+
+/* Front page: the stage turns like a page — the incoming frame swings in from the right
+   with a shallow fold, the previous one slides away on the same axis. */
+@keyframes beat-page-turn {
+  from {
+    transform: perspective(1800px) rotateY(-14deg) translateX(6%) scale(1.02);
+    opacity: 0;
+    filter: brightness(0.7);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    transform: perspective(1800px) rotateY(0deg) translateX(0) scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-showcase-frame="active"] {
+    animation: none !important;
+  }
+}
