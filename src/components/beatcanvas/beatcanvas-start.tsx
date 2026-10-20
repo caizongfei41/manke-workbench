@@ -22,7 +22,7 @@ export function BeatCanvasStart({
 }) {
   return (
     <div
-      className="pointer-events-auto w-[min(92vw,720px)] text-center"
+      className="pointer-events-none w-[min(92vw,720px)] text-center"
       data-beatcanvas-start="true"
     >
       {/* A miniature of the board: dotted field, three cards, one wire. */}
@@ -68,7 +68,7 @@ export function BeatCanvasStart({
             type="button"
             data-canvas-start-action={action.key}
             onClick={() => onAddCard(action.key)}
-            className="group flex flex-col items-start rounded-[14px] border border-ink/[0.1] bg-[var(--beat-surface)] p-3.5 text-left transition hover:border-ink/25 hover:shadow-[var(--beat-card-shadow)]"
+            className="pointer-events-auto group flex flex-col items-start rounded-[14px] border border-ink/[0.1] bg-[var(--beat-surface)] p-3.5 text-left transition hover:border-ink/25 hover:shadow-[var(--beat-card-shadow)]"
           >
             <span className="grid size-8 place-items-center rounded-[10px] border border-ink/[0.12] text-[var(--beat-text-1)]">
               {action.icon}

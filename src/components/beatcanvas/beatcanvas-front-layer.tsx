@@ -987,7 +987,7 @@ export function BeatCanvasFrontLayer() {
 
       {Object.keys(cards).length === 0 ? (
         <div
-          className="absolute inset-x-0 top-[44%] z-10 flex -translate-y-1/2 justify-center px-6"
+          className="pointer-events-none absolute inset-x-0 top-[44%] z-10 flex -translate-y-1/2 justify-center px-6"
           data-beatcanvas-empty="true"
         >
           <BeatCanvasStart

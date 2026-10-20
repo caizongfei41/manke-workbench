@@ -1666,6 +1666,9 @@ export function BeatCanvasShell({
               onHistoryCheckpoint={recordCanvasHistory}
               onShapeIdsRemoved={handleCanvasShapeIdsRemoved}
               onReferenceEdgesRemoved={handleReferenceEdgesRemoved}
+              onCanvasDoubleClick={({ x, y }) => {
+                handleCreateGenerationAtPoint({ taskType: 'image', pagePoint: { x, y } });
+              }}
               components={canvasComponents}
             />
           </Suspense>

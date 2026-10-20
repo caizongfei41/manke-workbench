@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { useTheme } from '@/components/app/theme-toggle';
 import {
   Background,
@@ -62,6 +64,7 @@ interface BeatCanvasReactFlowEditorProps {
     edges: Array<{ source: string; target: string }>
   ) => void;
   components?: Record<string, unknown>;
+  onCanvasDoubleClick?: (point: { x: number; y: number }) => void;
 }
 
 const nodeTypes = {
@@ -105,6 +108,7 @@ function BeatCanvasReactFlowCanvas({
   onHistoryCheckpoint,
   onShapeIdsRemoved,
   onReferenceEdgesRemoved,
+  onCanvasDoubleClick,
   components,
 }: BeatCanvasReactFlowEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -112,6 +116,26 @@ function BeatCanvasReactFlowCanvas({
     ReactFlowInstance<BeatCanvasFlowNode, BeatCanvasFlowEdge> | null
   >(null);
   const nodesRef = useRef<BeatCanvasFlowNode[]>([]);
+  // Capture phase, not bubble: ReactFlow's own double-click handler sits between the pane
+  // and the document and stops propagation, so a normal listener never runs.
+  const dblRef = useRef(onCanvasDoubleClick);
+  dblRef.current = onCanvasDoubleClick;
+  useEffect(() => {
+    const onDoubleClick = (event: MouseEvent) => {
+      const container = containerRef.current;
+      const target = event.target as HTMLElement | null;
+      if (!container || !target || !container.contains(target)) return;
+      if (target.closest('.react-flow__node, .react-flow__edge, .react-flow__handle')) return;
+      if (target.closest('[data-start-here], [data-beatcanvas-start]')) return;
+      const instance = instanceRef.current;
+      const handler = dblRef.current;
+      if (!instance || !handler) return;
+      const point = instance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      handler({ x: point.x, y: point.y });
+    };
+    document.addEventListener('dblclick', onDoubleClick, true);
+    return () => document.removeEventListener('dblclick', onDoubleClick, true);
+  }, []);
   const edgesRef = useRef<BeatCanvasFlowEdge[]>([]);
   const viewportRef = useRef<Viewport>(DEFAULT_VIEWPORT);
   // React Flow paints its own dot grid on a canvas layer, so CSS tokens do not
@@ -833,6 +857,7 @@ function BeatCanvasReactFlowCanvas({
           panOnScroll
           zoomOnScroll
           zoomOnPinch
+          zoomOnDoubleClick={false}
           nodesDraggable={interactionMode === 'select'}
           nodesConnectable={false}
           onlyRenderVisibleElements
