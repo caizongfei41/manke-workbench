@@ -1216,5 +1216,10 @@
   "home.workspaces.standardOutput": "产出一张可连线的分镜板",
   "AppShell.editor.media.backToCanvas": "回到画布",
   "standard.generating": "生成中…",
-  "standard.needPrompt": "先写一句提示词"
+  "standard.needPrompt": "先写一句提示词",
+  "standard.sendToEditor": "送剪辑台",
+  "standard.sentToEditor": "已送入",
+  "standard.generateVideo": "生成视频",
+  "standard.videoHint": "视频 take 走 H3，约 3–5 分钟",
+  "standard.openEditor": "去剪辑台"
 }

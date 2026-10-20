@@ -20,6 +20,8 @@ export type StandardNode = {
   imageUrl?: string | null;
   /** 设定/镜头节点的文本 */
   text?: string;
+  /** 这个节点的画面是图片还是视频（决定卡片里用 img 还是 video） */
+  mediaKind?: 'image' | 'video';
 };
 
 export type StandardLink = {
@@ -46,6 +48,9 @@ export const STANDARD_IMAGE_MODEL_ID = '小枫-qwen-image-2-1-文生图';
 
 /** 带参考图时用编辑工作流：它才声明了图片输入节点。 */
 export const STANDARD_EDIT_MODEL_ID = '小枫-qwen-image-2-1-图像编辑';
+
+/** 视频 take 用戏剧台同一条 H3 工作流；每次约 3–5 分钟。 */
+export const STANDARD_VIDEO_MODEL_ID = '小枫-aicg3d-h3-长视频';
 
 export const NODE_SIZES: Record<StandardNodeKind, { width: number; height: number }> = {
   role: { width: 392, height: 232 },
@@ -125,6 +130,7 @@ export const parseStandardDocument = (raw: unknown): StandardDocument => {
             height: toNumber(node.height, size.height),
             imageUrl: typeof node.imageUrl === 'string' ? node.imageUrl : null,
             text: typeof node.text === 'string' ? node.text : '',
+            mediaKind: node.mediaKind === 'video' ? 'video' : 'image',
           } satisfies StandardNode;
         })
     : fallback.nodes;

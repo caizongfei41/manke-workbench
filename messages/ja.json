@@ -1216,5 +1216,10 @@
   "home.workspaces.standardOutput": "接続できる絵コンテボード",
   "AppShell.editor.media.backToCanvas": "キャンバスに戻る",
   "standard.generating": "生成中…",
-  "standard.needPrompt": "まずプロンプトを入力"
+  "standard.needPrompt": "まずプロンプトを入力",
+  "standard.sendToEditor": "編集へ送る",
+  "standard.sentToEditor": "送信済み",
+  "standard.generateVideo": "動画を生成",
+  "standard.videoHint": "動画は H3 で 3〜5 分ほどかかります",
+  "standard.openEditor": "編集を開く"
 }

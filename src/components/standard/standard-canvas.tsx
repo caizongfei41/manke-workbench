@@ -77,6 +77,7 @@ export function StandardCanvas({
   onGenerate,
   generating,
   generationError,
+  onSendToEditor,
 }: {
   projectId: string;
   projectName: string;
@@ -84,9 +85,10 @@ export function StandardCanvas({
   onChange: (updater: (current: StandardDocument) => StandardDocument) => void;
   saving: 'idle' | 'saving' | 'saved' | 'error';
   onUpload: (nodeId: string, file: File) => Promise<string | null>;
-  onGenerate: (nodeId: string) => Promise<void>;
+  onGenerate: (nodeId: string, mode?: 'image' | 'video') => Promise<void>;
   generating: string | null;
   generationError: string | null;
+  onSendToEditor: (assetId: string, name: string) => Promise<string | null>;
 }) {
   const locale = normalizeLocale('zh');
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -98,6 +100,7 @@ export function StandardCanvas({
   const [railOpen, setRailOpen] = useState(true);
   const [locked, setLocked] = useState(false);
   const [menu, setMenu] = useState<'project' | 'assets' | 'model' | null>(null);
+  const [handedOver, setHandedOver] = useState<Record<string, string>>({});
 
   const { viewport } = doc;
   const zoom = viewport.zoom;
@@ -594,17 +597,64 @@ export function StandardCanvas({
                     </>
                   ) : node.imageUrl ? (
                     <>
-                      <img src={node.imageUrl} alt="" className="size-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          uploadTarget.current = node.id;
-                          fileRef.current?.click();
-                        }}
-                        className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2.5 py-1 text-[10.5px] text-white/85 backdrop-blur transition hover:bg-black/80"
-                      >
-                        {m['standard.replace']()}
-                      </button>
+                      {node.mediaKind === 'video' ? (
+                        <video
+                          src={node.imageUrl}
+                          muted
+                          loop
+                          playsInline
+                          preload="metadata"
+                          data-standard-video={node.id}
+                          onMouseEnter={(event) => void event.currentTarget.play().catch(() => {})}
+                          onMouseLeave={(event) => event.currentTarget.pause()}
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        <img src={node.imageUrl} alt="" className="size-full object-cover" />
+                      )}
+                      <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
+                        {node.kind === 'shot' && node.mediaKind === 'video' ? (
+                          <>
+                          <button
+                            type="button"
+                            data-standard-send-editor={node.id}
+                            onClick={async (event) => {
+                              event.stopPropagation();
+                              const match = /\/assets\/([^/?#]+)/.exec(node.imageUrl ?? '');
+                              if (!match) return;
+                              const editorProjectId = await onSendToEditor(
+                                match[1],
+                                node.name || node.kind
+                              );
+                              if (editorProjectId) {
+                                setHandedOver((current) => ({ ...current, [node.id]: editorProjectId }));
+                              }
+                            }}
+                            className="rounded-full bg-[#7dd3fc] px-2.5 py-1 text-[10.5px] font-medium text-black transition hover:bg-[#a5e3ff]"
+                          >
+                            {handedOver[node.id] ? m['standard.sentToEditor']() : m['standard.sendToEditor']()}
+                          </button>
+                          {handedOver[node.id] ? (
+                            <a
+                              href={`/zh/editor/${handedOver[node.id]}`}
+                              className="rounded-full bg-white/85 px-2.5 py-1 text-[10.5px] font-medium text-black transition hover:bg-white"
+                            >
+                              {m['standard.openEditor']()}
+                            </a>
+                          ) : null}
+                          </>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            uploadTarget.current = node.id;
+                            fileRef.current?.click();
+                          }}
+                          className="rounded-full bg-black/60 px-2.5 py-1 text-[10.5px] text-white/85 backdrop-blur transition hover:bg-black/80"
+                        >
+                          {m['standard.replace']()}
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <div className="grid size-full place-items-center">
@@ -725,12 +775,30 @@ export function StandardCanvas({
                   }));
                 }
                 setSelected(target.id);
-                void onGenerate(target.id);
+                void onGenerate(target.id, 'image');
               }}
               className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-[12px] font-medium text-black transition hover:bg-white/90 disabled:opacity-55"
             >
               <Sparkles className={`size-3.5 ${generating ? 'animate-pulse' : ''}`} />
               {generating ? m['standard.generating']() : m['standard.generate']()}
+            </button>
+            <button
+              type="button"
+              data-standard-generate-video="true"
+              disabled={generating !== null}
+              title={m['standard.videoHint']()}
+              onClick={() => {
+                const target =
+                  doc.nodes.find((node) => node.id === selected) ??
+                  doc.nodes.find((node) => node.kind === 'setting');
+                if (!target) return;
+                setSelected(target.id);
+                void onGenerate(target.id, 'video');
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[12px] text-white/75 transition hover:border-white/35 hover:text-white disabled:opacity-55"
+            >
+              <Clapperboard className="size-3.5" />
+              {m['standard.generateVideo']()}
             </button>
           </div>
         </div>

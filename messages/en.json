@@ -1216,5 +1216,10 @@
   "home.workspaces.standardOutput": "Get a wired-up board",
   "AppShell.editor.media.backToCanvas": "Back to canvas",
   "standard.generating": "Generating…",
-  "standard.needPrompt": "Write a prompt first"
+  "standard.needPrompt": "Write a prompt first",
+  "standard.sendToEditor": "Send to edit",
+  "standard.sentToEditor": "Sent",
+  "standard.generateVideo": "Video take",
+  "standard.videoHint": "Video takes run H3; about 3–5 minutes",
+  "standard.openEditor": "Open editor"
 }

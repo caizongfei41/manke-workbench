@@ -171,7 +171,12 @@ check('清除筛选后恢复', (await tiles()) === shown, `${await tiles()} / ${
 // 5. 打开预览
 const opened = await clickWhenReady('[data-library-open]');
 check('能点开预览瓦片', opened === 'ok', opened);
-await delay(800);
+let previewMounted = false;
+for (let waited = 0; waited < 6000; waited += 300) {
+  if (await ev("!!document.querySelector('[data-library-preview]')")) { previewMounted = true; break; }
+  await delay(300);
+}
+check('预览按时出现', previewMounted === true);
 const preview = await ev(`(() => {
   const dialog = document.querySelector('[data-library-preview]');
   if (!dialog) return null;
