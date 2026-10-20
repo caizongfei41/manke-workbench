@@ -264,6 +264,22 @@ export function StandardCanvas({
 
   const nodeById = useMemo(() => new Map(doc.nodes.map((node) => [node.id, node])), [doc.nodes]);
 
+  // On a narrow screen the board starts off-frame. Fitting everything makes the cards
+  // unreadable, so instead park the view on the first card at a legible zoom.
+  const fitted = useRef(false);
+  useEffect(() => {
+    if (fitted.current) return;
+    if (typeof window === 'undefined' || window.innerWidth >= 768) return;
+    if (doc.nodes.length === 0) return;
+    fitted.current = true;
+    const first = doc.nodes.reduce((left, node) => (node.x < left.x ? node : left), doc.nodes[0]);
+    onChange((current) => ({
+      ...current,
+      viewport: { zoom: 0.85, x: 20 - first.x * 0.85, y: 84 - first.y * 0.85 },
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc.nodes.length]);
+
   const savedLabel =
     saving === 'saving'
       ? m['standard.saving']()
@@ -304,7 +320,7 @@ export function StandardCanvas({
 
       {/* Floating capsule bar */}
       <header className="pointer-events-none absolute inset-x-0 top-3 z-30 flex justify-center px-4">
-        <div className="pointer-events-auto flex h-[46px] items-center gap-1 rounded-full border border-white/10 bg-[#16171c]/92 px-2 text-[12px] shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+        <div className="pointer-events-auto flex h-[46px] max-w-[calc(100vw-1.5rem)] items-center gap-1 overflow-x-auto rounded-full border border-white/10 bg-[#16171c]/92 px-2 text-[12px] shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl [scrollbar-width:none]">
           <span className="grid size-8 place-items-center rounded-[9px] bg-white text-[11px] font-bold text-black">
             FG
           </span>
@@ -316,12 +332,15 @@ export function StandardCanvas({
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="px-1 text-white/85" data-standard-project={projectName}>
+          <span className="max-w-[32vw] truncate px-1 text-white/85 sm:max-w-none" data-standard-project={projectName}>
             {projectName}
           </span>
-          <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10.5px] text-emerald-300">
+          <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10.5px] text-emerald-300">
             <Save className="size-3" />
-            <span data-standard-save-state="true">{savedLabel}</span>
+            <span className="hidden sm:inline">
+            </span>
+            <span className="sm:hidden" data-standard-save-state="true" aria-hidden="true" />
+            <span className="hidden sm:inline" data-standard-save-state="true">{savedLabel}</span>
           </span>
 
           <span className="mx-1 h-5 w-px bg-white/10" />
@@ -338,7 +357,7 @@ export function StandardCanvas({
               type="button"
               data-standard-menu={key}
               onClick={() => setMenu((current) => (current === key ? null : key))}
-              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-white/65 transition hover:bg-white/10 hover:text-white"
+              className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-white/65 transition hover:bg-white/10 hover:text-white sm:px-2.5"
             >
               {label}
               <ChevronDown className="size-3" />
@@ -371,7 +390,7 @@ export function StandardCanvas({
       </header>
 
       {/* Left rail */}
-      <aside className="absolute left-3 top-1/2 z-30 -translate-y-1/2">
+      <aside className="absolute left-3 top-1/2 z-30 hidden -translate-y-1/2 sm:block">
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
@@ -393,7 +412,7 @@ export function StandardCanvas({
       </aside>
 
       {/* Zoom stack */}
-      <div className="absolute bottom-4 left-4 z-30 flex flex-col overflow-hidden rounded-[10px] border border-white/10 bg-[#16171c]/92 backdrop-blur-xl">
+      <div className="absolute left-3 top-[64px] z-30 flex flex-col overflow-hidden rounded-[10px] border border-white/10 bg-[#16171c]/92 backdrop-blur-xl sm:bottom-4 sm:top-auto">
         <button
           type="button"
           data-standard-zoom="in"
@@ -648,7 +667,7 @@ export function StandardCanvas({
 
       {/* Composer */}
       <div className="pointer-events-none absolute inset-x-0 bottom-4 z-30 flex justify-center px-4">
-        <div className="pointer-events-auto w-full max-w-[820px] rounded-[18px] border border-white/10 bg-[#16171c]/94 p-3 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl">
+        <div className="pointer-events-auto w-full max-w-[820px] rounded-[18px] border border-white/10 bg-[#16171c]/94 p-2.5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:p-3">
           <textarea
             value={doc.composer.prompt}
             onChange={(event) =>
@@ -661,7 +680,7 @@ export function StandardCanvas({
             data-standard-composer="true"
             className="min-h-[54px] w-full resize-none bg-transparent text-[13px] leading-6 text-white/85 outline-none placeholder:text-white/25"
           />
-          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-white/55">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-white/55">
             <button
               type="button"
               data-standard-add-button="true"
@@ -671,16 +690,16 @@ export function StandardCanvas({
             >
               <Plus className="size-3.5" />
             </button>
-            <span className="flex items-center gap-1 rounded-full border border-white/12 px-2 py-1">
+            <span className="hidden items-center gap-1 rounded-full border border-white/12 px-2 py-1 sm:flex">
               <Monitor className="size-3" />
               {m['standard.modelLocal']()}
             </span>
-            <span className="rounded-full border border-white/12 px-2 py-1">8</span>
-            <span className="flex items-center gap-1 rounded-full border border-white/12 px-2 py-1">
+            <span className="hidden rounded-full border border-white/12 px-2 py-1 sm:inline">8</span>
+            <span className="hidden items-center gap-1 rounded-full border border-white/12 px-2 py-1 sm:flex">
               <Wand2 className="size-3" />
               {m['standard.styleImage']()}
             </span>
-            <span className="rounded-full border border-white/12 px-2 py-1">
+            <span className="hidden rounded-full border border-white/12 px-2 py-1 sm:inline">
               {m['standard.styleDefault']()}
             </span>
             <button
@@ -719,7 +738,7 @@ export function StandardCanvas({
 
       {/* Status line */}
       <p
-        className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 text-[10.5px] text-white/30"
+        className="absolute bottom-1 left-1/2 z-20 hidden -translate-x-1/2 text-[10.5px] text-white/30 sm:block"
         data-standard-status="true"
       >
         {m['standard.status']({
