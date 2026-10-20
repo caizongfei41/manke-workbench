@@ -310,6 +310,28 @@ export function HomeShowcase({ locale }: { locale: string }) {
 
   const safeActive = visible.length ? Math.min(active, visible.length - 1) : 0;
   const heroShot = visible[safeActive] ?? null;
+
+  // Stack geometry: the main frame owns the middle half; each side card steps outward by
+  // half of both widths plus a gap, so the fan is symmetric at every depth.
+  // Budget the full stage width: the main frame takes the middle, three side cards each
+  // side take the rest, and the leftover is the gap between them. Nothing can overflow
+  // because the total is the container width by construction.
+  // Percentages of the stage width. Total footprint must stay under 100:
+  //   main + 2*(side1+side2+side3) + 2*3*gap <= 100
+  const GAP = 1;
+  const MAIN_WIDTH = 34;
+  const SIDE_WIDTH = [0, 12, 9, 7];
+  // 34 + 2*(28) + 6 = 96 — four percent of slack for the shadow.
+  const SIDE_HEIGHT = [0, 78, 62, 48];
+  const SIDE_LEFT = (() => {
+    const out = [0, 0, 0, 0];
+    let edge = MAIN_WIDTH / 2;
+    for (let d = 1; d <= 3; d += 1) {
+      out[d] = edge + SIDE_WIDTH[d] / 2 + GAP;
+      edge = out[d] + SIDE_WIDTH[d] / 2;
+    }
+    return out;
+  })();
   const strip = useMemo(() => images.filter((_, index) => index !== active).slice(0, 4), [images, active]);
 
   return (
@@ -332,7 +354,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
           className="beat-glass relative overflow-hidden rounded-[24px] p-2"
           data-showcase-stage="true"
         >
-          <div className="relative aspect-[16/7] max-h-[520px] w-full overflow-hidden rounded-[18px] bg-[var(--beat-surface-2)]">
+          <div className="relative h-[clamp(340px,30vw,460px)] w-full overflow-hidden rounded-[18px] bg-[var(--beat-surface-2)]">
             {images.length === 0 ? (
               <div className="grid size-full place-items-center">
                 <div className="text-center">
@@ -344,26 +366,42 @@ export function HomeShowcase({ locale }: { locale: string }) {
               </div>
             ) : null}
             <>
-                {visible.map((shot, index) => (
-                  <img
-                    key={shot.id}
-                    src={shot.url}
-                    alt=""
-                    data-showcase-frame={index === safeActive ? 'active' : 'idle'}
-                    onError={() => {
-                      setBrokenIds((current) => ({ ...current, [shot.id]: true }));
-                    }}
-                    style={
-                      index === safeActive
-                        ? { animation: 'beat-page-turn 720ms cubic-bezier(0.22, 1, 0.36, 1) both' }
-                        : undefined
-                    }
-                    className={`absolute inset-0 h-full w-full object-cover ${
-                      index === safeActive ? '' : 'opacity-0'
-                    }`}
-                  />
-                ))}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent to-transparent" />
+                {visible.map((shot, index) => {
+                  const offset = index - safeActive;
+                  const depth = Math.abs(offset);
+                  // A short stack either side: past three the cards are hairlines and gain nothing.
+                  if (depth > 3) return null;
+                  return (
+                    <button
+                      key={shot.id}
+                      type="button"
+                      onClick={() => setActive(index)}
+                      aria-label={`${index + 1}`}
+                      data-showcase-frame={depth === 0 ? 'active' : 'idle'}
+                      data-showcase-depth={depth}
+                      className="absolute top-1/2 -translate-y-1/2 overflow-hidden rounded-[16px] border border-white/10 bg-[var(--beat-surface-2)] shadow-[0_18px_50px_-24px_rgba(0,0,0,0.65)] transition-all duration-[820ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                      style={{
+                        left: `${50 + Math.sign(offset) * (SIDE_LEFT[depth] ?? 0)}%`,
+                        width: `${depth === 0 ? MAIN_WIDTH : (SIDE_WIDTH[depth] ?? SIDE_WIDTH[3])}%`,
+                        height: `${depth === 0 ? 100 : (SIDE_HEIGHT[depth] ?? SIDE_HEIGHT[3])}%`,
+                        zIndex: 30 - depth,
+                        transform: 'translateX(-50%)',
+                        opacity: depth === 3 ? 0.6 : 1,
+                        filter: depth === 0 ? 'none' : `brightness(${1 - Math.min(depth, 3) * 0.18})`,
+                      }}
+                    >
+                      <img
+                        src={shot.url}
+                        alt=""
+                        onError={() => {
+                          setBrokenIds((current) => ({ ...current, [shot.id]: true }));
+                        }}
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  );
+                })}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-7">
                   <span
                     className="rounded-full border border-white/25 bg-black/55 px-3.5 py-1.5 text-[14px] font-medium text-white backdrop-blur-md"
