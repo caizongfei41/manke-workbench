@@ -1229,5 +1229,19 @@
   "startHere.capability.video": "Clips",
   "startHere.capability.videoBody": "H3 long-form workflow, generated in segments, resumable.",
   "startHere.capability.music": "Score",
-  "startHere.capability.musicBody": "Local YuE2 model, ready to drop onto the cut."
+  "startHere.capability.musicBody": "Local YuE2 model, ready to drop onto the cut.",
+  "product.history.newStandard": "New standard canvas",
+  "product.history.standardDescription": "Card-based node workspace where wires decide what feeds a render.",
+  "product.history.newDrama": "New AI drama",
+  "product.history.dramaDescription": "Script to finished cut, resumable at any segment.",
+  "product.history.closeDialog": "Close",
+  "canvasStart.title": "This is a board",
+  "canvasStart.subtitle": "Drop cards onto it and wire them together — the wires decide what feeds a render.",
+  "canvasStart.hint": "Double-click empty space to add a card",
+  "canvasStart.image": "Image card",
+  "canvasStart.imageBody": "Holds a prompt and reference plates.",
+  "canvasStart.video": "Film card",
+  "canvasStart.videoBody": "Renders in segments, can run in the background.",
+  "canvasStart.reference": "Reference card",
+  "canvasStart.referenceBody": "Contributes material without rendering."
 }

@@ -29,7 +29,10 @@ test('projects page resumes each project in its last workspace and filters in pl
   assert.match(source, /visibleProjects = useMemo/);
 
   assert.match(source, /copy\.createTitle/);
-  assert.match(source, /href="\/studio"/);
-  assert.match(source, /href="\/canvas"/);
-  assert.match(source, /sm:whitespace-nowrap/);
+  // Four ways in, and one explicit way out.
+  assert.match(source, /href: '\/studio'/);
+  assert.match(source, /href: '\/canvas'/);
+  assert.match(source, /href: '\/standard'/);
+  assert.match(source, /href: '\/canvas\?kind=drama'/);
+  assert.match(source, /data-create-close/);
 });

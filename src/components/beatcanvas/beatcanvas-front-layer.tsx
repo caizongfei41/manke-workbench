@@ -10,7 +10,10 @@ import {
   getWorkspaceAspectRatioOptions,
 } from '@/core/effects/workspace-models';
 import { cn } from '@/lib/utils';
-import { StudioStartHere } from '@/components/studio/studio-start-here';
+import { Clapperboard, ImageIcon, Layers } from 'lucide-react';
+
+import { BeatCanvasStart } from '@/components/beatcanvas/beatcanvas-start';
+import { m } from '@/paraglide/messages.js';
 import {
   getDraftReferencePickerOptions,
   isDraftBusyStatus,
@@ -983,18 +986,38 @@ export function BeatCanvasFrontLayer() {
       ) : null}
 
       {Object.keys(cards).length === 0 ? (
-        <div className="absolute inset-x-0 top-[46%] z-10 flex -translate-y-1/2 justify-center px-6">
-          {/* There is no prompt box on the canvas, so a picked idea opens a new
-              draft card already seeded with that prompt. */}
-          <StudioStartHere
-            onPickMode={(mode, prompt) => {
-              if (mode === 'image' || mode === 'video') {
-                onCreateImageDraft(prompt);
-                return;
-              }
-              // The canvas has no audio or analysis draft, so route to the studio tab.
-              const projectId = window.location.pathname.match(/\/canvas\/([0-9a-f-]{36})/i)?.[1];
-              if (projectId) window.location.assign(`/zh/studio/${projectId}?target=${mode}`);
+        <div
+          className="absolute inset-x-0 top-[44%] z-10 flex -translate-y-1/2 justify-center px-6"
+          data-beatcanvas-empty="true"
+        >
+          <BeatCanvasStart
+            copy={{
+              title: m['canvasStart.title'](),
+              subtitle: m['canvasStart.subtitle'](),
+              hint: m['canvasStart.hint'](),
+              actions: [
+                {
+                  key: 'image',
+                  label: m['canvasStart.image'](),
+                  body: m['canvasStart.imageBody'](),
+                  icon: <ImageIcon className="size-4" />,
+                },
+                {
+                  key: 'video',
+                  label: m['canvasStart.video'](),
+                  body: m['canvasStart.videoBody'](),
+                  icon: <Clapperboard className="size-4" />,
+                },
+                {
+                  key: 'reference',
+                  label: m['canvasStart.reference'](),
+                  body: m['canvasStart.referenceBody'](),
+                  icon: <Layers className="size-4" />,
+                },
+              ],
+            }}
+            onAddCard={(key) => {
+              onCreateImageDraft(key === 'video' ? undefined : undefined);
             }}
           />
         </div>

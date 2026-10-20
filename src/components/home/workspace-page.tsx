@@ -1,10 +1,13 @@
 import {
+  Clapperboard,
   FolderClock,
+  Layers,
   PanelsTopLeft,
   Pencil,
   Plus,
   Trash2,
   Workflow,
+  X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -13,6 +16,7 @@ import { normalizeLocale } from '@/config/locale';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -92,6 +96,17 @@ function getHistoryCopy(locale: string) {
       {},
       { locale: messageLocale }
     ),
+    newStandard: m['product.history.newStandard']({}, { locale: messageLocale }),
+    standardDescription: m['product.history.standardDescription'](
+      {},
+      { locale: messageLocale }
+    ),
+    newDrama: m['product.history.newDrama']({}, { locale: messageLocale }),
+    dramaDescription: m['product.history.dramaDescription'](
+      {},
+      { locale: messageLocale }
+    ),
+    closeDialog: m['product.history.closeDialog']({}, { locale: messageLocale }),
   };
 }
 
@@ -118,48 +133,103 @@ function CreateProjectDialog({
   onOpenChange: (open: boolean) => void;
   copy: HistoryCopy;
 }) {
+  const options = [
+    {
+      key: 'studio',
+      href: '/studio',
+      icon: PanelsTopLeft,
+      title: copy.newStudio,
+      body: copy.studioDescription,
+      accent: true,
+    },
+    {
+      key: 'canvas',
+      href: '/canvas',
+      icon: Workflow,
+      title: copy.newCanvas,
+      body: copy.canvasDescription,
+      accent: false,
+    },
+    {
+      key: 'standard',
+      href: '/standard',
+      icon: Layers,
+      title: copy.newStandard,
+      body: copy.standardDescription,
+      accent: false,
+    },
+    {
+      key: 'drama',
+      href: '/canvas?kind=drama',
+      icon: Clapperboard,
+      title: copy.newDrama,
+      body: copy.dramaDescription,
+      accent: false,
+    },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden rounded-[26px] border border-ink/10 bg-[var(--beat-surface)] p-0 text-[var(--beat-text-1)] shadow-[0_34px_110px_rgba(0,0,0,0.62)] ring-0 sm:max-w-[620px] [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:text-ink/45 [&_[data-slot=dialog-close]]:hover:bg-ink/[0.07] [&_[data-slot=dialog-close]]:hover:text-white">
-        <DialogHeader className="border-b border-ink/[0.08] px-6 pb-5 pt-6 text-left sm:px-7">
-          <DialogTitle className="beat-product-display text-[24px] font-semibold tracking-[-0.035em] text-ink">
-            {copy.createTitle}
-          </DialogTitle>
-          <DialogDescription className="w-full text-[13px] leading-6 text-ink/48 sm:whitespace-nowrap">
-            {copy.createDescription}
-          </DialogDescription>
+      <DialogContent className="overflow-hidden rounded-[26px] border border-ink/10 bg-[var(--beat-surface)] p-0 sm:max-w-[760px]">
+        <DialogHeader className="flex items-start justify-between gap-4 border-b border-ink/[0.08] px-6 pb-5 pt-6 text-left sm:px-7">
+          <div className="min-w-0">
+            <DialogTitle className="beat-product-display text-[24px] font-semibold tracking-[-0.035em] text-[var(--beat-text-1)]">
+              {copy.createTitle}
+            </DialogTitle>
+            <DialogDescription className="mt-2 text-[13.5px] leading-6 text-[var(--beat-text-2)]">
+              {copy.createDescription}
+            </DialogDescription>
+          </div>
+          {/* An explicit way out. The dialog closes on Escape and on the backdrop too, but a
+              modal that only closes invisibly reads as a dead end. */}
+          <button
+            type="button"
+            data-create-close="true"
+            onClick={() => onOpenChange(false)}
+            aria-label={copy.closeDialog}
+            className="grid size-9 shrink-0 place-items-center rounded-full border border-ink/[0.12] text-[var(--beat-text-2)] transition hover:border-ink/30 hover:text-ink"
+          >
+            <X className="size-4" />
+          </button>
         </DialogHeader>
 
         <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5">
-          <Link
-            href="/studio"
-            className="group relative min-h-[190px] overflow-hidden rounded-[20px] border border-[#38bdf8]/35 bg-[radial-gradient(circle_at_82%_8%,rgba(56,189,248,0.22),transparent_42%),#171719] p-5 transition hover:-translate-y-0.5 hover:border-[#38bdf8]/65 hover:bg-[var(--beat-surface)]"
-          >
-            <span className="grid size-11 place-items-center rounded-[14px] bg-[#38bdf8] text-[#1d1d1f] shadow-[0_12px_30px_rgba(56,189,248,0.22)]">
-              <PanelsTopLeft className="size-5" />
-            </span>
-            <h2 className="beat-product-display mt-8 text-[18px] font-semibold tracking-[-0.025em] text-ink">
-              {copy.newStudio}
-            </h2>
-            <p className="mt-2 max-w-[220px] text-[13.5px] leading-6 text-ink/45">
-              {copy.studioDescription}
-            </p>
-          </Link>
+          {options.map((option) => {
+            const Icon = option.icon;
+            return (
+              <Link
+                key={option.key}
+                href={option.href}
+                data-create-option={option.key}
+                className="group relative flex min-h-[176px] flex-col overflow-hidden rounded-[20px] border border-ink/[0.1] bg-[var(--beat-surface)] p-5 transition hover:border-ink/25 hover:shadow-[var(--beat-card-shadow)]"
+              >
+                <span
+                  className={`grid size-11 place-items-center rounded-[14px] ${
+                    option.accent
+                      ? 'bg-[#38bdf8] text-[#1d1d1f]'
+                      : 'border border-ink/[0.12] text-[var(--beat-text-1)]'
+                  }`}
+                >
+                  <Icon className="size-5" />
+                </span>
+                <h2 className="beat-product-display mt-auto pt-6 text-[18px] font-semibold tracking-[-0.025em] text-[var(--beat-text-1)]">
+                  {option.title}
+                </h2>
+                <p className="mt-1.5 text-[13.5px] leading-6 text-[var(--beat-text-2)]">
+                  {option.body}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
 
-          <Link
-            href="/canvas"
-            className="group relative min-h-[190px] overflow-hidden rounded-[20px] border border-ink/[0.08] shadow-[var(--beat-shadow-sm)] bg-[radial-gradient(circle_at_82%_8%,rgba(255,255,255,0.09),transparent_42%),#171719] p-5 transition hover:-translate-y-0.5 hover:border-ink/[0.22] hover:bg-[var(--beat-surface)]"
+        <div className="flex justify-end border-t border-ink/[0.08] px-6 py-3.5 sm:px-7">
+          <DialogClose
+            type="button"
+            className="rounded-full px-4 py-2 text-[13.5px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] hover:text-ink"
           >
-            <span className="grid size-11 place-items-center rounded-[14px] border border-ink/[0.12] bg-[#202126] text-white">
-              <Workflow className="size-5" />
-            </span>
-            <h2 className="beat-product-display mt-8 text-[18px] font-semibold tracking-[-0.025em] text-ink">
-              {copy.newCanvas}
-            </h2>
-            <p className="mt-2 max-w-[220px] text-[13.5px] leading-6 text-ink/45">
-              {copy.canvasDescription}
-            </p>
-          </Link>
+            {copy.cancel}
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>

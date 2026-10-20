@@ -1229,5 +1229,19 @@
   "startHere.capability.video": "出片",
   "startHere.capability.videoBody": "H3 长视频工作流，按段生成，可中断续跑。",
   "startHere.capability.music": "配乐",
-  "startHere.capability.musicBody": "本地 YuE2 模型，成片上直接可用。"
+  "startHere.capability.musicBody": "本地 YuE2 模型，成片上直接可用。",
+  "product.history.newStandard": "新建标准画布",
+  "product.history.standardDescription": "卡片式节点工作区，连线决定谁参与生成。",
+  "product.history.newDrama": "新建 AI 短剧",
+  "product.history.dramaDescription": "剧本到成片的完整流水线，可中断续跑。",
+  "product.history.closeDialog": "关闭",
+  "canvasStart.title": "这是一块画板",
+  "canvasStart.subtitle": "把卡片拖上来，连线决定谁参与生成。适合反复调整同一个场景。",
+  "canvasStart.hint": "双击空白处也能新建卡片",
+  "canvasStart.image": "图片卡片",
+  "canvasStart.imageBody": "放提示词和参考图，连线后生成。",
+  "canvasStart.video": "影片卡片",
+  "canvasStart.videoBody": "按段生成视频，可挂着跑。",
+  "canvasStart.reference": "参考卡片",
+  "canvasStart.referenceBody": "只提供素材，本身不生成。"
 }

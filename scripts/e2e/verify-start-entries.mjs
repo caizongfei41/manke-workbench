@@ -139,16 +139,21 @@ await send('Page.navigate', { url: `${APP}/zh/canvas/${canvas.id}` });
 for (let i = 0; i < 30; i++) { await delay(800); if (await ev("!!document.querySelector('[data-start-mode]')")) break; }
 await delay(2000);
 
-const canvasEntries = await ev(`document.querySelectorAll('[data-start-mode]').length`);
-check('画布上也有四个入口', canvasEntries === 4, `${canvasEntries} 个`);
+const canvasStart = await ev(`(() => ({
+  own: !!document.querySelector('[data-beatcanvas-start]'),
+  actions: document.querySelectorAll('[data-canvas-start-action]').length,
+  studioEntries: document.querySelectorAll('[data-start-mode]').length,
+}))()`);
+check('画布有自己的空状态', canvasStart?.own === true);
+check('画布给出三张卡', canvasStart?.actions === 3, `${canvasStart?.actions} 个`);
+check('画布不再复用创作台入口', canvasStart?.studioEntries === 0, `${canvasStart?.studioEntries} 个`);
 
 // 点「图片生成」→ 应该开出一张草稿卡
-const before = await ev(`document.querySelectorAll('[data-start-mode]').length`);
-await ev(`document.querySelector('[data-start-mode="image"]')?.click()`);
+await ev(`document.querySelector('[data-canvas-start-action="image"]')?.click()`);
 await delay(2500);
 const afterDraft = await ev(`(() => {
   const text = document.body.innerText || '';
-  return { entriesGone: document.querySelectorAll('[data-start-mode]').length === 0, hasComposer: /生成|提示词/.test(text) };
+  return { entriesGone: document.querySelectorAll('[data-canvas-start-action]').length === 0, hasComposer: /生成|提示词/.test(text) };
 })()`);
 check('点图片后开出草稿卡', afterDraft?.entriesGone === true, `入口剩余 ${await ev("document.querySelectorAll('[data-start-mode]').length")}`);
 
