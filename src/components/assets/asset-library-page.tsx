@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Download, ExternalLink, Film, ImageIcon, Music4, Play, Search, Trash2 } from 'lucide-react';
 
 import { BeatApiProductShell } from '@/components/marketing/beatapi-product-shell';
@@ -200,6 +200,9 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  // The input stays immediate; the list catches up a frame later. Typing a long filename
+  // should not rebuild a 332-row grid on every keystroke.
+  const deferredQuery = useDeferredValue(query);
   const [kind, setKind] = useState<Kind>('all');
   const [projectFilter, setProjectFilter] = useState('all');
   const [open, setOpen] = useState<LibraryAsset | null>(null);
@@ -256,7 +259,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
   const [shown, setShown] = useState(48);
 
   const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = deferredQuery.trim().toLowerCase();
     return assets.filter((asset) => {
       const bucket = (asset as { assetKind?: string }).assetKind ?? 'image';
       if (kind !== 'all' && bucket !== kind) return false;
@@ -267,7 +270,7 @@ export function AssetLibraryPage({ locale }: { locale: string }) {
         (asset.projectName ?? '').toLowerCase().includes(needle)
       );
     });
-  }, [assets, query, kind, projectFilter]);
+  }, [assets, deferredQuery, kind, projectFilter]);
 
   // A new filter starts from the top again.
   useEffect(() => {
