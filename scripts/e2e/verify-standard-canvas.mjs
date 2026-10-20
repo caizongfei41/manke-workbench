@@ -112,7 +112,25 @@ const linkIds = await ev(`(() => {
   const cards = [...document.querySelectorAll('[data-standard-node]')];
   return cards.map((c) => c.getAttribute('data-standard-node'));
 })()`);
-const dragged = await dragLink(`[data-port-out="${linkIds[0]}"]`, `[data-port-in="${linkIds[2]}"]`);
+// The shell renders a header above the board, so port rects settle a beat after load.
+let portRect = '';
+for (let i = 0; i < 20; i += 1) {
+  const next = await ev(`(() => {
+    const el = document.querySelector('[data-port-out]');
+    const r = el?.getBoundingClientRect();
+    return r ? [Math.round(r.left), Math.round(r.top)].join(',') : '';
+  })()`);
+  if (next && next === portRect) break;
+  portRect = next;
+  await delay(300);
+}
+
+let dragged = await dragLink(`[data-port-out="${linkIds[0]}"]`, `[data-port-in="${linkIds[2]}"]`);
+let linkCount = await ev(`(document.querySelector('[data-standard-status]')?.textContent || '').match(/连线 (\\d+)/)?.[1] ?? '0'`);
+if (linkCount === '0') {
+  await delay(600);
+  dragged = await dragLink(`[data-port-out="${linkIds[0]}"]`, `[data-port-in="${linkIds[2]}"]`);
+}
 check('拖拽连线可执行', dragged === 'ok', String(dragged));
 const statusAfterLink = await ev(`document.querySelector('[data-standard-status]')?.textContent ?? ''`);
 check('连线被记进状态栏', /连线 1/.test(statusAfterLink), statusAfterLink);
@@ -130,7 +148,7 @@ check('重置视图回到 100%', /缩放 100%/.test(await ev(`document.querySele
 
 // 4. 素材库菜单新增节点
 const before = await ev(`document.querySelectorAll('[data-standard-node]').length`);
-await ev(`document.querySelector('[data-standard-menu="assets"]')?.click()`);
+await ev(`document.querySelector('[data-standard-add-button]')?.click()`);
 await delay(500);
 await ev(`document.querySelector('[data-standard-add="shot"]')?.click()`);
 await delay(900);

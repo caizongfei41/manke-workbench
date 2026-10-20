@@ -9,6 +9,8 @@ import { ComfyMonitorPill } from '@/components/app/comfy-monitor-pill';
 import { GitHubIcon } from '@/components/icons/github';
 import { REPOSITORY_URL } from '@/core/app/repository';
 import { Link } from '@/core/i18n/navigation';
+import { useLocation } from '@tanstack/react-router';
+
 import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
 import { apiJsonGet, apiJsonPatch, apiJsonPost } from '@/lib/api-client';
 import { appConfig } from '@/config';
@@ -27,6 +29,8 @@ export function ProductPageShell({
   workspaceMode?: WorkspaceMode;
 }) {
   const t = useTranslations('AppShell');
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const onStandardCanvas = /\/standard\//.test(pathname);
   const untitledWorkspaceName = t('header.untitledCanvas');
   const getDisplayWorkspaceName = useCallback(
     (name: string | null | undefined) => {
@@ -155,12 +159,22 @@ export function ProductPageShell({
                   </Link>
                   <Link
                     href={`/canvas/${projectId}`}
-                    aria-current={workspaceMode === 'canvas' ? 'page' : undefined}
+                    aria-current={workspaceMode === 'canvas' && !onStandardCanvas ? 'page' : undefined}
                     aria-label={t('header.canvas')}
-                    className={workspaceTabClassName(workspaceMode === 'canvas')}
+                    className={workspaceTabClassName(workspaceMode === 'canvas' && !onStandardCanvas)}
                   >
                     <Workflow className="size-3.5" aria-hidden="true" />
                     <span className="hidden sm:inline">{t('header.canvas')}</span>
+                  </Link>
+                  <Link
+                    href={`/standard/${projectId}`}
+                    aria-current={onStandardCanvas ? 'page' : undefined}
+                    aria-label={t('header.standard')}
+                    data-workspace-tab="standard"
+                    className={workspaceTabClassName(onStandardCanvas)}
+                  >
+                    <Layers className="size-3.5" aria-hidden="true" />
+                    <span className="hidden sm:inline">{t('header.standard')}</span>
                   </Link>
                   <Link
                     href={`/editor/${projectId}`}

@@ -460,6 +460,7 @@ button[aria-disabled="true"] {
    */
   --beat-bg: #09090a;
   /* 玻璃质感：半透明面 + 内侧高光，靠 backdrop-blur 与背景里的极光一起产生厚度 */
+  --beat-grid-dot: rgba(255, 255, 255, 0.12);
   --beat-glass-bg: rgba(22, 22, 25, 0.55);
   --beat-glass-border: rgba(255, 255, 255, 0.12);
   --beat-glass-sheen: rgba(255, 255, 255, 0.05);
@@ -981,6 +982,7 @@ html[data-theme='light'] {
   --beat-success-bg: rgba(16, 185, 129, 0.12);
 
   --beat-bg: #f7f5f1;
+  --beat-grid-dot: rgba(23, 21, 15, 0.12);
   --beat-glass-bg: rgba(255, 255, 255, 0.6);
   --beat-glass-border: rgba(23, 21, 15, 0.1);
   --beat-glass-sheen: rgba(255, 255, 255, 0.6);

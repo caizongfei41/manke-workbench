@@ -764,7 +764,8 @@
           "saving": "保存中…",
           "saved": "存储配置已保存"
         }
-      }
+      },
+      "standard": "标准画布"
     }
   },
   "BeatAPI": {
@@ -1209,7 +1210,6 @@
   "standard.styleDefault": "默认",
   "standard.generate": "生成",
   "standard.status": "节点 {nodes} · 连线 {links} · 缩放 {zoom}%",
-  "header.standard": "标准画布",
   "cmd.standard": "标准画布",
   "home.workspaces.standardTitle": "标准画布",
   "home.workspaces.standardBody": "角色、场景、设定摆在一张网格上，连起来就是一场戏。",
@@ -1221,5 +1221,6 @@
   "standard.sentToEditor": "已送入",
   "standard.generateVideo": "生成视频",
   "standard.videoHint": "视频 take 走 H3，约 3–5 分钟",
-  "standard.openEditor": "去剪辑台"
+  "standard.openEditor": "去剪辑台",
+  "standard.backToProjects": "项目"
 }

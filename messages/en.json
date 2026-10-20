@@ -764,7 +764,8 @@
           "saving": "Saving…",
           "saved": "Storage configuration saved"
         }
-      }
+      },
+      "standard": "Standard"
     }
   },
   "BeatAPI": {
@@ -1209,7 +1210,6 @@
   "standard.styleDefault": "Default",
   "standard.generate": "Generate",
   "standard.status": "Nodes {nodes} · Links {links} · Zoom {zoom}%",
-  "header.standard": "Standard",
   "cmd.standard": "Standard canvas",
   "home.workspaces.standardTitle": "Standard canvas",
   "home.workspaces.standardBody": "Characters, scenes and settings on one grid; link them into a scene.",
@@ -1221,5 +1221,6 @@
   "standard.sentToEditor": "Sent",
   "standard.generateVideo": "Video take",
   "standard.videoHint": "Video takes run H3; about 3–5 minutes",
-  "standard.openEditor": "Open editor"
+  "standard.openEditor": "Open editor",
+  "standard.backToProjects": "Projects"
 }

@@ -764,7 +764,8 @@
           "saving": "保存中…",
           "saved": "ストレージ設定を保存しました"
         }
-      }
+      },
+      "standard": "標準"
     }
   },
   "BeatAPI": {
@@ -1209,7 +1210,6 @@
   "standard.styleDefault": "既定",
   "standard.generate": "生成",
   "standard.status": "ノード {nodes} · 接続 {links} · ズーム {zoom}%",
-  "header.standard": "標準キャンバス",
   "cmd.standard": "標準キャンバス",
   "home.workspaces.standardTitle": "標準キャンバス",
   "home.workspaces.standardBody": "キャラクター・シーン・設定を 1 枚のグリッドに並べ、線でつなぐ。",
@@ -1221,5 +1221,6 @@
   "standard.sentToEditor": "送信済み",
   "standard.generateVideo": "動画を生成",
   "standard.videoHint": "動画は H3 で 3〜5 分ほどかかります",
-  "standard.openEditor": "編集を開く"
+  "standard.openEditor": "編集を開く",
+  "standard.backToProjects": "プロジェクト"
 }

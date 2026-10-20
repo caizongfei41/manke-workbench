@@ -97,7 +97,6 @@ export function StandardCanvas({
 
   const [selected, setSelected] = useState<string | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
-  const [railOpen, setRailOpen] = useState(true);
   const [locked, setLocked] = useState(false);
   const [menu, setMenu] = useState<'project' | 'assets' | 'model' | null>(null);
   const [handedOver, setHandedOver] = useState<Record<string, string>>({});
@@ -267,21 +266,6 @@ export function StandardCanvas({
 
   const nodeById = useMemo(() => new Map(doc.nodes.map((node) => [node.id, node])), [doc.nodes]);
 
-  // On a narrow screen the board starts off-frame. Fitting everything makes the cards
-  // unreadable, so instead park the view on the first card at a legible zoom.
-  const fitted = useRef(false);
-  useEffect(() => {
-    if (fitted.current) return;
-    if (typeof window === 'undefined' || window.innerWidth >= 768) return;
-    if (doc.nodes.length === 0) return;
-    fitted.current = true;
-    const first = doc.nodes.reduce((left, node) => (node.x < left.x ? node : left), doc.nodes[0]);
-    onChange((current) => ({
-      ...current,
-      viewport: { zoom: 0.85, x: 20 - first.x * 0.85, y: 84 - first.y * 0.85 },
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [doc.nodes.length]);
 
   const savedLabel =
     saving === 'saving'
@@ -291,7 +275,7 @@ export function StandardCanvas({
         : m['standard.saved']();
 
   return (
-    <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-[#0d0e12] text-[#e8e9ee]">
+    <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--beat-bg)] text-[var(--beat-text-1)]">
       <input
         ref={fileRef}
         type="file"
@@ -315,157 +299,111 @@ export function StandardCanvas({
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.09) 1px, transparent 0)',
+            'radial-gradient(circle at 1px 1px, var(--beat-grid-dot) 1px, transparent 0)',
           backgroundSize: `${28 * zoom}px ${28 * zoom}px`,
           backgroundPosition: `${viewport.x}px ${viewport.y}px`,
         }}
       />
 
       {/* Floating capsule bar */}
-      <header className="pointer-events-none absolute inset-x-0 top-3 z-30 flex justify-center px-4">
-        <div className="pointer-events-auto flex h-[46px] max-w-[calc(100vw-1.5rem)] items-center gap-1 overflow-x-auto rounded-full border border-white/10 bg-[#16171c]/92 px-2 text-[12px] shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl [scrollbar-width:none]">
-          <span className="grid size-8 place-items-center rounded-[9px] bg-white text-[11px] font-bold text-black">
-            FG
-          </span>
+      {/* Canvas tools only: the shell above already carries the project name, the tabs and
+          the monitor. One slim row, readable size, no second navigation. */}
+      <div className="pointer-events-none absolute inset-x-0 top-3 z-30 flex items-start gap-2 px-4">
+        <div className="beat-glass pointer-events-auto flex h-10 items-center gap-1 rounded-full pl-1.5 pr-1 text-[12.5px]">
           <button
             type="button"
-            aria-label={m['standard.back']()}
-            onClick={() => window.history.back()}
-            className="grid size-7 place-items-center rounded-full text-white/55 transition hover:bg-white/10 hover:text-white"
+            data-standard-add-button="true"
+            onClick={() => setMenu((current) => (current === 'assets' ? null : 'assets'))}
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[var(--beat-text-2)] transition hover:bg-ink/[0.07] hover:text-ink"
           >
-            <ChevronLeft className="size-4" />
+            <Plus className="size-3.5" />
+            {m['standard.addNode']()}
           </button>
-          <span className="max-w-[32vw] truncate px-1 text-white/85 sm:max-w-none" data-standard-project={projectName}>
-            {projectName}
-          </span>
-          <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10.5px] text-emerald-300">
+          <span className="mx-0.5 h-5 w-px bg-ink/[0.1]" />
+          <span className="flex items-center gap-1.5 px-1.5 text-[11.5px] text-[var(--beat-text-3)]">
             <Save className="size-3" />
-            <span className="hidden sm:inline">
-            </span>
-            <span className="sm:hidden" data-standard-save-state="true" aria-hidden="true" />
-            <span className="hidden sm:inline" data-standard-save-state="true">{savedLabel}</span>
+            <span data-standard-save-state="true">{savedLabel}</span>
           </span>
-
-          <span className="mx-1 h-5 w-px bg-white/10" />
-
-          {(
-            [
-              ['project', m['standard.menu.project']()],
-              ['assets', m['standard.menu.assets']()],
-              ['model', m['standard.menu.model']()],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              data-standard-menu={key}
-              onClick={() => setMenu((current) => (current === key ? null : key))}
-              className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-white/65 transition hover:bg-white/10 hover:text-white sm:px-2.5"
-            >
-              {label}
-              <ChevronDown className="size-3" />
-            </button>
-          ))}
-
-          {menu === 'assets' ? (
-            <div className="absolute left-1/2 top-[54px] w-[260px] -translate-x-1/2 rounded-[14px] border border-white/10 bg-[#16171c] p-2 shadow-2xl">
-              {(['role', 'scene', 'setting', 'shot'] as StandardNodeKind[]).map((kind) => (
-                <button
-                  key={kind}
-                  type="button"
-                  data-standard-add={kind}
-                  onClick={() => {
-                    addNode(kind);
-                    setMenu(null);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-[9px] px-2.5 py-2 text-left text-[12px] text-white/75 transition hover:bg-white/8 hover:text-white"
-                >
-                  {(() => {
-                    const Icon = KIND_ICON[kind];
-                    return <Icon className="size-3.5" />;
-                  })()}
-                  {KIND_LABEL[kind]()}
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
-      </header>
 
-      {/* Left rail */}
-      <aside className="absolute left-3 top-1/2 z-30 hidden -translate-y-1/2 sm:block">
-        <div className="flex flex-col items-center gap-2">
+        <div className="beat-glass pointer-events-auto ml-auto flex h-10 items-center gap-0.5 rounded-full px-1 text-[12px]">
           <button
             type="button"
-            onClick={() => setRailOpen((open) => !open)}
-            aria-label={m['standard.rail']()}
-            className="flex items-center gap-1 rounded-full border border-white/10 bg-[#16171c]/92 px-2 py-3 text-[10.5px] text-white/70 backdrop-blur-xl transition hover:text-white"
-            style={{ writingMode: 'vertical-rl' }}
+            data-standard-zoom="out"
+            onClick={() => setZoom(zoom / 1.15)}
+            aria-label={m['standard.zoomOut']()}
+            className="grid size-8 place-items-center rounded-full text-[var(--beat-text-2)] transition hover:bg-ink/[0.07] hover:text-ink"
           >
-            <CircleDot className="size-3" />
-            {m['standard.rail']()}
+            <Minus className="size-3.5" />
           </button>
-          {railOpen ? (
-            <div className="w-[168px] rounded-[14px] border border-white/10 bg-[#16171c]/92 p-2.5 text-[11.5px] text-white/60 backdrop-blur-xl">
-              <p className="font-medium text-white/85">{m['standard.railTitle']()}</p>
-              <p className="mt-1.5 leading-5">{m['standard.railBody']()}</p>
-            </div>
-          ) : null}
+          <span className="min-w-[38px] text-center text-[11.5px] tabular-nums text-[var(--beat-text-2)]">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            data-standard-zoom="in"
+            onClick={() => setZoom(zoom * 1.15)}
+            aria-label={m['standard.zoomIn']()}
+            className="grid size-8 place-items-center rounded-full text-[var(--beat-text-2)] transition hover:bg-ink/[0.07] hover:text-ink"
+          >
+            <Plus className="size-3.5" />
+          </button>
+          <span className="mx-0.5 h-5 w-px bg-ink/[0.1]" />
+          <button
+            type="button"
+            data-standard-zoom="fit"
+            onClick={fit}
+            aria-label={m['standard.zoomFit']()}
+            className="grid size-8 place-items-center rounded-full text-[var(--beat-text-2)] transition hover:bg-ink/[0.07] hover:text-ink"
+          >
+            <Aperture className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            data-standard-zoom="reset"
+            onClick={() => onChange((current) => ({ ...current, viewport: { x: 0, y: 0, zoom: 1 } }))}
+            aria-label={m['standard.zoomReset']()}
+            className="grid size-8 place-items-center rounded-full text-[var(--beat-text-2)] transition hover:bg-ink/[0.07] hover:text-ink"
+          >
+            <RotateCcw className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocked((value) => !value)}
+            aria-pressed={locked}
+            aria-label={m['standard.lock']()}
+            className={`grid size-8 place-items-center rounded-full transition hover:bg-ink/[0.07] ${
+              locked ? 'text-[var(--beat-accent)]' : 'text-[var(--beat-text-2)] hover:text-ink'
+            }`}
+          >
+            <Lock className="size-3.5" />
+          </button>
         </div>
-      </aside>
 
-      {/* Zoom stack */}
-      <div className="absolute left-3 top-[64px] z-30 flex flex-col overflow-hidden rounded-[10px] border border-white/10 bg-[#16171c]/92 backdrop-blur-xl sm:bottom-4 sm:top-auto">
-        <button
-          type="button"
-          data-standard-zoom="in"
-          onClick={() => setZoom(zoom * 1.15)}
-          className="grid size-8 place-items-center text-white/60 transition hover:bg-white/10 hover:text-white"
-          aria-label={m['standard.zoomIn']()}
-        >
-          <Plus className="size-3.5" />
-        </button>
-        <button
-          type="button"
-          data-standard-zoom="out"
-          onClick={() => setZoom(zoom / 1.15)}
-          className="grid size-8 place-items-center border-t border-white/8 text-white/60 transition hover:bg-white/10 hover:text-white"
-          aria-label={m['standard.zoomOut']()}
-        >
-          <Minus className="size-3.5" />
-        </button>
-        <button
-          type="button"
-          data-standard-zoom="fit"
-          onClick={fit}
-          className="grid size-8 place-items-center border-t border-white/8 text-white/60 transition hover:bg-white/10 hover:text-white"
-          aria-label={m['standard.zoomFit']()}
-        >
-          <Aperture className="size-3.5" />
-        </button>
-        <button
-          type="button"
-          data-standard-zoom="reset"
-          onClick={() =>
-            onChange((current) => ({ ...current, viewport: { x: 0, y: 0, zoom: 1 } }))
-          }
-          className="grid size-8 place-items-center border-t border-white/8 text-white/60 transition hover:bg-white/10 hover:text-white"
-          aria-label={m['standard.zoomReset']()}
-        >
-          <RotateCcw className="size-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setLocked((value) => !value)}
-          aria-pressed={locked}
-          className={`grid size-8 place-items-center border-t border-white/8 transition hover:bg-white/10 ${
-            locked ? 'text-[#7dd3fc]' : 'text-white/60 hover:text-white'
-          }`}
-          aria-label={m['standard.lock']()}
-        >
-          <Lock className="size-3.5" />
-        </button>
+        {menu === 'assets' ? (
+          <div className="pointer-events-auto absolute left-4 top-[52px] w-[240px] rounded-[14px] border border-ink/[0.1] bg-[var(--beat-surface)] p-2 shadow-[var(--beat-card-shadow)]">
+            {(['role', 'scene', 'setting', 'shot'] as StandardNodeKind[]).map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                data-standard-add={kind}
+                onClick={() => {
+                  addNode(kind);
+                  setMenu(null);
+                }}
+                className="flex w-full items-center gap-2 rounded-[9px] px-2.5 py-2 text-left text-[12.5px] text-[var(--beat-text-2)] transition hover:bg-ink/[0.06] hover:text-ink"
+              >
+                {(() => {
+                  const Icon = KIND_ICON[kind];
+                  return <Icon className="size-3.5" />;
+                })()}
+                {KIND_LABEL[kind]()}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
+
 
       {/* Board */}
       <div
@@ -553,21 +491,21 @@ export function StandardCanvas({
                   });
                 }}
               >
-                <div className="mb-2 flex items-center gap-1.5 text-[11.5px] text-white/55">
+                <div className="mb-2 flex items-center gap-1.5 text-[11.5px] text-[var(--beat-text-2)]">
                   <Icon className="size-3.5" />
                   <span>{KIND_LABEL[node.kind]()}</span>
-                  <span className="text-white/25">·</span>
+                  <span className="text-[var(--beat-text-3)]">·</span>
                   <input
                     value={node.name}
                     onChange={(event) => patchNode(node.id, { name: event.target.value })}
                     placeholder={UNTITLED[node.kind]()}
                     data-standard-name={node.id}
-                    className="min-w-0 flex-1 bg-transparent text-[11.5px] text-white/80 outline-none placeholder:text-white/30"
+                    className="min-w-0 flex-1 bg-transparent text-[11.5px] text-white/80 outline-none placeholder:text-[var(--beat-text-3)]"
                   />
                   <button
                     type="button"
                     onClick={() => removeNode(node.id)}
-                    className="grid size-5 place-items-center rounded text-white/25 transition hover:bg-white/10 hover:text-red-300"
+                    className="grid size-5 place-items-center rounded text-[var(--beat-text-3)] transition hover:bg-ink/[0.07] hover:text-red-300"
                     aria-label={m['standard.delete']()}
                   >
                     <Trash2 className="size-3" />
@@ -575,16 +513,16 @@ export function StandardCanvas({
                 </div>
 
                 <div
-                  className={`relative overflow-hidden rounded-[18px] border bg-[#15161b] transition ${
+                  className={`relative overflow-hidden rounded-[18px] border bg-[var(--beat-surface)] transition ${
                     isSelected
                       ? 'border-white/85 shadow-[0_0_0_1px_rgba(255,255,255,0.5),0_24px_60px_-30px_rgba(0,0,0,0.9)]'
-                      : 'border-white/10 hover:border-white/25'
+                      : 'border-ink/[0.1] hover:border-white/25'
                   }`}
                   style={{ height: node.height }}
                 >
                   {node.kind === 'setting' ? (
                     <>
-                      <p className="absolute left-3 top-2.5 text-[10.5px] text-white/35">
+                      <p className="absolute left-3 top-2.5 text-[10.5px] text-[var(--beat-text-3)]">
                         {m['standard.settingHint']()}
                       </p>
                       <textarea
@@ -592,7 +530,7 @@ export function StandardCanvas({
                         onChange={(event) => patchNode(node.id, { text: event.target.value })}
                         data-standard-text={node.id}
                         placeholder={m['standard.settingPlaceholder']()}
-                        className="size-full resize-none bg-transparent px-3 pb-3 pt-8 text-[12.5px] leading-6 text-white/85 outline-none placeholder:text-white/20"
+                        className="size-full resize-none bg-transparent px-3 pb-3 pt-8 text-[12.5px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
                       />
                     </>
                   ) : node.imageUrl ? (
@@ -630,14 +568,14 @@ export function StandardCanvas({
                                 setHandedOver((current) => ({ ...current, [node.id]: editorProjectId }));
                               }
                             }}
-                            className="rounded-full bg-[#7dd3fc] px-2.5 py-1 text-[10.5px] font-medium text-black transition hover:bg-[#a5e3ff]"
+                            className="rounded-full bg-[#7dd3fc] px-2.5 py-1 text-[10.5px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-[#a5e3ff]"
                           >
                             {handedOver[node.id] ? m['standard.sentToEditor']() : m['standard.sendToEditor']()}
                           </button>
                           {handedOver[node.id] ? (
                             <a
                               href={`/zh/editor/${handedOver[node.id]}`}
-                              className="rounded-full bg-white/85 px-2.5 py-1 text-[10.5px] font-medium text-black transition hover:bg-white"
+                              className="rounded-full bg-[var(--beat-accent)] px-2.5 py-1 text-[10.5px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-white"
                             >
                               {m['standard.openEditor']()}
                             </a>
@@ -650,7 +588,7 @@ export function StandardCanvas({
                             uploadTarget.current = node.id;
                             fileRef.current?.click();
                           }}
-                          className="rounded-full bg-black/60 px-2.5 py-1 text-[10.5px] text-white/85 backdrop-blur transition hover:bg-black/80"
+                          className="rounded-full bg-black/60 px-2.5 py-1 text-[10.5px] text-[var(--beat-text-1)] backdrop-blur transition hover:bg-black/80"
                         >
                           {m['standard.replace']()}
                         </button>
@@ -659,9 +597,9 @@ export function StandardCanvas({
                   ) : (
                     <div className="grid size-full place-items-center">
                       <div className="text-center">
-                        <ImageIcon className="mx-auto size-5 text-white/30" />
-                        <p className="mt-1.5 text-[11px] text-white/35">{UNTITLED[node.kind]()}</p>
-                        <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-white/55">
+                        <ImageIcon className="mx-auto size-5 text-[var(--beat-text-3)]" />
+                        <p className="mt-1.5 text-[11px] text-[var(--beat-text-3)]">{UNTITLED[node.kind]()}</p>
+                        <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-[var(--beat-text-2)]">
                           <button
                             type="button"
                             data-standard-upload-for={node.id}
@@ -700,7 +638,7 @@ export function StandardCanvas({
                     setDrag({ type: 'link', from: node.id, pointerX: point.x, pointerY: point.y });
                   }}
                   aria-label={m['standard.portOut']()}
-                  className="absolute -right-[6px] z-10 size-3.5 -translate-y-1/2 rounded-full border-2 border-[#0d0e12] bg-white transition hover:scale-125 hover:bg-[#7dd3fc]"
+                  className="absolute -right-[6px] z-10 size-3.5 -translate-y-1/2 rounded-full border-2 border-[#0d0e12] bg-[var(--beat-accent)] transition hover:scale-125 hover:bg-[#7dd3fc]"
                 />
                 <button
                   type="button"
@@ -717,7 +655,7 @@ export function StandardCanvas({
 
       {/* Composer */}
       <div className="pointer-events-none absolute inset-x-0 bottom-4 z-30 flex justify-center px-4">
-        <div className="pointer-events-auto w-full max-w-[820px] rounded-[18px] border border-white/10 bg-[#16171c]/94 p-2.5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:p-3">
+        <div className="pointer-events-auto w-full max-w-[820px] rounded-[18px] border border-ink/[0.1] bg-[var(--beat-surface)] p-2.5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:p-3">
           <textarea
             value={doc.composer.prompt}
             onChange={(event) =>
@@ -728,28 +666,28 @@ export function StandardCanvas({
             }
             placeholder={m['standard.composerPlaceholder']()}
             data-standard-composer="true"
-            className="min-h-[54px] w-full resize-none bg-transparent text-[13px] leading-6 text-white/85 outline-none placeholder:text-white/25"
+            className="min-h-[54px] w-full resize-none bg-transparent text-[13px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-[var(--beat-text-3)]"
           />
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-white/55">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--beat-text-2)]">
             <button
               type="button"
               data-standard-add-button="true"
               onClick={() => setMenu((current) => (current === 'assets' ? null : 'assets'))}
-              className="grid size-7 place-items-center rounded-full border border-white/12 transition hover:bg-white/10 hover:text-white"
+              className="grid size-7 place-items-center rounded-full border border-ink/[0.12] transition hover:bg-ink/[0.07] hover:text-white"
               aria-label={m['standard.addNode']()}
             >
               <Plus className="size-3.5" />
             </button>
-            <span className="hidden items-center gap-1 rounded-full border border-white/12 px-2 py-1 sm:flex">
+            <span className="hidden items-center gap-1 rounded-full border border-ink/[0.12] px-2 py-1 sm:flex">
               <Monitor className="size-3" />
               {m['standard.modelLocal']()}
             </span>
-            <span className="hidden rounded-full border border-white/12 px-2 py-1 sm:inline">8</span>
-            <span className="hidden items-center gap-1 rounded-full border border-white/12 px-2 py-1 sm:flex">
+            <span className="hidden rounded-full border border-ink/[0.12] px-2 py-1 sm:inline">8</span>
+            <span className="hidden items-center gap-1 rounded-full border border-ink/[0.12] px-2 py-1 sm:flex">
               <Wand2 className="size-3" />
               {m['standard.styleImage']()}
             </span>
-            <span className="hidden rounded-full border border-white/12 px-2 py-1 sm:inline">
+            <span className="hidden rounded-full border border-ink/[0.12] px-2 py-1 sm:inline">
               {m['standard.styleDefault']()}
             </span>
             <button
@@ -777,7 +715,7 @@ export function StandardCanvas({
                 setSelected(target.id);
                 void onGenerate(target.id, 'image');
               }}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-[12px] font-medium text-black transition hover:bg-white/90 disabled:opacity-55"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[var(--beat-accent)] px-4 py-1.5 text-[12px] font-medium text-[var(--beat-accent-ink)] transition hover:bg-[var(--beat-accent-hover)] disabled:opacity-55"
             >
               <Sparkles className={`size-3.5 ${generating ? 'animate-pulse' : ''}`} />
               {generating ? m['standard.generating']() : m['standard.generate']()}
@@ -795,7 +733,7 @@ export function StandardCanvas({
                 setSelected(target.id);
                 void onGenerate(target.id, 'video');
               }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[12px] text-white/75 transition hover:border-white/35 hover:text-white disabled:opacity-55"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[12px] text-[var(--beat-text-2)] transition hover:border-white/35 hover:text-white disabled:opacity-55"
             >
               <Clapperboard className="size-3.5" />
               {m['standard.generateVideo']()}
@@ -806,7 +744,7 @@ export function StandardCanvas({
 
       {/* Status line */}
       <p
-        className="absolute bottom-1 left-1/2 z-20 hidden -translate-x-1/2 text-[10.5px] text-white/30 sm:block"
+        className="absolute bottom-1 left-1/2 z-20 hidden -translate-x-1/2 text-[10.5px] text-[var(--beat-text-3)] sm:block"
         data-standard-status="true"
       >
         {m['standard.status']({
