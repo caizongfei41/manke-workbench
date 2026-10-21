@@ -314,6 +314,12 @@ export const WORKSPACE_MEDIA_SCHEMAS = {
     // missing upload would silently cover that song instead.
     audio: { ...createGenericSection('reference-audio', 1), min: 1 },
   },
+  // 人物参考图：提示词里用 <Picture 1>～<Picture 8> 指代，编号就是这里的顺序。
+  '小枫-无限分段生视频': {
+    image: createGenericSection('reference-image', 8),
+    video: emptySection,
+    audio: emptySection,
+  },
   '小枫-aicg3d-h3-长视频': {
     image: emptySection,
     video: emptySection,

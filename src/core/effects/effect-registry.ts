@@ -593,6 +593,26 @@ export const WORKSPACE_EFFECT_REGISTRY: readonly WorkspaceEffectRegistryEntry[] 
       isLocalFree: true,
     },
     {
+      // 无限分段：每段独立提示词，段落之间用尾帧续写接上，
+      // 人物可以用 <Picture N> 参考图锁脸 —— 这是它和上面三段串联版本的区别。
+      id: '小枫-无限分段生视频',
+      name: 'MiniMax H3 无限分段 · 人物参考图',
+      description:
+        '每段独立提示词与时长，段间尾帧续写；8 张人物参考图按 <Picture 1-8> 锁定形象，适合短剧。',
+      workspaceType: 'ai-video',
+      routeSlug: 'minimax-h3-unlimited-segments',
+      routeOrder: 95,
+      defaultDuration: '12s',
+      supportedDurations: durationRange(1, 60),
+      supportedAspectRatios: ['16:9', '9:16', '1:1'],
+      defaultOutputQuality: '1080p',
+      supportedOutputQualities: ['480p', '720p', '1080p'],
+      supportsSeed: true,
+      multiSegment: true,
+      segmentUi: 'sequence',
+      isLocalFree: true,
+    },
+    {
       // AICG3D 分段串联家族：同一张图，三段串联，一次提交跑出 12 秒成片。
       // 三个条目只差显存档位、分辨率和模型量化 —— 分辨率也能在界面上用质量
       // 选项改（映射到全局设置节点的 resolution 枚举）。

@@ -1,0 +1,178 @@
+{
+  "60": {
+    "class_type": "AICG3D_H3SequenceCombine",
+    "inputs": {
+      "final_segment": [
+        "143",
+        0
+      ],
+      "filename_prefix": "video/MiniMax_H3_Sequence"
+    },
+    "_meta": {
+      "title": "AICG3D_H3SequenceCombine"
+    }
+  },
+  "77": {
+    "class_type": "AICG3D_H3MediaLoader",
+    "inputs": {
+      "media_state": "{\"images\":[{\"filename\":\"Krea2-USD-20260824193957_00001_.png\"},{\"filename\":\"Krea2-USD-20260824194149_00001_.png\"},{\"filename\":\"ComfyUI_temp_sloqp_00002_.png\"},{\"filename\":\"ComfyUI_temp_sloqp_00001_.png\"},{\"filename\":\"37e4c096b2a7bb25ea00a4f7c495e352815d2e58dbb220621e2d244660fc964b.png\"},{\"filename\":\"2a55a6c294838e9be401bd907dc5eb1a0a305322ee8d48b72bd9d7ae3af38af8.png\"},{\"filename\":\"441f4ef4245a049944c80759664910b47b352c662f14cc63032ebd4c1bad845f.png\"},{\"filename\":\"7a586252d09b6a240a3f425c0c347f43f35a9897303d2b0ae4492fd0cd4068ce.png\"}],\"audios\":[],\"videos\":[]}"
+    },
+    "_meta": {
+      "title": "AICG3D_H3MediaLoader"
+    }
+  },
+  "78": {
+    "class_type": "AICG3D_H3SequenceGlobal",
+    "inputs": {
+      "h3_bundle": [
+        "106",
+        0
+      ],
+      "model": [
+        "80",
+        0
+      ],
+      "resolution": "1080P",
+      "aspect_ratio": "16:9",
+      "fps": 24,
+      "handoff_frames": 22,
+      "handoff_mode": "尾帧续写（latent）",
+      "ref_image_size": "match",
+      "sampler_name": "res_multistep",
+      "scheduler": "simple",
+      "steps": 4,
+      "denoise": 1,
+      "vram_policy": "释放缓存",
+      "sample_preview": "开",
+      "preview_interval": 1,
+      "prompt_optimizer_settings": false,
+      "audio_mode": "生成音频",
+      "vram_tier": "自动（按显卡）",
+      "exposure_lock": "跨段曝光锁定",
+      "keep_full": true
+    },
+    "_meta": {
+      "title": "AICG3D_H3SequenceGlobal"
+    }
+  },
+  "80": {
+    "class_type": "BlockSparseAttention",
+    "inputs": {
+      "model": [
+        "82",
+        0
+      ],
+      "selection": {
+        "method": "sol-attn",
+        "tau": 0.2
+      },
+      "start_percent": 0.2,
+      "end_percent": 1,
+      "dense_blocks": "",
+      "min_tokens": 12288,
+      "extra_tokens": 256,
+      "sink_conditioning": "exact_kv_and_rows",
+      "verbose": true
+    },
+    "_meta": {
+      "title": "BlockSparseAttention"
+    }
+  },
+  "82": {
+    "class_type": "ModelAttentionBackend",
+    "inputs": {
+      "model": [
+        "106",
+        1
+      ],
+      "attention": "comfy kitchen attention"
+    },
+    "_meta": {
+      "title": "ModelAttentionBackend"
+    }
+  },
+  "106": {
+    "class_type": "AICG3D_H3Loader",
+    "inputs": {
+      "fl2va_model": "MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
+      "ref2va_model": "MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
+      "text_encoder": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "video_vae": "minimax_h3_video_vae_fp16.safetensors",
+      "audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+      "lora_1": "minimax\\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",
+      "lora_1_strength": 1,
+      "lora_2": "none",
+      "lora_2_strength": 1,
+      "lora_3": "none",
+      "lora_3_strength": 1,
+      "lora_4": "none",
+      "lora_4_strength": 1,
+      "non_h3_policy": "自动回落",
+      "lora_5": "none",
+      "lora_5_strength": 1,
+      "lora_6": "none",
+      "lora_6_strength": 1,
+      "lora_7": "none",
+      "lora_7_strength": 1,
+      "lora_8": "none",
+      "lora_8_strength": 1,
+      "lora_9": "none",
+      "lora_9_strength": 1,
+      "注意力加速(Sage)": "SageAttention"
+    },
+    "_meta": {
+      "title": "AICG3D_H3Loader"
+    }
+  },
+  "107": {
+    "class_type": "AICG3D_H3SequenceSegment",
+    "inputs": {
+      "sequence_config": [
+        "78",
+        0
+      ],
+      "media": [
+        "77",
+        0
+      ],
+      "prompt": "integrated_multimodal_description: [Shot 1] Cinematic war-torn desert style, warm yellow environmental light. Wide shot, <Picture 4> armored off-road vehicle parked in the desert wasteland with thick smoke and explosion fire in the background. Characters are the man from <Picture 1> and the woman from <Picture 2>, sitting inside the vehicle. Camera is a wide fixed shot with slight shake.\n0.0-1.5s: The off-road vehicle drives over uneven desert terrain, covered in dust.\n1.5-3.0s: The man grips the steering wheel while the woman checks her rifle in the passenger seat.\n3.0-4.0s: The frame holds on the vehicle continuing forward.\n\noverall_soundscape: Continuous engine roar, desert wind, distant muffled explosions.\nnon_diegetic_music: N/A",
+      "seconds": 4,
+      "seed": 1469333183,
+      "previous_segment": "fixed",
+      "inline_media_state": "{\"images\":[{\"filename\":\"Krea2-USD-20260824193957_00001_.png\"},{\"filename\":\"Krea2-USD-20260824194149_00001_.png\"},{\"filename\":\"ComfyUI_temp_sloqp_00002_.png\"},{\"filename\":\"ComfyUI_temp_sloqp_00001_.png\"},{\"filename\":\"37e4c096b2a7bb25ea00a4f7c495e352815d2e58dbb220621e2d244660fc964b.png\"},{\"filename\":\"2a55a6c294838e9be401bd907dc5eb1a0a305322ee8d48b72bd9d7ae3af38af8.png\"},{\"filename\":\"441f4ef4245a049944c80759664910b47b352c662f14cc63032ebd4c1bad845f.png\"},{\"filename\":\"7a586252d09b6a240a3f425c0c347f43f35a9897303d2b0ae4492fd0cd4068ce.png\"}],\"audios\":[],\"videos\":[]}"
+    },
+    "_meta": {
+      "title": "AICG3D_H3SequenceSegment"
+    }
+  },
+  "159": {
+    "class_type": "AICG3DPromptSegmentSplit",
+    "inputs": {
+      "text": "【第1段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn desert style, warm yellow environmental light. Wide shot, <Picture 4> armored off-road vehicle parked in the desert wasteland with thick smoke and explosion fire in the background. Characters are the man from <Picture 1> and the woman from <Picture 2>, sitting inside the vehicle. Camera is a wide fixed shot with slight shake.\n0.0-1.5s: The off-road vehicle drives over uneven desert terrain, covered in dust.\n1.5-3.0s: The man grips the steering wheel while the woman checks her rifle in the passenger seat.\n3.0-4.0s: The frame holds on the vehicle continuing forward.\n\noverall_soundscape: Continuous engine roar, desert wind, distant muffled explosions.\nnon_diegetic_music: N/A\n\n【第2段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn desert style, warm yellow environmental light. Close-up eye-level shot. The man from <Picture 1> and the woman from <Picture 2> are inside the off-road vehicle from <Picture 4>. The man is in the left driver's seat, the woman in the right passenger seat. Camera is a fixed interior close-up.\n0.0-1.0s: The man stares intently ahead, frowning slightly.\n1.0-2.5s: The man turns his head slightly towards the woman.\n2.5-3.0s: The man looks back to the front, jaw tightened.\n\noverall_soundscape: Continuous engine roar, tires crunching over gravel.\nnon_diegetic_music: N/A\n\n【第3段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn desert style, warm yellow environmental light. Close-up eye-level shot. The woman from <Picture 2> sits in the passenger seat, facing the man from <Picture 1>. Camera is a close-up on the woman's face with slight shake.\n0.0-0.5s: The woman turns to look at the man, lips parted slightly.\n0.5-2.2s: The woman holds her rifle tighter, scanning the horizon.\n2.2-3.0s: The woman turns her gaze back to the front.\n\noverall_soundscape: Continuous engine roar, slight vehicle rattling.\nnon_diegetic_music: N/A\n\n【第4段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn desert style, warm yellow environmental light. Medium shot tracking. The off-road vehicle from <Picture 4> leaps over a sand dune with burning ruins in the background. Camera is a side tracking shot moving with the vehicle.\n0.0-1.5s: The vehicle charges up the sand dune, lifting off the ground.\n1.5-3.0s: The vehicle lands, kicking up a massive cloud of sand and dust.\n3.0-4.0s: The vehicle continues forward, frame holds on the dust cloud.\n\noverall_soundscape: Engine roaring, vehicle landing impact, sand and dust friction.\nnon_diegetic_music: N/A\n\n【第5段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn desert style, warm yellow environmental light. Medium shot. The off-road vehicle from <Picture 4> slows down near a rocky outcrop. The man from <Picture 1> and the woman from <Picture 2> are visible inside. Camera is a medium fixed shot.\n0.0-1.0s: The vehicle comes to a halt behind the rocks.\n1.0-2.5s: The man turns off the engine and looks at the woman.\n2.5-3.0s: The woman nods, preparing to exit.\n\noverall_soundscape: Engine winding down, desert wind, distant explosions.\nnon_diegetic_music: N/A\n\n【第6段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snow mountain style, cold blue environmental light. Wide shot. The snow battlefield from <Picture 3> with massive explosions and black smoke in the background. The man from <Picture 1> and the woman from <Picture 2> step out of the off-road vehicle from <Picture 4>. Camera is a wide fixed shot.\n0.0-1.5s: The vehicle parks at the edge of the snowfield, both doors push open.\n1.5-3.0s: A violent explosion erupts in the distance, fire illuminating the sky.\n3.0-4.0s: The two step out, crouching low.\n\noverall_soundscape: Howling wind, distant explosion roars, snow crunching underfoot.\nnon_diegetic_music: Tense electronic strings at a slow pace.\n\n【第7段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snow mountain style, cold blue environmental light. Medium eye-level shot. The man from <Picture 1> stands in the snow, facing the woman from <Picture 2>. Camera is a medium shot with handheld shake.\n0.0-0.5s: The man turns to look at the woman and waves his hand.\n0.5-2.2s: The man points toward the rocky cover in the distance.\n2.2-3.0s: The man crouches and moves forward.\n\noverall_soundscape: Howling wind, snow footsteps, fabric friction.\nnon_diegetic_music: Tense electronic strings continue.\n\n【第8段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snow mountain style, cold blue environmental light. Close-up eye-level shot. The woman from <Picture 2> crouches behind the rocks from <Picture 3>, facing the man from <Picture 1>. Camera is a close-up with slight shake.\n0.0-0.8s: The woman crouches behind the rock, breathing heavily, scanning the surroundings.\n0.8-2.5s: The woman grips her rifle tightly, aiming toward the left.\n2.5-4.0s: The woman lowers her rifle slightly, maintaining a low profile.\n\noverall_soundscape: Howling wind, sporadic distant gunfire.\nnon_diegetic_music: Tense electronic strings continue.\n\n【第9段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snow mountain style, cold blue environmental light. Medium eye-level shot. The man from <Picture 1> crouches in the snow, facing the right side of the frame. Camera is a medium fixed shot.\n0.0-0.5s: The man nods and raises his hand to point right.\n0.5-2.2s: The man gestures for the woman to follow.\n2.2-3.0s: The man stands up, ready to move.\n\noverall_soundscape: Howling wind, snow footsteps.\nnon_diegetic_music: Tense electronic strings continue.\n\n【第10段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snowfield style, cold grey environmental light. Wide shot. The snow battlefield from <Picture 8> is littered with burning vehicle wrecks. The man from <Picture 1> and the woman from <Picture 2> navigate through the wreckage. Camera is a wide tracking shot.\n0.0-1.5s: The two move quickly through the snow, crouching low.\n1.5-3.0s: Burning armored vehicles surround them, firelight reflecting on the snow.\n3.0-4.0s: They stop behind a wreck, frame holds on them crouching down.\n\noverall_soundscape: Howling wind, crackling fire, snow crunching.\nnon_diegetic_music: Tense electronic strings continue.\n\n【第11段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snowfield style, cold grey environmental light. Close-up eye-level shot. The woman from <Picture 2> crouches behind the wreckage, facing the man from <Picture 1>. Camera is a close-up with slight shake.\n0.0-0.5s: The woman suddenly turns her head, alert.\n0.5-2.2s: The woman points her finger toward the left side of the frame.\n2.2-3.0s: The woman raises her rifle, aiming in that direction.\n\noverall_soundscape: Howling wind, distant metal scraping.\nnon_diegetic_music: Tense electronic strings continue.\n\n【第12段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snowfield style, cold grey environmental light. Close-up eye-level shot. The man from <Picture 1> crouches beside the woman, facing the left side of the frame. Camera is a close-up fixed shot.\n0.0-0.8s: The man raises his hand, signaling the woman to stay low.\n0.8-2.5s: The man peers over the wreckage, scanning the area.\n2.5-4.0s: The man ducks back down, looking at the woman.\n\noverall_soundscape: Howling wind, distant footsteps approaching.\nnon_diegetic_music: Tense electronic strings continue.\n\n【第13段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn snowfield style, cold grey environmental light. Medium tracking shot. The man from <Picture 1> and the woman from <Picture 2> move low through the snow wreckage. Camera is a low-angle tracking shot.\n0.0-1.2s: The two move quickly through the snow, crouching.\n1.2-2.5s: The man looks back to confirm the woman's position.\n2.5-3.0s: They continue forward, frame holds on their movement.\n\noverall_soundscape: Snow footsteps, howling wind, fabric friction.\nnon_diegetic_music: Tense electronic strings continue.\n\n【第14段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic cyber wasteland style, cold neon environmental light. Wide shot. The destroyed city from <Picture 5> with building ruins and flickering neon lights. The man from <Picture 1> and the woman from <Picture 2> enter from the left side of the frame. Camera is a wide fixed shot.\n0.0-1.5s: The two walk into the ruined street, surrounded by collapsed buildings.\n1.5-3.0s: Neon lights flicker through the smoke, embers falling.\n3.0-4.0s: They stop, frame holds on them observing the surroundings.\n\noverall_soundscape: Building fire crackling, distant metal collapse, wind.\nnon_diegetic_music: Low synthesizer ambient music.\n\n【第15段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic cyber wasteland style, cold neon environmental light. Close-up eye-level shot. The woman from <Picture 2> stands in the ruins, facing the man from <Picture 1>. Camera is a close-up with slight shake.\n0.0-0.5s: The woman looks around, expression heavy.\n0.5-2.2s: The woman lowers her head and sighs.\n2.2-3.0s: The woman looks back up, gripping her rifle.\n\noverall_soundscape: Building fire crackling, distant wind.\nnon_diegetic_music: Low synthesizer ambient music.\n\n【第16段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic cyber wasteland style, cold neon environmental light. Close-up eye-level shot. The man from <Picture 1> stands beside the woman, facing deep into the frame. Camera is a close-up fixed shot.\n0.0-0.8s: The man wipes dust from his face, eyes determined.\n0.8-2.5s: The man points forward, signaling the direction.\n2.5-4.0s: The man steps forward.\n\noverall_soundscape: Building fire crackling, footsteps on debris.\nnon_diegetic_music: Low synthesizer ambient music.\n\n【第17段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic cyber wasteland style, cold neon environmental light. Medium tracking shot. The man from <Picture 1> and the woman from <Picture 2> navigate through the ruins. Camera is a side tracking shot.\n0.0-1.2s: The two bypass a collapsed wall.\n1.2-2.5s: The woman follows closely behind the man.\n2.5-3.0s: They continue forward, frame holds on their backs.\n\noverall_soundscape: Debris falling, footsteps, wind.\nnon_diegetic_music: Low synthesizer ambient music.\n\n【第18段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic cyber wasteland style, cold neon environmental light. Close-up eye-level shot. The man from <Picture 1> stops abruptly, facing the left side of the frame. Camera is a close-up with fast push-in.\n0.0-0.8s: The man hears gunshots, quickly raising his hand.\n0.8-2.5s: The man pulls the woman into cover behind a wall.\n2.5-4.0s: The man presses against the wall, breathing heavily.\n\noverall_soundscape: Gunshots, bullets hitting walls, rapid footsteps.\nnon_diegetic_music: Low synthesizer ambient music.\n\n【第19段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic cyber wasteland style, cold neon environmental light. Close-up eye-level shot. The man from <Picture 1> and the woman from <Picture 2> hide behind the ruins wall. Camera is a two-shot close-up with slight shake.\n0.0-1.2s: The two lean against the wall, breathing rapidly.\n1.2-2.5s: The woman grips her rifle, the man peeks out.\n2.5-3.0s: The man pulls back, frame holds on their tense eye contact.\n\noverall_soundscape: Rapid breathing, distant gunshots, heartbeat.\nnon_diegetic_music: Low synthesizer ambient music.\n\n【第20段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic sci-fi wasteland style, dark red environmental light. Wide shot. The massive sci-fi tower from <Picture 6> stands in the ruined city, red light glowing at the top. The man from <Picture 1> and the woman from <Picture 2> step out from cover. Camera is a wide low-angle shot.\n0.0-1.5s: The two step out from cover, looking up at the tower.\n1.5-3.0s: The tower emits a low hum, red light flickering.\n3.0-4.0s: The man raises his hand pointing at the tower, frame holds.\n\noverall_soundscape: Tower low-frequency hum, wind, distant explosions.\nnon_diegetic_music: Epic sci-fi orchestral music at a slow pace.\n\n【第21段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic sci-fi wasteland style, dark red environmental light. Close-up eye-level shot. The woman from <Picture 2> looks up at the tower, facing the man from <Picture 1>. Camera is a close-up with slight shake.\n0.0-0.5s: The woman frowns, looking worried.\n0.5-2.2s: The woman looks down, then back at the man.\n2.2-3.0s: The woman grips her rifle tighter.\n\noverall_soundscape: Tower low-frequency hum, wind.\nnon_diegetic_music: Epic sci-fi orchestral music continues.\n\n【第22段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic sci-fi wasteland style, dark red environmental light. Close-up eye-level shot. The man from <Picture 1> faces the woman from <Picture 2>, expression determined. Camera is a close-up fixed shot.\n0.0-0.8s: The man takes a deep breath, eyes firm.\n0.8-2.5s: The man nods, turning towards the tower.\n2.5-4.0s: The man steps forward, frame holds on his movement.\n\noverall_soundscape: Tower low-frequency hum, footsteps on debris.\nnon_diegetic_music: Epic sci-fi orchestral music continues.\n\n【第23段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic sci-fi wasteland style, dark red environmental light. Medium tracking shot. The man from <Picture 1> and the woman from <Picture 2> advance toward the tower from <Picture 6>. Camera is a back tracking shot.\n0.0-1.2s: The two cross the ruins, approaching the tower.\n1.2-2.5s: The tower's red light casts a glow on them.\n2.5-3.0s: They continue forward, frame holds on their backs.\n\noverall_soundscape: Tower low-frequency hum, footsteps, debris falling.\nnon_diegetic_music: Epic sci-fi orchestral music continues.\n\n【第24段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic sci-fi wasteland style, dark red environmental light. Close-up eye-level shot. The woman from <Picture 2> suddenly stops, facing the left side of the frame. Camera is a close-up with fast push-in.\n0.0-0.8s: The woman sees fire ahead, quickly raising her hand.\n0.8-2.5s: The woman pulls the man into cover behind debris.\n2.5-4.0s: The woman presses against the debris, breathing heavily.\n\noverall_soundscape: Explosion, flying debris, rapid footsteps.\nnon_diegetic_music: Epic sci-fi orchestral music continues.\n\n【第25段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic sci-fi wasteland style, dark red environmental light. Close-up eye-level shot. The man from <Picture 1> and the woman from <Picture 2> hide behind the tower base debris. Camera is a two-shot close-up with slight shake.\n0.0-1.2s: The two lean against the debris, breathing rapidly.\n1.2-2.5s: The man peeks out to observe the tower entrance.\n2.5-3.0s: The man pulls back, frame holds on them preparing to move.\n\noverall_soundscape: Rapid breathing, tower low-frequency hum, fire crackling.\nnon_diegetic_music: Epic sci-fi orchestral music continues.\n\n【第26段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Wide shot. The coastal city from <Picture 7> with ships and explosion fire at the port. The man from <Picture 1> and the woman from <Picture 2> run out from the left side of the frame. Camera is a wide tracking shot.\n0.0-1.5s: The two run out of the ruins, entering the coastal area.\n1.5-3.0s: Explosions occur on the sea surface, water splashing.\n3.0-4.0s: They stop, frame holds on them observing the port.\n\noverall_soundscape: Ocean waves, explosions, wind.\nnon_diegetic_music: Tense orchestral music at a medium pace.\n\n【第27段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The man from <Picture 1> stands at the coast, facing the right side of the frame. Camera is a close-up fixed shot.\n0.0-0.5s: The man sees the port ships, raising his hand to point right.\n0.5-2.2s: The man gestures for the woman to follow.\n2.2-3.0s: The man prepares to move towards the ships.\n\noverall_soundscape: Ocean waves, distant explosions, wind.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第28段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The woman from <Picture 2> stands beside the man, facing the man from <Picture 1>. Camera is a close-up with slight shake.\n0.0-0.8s: The woman nods, gripping her rifle.\n0.8-2.5s: The woman looks toward the ships, expression resolute.\n2.5-4.0s: The woman steps forward, frame holds on her movement.\n\noverall_soundscape: Ocean waves, footsteps, distant explosions.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第29段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Medium shot. An explosion occurs near the port from <Picture 7>, sending water columns into the air. The man from <Picture 1> and the woman from <Picture 2> are caught in the shockwave. Camera is a medium fixed shot.\n0.0-1.2s: The explosion shockwave kicks up dust and seawater.\n1.2-2.5s: The two crouch to avoid flying debris.\n2.5-3.0s: They continue running forward, frame holds on their movement.\n\noverall_soundscape: Massive explosion, splashing water, flying debris.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第30段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The man from <Picture 1> looks back while running, facing the woman from <Picture 2>. Camera is a close-up tracking shot.\n0.0-0.8s: The man looks back while running, expression anxious.\n0.8-2.5s: The man gestures urgently for the woman to hurry.\n2.5-4.0s: The man accelerates forward, frame holds on his run.\n\noverall_soundscape: Rapid footsteps, ocean waves, explosions.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第31段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Medium tracking shot. The man from <Picture 1> and the woman from <Picture 2> run on the dock bridge. Camera is a back tracking shot.\n0.0-1.2s: The two run quickly on the dock bridge.\n1.2-2.5s: Explosion fire surrounds them, seawater reflecting red.\n2.5-3.0s: They continue running, frame holds on their backs.\n\noverall_soundscape: Rapid footsteps, dock bridge vibration, ocean waves.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第32段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up shot. The woman from <Picture 2> trips on the dock bridge, body leaning forward. Camera is a close-up with handheld shake.\n0.0-1.2s: The woman slips, losing her balance.\n1.2-2.5s: The woman falls onto the dock bridge, her rifle slipping away.\n2.5-4.0s: The woman looks up, frame holds on her fallen state.\n\noverall_soundscape: Body hitting wood, rifle dropping, rapid breathing.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第33段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The man from <Picture 1> turns and runs to the woman from <Picture 2>, reaching out. Camera is a two-shot close-up fixed shot.\n0.0-0.5s: The man reaches out and grabs the woman's arm.\n0.5-2.2s: The man pulls the woman up with force.\n2.2-3.0s: The woman stands steady, frame holds on their eye contact.\n\noverall_soundscape: Fabric friction, rapid breathing, ocean waves.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第34段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The man from <Picture 1> supports the woman from <Picture 2>, facing the right side of the frame. Camera is a close-up with slight shake.\n0.0-0.8s: The man grips the woman's arm tightly, expression determined.\n0.8-2.5s: The man pulls the woman forward, urging her to move.\n2.5-4.0s: The man runs forward with the woman, frame holds on their movement.\n\noverall_soundscape: Rapid footsteps, ocean waves, distant explosions.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第35段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Medium tracking shot. The man from <Picture 1> pulls the woman from <Picture 2> running on the dock bridge. Camera is a side tracking shot.\n0.0-1.2s: The two run hand in hand on the dock bridge.\n1.2-2.5s: A docked ship appears ahead.\n2.5-3.0s: They run towards the ship, frame holds on their movement.\n\noverall_soundscape: Rapid footsteps, ocean waves, wind.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第36段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The woman from <Picture 2> looks at the ship ahead while running, facing the man from <Picture 1>. Camera is a close-up tracking shot.\n0.0-0.8s: The woman sees the ship, a glimmer of hope in her eyes.\n0.8-2.5s: The woman points at the ship, accelerating.\n2.5-4.0s: The woman runs toward the ship, frame holds on her movement.\n\noverall_soundscape: Rapid footsteps, ocean waves, ship engine.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第37段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Medium shot. The man from <Picture 1> and the woman from <Picture 2> reach the ship, the man covering the woman as she boards. Camera is a medium fixed shot.\n0.0-1.2s: The woman grabs the ship's rail and climbs aboard.\n1.2-2.5s: The man stands below, aiming his rifle to provide cover.\n2.5-3.0s: The man turns to board, frame holds on him stepping onto the rail.\n\noverall_soundscape: Ship engine, waves crashing, rapid footsteps.\nnon_diegetic_music: Tense orchestral music continues.\n\n【第38段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The man from <Picture 1> stands on the ship, facing the shore. Camera is a close-up fixed shot.\n0.0-0.8s: The man stands steady, looking back at the shore.\n0.8-2.5s: The man looks toward the woman, then toward the sea.\n2.5-4.0s: The man turns and walks toward the helm, frame holds.\n\noverall_soundscape: Ship engine roaring, ocean waves, wind.\nnon_diegetic_music: Tense orchestral music gradually fading.\n\n【第39段｜3秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Close-up eye-level shot. The woman from <Picture 2> sits inside the ship cabin, facing the man from <Picture 1>. Camera is a close-up with slight shake.\n0.0-0.5s: The woman leans against the cabin, letting out a long breath.\n0.5-2.2s: The woman relaxes her shoulders, closing her eyes briefly.\n2.2-3.0s: The woman opens her eyes, looking at the man.\n\noverall_soundscape: Ship engine, ocean waves, wind.\nnon_diegetic_music: Soothing orchestral music at a slow pace.\n\n【第40段｜4秒】\nintegrated_multimodal_description: [Shot 1] Cinematic war-torn coastal style, cold blue environmental light. Wide shot. The coastal city from <Picture 7> gradually recedes as the ship sails into the open sea. Camera is a wide fixed shot.\n0.0-1.5s: The ship sails away from the port, heading into the deep sea.\n1.5-3.0s: The explosion fire on the shore gradually shrinks, smoke rising.\n3.0-4.0s: The ship sails into the distance, frame holds on the departing vessel.\n\noverall_soundscape: Ocean waves, ship engine, wind.\nnon_diegetic_music: Soothing orchestral music continues, fading out at the end.",
+      "mode": "自动识别",
+      "custom_regex": "",
+      "keep_header": false,
+      "seconds_mode": "跟随文本标注",
+      "default_seconds": 5,
+      "auto_fill": true,
+      "randomize_seed": true,
+      "max_segments": 40
+    },
+    "_meta": {
+      "title": "AICG3DPromptSegmentSplit"
+    }
+  },
+  "_beatdesign": {
+    "positive": "107",
+    "seed": "107",
+    "resolution": "78",
+    "sequence_global": "78",
+    "sequence_segments": [
+      "107"
+    ],
+    "lora_loader": "106",
+    "media_loader": "77",
+    "image": "77",
+    "multi_image": "77"
+  }
+}

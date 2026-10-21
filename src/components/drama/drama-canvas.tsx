@@ -26,6 +26,7 @@ import { HelpPopover, type HelpId } from '@/components/drama/help-popover';
 import { HintTip } from '@/components/app/hint-tip';
 import {
   DRAMA_ASPECT_RATIO,
+  DRAMA_OUTPUT_QUALITY,
   DRAMA_MODEL_ID,
   MAX_SHOT_VERSIONS,
   analyzeScript,
@@ -763,8 +764,26 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
     });
   };
 
-  const resolveImages = (shot: DramaShot): string[] =>
-    resolveShotRefs(shot).map((r) => r.imageUrl);
+  /**
+   * Reference image order is the <Picture N> numbering.
+   *
+   * Cast goes first: the same face recurs most often, so pinning it to slots 1-8 lets
+   * every shot write a stable <Picture 1>. Set and prop images follow the cast.
+   */
+  const castImages = () => (doc.cast ?? []).slice(0, 8).map((member) => member.imageUrl).filter(Boolean);
+
+  const castPromptLine = () => {
+    const cast = (doc.cast ?? []).slice(0, 8).filter((m) => m.imageUrl);
+    if (!cast.length) return '';
+    return cast
+      .map((member, index) => `${member.name || 'Character'} is <Picture ${index + 1}>: ${member.description}`)
+      .join('. ');
+  };
+
+  const resolveImages = (shot: DramaShot): string[] => [
+    ...castImages(),
+    ...resolveShotRefs(shot).map((r) => r.imageUrl),
+  ];
 
   const resolveRefs = (shot: DramaShot) =>
     resolveShotRefs(shot).map((r) => ({
@@ -812,7 +831,8 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
   const composePrompt = (prompt: string) => {
     const body = stripDialogueMarkup(prompt);
     const prefix = (doc.promptPrefix ?? '').trim();
-    return prefix ? `${prefix}，${body}` : body;
+    const cast = castPromptLine();
+    return [prefix, cast, body].filter(Boolean).join('. ');
   };
 
   const applyAssetToAll = (assetId: string) =>
@@ -889,7 +909,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             parameters: {
               aspect_ratio: DRAMA_ASPECT_RATIO,
               wmDuration: '12s',
-              wmOutputQuality: '480p',
+              wmOutputQuality: DRAMA_OUTPUT_QUALITY,
               director_global: dramaGlobalParameters(),
               director_loras: activeDramaLoras(),
               director_segments: [

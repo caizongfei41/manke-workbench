@@ -83,6 +83,13 @@ export type DramaDocument = {
   version: 1;
   script: string;
   /**
+   * 固定人物。
+   *
+   * 顺序决定 <Picture N> 的编号：第一个成员是 <Picture 1>，依次往后。
+   * 没有人物档案时，每一段的人物都靠文字重新想象，剪在一起像换了演员。
+   */
+  cast?: DramaCastMember[];
+  /**
    * Where each node sits on the board. Missing entries fall back to the default
    * pipeline layout, so a document saved before dragging existed still opens.
    */
@@ -346,7 +353,28 @@ export const totalSeconds = (shots: DramaShot[]): number =>
  * These are literal identifiers the ComfyUI graph matches by string, so they must
  * not be translated — which is also why they live here and not in the component.
  */
-export const DRAMA_MODEL_ID = '小枫-aicg3d-h3-长视频';
+export const DRAMA_MODEL_ID = '小枫-无限分段生视频';
+
+/**
+ * 输出画质。以前这里写死 480p，画质从画布上改不了 —— 这是短剧成片一直不够细的原因之一。
+ * 1080P 是这块卡能跑的档位；要更快可以降到 720P，但不要再回到 480p。
+ */
+export const DRAMA_OUTPUT_QUALITY = '1080p';
+
+/**
+ * 人物档案：一个 ID 对应一张参考图，提示词里用 <Picture N> 引用它。
+ *
+ * 这是新工作流最重要的能力 —— 没有它，每一段的人物都是重新想象出来的，
+ * 剪在一起像不同演员。有参考图之后，同一个 ID 始终是同一张脸。
+ */
+export type DramaCastMember = {
+  id: string;
+  name: string;
+  /** 在 ComfyUI input 目录里的文件名，或项目资产 URL。 */
+  imageUrl: string;
+  /** 默认形象描述，写进提示词帮助模型保持一致性。 */
+  description: string;
+};
 export const DRAMA_GLOBAL = {
   resolution: '480P',
   vram_policy: '卸载模型',
