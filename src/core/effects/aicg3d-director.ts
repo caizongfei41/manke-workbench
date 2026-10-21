@@ -71,7 +71,8 @@ export const DIRECTOR_FIELDS: readonly DirectorField[] = [
     min: 1,
     max: 22,
     step: 1,
-    hint: '段与段之间重叠多少帧。越大衔接越顺，也越慢。',
+    // H3 的时间栅格只有 5 / 22 / 39 帧几档，填中间值不会更顺，只会被归到最近的一档。
+    hint: '只有两档：填 1–5 按 5 帧衔接，填 6–22 按 22 帧。22 帧接得更贴，但每段要多跑一段。',
   },
   {
     key: 'handoff_mode',

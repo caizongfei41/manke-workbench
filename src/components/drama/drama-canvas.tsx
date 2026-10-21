@@ -908,7 +908,7 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             references: [],
             parameters: {
               aspect_ratio: DRAMA_ASPECT_RATIO,
-              wmDuration: '12s',
+              wmDuration: `${shot.seconds}s`,
               wmOutputQuality: DRAMA_OUTPUT_QUALITY,
               director_global: dramaGlobalParameters(),
               director_loras: activeDramaLoras(),
