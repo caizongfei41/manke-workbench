@@ -1,7 +1,8 @@
 {
-  "generated": "2026-10-17T16:21:37.095Z",
-  "templateCount": 21,
+  "generated": "2026-10-22T15:45:38.234Z",
+  "templateCount": 22,
   "customNodeClasses": [
+    "AICG3DPromptSegmentSplit",
     "AICG3D_H3Loader",
     "AICG3D_H3MediaLoader",
     "AICG3D_H3SequenceCombine",
@@ -81,6 +82,12 @@
       ]
     },
     {
+      "name": "ComfyUI-AICG3D-PromptSplit",
+      "classes": [
+        "AICG3DPromptSegmentSplit"
+      ]
+    },
+    {
       "name": "ComfyUI-DepthAnythingV2",
       "classes": [
         "DepthAnything_V2",
@@ -106,7 +113,7 @@
       ]
     },
     {
-      "name": "Comfyui-Qwen-Image-2.1-BlockCache-T8",
+      "name": "Comfyui-Qwen-Image-2",
       "classes": [
         "QwenImage21BlockCacheT8"
       ]
@@ -238,7 +245,8 @@
         "小枫-aicg3d-h3-低显存长视频.json",
         "小枫-aicg3d-h3-长视频.json",
         "小枫-h3导演台-人脸修复.json",
-        "小枫-minimaxh3-动作迁移.json"
+        "小枫-minimaxh3-动作迁移.json",
+        "小枫-无限分段生视频.json"
       ]
     },
     {
@@ -278,7 +286,8 @@
         "小枫-H3-导演-连贯成片.json",
         "小枫-aicg3d-h3-长视频.json",
         "小枫-h3导演台-人脸修复.json",
-        "小枫-minimaxh3-动作迁移.json"
+        "小枫-minimaxh3-动作迁移.json",
+        "小枫-无限分段生视频.json"
       ]
     },
     {
@@ -306,12 +315,20 @@
       ]
     },
     {
+      "name": "MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
+      "basename": "Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
+      "templates": [
+        "小枫-无限分段生视频.json"
+      ]
+    },
+    {
       "name": "minimax\\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",
       "basename": "minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",
       "templates": [
         "小枫-aicg3d-h3-中配长视频.json",
         "小枫-aicg3d-h3-低显存长视频.json",
-        "小枫-aicg3d-h3-长视频.json"
+        "小枫-aicg3d-h3-长视频.json",
+        "小枫-无限分段生视频.json"
       ]
     },
     {
@@ -376,6 +393,13 @@
         "小枫-aicg3d-h3-长视频.json",
         "小枫-h3导演台-人脸修复.json",
         "小枫-minimaxh3-动作迁移.json"
+      ]
+    },
+    {
+      "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "basename": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "templates": [
+        "小枫-无限分段生视频.json"
       ]
     },
     {

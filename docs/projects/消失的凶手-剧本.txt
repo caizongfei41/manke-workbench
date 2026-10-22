@@ -1,0 +1,494 @@
+【第1段｜5秒】
+integrated_multimodal_description: [Shot 1] stairwell, ground floor. Medium shot, eye level, fixed camera. Two cardboard boxes stacked by the stairs, a dusty bicycle against the wall. Faint footsteps from above.
+0.0～1.8秒：楼梯上方的脚步声逐渐变近。
+1.8～3.6秒：一只手扶上楼梯扶手，出现在画面边缘。
+3.6～5.0秒：画面停在扶手上那只手、人还没露出来的瞬间。
+
+overall_soundscape: 楼梯上的脚步声，老楼木头的吱声
+non_diegetic_music: N/A
+
+【第2段｜5秒】
+integrated_multimodal_description: [Shot 2] night, exterior of an old four-storey apartment building in a South Chinese town. Extreme wide shot, fixed camera, slight low angle, the whole facade visible, rain running down the wall, only one window on the fourth floor right side lit warm yellow. Empty street.
+0.0～1.8秒：雨丝穿过路灯的光锥，窗户里的灯光稳定不变。
+1.8～3.6秒：一辆自行车从画面左侧缓慢骑过，水花溅起。
+3.6～5.0秒：画面停在四楼那扇亮着的窗户上，雨仍在落。
+
+overall_soundscape: 持续雨声，远处车流，排水管流水
+non_diegetic_music: N/A
+
+【第3段｜5秒】
+integrated_multimodal_description: [Shot 3] interior, narrow corridor on the fourth floor. Medium shot, eye level, fixed camera. Zhou Yan stands with his back to camera at a dark wooden door, dark trench coat, right hand raised to knock. A single bare bulb overhead, peeling green paint on the walls.
+0.0～1.5秒：周砚右手抬到门前，指节停在离门板两厘米处。
+1.5～3.2秒：他敲了两下，声音闷在走廊里。
+3.2～5.0秒：手收回身侧，他没有转身，肩膀保持朝向门。
+
+overall_soundscape: 指节敲在木门上的两声闷响，走廊里雨声被墙隔开
+non_diegetic_music: N/A
+
+【第4段｜5秒】
+integrated_multimodal_description: [Shot 4] corridor, Zhou Yan in profile. Close shot, eye level, camera pushes in half a step. Half his face lit by the bulb above, the other half in shadow.
+0.0～0.8秒：周砚开口前先吸了一口气，视线停在门缝上。
+0.8～3.6秒：周砚 (S1) says: <d>[Chinese] 门是从里面锁的。窗户也是。</d>
+3.6～5.0秒：他闭上嘴，视线从门缝移向门锁。
+
+overall_soundscape: 走廊底噪，远处一声关门
+non_diegetic_music: N/A
+
+【第5段｜6秒】
+integrated_multimodal_description: [Shot 5] the other side of the corridor, Chen Mo leaning close to the door. Medium close shot, slightly low camera, slight handheld movement. Checked shirt, wire-rimmed glasses, his face close to the door panel, one hand braced on the frame.
+0.0～1.0秒：陈默把耳朵贴到门板上，眼睛看向周砚。
+1.0～4.6秒：陈默 (S3) says: <d>[Chinese] 九点多我听见他们吵架，吵得挺凶，我才报的警。</d>
+4.6～6.0秒：他直起身，手掌从门框上滑下来。
+
+overall_soundscape: 衣料摩擦门板，呼吸
+non_diegetic_music: N/A
+
+【第6段｜3秒】
+integrated_multimodal_description: [Shot 6] Zhou Yan in profile, extreme close shot, fixed camera. No change of expression, only his eyes move slightly.
+0.0～1.2秒：他的视线落在陈默脸上，一动不动。
+1.2～2.4秒：他眨了一次眼。
+2.4～3.0秒：画面停在他重新看向门的瞬间。
+
+overall_soundscape: 几乎静音，只有很轻的呼吸
+non_diegetic_music: N/A
+
+【第7段｜5秒】
+integrated_multimodal_description: [Shot 7] interior, the room. Wide angle, low camera, slow forward push, subjective. A man lies face down on the wooden floor, dark jacket, a dark stain spreading beneath him. A toppled chair beside him, an open laptop still glowing on the desk, a glass of water at the desk edge.
+0.0～1.8秒：镜头从门口向房间推进，地板逐渐占满画面。
+1.8～3.6秒：推进到能看清手臂的位置，笔记本电脑的光在墙上晃了一下。
+3.6～5.0秒：画面停在桌上那杯水，水面还在轻微晃动。
+
+overall_soundscape: 雨打在窗玻璃上，木地板轻微的吱声
+non_diegetic_music: N/A
+
+【第8段｜5秒】
+integrated_multimodal_description: [Shot 8] the room, overhead. Zhou Yan crouches beside the body, the hem of his dark trench coat spread on the floor, a torch in his hand, the beam falling on a puddle.
+0.0～1.6秒：手电光在地面移动，照到那滩水。
+1.6～3.4秒：他伸出两根手指，指尖碰到水面。
+3.4～5.0秒：画面停在他的手指抬起、水珠挂在指腹的瞬间。
+
+overall_soundscape: 雨声，手电开关的轻响
+non_diegetic_music: N/A
+
+【第9段｜5秒】
+integrated_multimodal_description: [Shot 9] the room, toward the window. Medium shot, camera slowly tracks sideways. The window is shut, its latch on the inside intact, a thin layer of dust on the latch, untouched. Rain outside.
+0.0～1.8秒：镜头从左向右移动，扫过窗框。
+1.8～3.6秒：停在插销上，灰尘完整。
+3.6～5.0秒：画面停在这扇没有出口的窗前。
+
+overall_soundscape: 雨打在玻璃上，密集
+non_diegetic_music: N/A
+
+【第10段｜6秒】
+integrated_multimodal_description: [Shot 10] the room, the desk. Close shot, eye level, fixed camera. A notebook open on the desk, times and names written on one page, a pen beside it and a desk lamp still on.
+0.0～2.0秒：台灯的光落在纸页上。
+2.0～4.4秒：一只戴手套的手把纸页翻过去一角，又放下。
+4.4～6.0秒：画面停在那一列时间上，最后一行被划掉了。
+
+overall_soundscape: 纸页的轻响，房间底噪
+non_diegetic_music: N/A
+
+【第11段｜5秒】
+integrated_multimodal_description: [Shot 11] corridor, daytime. Medium shot, fixed camera. Zhou Yan stands at the door reading a notebook in his hand, the other hand in his pocket. A stairwell door at the end of the corridor.
+0.0～1.8秒：他的拇指翻过一页，视线在纸上移动。
+1.8～3.6秒：他抬起头，看向走廊尽头的那扇门。
+3.6～5.0秒：画面停在他合上笔记本、手指夹在书页间的瞬间。
+
+overall_soundscape: 走廊底噪，纸页翻动
+non_diegetic_music: N/A
+
+【第12段｜5秒】
+integrated_multimodal_description: [Shot 12] crime scene, the floor. Medium close shot from above. An investigator crouches beside the body, gloved, holding up an evidence bag with the knife inside.
+0.0～1.8秒：证物袋被举到光下，刀身反光。
+1.8～3.6秒：调查员把袋子转向侧面，刀柄上有一个清晰的手印。
+3.6～5.0秒：画面停在手印的位置，玻璃纸反光盖住了一角。
+
+overall_soundscape: 证物袋的塑料摩擦声，相机快门
+non_diegetic_music: N/A
+
+【第13段｜6秒】
+integrated_multimodal_description: [Shot 13] police corridor, Lin He facing camera. Close shot, eye level. Her eyes are red, lashes wet, chin trembling slightly.
+0.0～1.0秒：她深吸一口气，肩膀抬起来。
+1.0～4.6秒：林鹤 (S2) says: <d>[Chinese] 我走的时候他还好好的，门是我关的。</d>
+4.6～6.0秒：她闭上嘴，眼泪停在眼眶里没有落下。
+
+overall_soundscape: 她压住的呼吸声，日光灯电流声
+non_diegetic_music: N/A
+
+【第14段｜5秒】
+integrated_multimodal_description: [Shot 14] police corridor, Zhou Yan and Lin He in frame. Medium shot, eye level, one step apart. Zhou Yan holds the notebook, unopened.
+0.0～0.9秒：周砚抬起眼，看向她。
+0.9～3.7秒：周砚 (S1) says: <d>[Chinese] 你关门的时候，他在房间的哪个位置。</d>
+3.7～5.0秒：他没有打开笔记本，手垂在身侧。
+
+overall_soundscape: 日光灯电流声，走廊尽头的脚步声
+non_diegetic_music: N/A
+
+【第15段｜5秒】
+integrated_multimodal_description: [Shot 15] memory flashback, inside the room, warm light. Medium shot, fixed eye-level camera. The victim alive, standing at the desk with his back to the window, a phone in his hand, his profile toward frame right.
+0.0～1.8秒：他把电话放到耳边，转过身。
+1.8～3.6秒：他的嘴动着，听不清声音。
+3.6～5.0秒：画面停在他放下电话、手搭在椅背上的瞬间。
+
+overall_soundscape: 房间的底噪，窗外的车声
+non_diegetic_music: N/A
+
+【第16段｜5秒】
+integrated_multimodal_description: [Shot 16] Chen home living room, daytime. Medium shot, eye level. Chen Mo sits on the sofa, hands folded on his knees, two unused teacups on the coffee table.
+0.0～1.8秒：他的手指在膝上互相摩挲。
+1.8～3.6秒：他伸手去拿茶杯，停在杯沿上，没有端起来。
+3.6～5.0秒：画面停在他的手指搭在杯沿、茶杯没有移动的状态。
+
+overall_soundscape: 室内安静，墙上挂钟的秒针
+non_diegetic_music: N/A
+
+【第17段｜6秒】
+integrated_multimodal_description: [Shot 17] Chen home living room, Chen Mo facing camera. Close shot, eye level, window light on one side of his face. He leans slightly forward, elbows on his knees.
+0.0～1.0秒：他身体前倾，抬起头。
+1.0～4.6秒：陈默 (S3) says: <d>[Chinese] 我这人睡觉浅，有点动静就醒，那晚我一直没睡踏实。</d>
+4.6～6.0秒：他闭上嘴，手指在膝上敲了一下。
+
+overall_soundscape: 挂钟秒针，布料在沙发上摩擦
+non_diegetic_music: N/A
+
+【第18段｜5秒】
+integrated_multimodal_description: [Shot 18] corridor ceiling, close shot looking up. The row of pipes crosses the frame, several yellowed inspection labels stuck to them, one bearing a date.
+0.0～1.8秒：镜头沿管道缓慢横移。
+1.8～3.6秒：停在贴着标签的位置上。
+3.6～5.0秒：画面停在标签的日期上，管壁有一道水痕。
+
+overall_soundscape: 管道里远处的流水声，走廊底噪
+non_diegetic_music: N/A
+
+【第19段｜5秒】
+integrated_multimodal_description: [Shot 19] corridor, Zhou Yan from behind. Medium shot, camera half a step behind him, following. He walks toward the stairwell, the hem of his coat swinging with each step.
+0.0～1.8秒：他迈出第一步，镜头跟着移动。
+1.8～3.6秒：他停在楼梯口，右手搭在扶手上。
+3.6～5.0秒：画面停在他抬脚准备下楼的瞬间。
+
+overall_soundscape: 脚步声踩在水泥地上，楼道回音
+non_diegetic_music: N/A
+
+【第20段｜5秒】
+integrated_multimodal_description: [Shot 20] downstairs, pump room doorway. Medium shot, eye level. An iron door half open, dense pipes inside and an old pressure gauge, its needle stopped at a mark.
+0.0～1.8秒：门被推开一点，光落进管道上。
+1.8～3.6秒：压力表的指针轻微抖动。
+3.6～5.0秒：画面停在指针停住不动的位置。
+
+overall_soundscape: 铁门的铰链声，水泵的低频预备声
+non_diegetic_music: N/A
+
+【第21段｜5秒】
+integrated_multimodal_description: [Shot 21] police station corridor. Medium shot, eye level, cold white fluorescent light from above. Lin He sits on a bench, beige knit sweater, short bob, an unlit cigarette between her right fingers.
+0.0～1.6秒：她低头看着手里的烟，拇指摩挲滤嘴。
+1.6～3.4秒：她把烟递到嘴边，停住，没有点火。
+3.4～5.0秒：画面停在她把烟放下来、手垂到膝上的瞬间。
+
+overall_soundscape: 日光灯的电流声，远处脚步声
+non_diegetic_music: N/A
+
+【第22段｜5秒】
+integrated_multimodal_description: [Shot 22] Lin He left wrist, extreme close shot, fixed camera, very shallow focus. An old leather-strap watch, a date engraved on the inner side of the strap, the leather worn shiny.
+0.0～1.8秒：她的手指捏住表带边缘。
+1.8～3.6秒：表带被翻过来，露出内侧的刻字。
+3.6～5.0秒：画面停在那行刻字上，指甲压着皮面。
+
+overall_soundscape: 皮带的轻微摩擦声，呼吸
+non_diegetic_music: N/A
+
+【第23段｜5秒】
+integrated_multimodal_description: [Shot 23] corridor, Zhou Yan and Lin He in frame. Medium shot, over the shoulder, focus on the watch on her wrist. Zhou Yan stands before her, leaning slightly forward.
+0.0～0.9秒：周砚低头，视线移到那只手表上。
+0.9～3.7秒：周砚 (S1) says: <d>[Chinese] 这块表你一直戴着？</d>
+3.7～5.0秒：他的视线没有从表上移开，手垂在身侧。
+
+overall_soundscape: 日光灯电流声，长椅上身体的轻微移动
+non_diegetic_music: N/A
+
+【第24段｜6秒】
+integrated_multimodal_description: [Shot 24] corridor, Lin He facing camera. Close shot, eye level, shallow focus, the fluorescent tubes behind her dissolving into white. Her chin slightly raised, eyes forward.
+0.0～1.0秒：她抬起头，喉部动了一下。
+1.0～4.4秒：林鹤 (S2) says: <d>[Chinese] 一直戴着。他送我的，戴了三年。</d>
+4.4～6.0秒：她闭上嘴，把手收回，指尖扣住表带。
+
+overall_soundscape: 她的呼吸，日光灯电流声
+non_diegetic_music: N/A
+
+【第25段｜5秒】
+integrated_multimodal_description: [Shot 25] flashback, bedroom, dusk. Warm light slanting in from the window. Lin He stands before a dressing table, back to the window, a watch in her hand, another watch lying open on the tabletop.
+0.0～1.8秒：她解开手表搭扣，动作很慢。
+1.8～3.6秒：手表被放到台面上，和另一只并排放着。
+3.6～5.0秒：画面停在她的手从台面收回、指尖擦过表盘的一瞬。
+
+overall_soundscape: 搭扣弹开的脆响，窗外鸟叫
+non_diegetic_music: N/A
+
+【第26段｜8秒】
+integrated_multimodal_description: [Shot 26] stairwell, daytime. Medium shot, backlit. Chen Mo stands by the window smoking, the window light the only bright area, smoke curling in front of him. His face half lit, half dark.
+0.0～2.4秒：他吸了一口烟，屏住，看向楼梯上方。
+2.4～5.2秒：他吐烟，烟在逆光里散开，他低头看向画面前方。
+5.2～8.0秒：画面停在烟灰将落未落、他的手指夹着烟停在半空的状态。
+
+overall_soundscape: 烟纸燃烧的细微声响，楼道回音，窗外风声
+non_diegetic_music: N/A
+
+【第27段｜6秒】
+integrated_multimodal_description: [Shot 27] stairwell, Chen Mo facing camera. Close shot, eye level, backlight leaving two highlights on his glasses. He smiles slightly, the smile staying at his mouth.
+0.0～1.0秒：他抬起头，笑意先出现。
+1.0～4.6秒：陈默 (S3) says: <d>[Chinese] 我真是九点多听见的，我哪儿记得那么准。</d>
+4.6～6.0秒：他闭上嘴，笑意从他脸上退下去一半。
+
+overall_soundscape: 楼道的空响，一声很轻的咳嗽
+non_diegetic_music: N/A
+
+【第28段｜5秒】
+integrated_multimodal_description: [Shot 28] corridor, Zhou Yan facing camera, extreme close shot, fixed camera, completely still. Only the corridor bulb is reflected in his right pupil.
+0.0～2.0秒：他一动不动，眼睛没有眨。
+2.0～3.8秒：他缓慢地眨了一次眼。
+3.8～5.0秒：画面停在他睁眼之后、视线已经移开的瞬间。
+
+overall_soundscape: 只有雨声，很远
+non_diegetic_music: N/A
+
+【第29段｜5秒】
+integrated_multimodal_description: [Shot 29] corridor, low angle looking up. Zhou Yan stands at the bottom of frame, one hand in his coat pocket, looking upward. A row of rusted pipes crosses the ceiling.
+0.0～1.8秒：他缓缓抬起头，视线沿管道向左移动。
+1.8～3.6秒：他的头停在某个位置，视线定住。
+3.6～5.0秒：画面停在他抬头不动、管道占满画面的构图。
+
+overall_soundscape: 走廊底噪，管道里传来一次很远的水流声
+non_diegetic_music: N/A
+
+【第30段｜5秒】
+integrated_multimodal_description: [Shot 30] pipe joint, extreme close shot, macro, fixed camera. A corroded metal joint with several water droplets hanging on it, the pipe crossing the frame horizontally.
+0.0～1.6秒：水珠静止，表面映着灯泡的亮点。
+1.6～3.2秒：管道轻微震动，一颗水珠落下去。
+3.2～5.0秒：画面停在管道震动传开、另一颗水珠正要落下的瞬间。
+
+overall_soundscape: 水泵启动的低频嗡鸣，管道在墙里敲击
+non_diegetic_music: N/A
+
+【第31段｜5秒】
+integrated_multimodal_description: [Shot 31] corridor, Zhou Yan facing camera, medium shot, low angle. Pipes directly above him, light falling on his face from above.
+0.0～0.8秒：他开口前，视线从管道回到画面前方。
+0.8～3.6秒：周砚 (S1) says: <d>[Chinese] 这栋楼的水泵，每天八点四十五准时启动。</d>
+3.6～5.0秒：他闭上嘴，头顶的管道仍在震动。
+
+overall_soundscape: 水泵持续运转，水在管道里流动
+non_diegetic_music: N/A
+
+【第32段｜6秒】
+integrated_multimodal_description: [Shot 32] corridor, Zhou Yan facing camera, close shot, eye level. His expression does not change, only his mouth moves. The pipes are behind him.
+0.0～0.9秒：他的视线穿过镜头，落向画面前方。
+0.9～4.6秒：周砚 (S1) says: <d>[Chinese] 泵一响，整栋楼什么都听不见。你在九点多，听见了什么。</d>
+4.6～6.0秒：他闭上嘴，眼睛没有眨。
+
+overall_soundscape: 水泵的持续低频，水管里的流水声
+non_diegetic_music: N/A
+
+【第33段｜5秒】
+integrated_multimodal_description: [Shot 33] Chen family balcony, looking up. Wide angle, camera below looking up. Two adjacent balconies separated by a narrow gap, rain falling straight through it, everything wet.
+0.0～1.8秒：镜头缓缓上摇，两边的阳台逐渐进入画面。
+1.8～3.6秒：缝隙的宽度清晰可见，雨水穿过缝隙落下。
+3.6～5.0秒：画面停在这道缝隙上。
+
+overall_soundscape: 雨砸在金属栏杆上，密集
+non_diegetic_music: N/A
+
+【第34段｜5秒】
+integrated_multimodal_description: [Shot 34] balcony railing, extreme close shot, macro. Wet rusted metal, a few fresh scrape marks in the paint, lighter than the surrounding surface.
+0.0～1.8秒：焦点沿栏杆缓慢移动。
+1.8～3.4秒：焦点停在刮痕上，雨水从刮痕里流过去。
+3.4～5.0秒：画面停在刮痕的边缘，一根纤维挂着。
+
+overall_soundscape: 雨打在金属上的声音，很近
+non_diegetic_music: N/A
+
+【第35段｜5秒】
+integrated_multimodal_description: [Shot 35] interior, the doormat. Close shot from above, fixed camera. A pair of men leather shoes side by side on the mat just inside the door, dried mud visible on the soles.
+0.0～1.8秒：鞋跟轻微地动了一下。
+1.8～3.6秒：镜头开始缓慢上摇。
+3.6～5.0秒：画面停在鞋面上方一点点，不再继续。
+
+overall_soundscape: 地毯上脚步的摩擦，一次呼吸
+non_diegetic_music: N/A
+
+【第36段｜5秒】
+integrated_multimodal_description: [Shot 36] corridor wall, close shot, eye level. A long water stain runs down the wall, the plaster bulging, darker than the surrounding surface.
+0.0～1.8秒：镜头沿水渍向下移动。
+1.8～3.6秒：停在水渍的末端，墙皮隆起。
+3.6～5.0秒：画面停在隆起的墙皮上。
+
+overall_soundscape: 墙里隐约的流水声，走廊底噪
+non_diegetic_music: N/A
+
+【第37段｜5秒】
+integrated_multimodal_description: [Shot 37] interrogation room, wide shot. Wide angle, fixed camera, all four corners visible. A metal table, three chairs, Zhou Yan on one side, Lin He and Chen Mo on the other, a gap between them. A single lamp overhead.
+0.0～1.8秒：镜头静止，三个人都没有动。
+1.8～3.6秒：周砚把一样东西放上桌面。
+3.6～5.0秒：画面停在桌面上的手表上。
+
+overall_soundscape: 通风口的气流，金属桌面的轻响
+non_diegetic_music: N/A
+
+【第38段｜5秒】
+integrated_multimodal_description: [Shot 38] the watch on the table, extreme close shot, macro, fixed camera. The date engraving on the inner strap is legible, the hands stopped at a particular time.
+0.0～1.8秒：焦点从表盘移到表带内侧。
+1.8～3.6秒：焦点在刻字上停住。
+3.6～5.0秒：画面停在那行日期上，指尖的影子掠过。
+
+overall_soundscape: 几乎静音，只有通风口的低频
+non_diegetic_music: N/A
+
+【第39段｜6秒】
+integrated_multimodal_description: [Shot 39] interrogation room, Zhou Yan facing camera. Close shot, eye level. His hands folded on the table, body upright, almost no movement as he speaks.
+0.0～1.0秒：他抬起眼，看向桌子对面。
+1.0～4.6秒：周砚 (S1) says: <d>[Chinese] 你说你那天晚上一直没睡踏实，那我问你，水管响的时候你醒着吗。</d>
+4.6～6.0秒：他闭上嘴，双手仍交叠着没有动。
+
+overall_soundscape: 通风口气流，椅子轻微的移动声
+non_diegetic_music: N/A
+
+【第40段｜7秒】
+integrated_multimodal_description: [Shot 40] interrogation room, Chen Mo facing camera. Medium close shot, eye level. His hands below the table, shoulders slightly hunched, leaning back.
+0.0～1.2秒：他的肩膀往上提了一点。
+1.2～5.4秒：陈默 (S3) says: <d>[Chinese] 水管？哪天晚上水管都在响啊，这跟我有什么关系。</d>
+5.4～7.0秒：他闭上嘴，视线移到桌角，没有抬起来。
+
+overall_soundscape: 椅腿在地面上挪动，他的呼吸变重
+non_diegetic_music: N/A
+
+【第41段｜6秒】
+integrated_multimodal_description: [Shot 41] interrogation room, Zhou Yan facing camera. Close shot, eye level. He slides a sheet of paper to the middle of the table, the building pump log printed on it.
+0.0～1.0秒：纸张滑过桌面，停住。
+1.0～4.6秒：周砚 (S1) says: <d>[Chinese] 八点四十五以后，你自己家的水管也在响，你不可能听见对面的争吵。</d>
+4.6～6.0秒：他的手指压在纸上，没有收回。
+
+overall_soundscape: 纸张在金属桌面滑动，手指按下的轻响
+non_diegetic_music: N/A
+
+【第42段｜5秒】
+integrated_multimodal_description: [Shot 42] Chen Mo hands, extreme close shot, fixed camera, below the table. His fingers slowly tighten on his knee, knuckles going pale.
+0.0～1.8秒：手指开始收紧。
+1.8～3.6秒：指节顶起，皮肤发白。
+3.6～5.0秒：画面停在手完全握紧、手背上血管凸起的状态。
+
+overall_soundscape: 布料被捏紧的摩擦声，他的呼吸
+non_diegetic_music: N/A
+
+【第43段｜5秒】
+integrated_multimodal_description: [Shot 43] interrogation room, Lin He facing camera. Close shot, eye level. Her face pale, her gaze moving between Zhou Yan and Chen Mo, finally settling on Chen Mo side.
+0.0～1.0秒：她的头缓慢地转向画面右侧。
+1.0～3.8秒：林鹤 (S2) says: <d>[Chinese] 阳台……中间只隔了那么一点点。</d>
+3.8～5.0秒：她闭上嘴，眼睛睁大，身体僵住。
+
+overall_soundscape: 她的呼吸变浅，椅子轻微向后挪
+non_diegetic_music: N/A
+
+【第44段｜6秒】
+integrated_multimodal_description: [Shot 44] interrogation room, Chen Mo facing camera. Close shot, eye level. He turns his head, facing the lens directly for the first time, the glare on his glasses gone for an instant.
+0.0～1.2秒：他抬起头，直视画面前方。
+1.2～4.6秒：陈默 (S3) says: <d>[Chinese] 我只是想让他把钱还我，就为了那点钱。</d>
+4.6～6.0秒：他闭上嘴，下巴往下沉了一点。
+
+overall_soundscape: 通风口气流，他清了一下嗓子
+non_diegetic_music: N/A
+
+【第45段｜5秒】
+integrated_multimodal_description: [Shot 45] interrogation room, tabletop. Close shot from above, fixed camera. The pump log pushed aside, the watch still in place, two hands entering from either side of frame, neither touching it.
+0.0～1.8秒：两只手同时停在画面边缘。
+1.8～3.6秒：左边的手收回去，右边的手也收回。
+3.6～5.0秒：画面停在手表孤零零躺在桌面中央。
+
+overall_soundscape: 纸张边缘的轻响，通风口气流
+non_diegetic_music: N/A
+
+【第46段｜6秒】
+integrated_multimodal_description: [Shot 46] interrogation room, Lin He facing camera. Close shot, eye level, cold white light from above. Both hands on the table, the watch lying open on the tabletop.
+0.0～1.0秒：她低头看着桌上的表，喉部动了一下。
+1.0～4.6秒：林鹤 (S2) says: <d>[Chinese] 表是我换的。八点二十五，我怕你们算时间。</d>
+4.6～6.0秒：她闭上嘴，眼睛没有从表上抬起来。
+
+overall_soundscape: 金属桌子上的轻微摩擦，通风口的气流声
+non_diegetic_music: N/A
+
+【第47段｜5秒】
+integrated_multimodal_description: [Shot 47] interrogation room, Zhou Yan facing camera. Close shot, eye level, half his face in light. The watch sits at the bottom of frame.
+0.0～0.8秒：他把手表向画面前方推了推。
+0.8～3.6秒：周砚 (S1) says: <d>[Chinese] 他八点四十就死了。你走的时候，他还活着。</d>
+3.6～5.0秒：他的手从表上收回，停在桌沿。
+
+overall_soundscape: 手表在桌面滑动的声音，通风口气流
+non_diegetic_music: N/A
+
+【第48段｜7秒】
+integrated_multimodal_description: [Shot 48] interrogation room, Chen Mo facing camera. Medium close shot, camera slowly pushes in. Hard top light, two reflections on his glasses hiding his eyes.
+0.0～1.2秒：镜头开始缓慢推近，他坐着没有动。
+1.2～5.4秒：周砚 (S1) says: <d>[Chinese] 你听见的是几点的争吵。</d>
+5.4～7.0秒：镜头停住，他的喉结动了一下。
+
+overall_soundscape: 通风口气流，椅子的轻微响动
+non_diegetic_music: N/A
+
+【第49段｜8秒】
+integrated_multimodal_description: [Shot 49] interrogation room, Chen Mo facing camera, extreme close shot, fixed camera. The light from above dims across the shot until only a rim remains on the edge of his face.
+0.0～2.6秒：他没有开口，嘴唇闭着。
+2.6～5.6秒：光线逐渐变暗，他的轮廓一点点沉进黑色。
+5.6～8.0秒：画面停在只剩一道侧脸边缘、其余全黑的构图。
+
+overall_soundscape: 几乎静音，一滴水落在金属上的声音
+non_diegetic_music: N/A
+
+【第50段｜6秒】
+integrated_multimodal_description: [Shot 50] the balcony gap, daytime, after rain. Medium shot, fixed camera, positioned between the buildings. Water still hanging on the iron railings, a flattened patch of ground below the gap.
+0.0～2.0秒：一颗水珠从栏杆上落下去。
+2.0～4.2秒：镜头轻微下摇，露出地面那块塌陷的痕迹。
+4.2～6.0秒：画面停在两栋楼之间的这道缝隙上。
+
+overall_soundscape: 水滴落在水泥地上，远处街道的车流
+non_diegetic_music: N/A
+
+【第51段｜6秒】
+integrated_multimodal_description: [Shot 51] below the building, Zhou Yan facing camera. Medium shot, eye level. He stands on the step at the entrance, coat collar open, the darkness of the stairwell behind him.
+0.0～1.2秒：他把手插进口袋，看向画面前方。
+1.2～4.6秒：周砚 (S1) says: <d>[Chinese] 他八点四十死的。你听不见的那段时间，才是他下手的时候。</d>
+4.6～6.0秒：他闭上嘴，视线移向街道尽头。
+
+overall_soundscape: 屋檐滴水，远处车流
+non_diegetic_music: N/A
+
+【第52段｜5秒】
+integrated_multimodal_description: [Shot 52] street, after rain. Wide shot, fixed camera. The whole street soaked, streetlights already on, long reflections in the water. No pedestrians in frame.
+0.0～1.8秒：路灯的光在水面上晃动。
+1.8～3.6秒：一只麻雀落在水边，又飞走。
+3.6～5.0秒：画面停在空荡的湿街道上。
+
+overall_soundscape: 屋檐滴水，远处一声鸟叫
+non_diegetic_music: N/A
+
+【第53段｜6秒】
+integrated_multimodal_description: [Shot 53] corridor outside the interrogation room, Zhou Yan from behind. Medium shot, fixed camera. He stands at the door without entering, one hand braced on the frame, looking down at the floor.
+0.0～2.0秒：他一动不动地站着，肩膀起伏一次。
+2.0～4.4秒：他抬起头，看向门里。
+4.4～6.0秒：画面停在他侧过身、脸露出四分之一的瞬间。
+
+overall_soundscape: 走廊底噪，门里传出的低声交谈
+non_diegetic_music: N/A
+
+【第54段｜6秒】
+integrated_multimodal_description: [Shot 54] street, night. Wide shot, fixed camera. Zhou Yan walks away down the wet road, growing smaller. Streetlights pass one after another behind him.
+0.0～2.2秒：他走过第一盏路灯，影子从长变短。
+2.2～4.6秒：走过第二盏，身影缩得更小。
+4.6～6.0秒：画面停在路面反光里那个小小的背影上。
+
+overall_soundscape: 街道远处的车流，屋檐滴水
+non_diegetic_music: N/A
+
+【第55段｜7秒】
+integrated_multimodal_description: [Shot 55] the fourth-floor window, viewed from the street. Close shot, fixed low angle. The light inside is out, only the outline of the curtain remains.
+0.0～2.4秒：窗户里的灯闪了一下，然后灭掉。
+2.4～5.0秒：窗帘的轮廓在黑暗里显现出来。
+5.0～7.0秒：画面停在这扇黑掉的窗户上，雨已经停了。
+
+overall_soundscape: 街道安静下来，最后几声屋檐滴水
+non_diegetic_music: N/A

@@ -4,8 +4,8 @@
 // the mapping comes from the running instance rather than from guessing at folder
 // names. The result is the install list for a new machine: which node packages to
 // copy, and which classes each one has to keep providing.
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 
 const ROOT = process.argv[2] ?? process.cwd();
 const COMFY = process.argv[3] ?? 'http://127.0.0.1:8188';
@@ -179,21 +179,60 @@ if (missing.length) {
 
 L.push('## 二、需要存在的模型 / 资源文件');
 L.push('');
-L.push('`文件名` 是模板里写死的值，必须在新机器上放在 ComfyUI 对应目录下（相对路径要一致）。');
+L.push(
+  '`文件名` 是模板里写死的值，必须在新机器上放在 ComfyUI 对应目录下（相对路径要一致）。' +
+    '「实际路径」来自本机 `COMFY_DIR` 的真实扫描，找不到的会标 `未安装`。'
+);
 L.push('');
-L.push('| 文件名 | 模板数 | 推测目录 |');
-L.push('| --- | --- | --- |');
-const guessDir = (f) => {
-  if (/\.gguf$/i.test(f)) return 'models/UNET 或 models/diffusion_models';
-  if (/vae/i.test(f)) return 'models/VAE';
-  if (/lora|lightning|turbo|combat/i.test(f)) return 'models/LORAS';
-  if (/4x-|UltraSharp|upscale/i.test(f)) return 'models/upscale_models';
-  if (/\.jpe?g$|\.png$/i.test(f)) return 'ComfyUI/input（模板示例图）';
-  if (/Qwen3-TTS/i.test(f)) return 'models（TTS 权重目录）';
-  return 'models/checkpoints 或 diffusion_models';
+L.push('| 文件名 | 模板数 | 实际路径（相对 ComfyUI 根） | 大小 |');
+L.push('| --- | --- | --- | --- |');
+
+/**
+ * 在本机的 ComfyUI 目录里找文件的真实位置。
+ *
+ * 以前这张表是拿文件名猜目录（`/vae/` 猜 VAE、`/lora/` 猜 LORAS），猜错了
+ * 迁移时会照着错的路径放文件。改成真扫一遍：找到就用实际相对路径，
+ * 找不到就明确写「未安装」，不猜。
+ */
+const indexModels = () => {
+  const modelsRoot = join(COMFY_DIR, 'models');
+  const map = new Map();
+  const walk = (dir) => {
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else {
+        const rel = relative(COMFY_DIR, full).split(sep).join('/');
+        const size = statSync(full).size;
+        // 同一文件名可能在多个位置，保留先找到的那个
+        if (!map.has(entry.name)) map.set(entry.name, { rel, size });
+      }
+    }
+  };
+  walk(modelsRoot);
+  return map;
 };
+
+const modelIndex = indexModels();
+const humanSize = (bytes) => {
+  if (!bytes) return '—';
+  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+  return `${Math.round(bytes / 1024 ** 2)} MB`;
+};
+
 for (const [f, t] of [...fileUsage.entries()].sort()) {
-  L.push(`| \`${f}\` | ${t.size} | ${guessDir(f)} |`);
+  // 模板里可能带子目录（Foo/bar.safetensors），索引按文件名建
+  const base = f.split(/[\\/]/).pop();
+  const hit = modelIndex.get(base);
+  const where = hit ? `\`${hit.rel}\`` : '**未安装**';
+  L.push(`| \`${f}\` | ${t.size} | ${where} | ${hit ? humanSize(hit.size) : '—'} |`);
 }
 L.push('');
 

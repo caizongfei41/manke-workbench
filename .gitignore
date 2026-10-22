@@ -70,6 +70,29 @@ yarn-error.log*
 *.sqlite3
 src/config/db/schema.ts
 
+# Model weights. The workflows need ~230 GB of them and GitHub caps a single
+# file at 100 MB, so they are never committed. scripts/fetch-models.mjs checks
+# which ones are installed; docs/DEPENDENCIES.md lists where each belongs.
+*.safetensors
+*.ckpt
+*.gguf
+*.onnx
+*.pth
+*.pt
+# ...unless it is a tiny fixture a test actually needs
+!tests/**/fixtures/*.pt
+
+# Rendered output: films, per-shot clips, TTS tracks, generated stills
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.flac
+
+# Junk the render scripts drop next to their output
+**/run.log
+
 # npm (project uses pnpm)
 package-lock.json
 
