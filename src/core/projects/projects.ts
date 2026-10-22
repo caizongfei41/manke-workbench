@@ -9,7 +9,7 @@ import {
   isDestructiveEmptyProjectSnapshot,
   normalizeProjectSnapshotDocument,
 } from '@/core/projects/project-snapshot';
-import { and, desc, eq, getTableColumns } from 'drizzle-orm';
+import { and, count, desc, eq, getTableColumns } from 'drizzle-orm';
 import {
   defaultWorkspaceMode,
   resolveWorkspaceMode,
@@ -63,13 +63,22 @@ export const createProject = async ({
   };
 };
 
+/**
+ * 项目列表。
+ *
+ * 以前只有 limit、没有 offset，而且默认 24 —— 调用方不传参就永远只能看到前 24 个，
+ * 后面的项目在界面上「消失」了（批量清理时删完一页又冒出一页，就是这个原因）。
+ * 现在 limit/offset 都能传，limit 传 null 表示不分页。
+ */
 export const loadProjects = async ({
   limit = 24,
+  offset = 0,
 }: {
-  limit?: number;
+  limit?: number | null;
+  offset?: number;
 }) => {
   const db = await getDb();
-  const projects = await db
+  const query = db
     .select({
       ...getTableColumns(project),
       coverImageUrl: userAsset.publicUrl,
@@ -81,13 +90,25 @@ export const loadProjects = async ({
       desc(project.lastOpenedAt),
       desc(project.updatedAt),
       desc(project.createdAt)
-    )
-    .limit(limit);
+    );
+
+  const paged = limit === null ? query : query.limit(limit).offset(offset);
+  const projects = await paged;
 
   return projects.map((entry: any) => ({
     ...entry,
     coverImageUrl: entry.coverImageUrl?.trim() || null,
   }));
+};
+
+/** 未删除的项目总数，给前端算分页用。 */
+export const countProjects = async () => {
+  const db = await getDb();
+  const rows = await db
+    .select({ value: count() })
+    .from(project)
+    .where(eq(project.status, 'active'));
+  return Number(rows[0]?.value ?? 0);
 };
 
 export const getProject = async ({

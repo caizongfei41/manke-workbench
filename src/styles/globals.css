@@ -14,9 +14,11 @@ button[aria-disabled="true"] {
 }
 
 :root {
-  --font-noto-sans: "Figtree Variable", "Figtree", ui-sans-serif, system-ui,
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  /* 中文优先：Figtree 没有汉字，放在前面只是让浏览器多试一次回退。
+     "Microsoft YaHei UI" 在 Windows 上比 YaHei 的 hinting 更好。 */
+  --font-noto-sans: "Figtree Variable", "Figtree", "PingFang SC",
+    "Microsoft YaHei UI", "Microsoft YaHei", "Hiragino Sans GB",
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-noto-serif: "Figtree Variable", "Figtree", ui-sans-serif, system-ui,
     -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
   --font-noto-sans-mono: "Geist Mono Variable", "Geist Mono", ui-monospace,
@@ -55,6 +57,8 @@ button[aria-disabled="true"] {
  * the shared utility surfaces keep their existing typography.
  */
 .beat-product-shell {
+  /* 正文基础字重。中文在 400 下笔画会糊，450 是临界值 —— 再高就显粗。 */
+  --beat-body-weight: 450;
   --beat-font-ui: "Figtree Variable", "Figtree", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", ui-sans-serif, system-ui,
     -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -668,6 +672,10 @@ button[aria-disabled="true"] {
 
 body {
   @apply overscroll-none bg-background text-foreground;
+  /* Chinese glyphs smear at 400; 450 is where strokes stand up without
+     looking bold. Figtree's variable axis interpolates smoothly, so Latin
+     is unaffected. */
+  font-weight: var(--beat-body-weight, 450);
 }
 
 /* https://github.com/shadcn-ui/ui/issues/4227#issuecomment-2438290165 */
@@ -1105,22 +1113,18 @@ html[data-theme] body {
 }
 
 /*
- * The editor's media rail is a permanently dark strip (it sits against the video
- * canvas, like the panels in a NLE). Its text used the themed `ink` token, so in
- * light mode it rendered near-black on near-black. Pin the tokens here instead of
- * flipping the whole rail to a light panel.
+ * The media rail follows the app theme.
+ *
+ * It used to be pinned to a permanent dark strip — the NLE convention of a dark
+ * panel beside the video canvas. In a light workbench that read as a foreign
+ * block: black column, white text, while everything around it was warm off-white.
+ * Now it inherits the same tokens as the rest of the shell, with only a slightly
+ * recessed surface so it still reads as a separate panel.
  */
 .editor-rail {
-  --beat-ink: #ffffff;
-  --color-ink: #ffffff;
-  --beat-text-1: #f4f4f5;
-  --beat-text-2: #a3a3ab;
-  --beat-text-3: #71717a;
-  --beat-border: rgba(255, 255, 255, 0.1);
-  --beat-border-strong: rgba(255, 255, 255, 0.18);
-  --beat-surface: #1d1e21;
-  --beat-surface-2: #202124;
-  --beat-control: #24252a;
+  --beat-surface: var(--beat-surface-2);
+  --beat-border: color-mix(in srgb, var(--beat-text-1) 9%, transparent);
+  --beat-border-strong: color-mix(in srgb, var(--beat-text-1) 16%, transparent);
 }
 
 /* Glass surfaces. Plain CSS, not a Tailwind layer: v4 tree-shakes a hand-written

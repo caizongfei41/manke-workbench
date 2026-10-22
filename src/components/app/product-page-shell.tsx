@@ -114,7 +114,7 @@ export function ProductPageShell({
     </span>
   );
   const workspaceTabClassName = (isActive: boolean) =>
-    `inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium transition sm:px-3 ${
+    `inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium transition sm:px-3.5 ${
       isActive
         ? 'bg-ink/[0.10] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
         : 'text-[var(--beat-text-2)] hover:bg-ink/[0.045] hover:text-ink'

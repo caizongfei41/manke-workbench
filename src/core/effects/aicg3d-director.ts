@@ -40,9 +40,11 @@ export const DIRECTOR_FIELDS: readonly DirectorField[] = [
     label: '分辨率',
     type: 'select',
     group: 'output',
-    default: '1080P',
+    default: '720P',
     options: RESOLUTIONS,
-    hint: '1080P 是 1920×1088；越高越慢，显存占用也越高。',
+    // 实测：720P 单段约 4 万 token、3.5 分钟；1080P 约 8.8-11.5 万 token、8-9 分钟，
+    // 且在 20G 卡上会顶到显存边界导致驱动重置。默认给能跑完的档位。
+    hint: '720P 单段约 3.5 分钟；1080P 慢一倍多，显存紧的卡容易卡住。要细节再往上调。',
   },
   {
     key: 'aspect_ratio',
@@ -72,7 +74,7 @@ export const DIRECTOR_FIELDS: readonly DirectorField[] = [
     max: 22,
     step: 1,
     // H3 的时间栅格只有 5 / 22 / 39 帧几档，填中间值不会更顺，只会被归到最近的一档。
-    hint: '只有两档：填 1–5 按 5 帧衔接，填 6–22 按 22 帧。22 帧接得更贴，但每段要多跑一段。',
+    hint: '只有两档：1–5 按 5 帧，6–22 按 22 帧。仅在同一镜头分成多段接成链时生效；单段生成不起作用。',
   },
   {
     key: 'handoff_mode',
@@ -142,10 +144,13 @@ export const DIRECTOR_FIELDS: readonly DirectorField[] = [
     key: 'vram_tier',
     label: '显存档位',
     type: 'select',
-    group: 'memory',
+    group: 'sampling',
     default: '自动（按显卡）',
     options: ['自动（按显卡）', '16G', '12G', '8G'],
-    hint: '自动会读显卡显存自己挑档位，换机器不用改。',
+    // 这一项和第二行的分辨率是两道闸，都会压画布上限：
+    //   12G 档把画布封顶 720P，8G 档封顶 480P，16G 档不额外限制。
+    // 选了 1080P 却停在 12G 档时，实际仍会被压回 720P —— 想跑高分辨率要把档位一起调上去。
+    hint: '自动会按显存压低画布上限（12G 档封顶 720P，8G 档封顶 480P）。要跑 1080P 得手动选 16G。',
   },
   {
     key: 'vram_policy',

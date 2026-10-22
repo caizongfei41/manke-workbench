@@ -909,7 +909,9 @@ export function DramaCanvas({ projectId, initialDocument, onPersist }: Props) {
             parameters: {
               aspect_ratio: DRAMA_ASPECT_RATIO,
               wmDuration: `${shot.seconds}s`,
-              wmOutputQuality: DRAMA_OUTPUT_QUALITY,
+              // Quality follows the resolution picked on the parameter board. It used to be
+              // a hardcoded constant, so changing resolution on the board had no effect here.
+              wmOutputQuality: String(dramaGlobalParameters().resolution ?? DRAMA_OUTPUT_QUALITY).toLowerCase(),
               director_global: dramaGlobalParameters(),
               director_loras: activeDramaLoras(),
               director_segments: [

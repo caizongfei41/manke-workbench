@@ -479,7 +479,8 @@
         "noResults": "一致するメディアはありません",
         "drop": "画像または動画をここにドロップ",
         "localOnly": "元ファイルはこのデバイスに保持されます",
-        "stillDuration": "静止画 · {duration}秒"
+        "stillDuration": "静止画 · {duration}秒",
+        "backToCanvas": "キャンバスに戻る"
       },
       "empty": {
         "title": "画像または動画を読み込んで編集を始める",
@@ -1214,7 +1215,6 @@
   "home.workspaces.standardTitle": "標準キャンバス",
   "home.workspaces.standardBody": "キャラクター・シーン・設定を 1 枚のグリッドに並べ、線でつなぐ。",
   "home.workspaces.standardOutput": "接続できる絵コンテボード",
-  "AppShell.editor.media.backToCanvas": "キャンバスに戻る",
   "standard.generating": "生成中…",
   "standard.needPrompt": "まずプロンプトを入力",
   "standard.sendToEditor": "編集へ送る",

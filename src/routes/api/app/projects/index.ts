@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { serializeProjectCenterCard } from '@/core/projects/project-entry';
 import {
+  countProjects,
   createProject,
   deleteProjects,
   loadProjects,
@@ -30,9 +31,37 @@ const readProjectIds = (value: unknown) =>
         .filter((item) => item.length > 0)
     : [];
 
-async function GET() {
-  const projects = await loadProjects({});
-  return Response.json({ projects: projects.map(serializeProjectCenterCard) });
+/**
+ * Project list.
+ *
+ * Paginated via ?limit=N&offset=M. Without params it still returns the original
+ * 24, but now also reports `total` so the client knows how much is left.
+ * ?all=1 returns everything (batch operations, cleanup scripts).
+ */
+async function GET({ request }: { request: Request }) {
+  const url = new URL(request.url);
+  const wantsAll = url.searchParams.get('all') === '1';
+  const rawLimit = Number(url.searchParams.get('limit'));
+  const rawOffset = Number(url.searchParams.get('offset'));
+
+  const limit = wantsAll
+    ? null
+    : Number.isFinite(rawLimit) && rawLimit > 0
+      ? Math.min(Math.floor(rawLimit), 500)
+      : 24;
+  const offset = Number.isFinite(rawOffset) && rawOffset > 0 ? Math.floor(rawOffset) : 0;
+
+  const [projects, total] = await Promise.all([
+    loadProjects({ limit, offset }),
+    countProjects(),
+  ]);
+
+  return Response.json({
+    projects: projects.map(serializeProjectCenterCard),
+    total,
+    limit,
+    offset,
+  });
 }
 
 async function POST({ request }: { request: Request }) {

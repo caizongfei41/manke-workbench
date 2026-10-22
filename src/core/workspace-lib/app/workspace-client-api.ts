@@ -41,10 +41,18 @@ export async function fetchRecentAssets(
 
 export async function fetchWorkspaceProjects(): Promise<{
   projects: WorkspaceProjectCardItem[];
+  total: number;
 }> {
-  return apiJsonGet<{ projects: WorkspaceProjectCardItem[] }>(
-    '/api/app/projects'
-  );
+  // 项目页要能看到全部。以前固定走默认的 24 条上限，项目超过 24 个之后
+  // 后面的在列表里根本看不到 —— 批量清理时删掉一页又冒出下一页就是这个。
+  const payload = await apiJsonGet<{
+    projects: WorkspaceProjectCardItem[];
+    total?: number;
+  }>('/api/app/projects?all=1');
+  return {
+    projects: payload.projects,
+    total: payload.total ?? payload.projects.length,
+  };
 }
 
 export async function renameWorkspaceProject(projectId: string, name: string) {

@@ -1564,12 +1564,12 @@ export function VideoEditorWorkspace({
         ))}
 
       <div className="flex min-h-0 flex-1">
-        <aside className="editor-rail hidden w-[292px] shrink-0 flex-col border-r border-ink/[0.07] bg-[#17181a] lg:flex">
+        <aside className="editor-rail hidden w-[292px] shrink-0 flex-col border-r border-[var(--beat-border)] bg-[var(--beat-surface-2)] lg:flex">
           <div className="flex h-[74px] items-end gap-5 border-b border-ink/[0.07] px-5 pb-3">
             <a
               href={`/canvas/${projectId}`}
               data-editor-back-to-canvas="true"
-              className="mb-1 inline-flex h-9 items-center gap-1.5 rounded-full border border-ink/[0.12] px-2.5 text-[13px] text-ink/60 transition hover:border-ink/30 hover:text-ink"
+              className="mb-1 inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink/[0.12] px-2.5 text-[13px] text-ink/60 transition hover:border-ink/30 hover:text-ink"
             >
               <Workflow className="size-3.5" />
               {t('media.backToCanvas')}
@@ -1705,7 +1705,7 @@ export function VideoEditorWorkspace({
                       ) : (
                         <Music2 className="size-4 text-[var(--beat-graph)]" />
                       )}
-                      <span className="absolute bottom-1 right-1 rounded bg-black/72 px-1 py-0.5 text-[8px] font-[560] tabular-nums text-ink/75">
+                      <span className="absolute bottom-1 right-1 rounded bg-black/72 px-1 py-0.5 text-[11px] font-[560] tabular-nums text-ink/75">
                         {formatTime(clip.duration)}
                       </span>
                     </span>
@@ -1820,7 +1820,7 @@ export function VideoEditorWorkspace({
             {t('player.title')}
           </div>
 
-          <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black/35 p-4 sm:p-8">
+          <div className={`relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-4 sm:p-8 ${sourceUrl && previewClip ? 'bg-[var(--beat-surface-2)]' : ''}`}>
             {sourceUrl && previewClip ? (
               <div
                 ref={previewFrameRef}
@@ -2194,7 +2194,7 @@ export function VideoEditorWorkspace({
                       })
                     );
                   }}
-                  className="relative h-9 border-b border-ink/[0.07] bg-black/[0.08] text-left"
+                  className="relative h-9 border-b border-ink/[0.07] bg-[var(--beat-surface-2)] text-left"
                 >
                   {[0, 0.25, 0.5, 0.75, 1].map((point) => (
                     <span
@@ -2249,6 +2249,11 @@ export function VideoEditorWorkspace({
                         );
                       }}
                     >
+                      {track.clips.length === 0 ? (
+                        <div className="pointer-events-none absolute inset-x-3 top-1/2 -translate-y-1/2">
+                          <div className="h-px w-full border-t border-dashed border-ink/[0.14]" />
+                        </div>
+                      ) : null}
                       {track.clips.map((clip) => {
                         const displayedClip =
                           timelineDragPreview?.id === clip.id
@@ -2365,7 +2370,7 @@ export function VideoEditorWorkspace({
                   </div>
 
                   {selectedClip.sourceType === 'caption' ? (
-                    <div className="space-y-3 rounded-xl border border-ink/[0.07] bg-black/15 p-3.5">
+                    <div className="space-y-3 rounded-xl border border-ink/[0.07] bg-[var(--beat-surface-2)] p-3.5">
                       <label className="block">
                         <span className="mb-2 block text-[13.5px] font-[520] text-ink/45">
                           {t('captions.text')}
@@ -2518,7 +2523,7 @@ export function VideoEditorWorkspace({
                       ) : null}
                     </div>
                   ) : selectedIsOverlay && selectedClip.overlay ? (
-                    <div className="space-y-4 rounded-xl border border-ink/[0.07] bg-black/15 p-3.5">
+                    <div className="space-y-4 rounded-xl border border-ink/[0.07] bg-[var(--beat-surface-2)] p-3.5">
                       {([
                         ['x', 0, 1, 0.01, selectedClip.overlay.x],
                         ['y', 0, 1, 0.01, selectedClip.overlay.y],
@@ -2594,7 +2599,7 @@ export function VideoEditorWorkspace({
                       </div>
                     </div>
                   ) : selectedClip.sourceType === 'audio' ? (
-                    <div className="space-y-4 rounded-xl border border-ink/[0.07] bg-black/15 p-3.5">
+                    <div className="space-y-4 rounded-xl border border-ink/[0.07] bg-[var(--beat-surface-2)] p-3.5">
                       {([
                         ['volume', 0, 1, 0.01, selectedClip.volume],
                         ['fadeIn', 0, selectedClip.duration, 0.01, selectedClip.fadeIn],
@@ -2661,7 +2666,7 @@ export function VideoEditorWorkspace({
                       </p>
                     </div>
                   ) : exactControlsOpen ? (
-                    <div className="space-y-3 rounded-xl border border-ink/[0.07] bg-black/15 p-3.5">
+                    <div className="space-y-3 rounded-xl border border-ink/[0.07] bg-[var(--beat-surface-2)] p-3.5">
                       {selectedClip.sourceType === 'video' && !selectedClip.activeTakeId ? (
                         <label className="block">
                           <span className="mb-2 block text-[13.5px] text-ink/38">
@@ -2770,7 +2775,7 @@ export function VideoEditorWorkspace({
               <div className="flex h-full flex-col">
                 <div className="rounded-2xl border border-ink/[0.07] bg-ink/[0.025] p-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-10 place-items-center rounded-xl bg-[#8d83ff]/15 text-[#a79fff]">
+                    <span className="grid size-10 place-items-center rounded-xl bg-[var(--beat-accent)]/15 text-[#a79fff]">
                       <Sparkles className="size-4" />
                     </span>
                     <div>

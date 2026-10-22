@@ -62,10 +62,8 @@
         "82",
         0
       ],
-      "selection": {
-        "method": "sol-attn",
-        "tau": 0.2
-      },
+      "selection": "sol-attn",
+      "selection.tau": 1.3,
       "start_percent": 0.2,
       "end_percent": 1,
       "dense_blocks": "",
@@ -138,8 +136,7 @@
       "prompt": "",
       "seconds": 5,
       "seed": 1469333183,
-      "previous_segment": "fixed",
-      "inline_media_state": "{\"images\":[{\"filename\":\"Krea2-USD-20260824193957_00001_.png\"},{\"filename\":\"Krea2-USD-20260824194149_00001_.png\"},{\"filename\":\"ComfyUI_temp_sloqp_00002_.png\"},{\"filename\":\"ComfyUI_temp_sloqp_00001_.png\"},{\"filename\":\"37e4c096b2a7bb25ea00a4f7c495e352815d2e58dbb220621e2d244660fc964b.png\"},{\"filename\":\"2a55a6c294838e9be401bd907dc5eb1a0a305322ee8d48b72bd9d7ae3af38af8.png\"},{\"filename\":\"441f4ef4245a049944c80759664910b47b352c662f14cc63032ebd4c1bad845f.png\"},{\"filename\":\"7a586252d09b6a240a3f425c0c347f43f35a9897303d2b0ae4492fd0cd4068ce.png\"}],\"audios\":[],\"videos\":[]}"
+      "inline_media_state": ""
     },
     "_meta": {
       "title": "AICG3D_H3SequenceSegment"

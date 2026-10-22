@@ -479,7 +479,8 @@
         "noResults": "没有匹配的素材",
         "drop": "拖入图片或视频",
         "localOnly": "原文件只保留在当前设备",
-        "stillDuration": "静态画面 {duration} 秒"
+        "stillDuration": "静态画面 {duration} 秒",
+        "backToCanvas": "回到画布"
       },
       "empty": {
         "title": "导入图片或视频，开始剪辑",
@@ -1214,7 +1215,6 @@
   "home.workspaces.standardTitle": "标准画布",
   "home.workspaces.standardBody": "角色、场景、设定摆在一张网格上，连起来就是一场戏。",
   "home.workspaces.standardOutput": "产出一张可连线的分镜板",
-  "AppShell.editor.media.backToCanvas": "回到画布",
   "standard.generating": "生成中…",
   "standard.needPrompt": "先写一句提示词",
   "standard.sendToEditor": "送剪辑台",

@@ -74,7 +74,22 @@ if (restart || !cdpUp) {
   launch('quark', QUARK, [`--remote-debugging-port=${CDP_PORT}`, '--remote-allow-origins=*', `http://127.0.0.1:${APP_PORT}/zh`], dirname(QUARK));
 }
 if (restart || !comfyUp) {
-  launch('comfyui', COMFY_PYTHON, ['-s', COMFY_SCRIPT, '--windows-standalone-build', '--use-sage-attention', '--disable-pinned-memory'], dirname(COMFY_SCRIPT));
+  // --windows-standalone-build turns auto-launch ON (see cli_args.py L291),
+  // so every respawn opened another browser tab. --disable-auto-launch is the
+  // documented override and must come along with it.
+  launch(
+    'comfyui',
+    COMFY_PYTHON,
+    [
+      '-s',
+      COMFY_SCRIPT,
+      '--windows-standalone-build',
+      '--disable-auto-launch',
+      '--use-sage-attention',
+      '--disable-pinned-memory',
+    ],
+    dirname(COMFY_SCRIPT)
+  );
 }
 if (restart || !appUp) {
   launch('workbench', process.execPath, [join(ROOT, '.output', 'server', 'index.mjs')], ROOT, {

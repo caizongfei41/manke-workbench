@@ -479,7 +479,8 @@
         "noResults": "No matching media",
         "drop": "Drop an image or video here",
         "localOnly": "The original stays on this device",
-        "stillDuration": "Still image · {duration}s"
+        "stillDuration": "Still image · {duration}s",
+        "backToCanvas": "Back to canvas"
       },
       "empty": {
         "title": "Import an image or video to start editing",
@@ -1214,7 +1215,6 @@
   "home.workspaces.standardTitle": "Standard canvas",
   "home.workspaces.standardBody": "Characters, scenes and settings on one grid; link them into a scene.",
   "home.workspaces.standardOutput": "Get a wired-up board",
-  "AppShell.editor.media.backToCanvas": "Back to canvas",
   "standard.generating": "Generating…",
   "standard.needPrompt": "Write a prompt first",
   "standard.sendToEditor": "Send to edit",
