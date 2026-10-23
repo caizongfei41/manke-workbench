@@ -95,7 +95,15 @@ for (const [cls, meta] of Object.entries(info)) {
 // register itself under a shorter name than its directory. Resolve against the
 // real custom_nodes listing so the install instructions name a directory that
 // actually exists.
-const cnDir = join(COMFY_DIR, 'ComfyUI', 'custom_nodes');
+// COMFY_DIR is the ComfyUI install root itself (the one holding models/ and
+// main.py), so custom_nodes sits directly under it. This used to append an
+// extra 'ComfyUI' segment, which pointed at a path that does not exist on a
+// standard install -- the folder listing came back empty, name resolution fell
+// through to the raw /object_info module name, and the manifest ended up
+// naming "Comfyui-Qwen-Image-2" for a directory actually called
+// "Comfyui-Qwen-Image-2.1-BlockCache-T8". The environment check then reported
+// a missing package that was installed all along.
+const cnDir = join(COMFY_DIR, 'custom_nodes');
 let cnFolders = [];
 try {
   cnFolders = readdirSync(cnDir, { withFileTypes: true })
@@ -107,7 +115,10 @@ try {
 
 const packageOf = (mod) => {
   if (!mod) return null;
-  const m = /^custom_nodes\.([^.]+)/.exec(mod);
+  // Greedy to the end: package folders routinely contain dots
+  // ("Comfyui-Qwen-Image-2.1-BlockCache-T8"), and a non-greedy [^.]+ stops at
+  // the version number, producing a name that matches no directory.
+  const m = /^custom_nodes\.(.+)$/.exec(mod);
   if (!m) {
     if (/^comfy_extras/.test(mod)) return '(comfy_extras)';
     if (/^nodes$|^comfy\./.test(mod)) return '(core)';

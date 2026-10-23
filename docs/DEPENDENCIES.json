@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-22T15:45:38.234Z",
+  "generated": "2026-10-23T03:29:45.779Z",
   "templateCount": 22,
   "customNodeClasses": [
     "AICG3DPromptSegmentSplit",
@@ -113,7 +113,7 @@
       ]
     },
     {
-      "name": "Comfyui-Qwen-Image-2",
+      "name": "Comfyui-Qwen-Image-2.1-BlockCache-T8",
       "classes": [
         "QwenImage21BlockCacheT8"
       ]
