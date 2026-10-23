@@ -14,6 +14,14 @@ const COMFY_DIR = process.argv[4] ?? process.env.BEATDESIGN_COMFYUI_HOME ?? 'E:\
 const WF_DIR = join(ROOT, 'data/comfyui/workflows');
 const OUT = join(ROOT, 'docs/DEPENDENCIES.md');
 
+// 安装渠道（下载地址、整包来源）。与 check-environment.mjs 读同一份。
+let sources = { runtime: {}, bundles: [], nodes: {}, models: {} };
+try {
+  sources = JSON.parse(readFileSync(join(ROOT, 'data/install-sources.json'), 'utf8'));
+} catch {
+  // 没有渠道文件也能生成清单，只是少了「从哪儿装」那一节
+}
+
 const CORE_NODES = new Set([
   'KSampler', 'KSamplerAdvanced', 'SamplerCustom', 'CheckpointLoaderSimple',
   'CLIPTextEncode', 'CLIPSetLastLayer', 'EmptyLatentImage', 'VAEDecode', 'VAEEncode',
@@ -154,6 +162,69 @@ L.push(`- 模板：**${templates.length}** 个`);
 L.push(`- 核心之外的自定义节点类：**${customClasses.length}** 个`);
 L.push(`- 需要的自定义节点包：**${[...byPackage.keys()].filter((p) => !p.startsWith('(')).length}** 个`);
 L.push(`- 模型 / 资源文件：**${fileUsage.size}** 个`);
+L.push('');
+
+// ── 安装渠道
+// 换机器部署时最先问的就是「这些文件从哪儿下」。渠道数据在
+// data/install-sources.json，这里渲染成人看的表格；自检脚本读的是同一份。
+L.push('## 〇、从哪儿装（换机器部署必读）');
+L.push('');
+L.push('本机跑通了不代表另一台也能跑。缺东西时按这张表补，命令行自检会把对应链接直接打出来。');
+L.push('');
+L.push('### 基础环境');
+L.push('');
+L.push('| 项目 | 版本 | 渠道 | 说明 |');
+L.push('| --- | --- | --- | --- |');
+const runtimeRows = [
+  ['Node.js', '20+', sources.runtime?.node],
+  ['pnpm', '9+', sources.runtime?.pnpm],
+  ['ComfyUI', 'Windows 整合包（推荐）', sources.runtime?.comfyuiPortable],
+  ['Python', '3.12（整合包内置）', sources.runtime?.python],
+];
+for (const [label, version, entry] of runtimeRows) {
+  if (!entry) continue;
+  L.push(`| ${label} | ${version} | ${entry.url} | ${entry.note ?? ''} |`);
+}
+L.push('');
+L.push('### 大模型整包');
+L.push('');
+L.push('逐个下 30 个文件很折腾，能整包拿优先整包：');
+L.push('');
+L.push('| 渠道 | 地址 | 提取码 | 覆盖 |');
+L.push('| --- | --- | --- | --- |');
+for (const bundle of sources.bundles ?? []) {
+  L.push(
+    `| ${bundle.name} | ${bundle.url || '（无公开地址）'} | ${bundle.code ?? '—'} | ${bundle.covers ?? '—'} |`
+  );
+}
+L.push('');
+L.push('> 国内环境优先 ModelScope，直连速度快。HuggingFace 需要代理或镜像站。');
+L.push('');
+L.push('### 按显存选模型版本');
+L.push('');
+L.push('同一份工作流常有多个量化版。模板里写死了文件名，换版本要同步改 JSON 或做软链接。');
+L.push('');
+L.push('| 显存 | 视频主模型 | 文本编码器 | 分辨率上限 |');
+L.push('| --- | --- | --- | --- |');
+L.push('| 8–12 GB | `minimax_h3_fl2va_pruned_w4a8_mixed` | `qwen3vl_8b_int8_convrot` | 480P |');
+L.push('| 16 GB | `minimax_h3_ref2va_pruned_int8_convrot` | `qwen3vl_32b_minimax_h3_int8_convrot` | 720P |');
+L.push('| 20–24 GB | `Minimax-h3_Singularity_ref2va_v1.3_int8` | `qwen3vl_32b_minimax_h3_int8_convrot` | 720P（1080P 顶边界） |');
+L.push('| 40 GB+ | 同上 | `qwen3vl_32b_minimax_h3_nvfp4_awq` | 1080P |');
+L.push('');
+L.push('> `nvfp4` 需要 40 系及以上显卡，30 系只能用 int8。');
+L.push('');
+L.push('### 命令行自检');
+L.push('');
+L.push('```bash');
+L.push('node scripts/check-environment.mjs          # 缺什么连带下载地址一起打印');
+L.push('node scripts/check-environment.mjs --json   # 机器读');
+L.push('node scripts/fetch-models.mjs --write       # 生成带路径的清单');
+L.push('```');
+L.push('');
+L.push('服务控制台的「环境自检」面板里，失败项下面也会列出渠道；');
+L.push('旁边的「依赖清单」按钮直接打开本文件。');
+L.push('');
+L.push('---');
 L.push('');
 
 L.push('## 一、需要安装的 ComfyUI 自定义节点包');

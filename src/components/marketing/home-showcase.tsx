@@ -370,7 +370,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
               <div className="grid size-full place-items-center">
                 <div className="text-center">
                   <Sparkles className="mx-auto size-6 text-[var(--beat-text-3)]" />
-                  <p className="mt-3 text-[14px] text-[var(--beat-text-2)]" data-showcase-empty="true">
+                  <p className="mt-3 text-[15px] text-[var(--beat-text-2)]" data-showcase-empty="true">
                     {ready ? text.empty : ' '}
                   </p>
                 </div>
@@ -415,7 +415,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-7">
                   <span
-                    className="rounded-full border border-white/25 bg-black/55 px-3.5 py-1.5 text-[14px] font-medium text-white backdrop-blur-md"
+                    className="rounded-full border border-white/25 bg-black/55 px-3.5 py-1.5 text-[15px] font-medium text-white backdrop-blur-md"
                     data-showcase-caption="true"
                   >
                     {heroShot?.label ?? ''}
@@ -440,7 +440,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
               <div className="grid size-full place-items-center">
                 <div className="text-center">
                   <Sparkles className="mx-auto size-6 text-[var(--beat-text-3)]" />
-                  <p className="mt-3 text-[14px] text-[var(--beat-text-2)]" data-showcase-empty="true">
+                  <p className="mt-3 text-[15px] text-[var(--beat-text-2)]" data-showcase-empty="true">
                     {ready ? text.empty : ' '}
                   </p>
                 </div>
@@ -458,7 +458,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
             <h2 className="beat-product-display text-[20px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)] sm:text-[24px]">
               {text.videoTitle}
             </h2>
-            <p className="mt-1.5 max-w-xl text-[14px] leading-6 text-[var(--beat-text-2)]">
+            <p className="mt-1.5 max-w-xl text-[15px] leading-6 text-[var(--beat-text-2)]">
               {text.videoSubtitle}
             </p>
           </div>
@@ -493,7 +493,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
                       <Play className="size-4" />
                     </span>
                   </span>
-                  <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/60 to-transparent px-2.5 pb-1.5 pt-6 text-[14px] text-white">
+                  <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/60 to-transparent px-2.5 pb-1.5 pt-6 text-[15px] text-white">
                     {clip.label}
                   </figcaption>
                 </div>
@@ -502,7 +502,7 @@ export function HomeShowcase({ locale }: { locale: string }) {
           </div>
         ) : (
           <div className="beat-glass flex min-h-[160px] items-center justify-center rounded-[18px]">
-            <p className="flex items-center gap-2 text-[14px] text-[var(--beat-text-2)]" data-showcase-clips-empty="true">
+            <p className="flex items-center gap-2 text-[15px] text-[var(--beat-text-2)]" data-showcase-clips-empty="true">
               <ImageIcon className="size-4" />
               {ready ? text.empty : ' '}
             </p>

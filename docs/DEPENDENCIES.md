@@ -7,6 +7,58 @@
 - 需要的自定义节点包：**13** 个
 - 模型 / 资源文件：**30** 个
 
+## 〇、从哪儿装（换机器部署必读）
+
+本机跑通了不代表另一台也能跑。缺东西时按这张表补，命令行自检会把对应链接直接打出来。
+
+### 基础环境
+
+| 项目 | 版本 | 渠道 | 说明 |
+| --- | --- | --- | --- |
+| Node.js | 20+ | https://nodejs.org/zh-cn/download | 装 LTS 版即可 |
+| pnpm | 9+ | https://pnpm.io/zh/installation | 或 npm i -g pnpm |
+| ComfyUI | Windows 整合包（推荐） | https://github.com/comfyanonymous/ComfyUI/releases | Windows 解压即用，自带 python_embeded |
+| Python | 3.12（整合包内置） | https://www.python.org/downloads/ | 整合包已内置，只有源码部署需要 |
+
+### 大模型整包
+
+逐个下 30 个文件很折腾，能整包拿优先整包：
+
+| 渠道 | 地址 | 提取码 | 覆盖 |
+| --- | --- | --- | --- |
+| 漫客工作台 · 模型包（197 GB，夸克网盘） | https://pan.quark.cn/s/ebc77c7d9817 | /~72003bgWcO~/ | 全部 / 25 个文件 |
+| ModelScope · MiniMax H3 官方仓 | https://modelscope.cn/models/MiniMaxAI/MiniMax_H3 | — | Minimax-h3/minimax_h3_ |
+| HuggingFace · H3 社区量化索引 | https://huggingface.co/models?search=MiniMax%20H3 | — | minimax_h3 |
+| HuggingFace · Qwen-Image GGUF 索引 | https://huggingface.co/models?search=qwen-image%20gguf | — | qwen-image |
+
+> 国内环境优先 ModelScope，直连速度快。HuggingFace 需要代理或镜像站。
+
+### 按显存选模型版本
+
+同一份工作流常有多个量化版。模板里写死了文件名，换版本要同步改 JSON 或做软链接。
+
+| 显存 | 视频主模型 | 文本编码器 | 分辨率上限 |
+| --- | --- | --- | --- |
+| 8–12 GB | `minimax_h3_fl2va_pruned_w4a8_mixed` | `qwen3vl_8b_int8_convrot` | 480P |
+| 16 GB | `minimax_h3_ref2va_pruned_int8_convrot` | `qwen3vl_32b_minimax_h3_int8_convrot` | 720P |
+| 20–24 GB | `Minimax-h3_Singularity_ref2va_v1.3_int8` | `qwen3vl_32b_minimax_h3_int8_convrot` | 720P（1080P 顶边界） |
+| 40 GB+ | 同上 | `qwen3vl_32b_minimax_h3_nvfp4_awq` | 1080P |
+
+> `nvfp4` 需要 40 系及以上显卡，30 系只能用 int8。
+
+### 命令行自检
+
+```bash
+node scripts/check-environment.mjs          # 缺什么连带下载地址一起打印
+node scripts/check-environment.mjs --json   # 机器读
+node scripts/fetch-models.mjs --write       # 生成带路径的清单
+```
+
+服务控制台的「环境自检」面板里，失败项下面也会列出渠道；
+旁边的「依赖清单」按钮直接打开本文件。
+
+---
+
 ## 一、需要安装的 ComfyUI 自定义节点包
 
 把下面这些目录从旧机器的 `ComfyUI/custom_nodes/` 整个拷到新机器同名目录。

@@ -19,8 +19,63 @@ const JSON_MODE = process.argv.includes('--json');
 const QUIET = process.argv.includes('--quiet');
 
 const checks = [];
-const add = (id, label, status, detail, hint) => {
-  checks.push({ id, label, status, detail, hint });
+const add = (id, label, status, detail, hint, sources) => {
+  checks.push({ id, label, status, detail, hint, sources: sources ?? undefined });
+};
+
+/**
+ * 安装渠道。
+ *
+ * 自检只回答「缺什么」，这个文件回答「去哪儿拿」。分开是因为下载地址会变，
+ * 而检查逻辑不该跟着改。缺东西时把渠道附在条目上，换机器部署照着补就行。
+ */
+const loadInstallSources = () => {
+  const path = join(ROOT, 'data', 'install-sources.json');
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return { models: {}, nodes: {}, runtime: {}, bundles: [] };
+  }
+};
+const installSources = loadInstallSources();
+
+/** 查节点的下载渠道。 */
+const nodeSource = (name) => installSources.nodes?.[name] ?? null;
+
+/** 查模型文件的下载渠道，文件名可能带子目录。 */
+const modelSource = (basename) => {
+  const models = installSources.models ?? {};
+  if (models[basename]) return models[basename];
+  const lower = String(basename).toLowerCase();
+  for (const [key, value] of Object.entries(models)) {
+    if (key.toLowerCase() === lower) return value;
+  }
+  return null;
+};
+
+/** 把一批来源整理成 UI 能直接渲染的结构。 */
+const collectSources = (entries) => {
+  const out = [];
+  const seen = new Set();
+  for (const { name, source } of entries) {
+    if (!source) continue;
+    const key = `${source.kind}|${source.url}`;
+    if (seen.has(key)) {
+      // 同一个地址覆盖多个文件时合并名字，避免重复列五行
+      const existing = out.find((item) => `${item.kind}|${item.url}` === key);
+      if (existing) existing.covers.push(name);
+      continue;
+    }
+    seen.add(key);
+    out.push({
+      kind: source.kind,
+      url: source.url,
+      note: source.note ?? '',
+      dir: source.dir,
+      covers: [name],
+    });
+  }
+  return out;
 };
 
 // ── 配置
@@ -156,12 +211,16 @@ if (manifest) {
       add('nodes', '自定义节点包', 'pass', `${manifest.nodePackages.length} / ${manifest.nodePackages.length} 到位`);
     } else {
       const names = missingPkgs.map((p) => p.name);
+      const sources = collectSources(
+        missingPkgs.map((p) => ({ name: p.name, source: nodeSource(p.name) }))
+      );
       add(
         'nodes',
         '自定义节点包',
         'fail',
         `缺 ${missingPkgs.length} 个：${names.slice(0, 4).join('、')}${names.length > 4 ? ' …' : ''}`,
-        `ComfyUI/custom_nodes 下补齐：${names.join('、')}`
+        `ComfyUI/custom_nodes 下补齐：${names.join('、')}`,
+        sources.length ? sources : undefined
       );
     }
 
@@ -238,12 +297,26 @@ if (manifest) {
       add('models', '模型文件', 'pass', `${presentFiles} / ${total} 就位 · ${(presentBytes / 1024 ** 3).toFixed(1)} GB`);
     } else {
       const names = missingFiles.map((f) => f.basename);
+      const sources = collectSources(
+        missingFiles.map((f) => ({ name: f.basename, source: modelSource(f.basename) }))
+      );
+      // 整包网盘链接排在最前：缺一堆文件时，一条链接比逐个去搜有用得多
+      const bundles = (installSources.bundles ?? [])
+        .filter((b) => b.primary && b.url)
+        .map((b) => ({
+          kind: b.kind,
+          url: b.url,
+          note: b.note ?? '',
+          code: b.code,
+          covers: [b.covers ?? b.name],
+        }));
       add(
         'models',
         '模型文件',
         'fail',
         `${presentFiles} / ${total} 就位，缺 ${missingFiles.length} 个 · ${(presentBytes / 1024 ** 3).toFixed(1)} GB`,
-        `缺：${names.slice(0, 3).join('、')}${names.length > 3 ? ` …（共 ${names.length} 个）` : ''}`
+        `缺：${names.slice(0, 3).join('、')}${names.length > 3 ? ` …（共 ${names.length} 个）` : ''}`,
+        [...bundles, ...sources]
       );
     }
 
@@ -259,6 +332,36 @@ if (manifest) {
       );
     }
   }
+}
+
+// ── 安装渠道
+// 这一项永远通过：它的用途不是判断，而是换机器时告诉你去哪儿下。
+// 缺什么的时候，失败项里会附带具体渠道；这里给的是整体入口和整包渠道。
+{
+  const nodeCount = Object.keys(installSources.nodes ?? {}).length;
+  const modelCount = Object.keys(installSources.models ?? {}).length;
+  const bundles = installSources.bundles ?? [];
+  add(
+    'install-sources',
+    '安装渠道',
+    'pass',
+    `${nodeCount} 个节点包 · ${modelCount} 个模型 · ${bundles.length} 个整包渠道`,
+    '缺文件时点开对应条目的来源链接，或见 docs/DEPENDENCIES.md',
+    [
+      ...bundles.map((b) => ({
+        kind: b.kind,
+        url: b.url,
+        note: b.note,
+        covers: [b.name],
+      })),
+      ...Object.entries(installSources.runtime ?? {}).map(([, value]) => ({
+        kind: value.kind,
+        url: value.url,
+        note: value.label ?? '',
+        covers: [value.note ?? ''],
+      })),
+    ].filter((item) => item.url)
+  );
 }
 
 // ── 汇总
@@ -288,6 +391,13 @@ if (JSON_MODE) {
       `${color[c.status]}${icon[c.status]}\x1b[0m ${c.label.padEnd(14, ' ')} ${c.detail}`
     );
     if (c.hint && c.status !== 'pass') console.log(`  ${' '.repeat(17)}→ ${c.hint}`);
+    // 缺东西时把下载地址打出来，省得再翻文档
+    if (c.sources?.length && c.status !== 'pass') {
+      for (const s of c.sources.slice(0, 6)) {
+        console.log(`  ${' '.repeat(17)}  [${s.kind}] ${s.url}`);
+        if (s.code) console.log(`  ${' '.repeat(17)}    提取码 ${s.code}`);
+      }
+    }
   }
   console.log('='.repeat(56));
   console.log(

@@ -190,13 +190,41 @@ pnpm stack:up
 **这一点必须先说清楚：仓库里没有模型权重，一个都没有。**
 
 全部模型合计 **230 GB 以上**（最大的单个主模型 32 GB），GitHub 单文件上限是 100 MB，
-放不进 Git，用 LFS 也不现实（免费额度 1 GB/月）。所以仓库提供的是三样东西：
+放不进 Git，用 LFS 也不现实（免费额度 1 GB/月）。
+
+**但模型有现成的整包，不用一个一个去搜。**
+
+### 下载模型包（推荐）
+
+25 个文件 / 约 197 GB，目录结构已经对齐 `ComfyUI/models`，解压覆盖即可：
+
+> **链接**：https://pan.quark.cn/s/ebc77c7d9817
+>
+> **提取码**：`/~72003bgWcO~/`
+>
+> 或打开夸克 APP 复制这段：`/~72003bgWcO~:/`
+
+下载后：
+
+```
+1. 解压得到 models/ 文件夹
+2. 打开 ComfyUI 安装目录
+3. 把 models 覆盖进去（只新增这 25 个文件，不会动你自己的模型）
+4. node scripts/check-environment.mjs 看到 "30 / 30 就位" 就成功了
+```
+
+这一版按 **20 GB 显存**（RTX 3080 级别）配的，720P 视频能跑通。
+显存更小的机器见 [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md) 的「按显存选模型版本」。
+
+### 或者自己逐个下
+
+仓库提供三样东西，配合使用：
 
 1. 工作流 JSON —— 决定了需要哪些模型
-2. 完整依赖清单 —— [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md)，含每个文件的真实相对路径与大小
+2. 完整依赖清单 —— [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md)，含每个文件的真实相对路径、大小与下载渠道
 3. 核对脚本 —— `scripts/fetch-models.mjs`，告诉你现在还缺什么
 
-### 准备模型
+### 检查缺什么
 
 ```bash
 # 1. 先核对：当前缺哪些、该放哪、多大

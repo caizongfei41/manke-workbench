@@ -325,8 +325,22 @@ $form.Controls.Add($openBtn)
 
 # ── 环境自检
 $y += 52
-$form.Controls.Add((New-Label '环境自检' 20 $y 200 22 10.5 $TXT1 'Bold'))
-$envSummary = New-Label '尚未检查' 200 $y 210 22 9 $TXT3
+$form.Controls.Add((New-Label '环境自检' 20 $y 130 22 10.5 $TXT1 'Bold'))
+
+# 换机器部署时最常问的就是「这些文件从哪儿下」，给一个直达文档的入口
+$depDocBtn = New-Button '依赖清单' 152 ($y - 4) 76 30 $false
+$depDocBtn.Add_Click({
+    $doc = Join-Path $BD 'docs\DEPENDENCIES.md'
+    if (Test-Path $doc) {
+        Start-Process $doc
+        Add-Log '已打开依赖清单 docs\DEPENDENCIES.md'
+    } else {
+        Add-Log '✗ 找不到 docs\DEPENDENCIES.md'
+    }
+})
+$form.Controls.Add($depDocBtn)
+
+$envSummary = New-Label '尚未检查' 232 $y 178 22 9 $TXT3
 $envSummary.TextAlign = 'MiddleRight'
 $form.Controls.Add($envSummary)
 
@@ -535,6 +549,25 @@ function Render-Env([string]$json) {
         if ($chk.hint -and $chk.status -ne 'pass') {
             $envPanel.Controls.Add((New-Label ('→ ' + $chk.hint) 34 $y0 428 20 8 $TXT3))
             $y0 += 20
+        }
+
+        # 缺东西时把下载渠道列出来：换机器部署照着点就行，不用再翻文档
+        if ($chk.sources -and $chk.status -ne 'pass') {
+            foreach ($src in $chk.sources) {
+                if (-not $src.url) { continue }
+                $cover = ''
+                if ($src.covers -and $src.covers.Count -gt 0) {
+                    $cover = ($src.covers | Select-Object -First 3) -join '、'
+                    if ($src.covers.Count -gt 3) { $cover += ' …' }
+                }
+                $line = "   [$($src.kind)] $($src.url)"
+                $envPanel.Controls.Add((New-Label $line 46 $y0 416 20 7.5 $TXT3))
+                $y0 += 18
+                if ($cover) {
+                    $envPanel.Controls.Add((New-Label ('        ↳ ' + $cover) 46 $y0 416 18 7.5 $TXT3))
+                    $y0 += 16
+                }
+            }
         }
     }
 

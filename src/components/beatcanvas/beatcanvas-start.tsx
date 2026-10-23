@@ -57,7 +57,7 @@ export function BeatCanvasStart({
       <h2 className="beat-product-display mt-7 text-[26px] font-semibold tracking-[-0.03em] text-[var(--beat-text-1)]">
         {copy.title}
       </h2>
-      <p className="mx-auto mt-2.5 max-w-[420px] text-[14px] leading-7 text-[var(--beat-text-2)]">
+      <p className="mx-auto mt-2.5 max-w-[420px] text-[15px] leading-7 text-[var(--beat-text-2)]">
         {copy.subtitle}
       </p>
 
@@ -73,17 +73,17 @@ export function BeatCanvasStart({
             <span className="grid size-8 place-items-center rounded-[10px] border border-ink/[0.12] text-[var(--beat-text-1)]">
               {action.icon}
             </span>
-            <span className="mt-3 text-[13.5px] font-semibold text-[var(--beat-text-1)]">
+            <span className="mt-3 text-[15px] font-semibold text-[var(--beat-text-1)]">
               {action.label}
             </span>
-            <span className="mt-0.5 text-[13px] leading-6 text-[var(--beat-text-2)]">
+            <span className="mt-0.5 text-[15px] leading-6 text-[var(--beat-text-2)]">
               {action.body}
             </span>
           </button>
         ))}
       </div>
 
-      <p className="mt-5 text-[13px] text-[var(--beat-text-3)]">{copy.hint}</p>
+      <p className="mt-5 text-[15px] text-[var(--beat-text-3)]">{copy.hint}</p>
     </div>
   );
 }
