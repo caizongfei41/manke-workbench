@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { lstatSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { mkdir, rename, unlink, writeFile } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
@@ -156,4 +157,46 @@ export const persistLocalProjectAsset = async ({
 
 export const removePersistedLocalProjectAsset = async (filePath: string) => {
   await unlink(filePath).catch(() => undefined);
+};
+
+export const getLocalProjectAssetTrashRoot = () =>
+  resolve(getBeatDesignDataRoot(), 'trash', 'project-assets');
+
+/**
+ * 把某个项目的资产目录整体移进回收站。
+ *
+ * 删除项目时资产文件必须跟着走，否则会出现一个只在数据库里存在的项目：
+ * 文件还占着盘，记录还挂在 asset 表里，素材库里点开就是 404。
+ *
+ * 移进回收站而不是直接删，是因为误删项目是常见操作，而资产动辄几百 MB，
+ * 重新生成一遍代价很高。回收站页面已经能列出条目和占用。
+ *
+ * 返回移走后的目录名（项目 id）；目录不存在时返回 null，调用方不必当失败处理。
+ */
+export const trashLocalProjectAssets = async ({
+  projectId,
+  assetRoot = getLocalProjectAssetRoot(),
+  trashRoot = getLocalProjectAssetTrashRoot(),
+}: {
+  projectId: string;
+  assetRoot?: string;
+  trashRoot?: string;
+}) => {
+  assertSafePathSegment(projectId, 'project id');
+  const source = resolve(assetRoot, projectId);
+  // 双保险：拼出来的路径必须还在资产根目录下
+  const relativePath = relative(resolve(assetRoot), source);
+  if (!relativePath || relativePath.startsWith('..') || isAbsolute(relativePath)) {
+    throw new Error('Invalid local project asset path');
+  }
+  if (!existsSync(source)) return null;
+
+  await mkdir(trashRoot, { recursive: true });
+  // 同一个项目重复删除时不能覆盖上一次的备份，加一个短后缀
+  let target = resolve(trashRoot, projectId);
+  if (existsSync(target)) {
+    target = resolve(trashRoot, `${projectId}-${Date.now().toString(36)}`);
+  }
+  await rename(source, target);
+  return target;
 };

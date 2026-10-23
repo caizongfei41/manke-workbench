@@ -1,7 +1,14 @@
 
 import { randomUUID } from 'crypto';
 import { getDb } from '@/core/workspace-lib/db-adapter';
-import { project, projectCanvasState, userAsset } from '@/config/db/schema';
+import {
+  generationAssetLink,
+  project,
+  projectAssetMembership,
+  projectCanvasState,
+  userAsset,
+} from '@/config/db/schema';
+import { trashLocalProjectAssets } from '@/core/projects/local-project-assets';
 import {
   type ProjectSnapshotDocument,
   createEmptyProjectSnapshot,
@@ -201,6 +208,23 @@ export const loadProjectWithLatestSnapshot = async ({
   };
 };
 
+/**
+ * 删除项目，连同它的资产。
+ *
+ * 以前这里只把 project.status 改成 'deleted'，资产表一行不动、磁盘一个字节不删。
+ * 结果每轮清理之后都留下一堆只在数据库里存在的项目：文件已经不在了，
+ * asset 记录还指着它，素材库点开全是 404，而磁盘占用一直降不下去
+ * （一次清理攒出 1230 条这种记录，占了 195 MB）。
+ *
+ * 现在的顺序：
+ *   1. 先把资产目录移进回收站 —— 可恢复，且不占用项目资产的活目录
+ *   2. 删掉关联表里的行（membership / generation link）
+ *   3. 删掉该项目的 asset 行
+ *   4. 最后软删项目本身
+ *
+ * 文件先走、记录后走：万一第 2、3 步抛错，文件已经在回收站里，
+ * 记录还完整，重试一次就能收尾；反过来则会留下永远找不到文件的孤儿记录。
+ */
 export const deleteProjects = async ({
   projectIds,
 }: {
@@ -212,6 +236,49 @@ export const deleteProjects = async ({
   const now = new Date();
 
   for (const projectId of projectIds) {
+    // 1. 资产文件移进回收站
+    try {
+      await trashLocalProjectAssets({ projectId });
+    } catch (error) {
+      // 目录不存在是正常情况（项目从没上传过东西），其余错误不该阻断删除
+      console.error('[projects] move assets to trash failed:', projectId, error);
+    }
+
+    // 2. 关联表
+    const memberships = await db
+      .select({ id: projectAssetMembership.id })
+      .from(projectAssetMembership)
+      .where(eq(projectAssetMembership.projectId, projectId));
+    if (memberships.length > 0) {
+      await db
+        .delete(projectAssetMembership)
+        .where(eq(projectAssetMembership.projectId, projectId));
+    }
+
+    // 3. asset 行。
+    //    按 origin_project_id 找是主路径，但历史数据里有些行没写这个字段，
+    //    所以再按 object_key 前缀（`<projectId>/…`）兜一次底。
+    const owned = await db
+      .select({ id: userAsset.id, originProjectId: userAsset.originProjectId })
+      .from(userAsset)
+      .where(eq(userAsset.originProjectId, projectId));
+    const all = await db
+      .select({ id: userAsset.id, objectKey: userAsset.objectKey })
+      .from(userAsset);
+    const byPrefix = all.filter((row: { id: string; objectKey: string | null }) =>
+      String(row.objectKey ?? '').startsWith(`${projectId}/`)
+    );
+    const doomed = new Set<string>([
+      ...owned.map((row: { id: string }) => row.id),
+      ...byPrefix.map((row: { id: string }) => row.id),
+    ]);
+
+    for (const assetId of doomed) {
+      await db.delete(generationAssetLink).where(eq(generationAssetLink.assetId, assetId));
+      await db.delete(userAsset).where(eq(userAsset.id, assetId));
+    }
+
+    // 4. 项目本身
     await db
       .update(project)
       .set({
