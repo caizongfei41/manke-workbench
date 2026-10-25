@@ -52,12 +52,15 @@ yarn-error.log*
 
 # ---- local data: never commit user content ----
 # data/ holds the project database, generated media, logs and the local ComfyUI
-# config. The only thing worth tracking is the shipped workflow templates, so the
-# exceptions below re-include exactly that one directory and nothing else.
+# config. Two things are worth tracking: the shipped workflow templates, and the
+# install-source manifest (download links for the model/deploy bundles -- it is
+# configuration, not user content, and shipping it is how a fresh clone knows
+# where to get the 197 GB it cannot contain).
 /data/*
 !/data/comfyui/
 /data/comfyui/*
 !/data/comfyui/workflows/
+!/data/install-sources.json
 
 *.db
 *.db-journal

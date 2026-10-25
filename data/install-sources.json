@@ -1,0 +1,349 @@
+{
+  "_comment": "安装渠道清单。环境自检用它把「缺什么」翻译成「去哪儿下」。换机器部署时照着补即可。",
+  "_kinds": "huggingface | modelscope | github | civitai | official | openmodeldb | manual",
+  "runtime": {
+    "node": {
+      "label": "Node.js 20+",
+      "kind": "official",
+      "url": "https://nodejs.org/zh-cn/download",
+      "note": "装 LTS 版即可"
+    },
+    "pnpm": {
+      "label": "pnpm 9+",
+      "kind": "official",
+      "url": "https://pnpm.io/zh/installation",
+      "note": "或 npm i -g pnpm"
+    },
+    "comfyuiPortable": {
+      "label": "ComfyUI 整合包（推荐）",
+      "kind": "official",
+      "url": "https://github.com/comfyanonymous/ComfyUI/releases",
+      "note": "Windows 解压即用，自带 python_embeded"
+    },
+    "comfyui": {
+      "label": "ComfyUI 源码",
+      "kind": "github",
+      "url": "https://github.com/comfyanonymous/ComfyUI",
+      "note": "需要 Python 3.12 和依赖"
+    },
+    "python": {
+      "label": "Python 3.12",
+      "kind": "official",
+      "url": "https://www.python.org/downloads/",
+      "note": "整合包已内置，只有源码部署需要"
+    }
+  },
+  "bundles": [
+    {
+      "name": "漫客工作台 · 一键部署包（197 GB，115 卷）",
+      "kind": "quark",
+      "url": "https://pan.quark.cn/s/c0441ca5d59c",
+      "code": "~01793bkzer~:/",
+      "note": "含模型、13 个自定义节点包、工作台源码。解压后控制台点「一键部署」即可",
+      "covers": "全部 / 115 个分卷",
+      "primary": true,
+      "deployBundle": true
+    },
+    {
+      "name": "漫客工作台 · 模型包（197 GB，仅模型）",
+      "kind": "quark",
+      "url": "https://pan.quark.cn/s/ebc77c7d9817",
+      "code": "/~72003bgWcO~/",
+      "note": "本机跑通的 25 个模型，目录结构已对齐 ComfyUI/models，下载后直接覆盖进去",
+      "covers": "全部 / 25 个文件",
+      "primary": false
+    },
+    {
+      "name": "ModelScope · MiniMax H3 官方仓",
+      "kind": "modelscope",
+      "url": "https://modelscope.cn/models/MiniMaxAI/MiniMax_H3",
+      "note": "国内直连速度快，含官方 fp16 权重；int8/nvfp4 量化需找社区版",
+      "covers": "Minimax-h3/minimax_h3_"
+    },
+    {
+      "name": "HuggingFace · H3 社区量化索引",
+      "kind": "huggingface",
+      "url": "https://huggingface.co/models?search=MiniMax%20H3",
+      "note": "搜 int8 / nvfp4 / convrot 各版本",
+      "covers": "minimax_h3"
+    },
+    {
+      "name": "HuggingFace · Qwen-Image GGUF 索引",
+      "kind": "huggingface",
+      "url": "https://huggingface.co/models?search=qwen-image%20gguf",
+      "note": "Q4~Q8 各档量化，按显存选",
+      "covers": "qwen-image"
+    }
+  ],
+  "nodes": {
+    "ComfyUI-AICG3D-Integrated": {
+      "url": "https://github.com/AICG3D/ComfyUI-AICG3D-Integrated",
+      "kind": "github",
+      "note": "H3 核心：H3Loader / H3SequenceGlobal / H3SequenceSegment / H3SequenceCombine",
+      "required": true
+    },
+    "ComfyUI_MiniMaxH3_Director": {
+      "url": "https://github.com/modelscope/ComfyUI_MiniMaxH3_Director",
+      "kind": "github",
+      "note": "导演台节点",
+      "required": true
+    },
+    "Comfyui-Qwen-Image-2.1-BlockCache-T8": {
+      "url": "https://github.com/T8-Comfy/Comfyui-Qwen-Image-2.1-BlockCache-T8",
+      "kind": "github",
+      "note": "Qwen-Image 2.1 的 BlockCache 加速"
+    },
+    "ComfyUI-QWEN3_TTS": {
+      "url": "https://github.com/QwenLM/ComfyUI-QWEN3_TTS",
+      "kind": "github",
+      "note": "TTS 音色节点，配音必需"
+    },
+    "ComfyUI-GGUF": {
+      "url": "https://github.com/city96/ComfyUI-GGUF",
+      "kind": "github",
+      "note": "加载 GGUF 量化模型",
+      "required": true
+    },
+    "ComfyUI-VideoHelperSuite": {
+      "url": "https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite",
+      "kind": "github",
+      "note": "视频读写与合成",
+      "required": true
+    },
+    "ComfyUI-KJNodes": {
+      "url": "https://github.com/kijai/ComfyUI-KJNodes",
+      "kind": "github",
+      "note": "图像拼接等工具节点"
+    },
+    "ComfyUI-Easy-Use": {
+      "url": "https://github.com/yolain/ComfyUI-Easy-Use",
+      "kind": "github",
+      "note": "显存清理等便捷节点"
+    },
+    "ComfyUI-SeedVR2_VideoUpscaler": {
+      "url": "https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler",
+      "kind": "github",
+      "note": "视频放大"
+    },
+    "ComfyUI-ReActor": {
+      "url": "https://github.com/Gourieff/ComfyUI-ReActor",
+      "kind": "github",
+      "note": "人脸修复 / 换脸"
+    },
+    "ComfyUI-DepthAnythingV2": {
+      "url": "https://github.com/kijai/ComfyUI-DepthAnythingV2",
+      "kind": "github",
+      "note": "深度估计，动作迁移用"
+    },
+    "XB_ToolBox": {
+      "url": "https://github.com/X-B-O/ComfyUI-XB_ToolBox",
+      "kind": "github",
+      "note": "YuE2 音乐工作流辅助节点"
+    },
+    "ComfyUI-AICG3D-PromptSplit": {
+      "url": "https://github.com/AICG3D/ComfyUI-AICG3D-PromptSplit",
+      "kind": "github",
+      "note": "提示词分段"
+    }
+  },
+  "models": {
+    "Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors": {
+      "url": "https://modelscope.cn/models?name=MiniMax%20H3",
+      "kind": "modelscope",
+      "note": "int8 社区量化版，ModelScope 搜「MiniMax H3 int8」",
+      "dir": "UNET"
+    },
+    "minimax_h3_ref2va_pruned_int8_convrot.safetensors": {
+      "url": "https://modelscope.cn/models?name=MiniMax%20H3",
+      "kind": "modelscope",
+      "note": "剪枝加速版，与上一个二选一",
+      "dir": "UNET"
+    },
+    "minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors": {
+      "url": "https://huggingface.co/models?search=MiniMax%20H3",
+      "kind": "huggingface",
+      "note": "混合版，兼容 fl2va / ref2va",
+      "dir": "UNET"
+    },
+    "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors": {
+      "url": "https://huggingface.co/models?search=MiniMax%20H3",
+      "kind": "huggingface",
+      "note": "融合 refdelta + turbo8，长视频用",
+      "dir": "UNET"
+    },
+    "minimax_h3_fl2va_pruned_w4a8_mixed.safetensors": {
+      "url": "https://huggingface.co/models?search=MiniMax%20H3",
+      "kind": "huggingface",
+      "note": "低显存版（w4a8），8-12 GB 卡用",
+      "dir": "UNET"
+    },
+    "minimax_h3_video_vae_fp16.safetensors": {
+      "url": "https://modelscope.cn/models/MiniMaxAI/MiniMax_H3",
+      "kind": "modelscope",
+      "note": "H3 视频 VAE",
+      "dir": "VAE"
+    },
+    "minimax_h3_video_vae_int8_convrot.safetensors": {
+      "url": "https://modelscope.cn/models/MiniMaxAI/MiniMax_H3",
+      "kind": "modelscope",
+      "note": "int8 版 VAE，省显存",
+      "dir": "VAE"
+    },
+    "minimax_h3_audio_vae_fp32.safetensors": {
+      "url": "https://modelscope.cn/models/MiniMaxAI/MiniMax_H3",
+      "kind": "modelscope",
+      "note": "H3 音频 VAE，对白与环境音必需",
+      "dir": "VAE"
+    },
+    "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors": {
+      "url": "https://huggingface.co/models?search=qwen3vl%20minimax",
+      "kind": "huggingface",
+      "note": "nvfp4 量化，需要 40 系以上显卡",
+      "dir": "CLIP"
+    },
+    "qwen3vl_32b_minimax_h3_int8_convrot.safetensors": {
+      "url": "https://huggingface.co/models?search=qwen3vl%20minimax",
+      "kind": "huggingface",
+      "note": "int8 版，30 系显卡用这个",
+      "dir": "CLIP"
+    },
+    "qwen3vl_8b_int8_convrot.safetensors": {
+      "url": "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct",
+      "kind": "huggingface",
+      "note": "Qwen3-VL 8B，图像工作流用，轻量得多",
+      "dir": "CLIP"
+    },
+    "minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors": {
+      "url": "https://huggingface.co/models?search=DMAD%20lora",
+      "kind": "huggingface",
+      "note": "4 步蒸馏 LoRA。没有它采样步数降不到 4",
+      "dir": "LORA"
+    },
+    "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors": {
+      "url": "https://huggingface.co/models?search=minimax_h3%20turbo",
+      "kind": "huggingface",
+      "note": "8 步 Turbo LoRA，动作迁移用",
+      "dir": "LORA"
+    },
+    "minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors": {
+      "url": "https://huggingface.co/models?search=minimax_h3%20turbo",
+      "kind": "huggingface",
+      "note": "768P 版 8 步加速",
+      "dir": "LORA"
+    },
+    "minimax_h3_latent_upscaler_3d_bf16.safetensors": {
+      "url": "https://huggingface.co/models?search=minimax_h3%20upscaler",
+      "kind": "huggingface",
+      "note": "latent 空间 3D 放大，比像素放大省显存",
+      "dir": "latent_upscale_models"
+    },
+    "minimax_h3_latent_upscaler_3d_fp16.safetensors": {
+      "url": "https://huggingface.co/models?search=minimax_h3%20upscaler",
+      "kind": "huggingface",
+      "note": "同上，fp16 版",
+      "dir": "latent_upscale_models"
+    },
+    "flux-2-klein-base-9b-fp8.safetensors": {
+      "url": "https://huggingface.co/black-forest-labs/FLUX.2-Klein",
+      "kind": "huggingface",
+      "note": "FLUX.2 Klein 9B 官方 fp8",
+      "dir": "UNET"
+    },
+    "qwen_3_8b_fp8mixed.safetensors": {
+      "url": "https://huggingface.co/Qwen/Qwen3-8B",
+      "kind": "huggingface",
+      "note": "FLUX.2 Klein 的文本编码器",
+      "dir": "CLIP"
+    },
+    "flux2-vae.safetensors": {
+      "url": "https://huggingface.co/black-forest-labs/FLUX.2-Klein",
+      "kind": "huggingface",
+      "note": "FLUX.2 专用 VAE",
+      "dir": "VAE"
+    },
+    "qwen-image-2.1-Q8_0.gguf": {
+      "url": "https://huggingface.co/models?search=qwen-image%20gguf",
+      "kind": "huggingface",
+      "note": "Q8 量化，需装 ComfyUI-GGUF",
+      "dir": "UNET"
+    },
+    "qwen-image-2.1-Q6_K.gguf": {
+      "url": "https://huggingface.co/models?search=qwen-image%20gguf",
+      "kind": "huggingface",
+      "note": "Q6 量化，比 Q8 省显存，画质几乎无损",
+      "dir": "UNET"
+    },
+    "qwen-image-2.1-lightning-4step-int8_convrot.safetensors": {
+      "url": "https://huggingface.co/models?search=qwen-image%20lightning",
+      "kind": "huggingface",
+      "note": "4 步加速 LoRA，配采样步数 4",
+      "dir": "LORA"
+    },
+    "qwen_image_2.1_vae_bf16.safetensors": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image",
+      "kind": "huggingface",
+      "note": "Qwen-Image VAE",
+      "dir": "VAE"
+    },
+    "yue2_3b_bf16.safetensors": {
+      "url": "https://huggingface.co/m-a-p/YuE",
+      "kind": "huggingface",
+      "note": "YuE2 3B，本地音乐 / 翻唱",
+      "dir": "checkpoints"
+    },
+    "sheetsage2_bf16.safetensors": {
+      "url": "https://huggingface.co/models?search=sheetsage",
+      "kind": "huggingface",
+      "note": "SheetSage2，音频转乐谱，翻唱工作流用",
+      "dir": "audio_encoders"
+    },
+    "seedvr2_ema_3b_fp8_e4m3fn.safetensors": {
+      "url": "https://huggingface.co/models?search=SeedVR2",
+      "kind": "huggingface",
+      "note": "SeedVR2 视频放大 3B",
+      "dir": "seedvr2"
+    },
+    "ema_vae_fp16.safetensors": {
+      "url": "https://huggingface.co/models?search=SeedVR2",
+      "kind": "huggingface",
+      "note": "SeedVR2 配套 VAE",
+      "dir": "seedvr2"
+    },
+    "4x-UltraSharp.pth": {
+      "url": "https://openmodeldb.info/models/4x-UltraSharp",
+      "kind": "openmodeldb",
+      "note": "经典 4 倍放大模型，页面里有多个镜像",
+      "dir": "upscale_models"
+    },
+    "depth_anything_v2_vits_fp16.safetensors": {
+      "url": "https://huggingface.co/depth-anything/Depth-Anything-V2-Small",
+      "kind": "huggingface",
+      "note": "深度估计，动作迁移用",
+      "dir": "depthanything"
+    },
+    "face_yolov8n.pt": {
+      "url": "https://github.com/ultralytics/assets/releases",
+      "kind": "github",
+      "note": "人脸检测权重，ReActor 链路用",
+      "dir": "ultralytics/bbox"
+    },
+    "H3_Combat_V2.safetensors": {
+      "url": "https://civitai.com/models?query=minimax%20h3",
+      "kind": "civitai",
+      "note": "打斗动作 LoRA（社区模型）",
+      "dir": "LORA"
+    },
+    "Minimax H3真实电影质感V0.1.safetensors": {
+      "url": "https://civitai.com/models?query=minimax%20h3",
+      "kind": "civitai",
+      "note": "电影质感风格 LoRA",
+      "dir": "LORA"
+    },
+    "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice": {
+      "url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "kind": "huggingface",
+      "note": "TTS 音色权重目录，配音必需",
+      "dir": "TTS"
+    }
+  }
+}

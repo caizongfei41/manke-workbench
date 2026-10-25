@@ -192,26 +192,57 @@ pnpm stack:up
 全部模型合计 **230 GB 以上**（最大的单个主模型 32 GB），GitHub 单文件上限是 100 MB，
 放不进 Git，用 LFS 也不现实（免费额度 1 GB/月）。
 
-**但模型有现成的整包，不用一个一个去搜。**
+**但整套环境有现成的部署包，不用一个一个去搜。**
 
-### 下载模型包（推荐）
+### 一键部署包（推荐）
 
-25 个文件 / 约 197 GB，目录结构已经对齐 `ComfyUI/models`，解压覆盖即可：
+115 个分卷 / 197 GB，含**模型 + 13 个节点包 + 工作台源码**，目录结构已对齐：
 
-> **链接**：https://pan.quark.cn/s/ebc77c7d9817
+> **链接**：https://pan.quark.cn/s/c0441ca5d59c
 >
-> **提取码**：`/~72003bgWcO~/`
->
-> 或打开夸克 APP 复制这段：`/~72003bgWcO~:/`
+> 或打开夸克 APP 复制这段：`~01793bkzer~:/`
 
-下载后：
+| 分卷 | 内容 | 大小 |
+|---|---|---|
+| `01-models.7z.001 … .113` | 25 个模型权重 | 196.9 GB |
+| `02-nodes.7z.001` | 13 个自定义节点包 | 264 MB |
+| `03-app.7z.001` | 工作台源码 | 13 MB |
+
+**全部下齐再解压**，只点 `.001`，7-Zip 会自动接续后面的分卷。
+
+### 部署三步
 
 ```
-1. 解压得到 models/ 文件夹
-2. 打开 ComfyUI 安装目录
-3. 把 models 覆盖进去（只新增这 25 个文件，不会动你自己的模型）
-4. node scripts/check-environment.mjs 看到 "30 / 30 就位" 就成功了
+1. 解压 03-app → 比如 D:\manke-workbench
+2. 把整个部署包目录拷到 D:\manke-workbench\deploy\
+3. 打开「漫客工作台 控制台」→ 检查部署包 → 一键部署
 ```
+
+控制台会自动解压模型和节点到 ComfyUI 对应位置，然后把环境自检跑一遍。
+
+收尾：
+
+```bash
+pnpm install && pnpm db:push && pnpm build
+node scripts/check-environment.mjs   # 看到 "30 / 30 就位" 就成功了
+```
+
+### 手工部署
+
+不想用控制台的话：
+
+```powershell
+# 节点 + 模型 → ComfyUI 根目录
+7z x 02-nodes.7z.001 -o"<ComfyUI 根>"
+7z x 01-models.7z.001 -o"<ComfyUI 根>"
+# 源码 → 你想放的地方
+7z x 03-app.7z.001 -o"D:\manke-workbench"
+```
+
+### 只想要模型
+
+部署包里有完整的 `README-必读.md`，包含显存选型、常见问题、校验清单。
+包里还附了 `校验清单.md`（115 个分卷的 SHA256），解压失败时能定位坏卷。
 
 这一版按 **20 GB 显存**（RTX 3080 级别）配的，720P 视频能跑通。
 显存更小的机器见 [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md) 的「按显存选模型版本」。

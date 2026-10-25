@@ -323,6 +323,20 @@ $form.Controls.Add($refreshBtn)
 $openBtn = New-Button '打开工作台' 348 $y 152 34
 $form.Controls.Add($openBtn)
 
+# ── 一键部署
+# 新机器上最费时的是「把那 200 GB 装到该去的地方」。部署包自带分卷和目录结构，
+# 这里只负责把解压交给 deploy-bundle.mjs，并把输出实时打进日志。
+$y += 44
+$deployBtn = New-Button '一键部署' 20 $y 110 34 $false
+$form.Controls.Add($deployBtn)
+
+$deployInspectBtn = New-Button '检查部署包' 138 $y 110 34 $false
+$form.Controls.Add($deployInspectBtn)
+
+$deployHint = New-Label '把部署包放到 deploy\ 下，或点「检查部署包」指定位置' 256 $y 244 34 8.5 $TXT3
+$deployHint.TextAlign = 'MiddleLeft'
+$form.Controls.Add($deployHint)
+
 # ── 环境自检
 $y += 52
 $form.Controls.Add((New-Label '环境自检' 20 $y 130 22 10.5 $TXT1 'Bold'))
@@ -508,6 +522,94 @@ $stopAll.Add_Click({
 }.GetNewClosure())
 
 $refreshBtn.Add_Click({ Update-Status; Add-Log '状态已刷新。' }.GetNewClosure())
+
+# ── 部署：检查 / 解压
+# 部署包默认放 deploy\，也可以在「检查部署包」里选目录。
+$script:deployBundleDir = Join-Path $BD 'deploy'
+
+function Get-DeployJson {
+    param([string]$BundleDir)
+    $script = Join-Path $BD 'scripts\deploy-bundle.mjs'
+    if (-not (Test-Path $script)) { return $null }
+    try {
+        $raw = & node $script --bundle $BundleDir --json 2>$null
+        return $raw | ConvertFrom-Json
+    } catch {
+        return $null
+    }
+}
+
+$deployInspectBtn.Add_Click({
+    $data = Get-DeployJson $script:deployBundleDir
+    if (-not $data) {
+        Add-Log '✗ 检查失败：找不到 scripts\deploy-bundle.mjs'
+        return
+    }
+    if (-not $data.sevenZip) {
+        Add-Log '✗ 未安装 7-Zip（解压需要），https://www.7-zip.org/'
+        return
+    }
+
+    $found = @($data.bundles | Where-Object { $_.count -gt 0 })
+    if ($found.Count -eq 0) {
+        Add-Log "✗ $($script:deployBundleDir) 下没有部署包"
+        Add-Log '  把 01-models / 02-nodes / 03-app 三类 .7z.001 放进去'
+        # 让用户挑一个目录
+        $dlg = New-Object Windows.Forms.FolderBrowserDialog
+        $dlg.Description = '选择包含 01-models.7z.001 等分卷的目录'
+        if ($dlg.ShowDialog() -eq 'OK') {
+            $script:deployBundleDir = $dlg.SelectedPath
+            Add-Log "部署包目录已设为 $($script:deployBundleDir)"
+        }
+        return
+    }
+
+    foreach ($b in $found) {
+        $state = if ($b.complete) { '完整' } else { "缺第 $($b.missing -join ',') 卷" }
+        $gb = [math]::Round($b.bytes / 1GB, 1)
+        Add-Log "  $($b.label)：$($b.count) 卷 $gb GB —— $state"
+    }
+    $required = @($data.bundles | Where-Object { $_.required })
+    $missing = @($required | Where-Object { $_.count -eq 0 -or -not $_.complete })
+    if ($missing.Count -eq 0) {
+        Add-Log '部署包齐全，可以点「一键部署」。'
+    } else {
+        Add-Log "还缺 $($missing.Count) 个必需的包。"
+    }
+}.GetNewClosure())
+
+$deployBtn.Add_Click({
+    $data = Get-DeployJson $script:deployBundleDir
+    if (-not $data) { Add-Log '✗ 找不到 deploy-bundle.mjs'; return }
+    if (-not $data.sevenZip) { Add-Log '✗ 未安装 7-Zip'; return }
+    if (-not $data.comfyRoot) { Add-Log '✗ 未确定 ComfyUI 位置，先用「检查」确认环境'; return }
+
+    $total = @($data.bundles | Where-Object { $_.count -gt 0 }) | Measure-Object -Property bytes -Sum
+    $gb = [math]::Round($total.Sum / 1GB, 1)
+    $answer = [Windows.Forms.MessageBox]::Show(
+        "将解压 $gb GB 到 $($data.comfyRoot)，已有同名文件会被覆盖。继续？",
+        '确认部署', 'YesNo', 'Question')
+    if ($answer -ne 'Yes') { Add-Log '已取消部署。'; return }
+
+    Add-Log "开始部署（$gb GB），耗时可能较长，进度看日志…"
+    $deployBtn.Enabled = $false
+    $deployBtn.Text = '部署中'
+    $deployBtn.Refresh()
+
+    try {
+        $script = Join-Path $BD 'scripts\deploy-bundle.mjs'
+        & node $script --bundle $script:deployBundleDir --deploy 2>&1 | ForEach-Object {
+            if ($_ -and $_.ToString().Trim()) { Add-Log $_.ToString().Trim() }
+        }
+        Add-Log '部署完成。点「检查」确认环境，然后「全部启动」。'
+    } catch {
+        Add-Log "✗ 部署失败：$($_.Exception.Message)"
+    } finally {
+        $deployBtn.Enabled = $true
+        $deployBtn.Text = '一键部署'
+        Update-Status
+    }
+}.GetNewClosure())
 
 $openBtn.Add_Click({
     Start-Process 'http://127.0.0.1:3020'
