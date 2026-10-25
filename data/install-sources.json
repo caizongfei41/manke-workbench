@@ -35,12 +35,12 @@
   },
   "bundles": [
     {
-      "name": "漫客工作台 · 一键部署包（197 GB，115 卷）",
+      "name": "漫客工作台 · 一键部署包（203.7 GB，119 卷）",
       "kind": "quark",
-      "url": "https://pan.quark.cn/s/c0441ca5d59c",
-      "code": "~01793bkzer~:/",
-      "note": "含模型、13 个自定义节点包、工作台源码。解压后控制台点「一键部署」即可",
-      "covers": "全部 / 115 个分卷",
+      "url": "https://pan.quark.cn/s/5ed114d7e32a",
+      "code": "~79173bl7Nd~:/",
+      "note": "含便携 ComfyUI、模型、13 个节点包、工作台源码。解压后控制台点「一键部署」即可",
+      "covers": "全部 / 119 个分卷",
       "primary": true,
       "deployBundle": true
     },
@@ -49,7 +49,7 @@
       "kind": "quark",
       "url": "https://pan.quark.cn/s/ebc77c7d9817",
       "code": "/~72003bgWcO~/",
-      "note": "本机跑通的 25 个模型，目录结构已对齐 ComfyUI/models，下载后直接覆盖进去",
+      "note": "旧版渠道，只含 25 个模型，不含节点和便携 ComfyUI。新用户请用上面的一键部署包",
       "covers": "全部 / 25 个文件",
       "primary": false
     },

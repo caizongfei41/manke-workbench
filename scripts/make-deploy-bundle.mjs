@@ -166,6 +166,51 @@ const buildParts = () => {
   };
   parts[2].bytes = parts[2].paths.reduce((sum, p) => sum + measurePath(p), 0);
 
+  // ── 04 便携 ComfyUI
+  // 新机器不该再让用户自己装 ComfyUI、配 Python、pip 一堆依赖。
+  // 把 python_embeded（含 torch / sage-attention / 各节点包依赖）和 ComfyUI 本体
+  // 一起打进来，解压即用。模型和节点在 01/02 里，这里排除它们，避免重复打包 200 GB。
+  const comfyRoot = resolveComfyRoot();
+  const pyDir = join(comfyRoot, 'python_embeded');
+  const comfyCore = join(comfyRoot, 'ComfyUI');
+
+  /** ComfyUI 本体不含 model / output / custom_nodes / input / temp —— 那些在别的分卷里。 */
+  const COMFY_EXCLUDE = new Set(['models', 'output', 'custom_nodes', 'input', 'temp', '__pycache__', 'user', 'logs']);
+  const measureComfyCore = (dir, depth = 0) => {
+    let total = 0;
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return 0;
+    }
+    for (const e of entries) {
+      if (COMFY_EXCLUDE.has(e.name)) continue;
+      const full = join(dir, e.name);
+      try {
+        total += e.isDirectory() ? measureComfyCore(full, depth + 1) : statSync(full).size;
+      } catch {
+        /* 读不到跳过 */
+      }
+    }
+    return total;
+  };
+
+  if (existsSync(pyDir) || existsSync(comfyCore)) {
+    const portableBytes =
+      (existsSync(pyDir) ? measurePath(pyDir) : 0) +
+      (existsSync(comfyCore) ? measureComfyCore(comfyCore) : 0);
+    parts.push({
+      id: '04-comfyui',
+      label: '便携 ComfyUI',
+      kind: 'comfyui',
+      paths: [...(existsSync(pyDir) ? [pyDir] : []), ...(existsSync(comfyCore) ? [comfyCore] : [])],
+      bytes: portableBytes,
+      base: comfyRoot,
+      exclude: [...COMFY_EXCLUDE],
+    });
+  }
+
   return { parts, modelFiles, nodeDirs };
 };
 
@@ -212,11 +257,17 @@ const main = () => {
     console.log(`  ── ${part.id} · ${part.label} · ${human(part.bytes)}`);
     console.log(`     输出 ${archive}.001 …`);
 
-    // 基准目录：模型和节点都从 COMFY_DIR 算 —— 那层下面直接就是 models/ 和
-    // custom_nodes/。用上一层的 comfyRoot 会多打一层 ComfyUI\ComfyUI 进包内路径，
-    // 还原时就铺错位置了。源码从工作台根算。
+    // 基准目录：
+    //   模型 / 节点 → COMFY_DIR（那层下面直接是 models/ 和 custom_nodes/）
+    //   便携 ComfyUI → comfyRoot（包内应是 python_embeded/ 和 ComfyUI/）
+    //   源码 → 工作台根
+    // 用错基准会多打一层目录，还原时铺错位置。
     const baseDir =
-      part.id === '01-models' || part.id === '02-nodes' ? resolve(COMFY_DIR) : resolve(ROOT);
+      part.id === '04-comfyui'
+        ? resolve(part.base)
+        : part.id === '01-models' || part.id === '02-nodes'
+          ? resolve(COMFY_DIR)
+          : resolve(ROOT);
     const relPaths = part.paths
       .map((p) => relative(baseDir, resolve(p)))
       .filter((p) => p && !p.startsWith('..'));
@@ -226,6 +277,8 @@ const main = () => {
     }
 
     const listFile = join(OUT, `.${part.id}.list`);
+    // ComfyUI 本体要排除 models/output 等，用 7z 的 -xr! 递归排除
+    const excludes = (part.exclude ?? []).flatMap((name) => [`-xr!${name}`]);
     writeFileSync(listFile, relPaths.join('\r\n'), 'utf8');
 
     try {
@@ -236,6 +289,7 @@ const main = () => {
           '-mx0', // 只打包不压缩：权重已是压缩格式
           '-t7z',
           `-v${VOLUME}`,
+          ...excludes,
           archive,
           `@${listFile}`,
         ],

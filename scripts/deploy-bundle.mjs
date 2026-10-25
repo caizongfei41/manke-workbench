@@ -14,7 +14,7 @@
 // 判断 ComfyUI 位置：跟 check-environment 一致，环境变量优先，其次从
 // data/comfyui.config.json 的 pythonPath 反推。找不到就让用户指定。
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,6 +43,16 @@ const readJson = (path, fallback) => {
   }
 };
 
+/**
+ * ComfyUI 装在哪 / 装到哪。
+ *
+ * 三种情况：
+ *   1. --comfy 显式指定 → 用它（新机器上是「将要装到这里」）
+ *   2. 环境变量 → 用它
+ *   3. 从现有配置的 pythonPath 反推 → 已有安装
+ * 都没有时返回 null，由调用方决定怎么提示。注意：带 04-comfyui 包时，
+ * 这个目录会被创建出来，不需要事先存在。
+ */
 const resolveComfyRoot = () => {
   const fromArg = valueOf('--comfy');
   if (fromArg) return fromArg;
@@ -57,13 +67,62 @@ const resolveComfyRoot = () => {
 /** 部署包目录：默认工作台根下的 deploy/，可以用 --bundle 指定。 */
 const bundleDir = () => valueOf('--bundle') ?? join(ROOT, 'deploy');
 
+/**
+ * 进度文件。
+ *
+ * 解压 197 GB 要 40 分钟以上，HTTP 请求扛不住。所以 POST 只负责启进程，
+ * 前端轮询这个 JSON 看进展。/api/app/deploy 读的是同一个文件。
+ */
+const PROGRESS_FILE = join(ROOT, '.verify', 'deploy-progress.json');
+
+const writeProgress = (patch) => {
+  try {
+    mkdirSync(dirname(PROGRESS_FILE), { recursive: true });
+    const prev = existsSync(PROGRESS_FILE)
+      ? JSON.parse(readFileSync(PROGRESS_FILE, 'utf8'))
+      : {};
+    writeFileSync(
+      PROGRESS_FILE,
+      JSON.stringify(
+        {
+          running: true,
+          stage: 'starting',
+          detail: '',
+          percent: 0,
+          startedAt: null,
+          finishedAt: null,
+          error: null,
+          ...prev,
+          ...patch,
+          finishedAt: patch.running === false ? new Date().toISOString() : null,
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+  } catch {
+    // 进度写不进去不该影响部署本身
+  }
+};
+
 const BUNDLES = [
+  {
+    id: '04-comfyui',
+    label: '便携 ComfyUI',
+    // 包内是 python_embeded/ 和 ComfyUI/，解到 ComfyUI 根（python_embeded 的上一层）
+    target: (comfyRoot) => comfyRoot,
+    required: true,
+    // 必须先于模型和节点：那些要解到 ComfyUI/ 里去，目录得先存在
+    order: 0,
+  },
   {
     id: '01-models',
     label: '模型',
     // 包内路径就是 models/…，所以解到 COMFY_DIR —— 那层下面直接是 models/
     target: (comfyRoot) => join(comfyRoot, 'ComfyUI'),
     required: true,
+    order: 1,
   },
   {
     id: '02-nodes',
@@ -71,12 +130,14 @@ const BUNDLES = [
     // 包内路径是 custom_nodes/ComfyUI-xxx/…，同样解到 COMFY_DIR
     target: (comfyRoot) => join(comfyRoot, 'ComfyUI'),
     required: true,
+    order: 2,
   },
   {
     id: '03-app',
     label: '工作台源码',
     target: () => ROOT,
     required: false,
+    order: 3,
   },
 ];
 
@@ -127,6 +188,7 @@ const inspect = () => {
       label: spec.label,
       ...info,
       required: spec.required,
+      order: spec.order ?? 9,
       target: comfyRoot ? spec.target(comfyRoot) : null,
     });
   }
@@ -153,7 +215,13 @@ const printInspect = (report) => {
 
   const blockers = [];
   if (!report.sevenZip) blockers.push('找不到 7z.exe');
-  if (!report.comfyRoot) blockers.push('未确定 ComfyUI 位置（--comfy 指定）');
+  // 带了便携 ComfyUI 就不用事先装；没带才必须指向已有的安装
+  const hasPortable = report.bundles.some((b) => b.id === '04-comfyui' && b.count > 0 && b.complete);
+  if (!report.comfyRoot) {
+    blockers.push(
+      hasPortable ? '未指定安装位置（--comfy "D:\\ComfyUI"）' : '未确定 ComfyUI 位置（--comfy 指定）'
+    );
+  }
   for (const b of report.bundles) {
     if (b.required && b.count === 0) blockers.push(`${b.label} 缺失`);
     else if (b.count > 0 && !b.complete) blockers.push(`${b.label} 分卷不全`);
@@ -171,24 +239,40 @@ const deploy = ({ dryRun }) => {
   const report = inspect();
   if (!report.sevenZip) {
     console.error('  找不到 7z.exe。装 7-Zip，或把 7z.exe 放到 tools/ 下。');
+    writeProgress({ running: false, stage: 'failed', detail: '缺少 7z.exe', percent: 0, error: '7z missing' });
     return 1;
   }
   if (!report.comfyRoot) {
     console.error('  未确定 ComfyUI 位置。用 --comfy "D:\\ComfyUI" 指定。');
+    writeProgress({ running: false, stage: 'failed', detail: '未指定安装位置', percent: 0, error: 'comfy root missing' });
     return 1;
   }
 
   const runnable = report.bundles.filter((b) => b.count > 0 && b.complete);
   if (runnable.length === 0) {
     console.error('  没有可解压的包。');
+    writeProgress({ running: false, stage: 'failed', detail: '没有可解压的包', percent: 0, error: 'no bundle' });
     return 1;
   }
 
-  for (const b of runnable) {
+  // 顺序要紧：先装便携 ComfyUI，模型和节点才有地方落。
+  const ordered = [...runnable].sort((a, b) => (a.order ?? 9) - (b.order ?? 9));
+  const totalBytes = ordered.reduce((sum, b) => sum + b.bytes, 0);
+  let doneBytes = 0;
+
+  for (const b of ordered) {
     const first = join(report.bundleDir, b.volumes[0]);
-    // 解到目标上层：7z 会按包内相对路径铺开，模型包里有 models/，所以解到 ComfyUI 根
-    const cwd =
-      b.id === '01-models' ? b.target : b.id === '02-nodes' ? dirname(b.target) : b.target;
+    // 包内路径都带了各自的第一层（models/、custom_nodes/、python_embeded/、src/），
+    // 所以直接解到 target 就行，不要再往上退一层。
+    const cwd = b.target;
+
+    // 前端每 2 秒轮询一次这个文件，所以每开始一个包就写一次
+    writeProgress({
+      running: true,
+      stage: b.id,
+      detail: `正在解压${b.label}（${b.count} 卷，${human(b.bytes)}）`,
+      percent: Math.round((doneBytes / totalBytes) * 100),
+    });
 
     console.log('');
     console.log(`  ── ${b.label}（${b.count} 卷，${human(b.bytes)}）`);
@@ -211,8 +295,23 @@ const deploy = ({ dryRun }) => {
       console.log(`     ${tail}`);
     } catch (error) {
       console.error(`     解压失败: ${String(error.stdout ?? error).slice(0, 300)}`);
+      writeProgress({
+        running: false,
+        stage: 'failed',
+        detail: `${b.label} 解压失败`,
+        percent: Math.round((doneBytes / totalBytes) * 100),
+        error: String(error.stdout ?? error).slice(0, 300),
+      });
       return 1;
     }
+
+    doneBytes += b.bytes;
+    writeProgress({
+      running: true,
+      stage: b.id,
+      detail: `${b.label} 完成`,
+      percent: Math.round((doneBytes / totalBytes) * 100),
+    });
   }
 
   console.log('');
@@ -221,6 +320,7 @@ const deploy = ({ dryRun }) => {
   console.log('     pnpm db:push        # 初始化本地数据库');
   console.log('     pnpm build          # 构建产物');
   console.log('     node scripts/check-environment.mjs   # 核对');
+  writeProgress({ running: false, stage: 'done', detail: '解压完成', percent: 100 });
   return 0;
 };
 

@@ -11,6 +11,7 @@ import {
 
 import { Link } from '@/core/i18n/navigation';
 import { EnvironmentPanel } from '@/components/services/environment-panel';
+import { DeployWizard } from '@/components/services/deploy-wizard';
 import { apiJsonGet, apiJsonPost } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
 
@@ -292,6 +293,10 @@ function ServicesRouteComponent() {
             {m['services.python']()}：{data.comfyUiPython}
           </div>
         ) : null}
+
+        <div className="mb-6">
+          <DeployWizard />
+        </div>
 
         <EnvironmentPanel />
 

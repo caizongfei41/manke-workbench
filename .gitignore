@@ -124,3 +124,8 @@ public/*.bak
 # scratch scripts created while driving the browser
 /_*.mjs
 /_*.cjs
+
+# One-off render drivers for the 消失的凶手 film. Kept out of the repo on purpose:
+# they hardcode this machine's ComfyUI path, node ids and segment timings, so they
+# are not reusable. The reproducible parts (workflows, scripts/, docs) are tracked.
+/scripts/shotfilm-*.mjs
