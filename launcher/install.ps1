@@ -58,12 +58,31 @@ if (-not (Test-Path $files)) {
     Write-Host '  ✗ 找不到 files 目录，安装包不完整' -ForegroundColor Red
     exit 1
 }
+# 复制四个目录。
+#
+# 注意：Copy-Item -Recurse 在目标目录已存在时的行为不直观 ——
+# 它可能把源目录整个塞进目标下（变成 scripts\scripts\），也可能只是合并。
+# 覆盖安装时这个差异会让新文件悄悄漏掉。
+# 所以先删掉旧目录再整份拷，保证「装完 = 包里有」。
 foreach ($dir in @('launcher', 'scripts', 'docs', 'node')) {
     $src = Join-Path $files $dir
-    if (Test-Path $src) {
-        Copy-Item $src (Join-Path $target $dir) -Recurse -Force
-        Write-Host "    ✓ $dir"
+    if (-not (Test-Path $src)) { continue }
+
+    $dst = Join-Path $target $dir
+    if (Test-Path $dst) {
+        Remove-Item $dst -Recurse -Force -ErrorAction SilentlyContinue
     }
+    Copy-Item $src $dst -Recurse -Force
+    $count = @(Get-ChildItem $dst -Recurse -File -ErrorAction SilentlyContinue).Count
+    Write-Host "    ✓ $dir（$count 个文件）"
+}
+
+# files\ 根下的散落文件（version.json 等）也要复制。
+# 之前只拷四个目录，version.json 被漏在外面，装好的控制台永远
+# 认为自己落后于远程 —— 因为读不到本地版本号。
+Get-ChildItem $files -File -ErrorAction SilentlyContinue | ForEach-Object {
+    Copy-Item $_.FullName (Join-Path $target $_.Name) -Force
+    Write-Host "    ✓ $($_.Name)"
 }
 
 # 部署包目录先建出来，用户往里放分卷

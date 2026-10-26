@@ -337,9 +337,32 @@ $form.Controls.Add($deployInspectBtn)
 $pickComfyBtn = New-Button 'ComfyUI 位置' 236 $y 108 34 $false
 $form.Controls.Add($pickComfyBtn)
 
-$deployHint = New-Label '把分卷放 deploy\ 下' 352 $y 148 34 8.5 $TXT3
+$deployHint = New-Label '分卷放 deploy\ 下' 352 $y 148 34 8.5 $TXT3
 $deployHint.TextAlign = 'MiddleLeft'
 $form.Controls.Add($deployHint)
+
+# ── 工作台更新
+# 工作台会持续加功能。更新走 GitHub tarball，不依赖 git，
+# 也不重下 210 GB 的部署包。实现在 src/core/update/ 里，
+# 这里只负责调脚本并把结果打进日志。
+#
+# 三个按钮分工：
+#   检查更新    只查远程有没有新版，不动文件
+#   更新工作台  下载代码并重建，失败自动回滚
+#   补齐依赖    新版需要新模型/节点包时才用，体积大，必须手动点
+$y += 44
+$updateCheckBtn = New-Button '检查更新' 20 $y 100 34 $false
+$form.Controls.Add($updateCheckBtn)
+
+$updateApplyBtn = New-Button '更新工作台' 128 $y 100 34 $false
+$form.Controls.Add($updateApplyBtn)
+
+$syncDepsBtn = New-Button '补齐依赖' 236 $y 100 34 $false
+$form.Controls.Add($syncDepsBtn)
+
+$updateHint = New-Label '只更新代码，不动 data\ 里的作品' 344 $y 156 34 8.5 $TXT3
+$updateHint.TextAlign = 'MiddleLeft'
+$form.Controls.Add($updateHint)
 
 # ── 环境自检
 $y += 52
@@ -536,6 +559,47 @@ $stopAll.Add_Click({
 
 $refreshBtn.Add_Click({ Update-Status; Add-Log '状态已刷新。' }.GetNewClosure())
 
+# ── 工作台位置
+# 控制台安装包只有 25 MB，不含工作台源码；用户机器上的完整工作台可能在别处。
+# 自检和更新都必须作用在「真正在跑的那个工作台」上，所以统一在这里解析。
+#
+# 顺序：
+#   1. 计划任务 BD-Workbench 的工作目录 —— 启动工作台就用它，最可信
+#   2. 安装目录本身（如果里面有 package.json）
+#   3. 几个常见位置兜底
+$script:workbenchRoot = $null
+
+function Resolve-WorkbenchRoot {
+    if ($script:workbenchRoot) { return $script:workbenchRoot }
+
+    $task = Get-ScheduledTask -TaskName 'BD-Workbench' -ErrorAction SilentlyContinue
+    if ($task -and $task.Actions.Count -gt 0 -and $task.Actions[0].WorkingDirectory) {
+        $cand = $task.Actions[0].WorkingDirectory.Trim('"')
+        if (Test-Path (Join-Path $cand 'package.json')) {
+            $script:workbenchRoot = $cand
+            return $script:workbenchRoot
+        }
+    }
+
+    if (Test-Path (Join-Path $BD 'package.json')) {
+        $script:workbenchRoot = $BD
+        return $script:workbenchRoot
+    }
+
+    foreach ($guess in @(
+        (Join-Path $env:USERPROFILE 'Desktop\ComfyUI无线画布'),
+        'C:\Users\Administrator\Desktop\ComfyUI无线画布',
+        'D:\manke\workbench'
+    )) {
+        if (Test-Path (Join-Path $guess 'package.json')) {
+            $script:workbenchRoot = $guess
+            return $script:workbenchRoot
+        }
+    }
+
+    return $null
+}
+
 # ── 部署：检查 / 解压
 # 部署包默认放 deploy\，也可以在「检查部署包」里选目录。
 $script:deployBundleDir = Join-Path $BD 'deploy'
@@ -717,6 +781,132 @@ $pickComfyBtn.Add_Click({
     } catch {
         Add-Log "✗ 选择位置失败：$($_.Exception.Message)"
         Add-Log "   位置：$($_.InvocationInfo.ScriptLineNumber) 行"
+    }
+}.GetNewClosure())
+
+# 检查更新：只查不动，告诉用户有没有新版本
+$updateCheckBtn.Add_Click({
+    try {
+        Add-Log '▶ 检查工作台更新'
+        $script = Join-Path $BD 'scripts\check-update.mjs'
+        if (-not (Test-Path $script)) {
+            Add-Log '✗ 缺少 scripts\check-update.mjs'
+            return
+        }
+        $nodeExe = Join-Path $BD 'node\node.exe'
+        if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
+
+        $raw = & cmd /c "`"$nodeExe`" `"$script`" --root `"$script:workbenchRoot`" 2>&1"
+        $text = ($raw | Out-String).Trim()
+        foreach ($line in ($text -split "`r?`n")) {
+            if ($line.Trim()) { Add-Log ('  ' + $line.Trim()) }
+        }
+    } catch {
+        Add-Log "✗ 检查更新失败：$($_.Exception.Message)"
+    }
+}.GetNewClosure())
+
+# 更新工作台：下载 tarball → 覆盖代码 → pnpm install → pnpm build
+# 失败会自动回滚，见 src/core/update/workbench-update.ts
+$updateApplyBtn.Add_Click({
+    try {
+        Add-Log '▶ 更新工作台'
+        $script = Join-Path $BD 'scripts\apply-update.mjs'
+        if (-not (Test-Path $script)) {
+            Add-Log '✗ 缺少 scripts\apply-update.mjs'
+            return
+        }
+        $nodeExe = Join-Path $BD 'node\node.exe'
+        if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
+
+        $answer = [Windows.Forms.MessageBox]::Show(
+            "将从 GitHub 下载最新代码并重新构建。`n`n" +
+            "会更新：src / scripts / messages / public 等代码目录`n" +
+            "不会动：data\（你的作品和素材）、node_modules、.output`n`n" +
+            "构建失败会自动回滚。继续？",
+            '更新工作台', 'YesNo', 'Question')
+        if ($answer -ne 'Yes') { Add-Log '已取消。'; return }
+
+        $updateApplyBtn.Enabled = $false
+        $updateApplyBtn.Text = '更新中'
+        $updateApplyBtn.Refresh()
+
+        $raw = & cmd /c "`"$nodeExe`" `"$script`" --root `"$script:workbenchRoot`" 2>&1"
+        $text = ($raw | Out-String).Trim()
+        foreach ($line in ($text -split "`r?`n")) {
+            if ($line.Trim()) { Add-Log ('  ' + $line.Trim()) }
+        }
+        Add-Log '更新流程结束。要生效请点「全部停止」再「全部启动」。'
+    } catch {
+        Add-Log "✗ 更新失败：$($_.Exception.Message)"
+    } finally {
+        $updateApplyBtn.Enabled = $true
+        $updateApplyBtn.Text = '更新工作台'
+        Update-Status
+    }
+}.GetNewClosure())
+
+# 补齐依赖：新版工作台可能需要新模型或节点包
+#
+# 为什么不跟「更新工作台」合并：
+#   代码 12 MB，30 秒。模型 200 GB，6 小时。
+#   合在一起会让「更新代码」这个动作变得不可用 ——
+#   用户可能磁盘不够、只需要图片功能、或者在流量计费网络上。
+#   所以拆成独立按钮，由用户决定什么时候下。
+$syncDepsBtn.Add_Click({
+    try {
+        Add-Log '▶ 检查依赖'
+        $script = Join-Path $BD 'scripts\sync-deps.mjs'
+        if (-not (Test-Path $script)) {
+            Add-Log '✗ 缺少 scripts\sync-deps.mjs'
+            return
+        }
+        $nodeExe = Join-Path $BD 'node\node.exe'
+        if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
+        $wbRoot = Resolve-WorkbenchRoot
+        if (-not $wbRoot) {
+            Add-Log '✗ 找不到工作台目录'
+            return
+        }
+
+        # 先只查，把结果打进日志
+        $raw = & cmd /c "`"$nodeExe`" `"$script`" --root `"$wbRoot`" --check 2>&1"
+        $text = ($raw | Out-String).Trim()
+        foreach ($line in ($text -split "`r?`n")) {
+            if ($line.Trim()) { Add-Log ('  ' + $line.Trim()) }
+        }
+
+        if ($text -match '依赖齐全' -or -not ($text -match '缺 \d+ 个')) {
+            Add-Log '依赖齐全，不用补齐。'
+            return
+        }
+
+        # 有缺失 → 问用户要不要下载
+        $answer = [Windows.Forms.MessageBox]::Show(
+            "检测到缺失的模型或节点包。`n`n" +
+            "补齐会下载文件到 ComfyUI 目录，体积可能很大（几十 GB 到几百 GB）。`n" +
+            "标了「需手动下载」的没有直链，要去网盘手动拿。`n`n" +
+            "现在开始补齐？",
+            '补齐依赖', 'YesNo', 'Question')
+        if ($answer -ne 'Yes') { Add-Log '已跳过补齐。'; return }
+
+        Add-Log '开始补齐依赖，进度看日志…'
+        $syncDepsBtn.Enabled = $false
+        $syncDepsBtn.Text = '补齐中'
+        $syncDepsBtn.Refresh()
+
+        $raw2 = & cmd /c "`"$nodeExe`" `"$script`" --root `"$wbRoot`" --sync 2>&1"
+        $text2 = ($raw2 | Out-String).Trim()
+        foreach ($line in ($text2 -split "`r?`n")) {
+            if ($line.Trim()) { Add-Log ('  ' + $line.Trim()) }
+        }
+        Add-Log '依赖处理结束。'
+    } catch {
+        Add-Log "✗ 补齐依赖失败：$($_.Exception.Message)"
+    } finally {
+        $syncDepsBtn.Enabled = $true
+        $syncDepsBtn.Text = '补齐依赖'
+        Update-Status
     }
 }.GetNewClosure())
 
@@ -958,23 +1148,7 @@ $checkBtn.Add_Click({
             $nodeExe = Join-Path $BD 'node\node.exe'
             if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
 
-            # 自检要查「真正在跑的那个工作台」，而不是这个 25 MB 的安装目录。
-            # 优先用计划任务里的工作目录（启动工作台就用它），其次找常见位置。
-            $wbRoot = $null
-            $task = Get-ScheduledTask -TaskName 'BD-Workbench' -ErrorAction SilentlyContinue
-            if ($task -and $task.Actions[0].WorkingDirectory) {
-                $cand = $task.Actions[0].WorkingDirectory.Trim('"')
-                if (Test-Path (Join-Path $cand 'package.json')) { $wbRoot = $cand }
-            }
-            if (-not $wbRoot -and (Test-Path (Join-Path $BD 'package.json'))) { $wbRoot = $BD }
-            if (-not $wbRoot) {
-                foreach ($guess in @(
-                    (Join-Path $env:USERPROFILE 'Desktop\ComfyUI无线画布'),
-                    'C:\Users\Administrator\Desktop\ComfyUI无线画布'
-                )) {
-                    if (Test-Path (Join-Path $guess 'package.json')) { $wbRoot = $guess; break }
-                }
-            }
+            $wbRoot = Resolve-WorkbenchRoot
             if ($wbRoot) { Add-Log "  检查的工作台：$wbRoot" }
 
             $rootArg = if ($wbRoot) { " --root `"$wbRoot`"" } else { '' }

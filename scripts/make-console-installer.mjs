@@ -40,6 +40,9 @@ const PAYLOAD = [
   { src: join(ROOT, 'launcher'), name: 'launcher', label: '控制台脚本' },
   { src: join(ROOT, 'scripts'), name: 'scripts', label: '部署与自检脚本', exclude: ['shotfilm-'] },
   { src: join(ROOT, 'docs'), name: 'docs', label: '依赖清单', only: ['DEPENDENCIES.md'] },
+  // version.json 决定控制台能否判断「本地是新是旧」。打包时漏掉它，
+  // 装好的控制台就永远认为自己落后于远程。
+  { src: join(ROOT, 'version.json'), name: 'version.json', label: '版本号', file: true },
 ];
 
 /** 便携 Node：只要 node.exe 和必要的 dll，不要 npm 那一堆。 */
@@ -116,12 +119,14 @@ const plan = () => {
       console.log(`   ✗ ${item.label}: 源目录不存在 ${item.src}`);
       continue;
     }
-    const size = item.only
-      ? item.only.reduce((sum, name) => {
-          const p = join(item.src, name);
-          return sum + (existsSync(p) ? statSync(p).size : 0);
-        }, 0)
-      : measure(item.src);
+    const size = item.file
+      ? statSync(item.src).size
+      : item.only
+        ? item.only.reduce((sum, name) => {
+            const p = join(item.src, name);
+            return sum + (existsSync(p) ? statSync(p).size : 0);
+          }, 0)
+        : measure(item.src);
     console.log(`   ${item.label.padEnd(14)} ${human(size).padStart(8)}`);
   }
   console.log(`   ${'便携 Node'.padEnd(14)} ${'约 40 MB'.padStart(8)}  （${NODE_EXE}）`);
@@ -144,8 +149,19 @@ const make = () => {
   // 1. 复制负载
   let copied = 0;
   for (const item of PAYLOAD) {
-    if (!existsSync(item.src)) continue;
+    if (!existsSync(item.src)) {
+      console.log(`    ! 跳过（不存在）：${item.label}`);
+      continue;
+    }
     const dest = join(FILES, item.name);
+
+    // 单文件条目：直接复制到 files/ 根下
+    if (item.file) {
+      cpSync(item.src, dest);
+      copied += 1;
+      continue;
+    }
+
     mkdirSync(dest, { recursive: true });
 
     if (item.only) {
