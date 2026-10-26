@@ -1,0 +1,5 @@
+﻿{
+  "version": "1.0.0",
+  "releasedAt": "2026-10-26",
+  "note": "Hand-updated on each release. The updater compares this against the copy in the repo to decide whether the local install is behind."
+}
