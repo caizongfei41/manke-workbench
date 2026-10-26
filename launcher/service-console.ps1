@@ -327,13 +327,17 @@ $form.Controls.Add($openBtn)
 # 新机器上最费时的是「把那 200 GB 装到该去的地方」。部署包自带分卷和目录结构，
 # 这里只负责把解压交给 deploy-bundle.mjs，并把输出实时打进日志。
 $y += 44
-$deployBtn = New-Button '一键部署' 20 $y 110 34 $false
+$deployBtn = New-Button '一键部署' 20 $y 100 34 $false
 $form.Controls.Add($deployBtn)
 
-$deployInspectBtn = New-Button '检查部署包' 138 $y 110 34 $false
+$deployInspectBtn = New-Button '检查部署包' 128 $y 100 34 $false
 $form.Controls.Add($deployInspectBtn)
 
-$deployHint = New-Label '把部署包放到 deploy\ 下，或点「检查部署包」指定位置' 256 $y 244 34 8.5 $TXT3
+# 换机器时 ComfyUI 可能装在任意盘上，启动前得能指定它在哪
+$pickComfyBtn = New-Button 'ComfyUI 位置' 236 $y 108 34 $false
+$form.Controls.Add($pickComfyBtn)
+
+$deployHint = New-Label '把分卷放 deploy\ 下' 352 $y 148 34 8.5 $TXT3
 $deployHint.TextAlign = 'MiddleLeft'
 $form.Controls.Add($deployHint)
 
@@ -410,6 +414,15 @@ function Add-Log([string]$Message) {
     $logBox.AppendText("[$stamp] $Message`r`n")
     $logBox.SelectionStart = $logBox.TextLength
     $logBox.ScrollToCaret()
+    # 同时写文件：GUI 里日志滚没了就查不到，出问题时得有地方翻。
+    try {
+        $dir = Join-Path $BD 'data\logs'
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+        $file = Join-Path $dir ('console-' + (Get-Date -Format 'yyyyMMdd') + '.log')
+        Add-Content -Path $file -Value "[$stamp] $Message" -Encoding UTF8
+    } catch {
+        # 日志写不进去不该影响控制台本身
+    }
 }
 
 function Set-RowState($Row, [string]$State) {
@@ -606,32 +619,217 @@ $deployInspectBtn.Add_Click({
     }
 }.GetNewClosure())
 
+# 选择 ComfyUI 位置
+# 换一台机器，ComfyUI 可能装在 D 盘、G 盘或者部署包解出来的 manke\ComfyUI 下，
+# 写死路径的话启动按钮必然失败。这里扫一遍所有固定硬盘找出像 ComfyUI 的目录，
+# 让用户直接选，选完写进 data\comfyui.config.json。
+$pickComfyBtn.Add_Click({
+    try {
+        Add-Log '▶ 选择 ComfyUI 位置'
+
+        # 先扫描，找到就列出来让用户选；扫不到直接开文件夹对话框。
+        # 注意：不用自定义 Form + ShowDialog —— 在事件处理器里创建模态窗体
+        # 容易被 GetNewClosure 捕获后失去窗口句柄，表现就是「点了没反应」。
+        # 这里全部走系统的 FolderBrowserDialog / InputBox，最稳。
+        $candidates = @()
+        foreach ($drv in [System.IO.DriveInfo]::GetDrives()) {
+            if (-not $drv.IsReady) { continue }
+            if ($drv.DriveType -ne [System.IO.DriveType]::Fixed) { continue }
+            $roots = @(
+                $drv.Name,
+                (Join-Path $drv.Name 'ComfyUI'),
+                (Join-Path $drv.Name 'manke'),
+                (Join-Path $drv.Name 'AI'),
+                (Join-Path $drv.Name 'Programs')
+            )
+            foreach ($r in $roots) {
+                if (-not (Test-Path $r)) { continue }
+                if (Test-Path (Join-Path $r 'python_embeded\python.exe')) {
+                    $candidates += $r
+                }
+                Get-ChildItem $r -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+                    if (Test-Path (Join-Path $_.FullName 'python_embeded\python.exe')) {
+                        $candidates += $_.FullName
+                    }
+                    if (Test-Path (Join-Path $_.FullName 'ComfyUI\python_embeded\python.exe')) {
+                        $candidates += (Join-Path $_.FullName 'ComfyUI')
+                    }
+                }
+            }
+        }
+        $candidates = @($candidates | Sort-Object -Unique)
+        Add-Log "  扫描到 $($candidates.Count) 个 ComfyUI"
+
+        $root = $null
+        if ($candidates.Count -gt 0) {
+            foreach ($c in $candidates) { Add-Log "    · $c" }
+            # 只有一个就直接用，多个则列出编号让用户在日志里确认第一个
+            if ($candidates.Count -eq 1) {
+                $root = $candidates[0]
+                Add-Log "  只有一个候选，直接用：$root"
+            } else {
+                $root = $candidates[0]
+                Add-Log "  默认用第一个：$root"
+                Add-Log '  要换的话再点一次本按钮，然后手动指定。'
+            }
+        }
+
+        # 无论扫没扫到，都允许手动指定
+        $dlg = New-Object Windows.Forms.FolderBrowserDialog
+        $dlg.Description = '选择 ComfyUI 安装目录（里面应有 python_embeded\python.exe）'
+        $dlg.ShowNewFolderButton = $false
+        if ($root -and (Test-Path $root)) { $dlg.SelectedPath = $root }
+        Add-Log '  请在弹出的窗口里确认或另选目录…'
+        if ($dlg.ShowDialog() -ne 'OK') {
+            if ($root) {
+                Add-Log "  已取消选择，沿用扫描结果：$root"
+            } else {
+                Add-Log '已取消。'
+                return
+            }
+        } else {
+            $root = $dlg.SelectedPath
+        }
+
+        $pyPath = Join-Path $root 'python_embeded\python.exe'
+        $mainPath = Join-Path $root 'ComfyUI\main.py'
+        if (-not (Test-Path $pyPath)) {
+            Add-Log "✗ $root 下没有 python_embeded\python.exe"
+            Add-Log '  请选 ComfyUI 的根目录（含 python_embeded 和 ComfyUI 两个子目录）。'
+            return
+        }
+
+        $cfgPath = Join-Path $BD 'data\comfyui.config.json'
+        $cfg = @{}
+        if (Test-Path $cfgPath) {
+            try { $cfg = Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json -AsHashtable } catch { $cfg = @{} }
+        }
+        $cfg['pythonPath'] = $pyPath
+        if (-not $cfg['baseUrl']) { $cfg['baseUrl'] = 'http://127.0.0.1:8188' }
+        if (-not $cfg['workflowDir']) { $cfg['workflowDir'] = 'comfyui/workflows' }
+        $cfg | ConvertTo-Json -Depth 6 | Set-Content $cfgPath -Encoding UTF8
+
+        Add-Log "✓ ComfyUI 位置已设为 $root"
+        Add-Log "  python: $pyPath"
+        Add-Log "  main:   $mainPath $(if (Test-Path $mainPath) { '' } else { '（缺失！）' })"
+        Add-Log '  已写入 data\comfyui.config.json，启动时用这个位置。'
+        Update-Status
+    } catch {
+        Add-Log "✗ 选择位置失败：$($_.Exception.Message)"
+        Add-Log "   位置：$($_.InvocationInfo.ScriptLineNumber) 行"
+    }
+}.GetNewClosure())
+
 $deployBtn.Add_Click({
+  try {
+    Add-Log '▶ 一键部署：开始'
     $data = Get-DeployJson $script:deployBundleDir
     if (-not $data) {
         Add-Log ("✗ " + $(if ($script:deployLastError) { $script:deployLastError } else { '检查失败' }))
         return
     }
     if (-not $data.sevenZip) { Add-Log '✗ 未安装 7-Zip'; return }
+
+    # 找不到分卷时不要让用户自己回去点「检查部署包」——
+    # 直接问「部署包在哪」，选完继续，不用重新点一次。
     if (-not $data.volumes -or -not $data.volumes.complete) {
-        Add-Log '✗ 分卷不全，先点「检查部署包」看看缺什么'
+        Add-Log "  默认目录 $($script:deployBundleDir) 里没有完整的分卷"
+        Add-Log '  请选择存放 manke-bundle.7z.001 … 的目录'
+        $dlg = New-Object Windows.Forms.FolderBrowserDialog
+        $dlg.Description = "选择存放 $($data.archiveBase).7z.001 … 的目录"
+        $dlg.ShowNewFolderButton = $false
+        if ($dlg.ShowDialog() -ne 'OK') { Add-Log '已取消。'; return }
+
+        $script:deployBundleDir = $dlg.SelectedPath
+        Add-Log "部署包目录：$($script:deployBundleDir)"
+        $data = Get-DeployJson $script:deployBundleDir
+        if (-not $data -or -not $data.volumes -or -not $data.volumes.complete) {
+            $state = if ($data -and $data.volumes.count -gt 0) { "缺第 $($data.volumes.missing -join ',') 卷" } else { '没有分卷' }
+            Add-Log "✗ 这个目录也不行：$state"
+            return
+        }
+    }
+
+    $needBytes = $data.volumes.bytes
+    $needGb = [math]::Round($needBytes / 1GB, 1)
+
+    # ── 选盘：列出所有固定硬盘，标出空间够不够
+    # 文件夹选择框看不出「这个盘还剩多少」，而解压要 211 GB，
+    # 选错盘会在解压到一半时失败，白等半小时。所以直接列盘 + 算余量。
+    $drives = @()
+    foreach ($d in [System.IO.DriveInfo]::GetDrives()) {
+        if (-not $d.IsReady) { continue }
+        if ($d.DriveType -ne [System.IO.DriveType]::Fixed) { continue }
+        $free = $d.AvailableFreeSpace
+        $drives += [PSCustomObject]@{
+            Root  = $d.Name
+            Free  = $free
+            Total = $d.TotalSize
+            Ok    = ($free -gt $needBytes * 1.05)
+        }
+    }
+    $drives = $drives | Sort-Object -Property @{ Expression = 'Ok'; Descending = $true }, @{ Expression = 'Free'; Descending = $true }
+
+    if ($drives.Count -eq 0) {
+        Add-Log '✗ 没有可用的固定硬盘'
         return
     }
 
-    # 让用户选解压位置：默认是部署包所在盘的根目录
-    $dlg = New-Object Windows.Forms.FolderBrowserDialog
-    $dlg.Description = '选择解压到哪个目录（需要约 211 GB 空闲，会在这里生成 manke 文件夹）'
-    $dlg.SelectedPath = $data.target
-    if ($dlg.ShowDialog() -ne 'OK') { Add-Log '已取消部署。'; return }
-    $target = $dlg.SelectedPath
+    # 构建选盘窗口
+    $pick = New-Object Windows.Forms.Form
+    $pick.Text = '选择解压位置'
+    $pick.Size = New-Object Drawing.Size(520, 400)
+    $pick.StartPosition = 'CenterParent'
+    $pick.FormBorderStyle = 'FixedDialog'
+    $pick.MaximizeBox = $false
+    $pick.MinimizeBox = $false
+    $pick.BackColor = $BG
+    $pick.Font = New-Object Drawing.Font('Microsoft YaHei UI', 9)
 
-    $gb = [math]::Round($data.volumes.bytes / 1GB, 1)
+    $tip = New-Label "解压需要约 $needGb GB。绿点表示空间够，灰点不够。" 18 14 470 22 9 $TXT2
+    $pick.Controls.Add($tip)
+
+    $list = New-Object Windows.Forms.ListBox
+    $list.Location = New-Object Drawing.Point(18, 42)
+    $list.Size = New-Object Drawing.Size(468, 240)
+    $list.BorderStyle = 'FixedSingle'
+    $list.Font = New-Object Drawing.Font('Microsoft YaHei UI', 9.5)
+    $pick.Controls.Add($list)
+
+    $pickOk = New-Button '开始解压' 268 296 110 34 $true
+    $pickCancel = New-Button '取消' 388 296 98 34 $false
+    $pick.Controls.Add($pickOk)
+    $pick.Controls.Add($pickCancel)
+
+    $script:pickResult = $null
+    $pickOk.Add_Click({
+        if ($list.SelectedIndex -ge 0) {
+            $script:pickResult = $drives[$list.SelectedIndex].Root
+            $pick.Close()
+        }
+    }.GetNewClosure())
+    $pickCancel.Add_Click({ $pick.Close() }.GetNewClosure())
+
+    foreach ($d in $drives) {
+        $mark = if ($d.Ok) { '●' } else { '○' }
+        $freeGb = [math]::Round($d.Free / 1GB, 1)
+        $totalGb = [math]::Round($d.Total / 1GB, 0)
+        $suffix = if ($d.Ok) { '可以' } else { "不够（差 $([math]::Round(($needBytes - $d.Free)/1GB)) GB）" }
+        $null = $list.Items.Add("$mark  $($d.Root)   可用 $freeGb / $totalGb GB   —— $suffix")
+        if ($d.Ok -and $list.SelectedIndex -lt 0) { $list.SelectedIndex = $list.Items.Count - 1 }
+    }
+
+    $pick.ShowDialog() | Out-Null
+    if (-not $script:pickResult) { Add-Log '已取消部署。'; return }
+    $target = $script:pickResult
+
+    Add-Log "解压到：$target\manke"
     $answer = [Windows.Forms.MessageBox]::Show(
-        "将解压 $gb GB 到：`n$target`n`n耗时约 20-40 分钟，中途不要关窗口。继续？",
+        "将解压 $needGb GB 到：`n$target`n`n耗时约 20-40 分钟，中途不要关窗口。继续？",
         '确认部署', 'YesNo', 'Question')
     if ($answer -ne 'Yes') { Add-Log '已取消部署。'; return }
 
-    Add-Log "开始部署（$gb GB）→ $target"
+    Add-Log "开始部署（$needGb GB）→ $target"
     Add-Log '进度看下方日志，完成前不要关闭窗口…'
     $deployBtn.Enabled = $false
     $deployBtn.Text = '部署中'
@@ -653,6 +851,12 @@ $deployBtn.Add_Click({
         $deployBtn.Text = '一键部署'
         Update-Status
     }
+  } catch {
+    Add-Log "✗ 部署按钮异常：$($_.Exception.Message)"
+    Add-Log "   位置：$($_.InvocationInfo.ScriptLineNumber) 行"
+    $deployBtn.Enabled = $true
+    $deployBtn.Text = '一键部署'
+  }
 }.GetNewClosure())
 
 $openBtn.Add_Click({
@@ -732,9 +936,49 @@ $checkBtn.Add_Click({
         Add-Log '✗ 缺少 scripts\check-environment.mjs，无法自检。'
     } else {
         Add-Log '环境自检开始…'
+
+        # 刚点过「启动」时 ComfyUI 要 30-90 秒才监听 8188，
+        # 立刻自检会误报「无响应」——进程明明在起，看结果却像是坏了。
+        # 先等端口，最多 90 秒；等不到也继续检查，让用户看到真实状态。
+        if (-not (Test-Port 8188)) {
+            $pyProcs = @(Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue)
+            if ($pyProcs.Count -gt 0) {
+                Add-Log '  ComfyUI 正在启动，等它就绪（最多 90 秒）…'
+                for ($w = 0; $w -lt 30; $w++) {
+                    Start-Sleep -Seconds 3
+                    if (Test-Port 8188) { Add-Log "  ComfyUI 已就绪（等了 $(($w + 1) * 3) 秒）"; break }
+                }
+                if (-not (Test-Port 8188)) { Add-Log '  ✗ 90 秒内没起来，继续检查其余项' }
+            }
+        }
+
         $tmp = [IO.Path]::GetTempFileName()
         try {
-            & cmd /c "node `"$checkScript`" --json > `"$tmp`" 2>&1"
+            # 用安装包自带的 node，不依赖系统 PATH
+            $nodeExe = Join-Path $BD 'node\node.exe'
+            if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
+
+            # 自检要查「真正在跑的那个工作台」，而不是这个 25 MB 的安装目录。
+            # 优先用计划任务里的工作目录（启动工作台就用它），其次找常见位置。
+            $wbRoot = $null
+            $task = Get-ScheduledTask -TaskName 'BD-Workbench' -ErrorAction SilentlyContinue
+            if ($task -and $task.Actions[0].WorkingDirectory) {
+                $cand = $task.Actions[0].WorkingDirectory.Trim('"')
+                if (Test-Path (Join-Path $cand 'package.json')) { $wbRoot = $cand }
+            }
+            if (-not $wbRoot -and (Test-Path (Join-Path $BD 'package.json'))) { $wbRoot = $BD }
+            if (-not $wbRoot) {
+                foreach ($guess in @(
+                    (Join-Path $env:USERPROFILE 'Desktop\ComfyUI无线画布'),
+                    'C:\Users\Administrator\Desktop\ComfyUI无线画布'
+                )) {
+                    if (Test-Path (Join-Path $guess 'package.json')) { $wbRoot = $guess; break }
+                }
+            }
+            if ($wbRoot) { Add-Log "  检查的工作台：$wbRoot" }
+
+            $rootArg = if ($wbRoot) { " --root `"$wbRoot`"" } else { '' }
+            & cmd /c "`"$nodeExe`" `"$checkScript`" --json$rootArg > `"$tmp`" 2>&1"
             $text = [IO.File]::ReadAllText($tmp, [Text.Encoding]::UTF8)
             Render-Env $text
 

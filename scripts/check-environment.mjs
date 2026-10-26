@@ -14,7 +14,22 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-const ROOT = resolve(process.argv[1], '../..');
+// 工作台根目录。三种来源，按优先级：
+//   1. --root <path>（控制台传入计划任务实际指向的目录）
+//   2. BEATDESIGN_WORKBENCH_HOME 环境变量
+//   3. 本脚本所在位置的上两级（直接在仓库里跑时）
+// 为什么需要 1 和 2：控制台安装包只有 25 MB，不含工作台源码；
+// 用户机器上的完整工作台可能在别处，自检查的必须是真正在跑的那个。
+const ROOT = (() => {
+  const rootArg = (() => {
+    const i = process.argv.indexOf('--root');
+    return i >= 0 ? process.argv[i + 1] : undefined;
+  })();
+  if (rootArg) return resolve(rootArg);
+  const envHome = process.env.BEATDESIGN_WORKBENCH_HOME;
+  if (envHome) return resolve(envHome);
+  return resolve(process.argv[1], '../..');
+})();
 const JSON_MODE = process.argv.includes('--json');
 const QUIET = process.argv.includes('--quiet');
 
@@ -91,24 +106,42 @@ const baseUrl = String(config.baseUrl ?? 'http://127.0.0.1:8188').replace(/\/+$/
 const isLocalComfy =
   /\/\/(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/.test(baseUrl) || baseUrl === '';
 
-// ComfyUI 安装根目录：优先环境变量，其次从 pythonPath 反推
-const deriveComfyRoot = () => {
+// ComfyUI 安装根目录的确定顺序：
+//   1. BEATDESIGN_COMFYUI_HOME 环境变量（临时覆盖）
+//   2. data/comfyui.config.json 的 pythonPath 反推（控制台「ComfyUI 位置」写这里）
+//   3. 常见盘符猜一个
+// 关键：用户的配置说在哪就在哪。找不到就如实报「你说的位置没东西」，
+// 不要偷偷退回某个默认路径 —— 那样检查的是别的目录，结果全是误导。
+const comfyRootSource = (() => {
   const envRoot = process.env.BEATDESIGN_COMFYUI_HOME;
-  if (envRoot) return envRoot;
+  if (envRoot) return { root: envRoot, source: 'BEATDESIGN_COMFYUI_HOME' };
   const py = String(config.pythonPath ?? '');
   if (py) {
-    // <root>\python_embeded\python.exe
     const idx = py.toLowerCase().indexOf('python_embeded');
-    if (idx > 0) return py.slice(0, idx).replace(/[\\/]+$/, '');
+    if (idx > 0) {
+      return { root: py.slice(0, idx).replace(/[\\/]+$/, ''), source: 'data/comfyui.config.json' };
+    }
+    // pythonPath 有值但不像 <root>\python_embeded\python.exe，直接用它的两层上级
+    const guess = dirname(dirname(py));
+    if (guess) return { root: guess, source: 'data/comfyui.config.json（推断）' };
   }
-  return 'E:\\ComfyUI';
-};
-const comfyRoot = deriveComfyRoot();
-const comfyDir = join(comfyRoot, 'ComfyUI');
+  for (const candidate of ['E:\\ComfyUI', 'D:\\ComfyUI', 'C:\\ComfyUI']) {
+    try {
+      if (existsSync(join(candidate, 'python_embeded', 'python.exe'))) {
+        return { root: candidate, source: '自动探测' };
+      }
+    } catch {
+      /* 无权限就跳过 */
+    }
+  }
+  return { root: null, source: '未配置' };
+})();
+
+const comfyRoot = comfyRootSource.root;
+const comfyDir = comfyRoot ? join(comfyRoot, 'ComfyUI') : null;
 
 // ── 1. 构建产物
-const serverEntry = join(ROOT, '.output', 'server', 'index.mjs');
-if (existsSync(serverEntry)) {
+const serverEntry = join(ROOT, '.output', 'server', 'index.mjs');if (existsSync(serverEntry)) {
   add('build', '构建产物', 'pass', '.output/server/index.mjs 存在');
 } else {
   add('build', '构建产物', 'fail', '缺少 .output/server/index.mjs', '跑 pnpm build');
@@ -128,6 +161,46 @@ if (existsSync(configPath)) {
 } else {
   add('config', 'ComfyUI 配置', 'warn', '缺少 data/comfyui.config.json', '首次启动会自动生成');
 }
+
+// ── 3.5 自检到底在检查哪个 ComfyUI
+// 用户可能在控制台里选了别的盘，这时候所有文件类检查都该看那个位置。
+// 位置不存在就明确说清楚，而不是默默退回默认路径给出一堆无关的结论。
+if (!comfyRoot) {
+  add(
+    'comfy-location',
+    'ComfyUI 位置',
+    'fail',
+    '还没指定 ComfyUI 在哪',
+    '点控制台「ComfyUI 位置」选一个目录，或解压部署包后指向 manke\\ComfyUI'
+  );
+} else if (!existsSync(comfyRoot)) {
+  add(
+    'comfy-location',
+    'ComfyUI 位置',
+    'fail',
+    `指定的目录不存在：${comfyRoot}`,
+    `来源：${comfyRootSource.source}。重新点「ComfyUI 位置」选一个存在的目录`
+  );
+} else if (!existsSync(join(comfyRoot, 'python_embeded', 'python.exe'))) {
+  add(
+    'comfy-location',
+    'ComfyUI 位置',
+    'fail',
+    `${comfyRoot} 下没有 python_embeded\\python.exe`,
+    '这不是一个完整的 ComfyUI 目录，或者部署包还没解压'
+  );
+} else if (!existsSync(join(comfyRoot, 'ComfyUI'))) {
+  add(
+    'comfy-location',
+    'ComfyUI 位置',
+    'fail',
+    `${comfyRoot} 下没有 ComfyUI 子目录`,
+    '标准的 ComfyUI 结构是 <根>\\python_embeded + <根>\\ComfyUI'
+  );
+} else {
+  add('comfy-location', 'ComfyUI 位置', 'pass', `${comfyRoot}（来源：${comfyRootSource.source}）`);
+}
+
 if (isLocalComfy && config.pythonPath) {
   if (existsSync(String(config.pythonPath))) {
     add('pythonPath', 'ComfyUI 解释器', 'pass', String(config.pythonPath));
@@ -202,6 +275,8 @@ if (manifest) {
   // ── 7. 节点包
   if (!isLocalComfy) {
     add('nodes', '自定义节点包', 'warn', 'ComfyUI 不在本机，无法检查文件', undefined);
+  } else if (!comfyDir) {
+    add('nodes', '自定义节点包', 'fail', '还没指定 ComfyUI 位置', '点控制台「ComfyUI 位置」选一个目录');
   } else {
     const cnDir = join(comfyDir, 'custom_nodes');
     const missingPkgs = (manifest.nodePackages ?? []).filter(
@@ -250,8 +325,7 @@ if (manifest) {
     // ── 8. 模型文件
     const index = new Map();
     const dirNames = new Set();
-    for (const root of [join(comfyDir, 'models'), join(comfyDir, 'input')]) {
-      if (!existsSync(root)) continue;
+    for (const root of [join(comfyDir, 'models'), join(comfyDir, 'input')]) {      if (!existsSync(root)) continue;
       const walk = (d) => {
         let entries;
         try {

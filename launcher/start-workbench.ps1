@@ -6,8 +6,28 @@ $host.UI.RawUI.WindowTitle = '漫客工作台'
 # （旧版写死了某个用户的桌面路径，换机器就无法启动。）
 $bd = Split-Path -Parent $PSScriptRoot
 
-# ComfyUI 安装目录：优先读环境变量，便于在不同机器上复用同一个启动器。
+# ComfyUI 安装目录，按优先级：
+#   1. 环境变量 BEATDESIGN_COMFYUI_HOME（临时覆盖）
+#   2. data\comfyui.config.json 里的 pythonPath（控制台「选择位置」会写这里）
+#   3. 常见位置猜一个
+# 不再写死某个盘符：部署包解到哪个盘由用户在控制台里选。
 $comfy = $env:BEATDESIGN_COMFYUI_HOME
+if (-not $comfy) {
+  $cfgPath = Join-Path $bd 'data\comfyui.config.json'
+  if (Test-Path $cfgPath) {
+    try {
+      $cfg = Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json
+      $py = [string]$cfg.pythonPath
+      $idx = $py.ToLower().IndexOf('python_embeded')
+      if ($idx -gt 0) { $comfy = $py.Substring(0, $idx).TrimEnd('\', '/') }
+    } catch { }
+  }
+}
+if (-not $comfy) {
+  foreach ($guess in @('E:\ComfyUI', 'D:\ComfyUI', 'C:\ComfyUI')) {
+    if (Test-Path (Join-Path $guess 'python_embeded\python.exe')) { $comfy = $guess; break }
+  }
+}
 if (-not $comfy) { $comfy = 'E:\ComfyUI' }
 # Node / pnpm 所在目录（用系统安装的 Node.js；可用 BEATDESIGN_NODE_DIR 覆盖）
 $nodeDir = $env:BEATDESIGN_NODE_DIR

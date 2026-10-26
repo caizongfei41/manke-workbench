@@ -173,7 +173,25 @@ const make = () => {
   console.log(`  便携 Node ${human(nodeBytes)}`);
 
   // 3. 安装脚本
+  const ensureBom = (path) => {
+    const buf = readFileSync(path);
+    if (buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) return false;
+    writeFileSync(path, Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), buf]));
+    return true;
+  };
   writeFileSync(join(STAGE, 'install.ps1'), INSTALL_SCRIPT, 'utf8');
+  ensureBom(join(STAGE, 'install.ps1'));
+  // 负载里的 .ps1 也要有 BOM，否则装到目标机器一样跑不起来
+  const fixPs1 = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) fixPs1(full);
+      else if (e.name.endsWith('.ps1') && ensureBom(full)) {
+        console.log('    补 BOM: ' + full.replace(STAGE, ''));
+      }
+    }
+  };
+  fixPs1(FILES);
   copyFileSync(join(ROOT, 'launcher', 'install.cmd'), join(STAGE, '安装.cmd'));
 
   // 4. 自解压：把 files/ 打成 7z sfx
