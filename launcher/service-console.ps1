@@ -105,31 +105,71 @@ function New-HiddenLaunchVbs {
 ' 计划任务直接跑 cmd.exe 会弹控制台窗口，每次启动闪一下。
 ' WshShell.Run 的第 3 个参数传 0 = 窗口完全隐藏。
 '
+' 这个文件由控制台自动生成，不要手改 —— 控制台启动时可能重建。
+' 原始命令记录在 run-$Name.cmd.txt 里，重装后靠它还原。
+'
 Set sh = CreateObject("WScript.Shell")
 sh.CurrentDirectory = "$WorkDir"
 sh.Run "$escaped", 0, False
 "@
     Set-Content $vbsPath $content -Encoding Unicode
+
+    # 同时把原始命令行存一份。
+    # 计划任务改成 wscript 之后就只剩下 VBS 路径，原始的 cmd 命令行丢了；
+    # 而重装控制台会删掉 launcher 目录（含 VBS），任务就指向不存在的文件，
+    # 表现为「任务状态 Running 但什么都不启动」。存一份原始命令才能重建。
+    $cmdPath = Join-Path $BD "launcher\run-$Name.cmd.txt"
+    Set-Content $cmdPath $CmdLine -Encoding UTF8
+
     return $vbsPath
 }
 
-# 把计划任务从「直接跑 cmd.exe」改成「wscript 跑 VBS」。
+# 把计划任务改成「wscript 跑 VBS」。
 # 返回 $true 表示做了修改。
-function Repair-TaskWindow([string]$TaskName, [string]$WrapperName) {
+#
+# 三种情况都要处理：
+#   1. 任务还指向 cmd.exe      → 生成 VBS 并改写
+#   2. 指向 wscript 但 VBS 没了 → 用 .cmd.txt 还原后重建（重装控制台会遇到）
+#   3. 指向 wscript 且 VBS 在   → 什么都不做
+function Repair-TaskWindow([string]$TaskName, [string]$WrapperName, [string]$DefaultCmdLine, [string]$DefaultWorkDir) {
     $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     if (-not $task) { return $false }
     if ($task.Actions.Count -eq 0) { return $false }
 
     $action = $task.Actions[0]
+    $vbsExpected = Join-Path $BD "launcher\run-$WrapperName.vbs"
+    $cmdRecord = Join-Path $BD "launcher\run-$WrapperName.cmd.txt"
+    $isWscript = $action.Execute -and $action.Execute.ToLower().EndsWith('wscript.exe')
 
-    # 已经是 wscript 就走人，别重复改
-    if ($action.Execute -and $action.Execute.ToLower().EndsWith('wscript.exe')) {
+    if ($isWscript -and (Test-Path $vbsExpected)) {
+        # 已经修好且文件在，不用动
         return $false
     }
 
+    if ($isWscript -and -not (Test-Path $vbsExpected)) {
+        # 重装后 VBS 丢了。从记录还原原始命令行。
+        if (Test-Path $cmdRecord) {
+            $cmdLine = (Get-Content $cmdRecord -Raw -Encoding UTF8).Trim()
+            $workDir = if ($action.WorkingDirectory) { $action.WorkingDirectory } else { $DefaultWorkDir }
+        } else {
+            # 没有记录就用内置的默认命令（老部署没有 .cmd.txt）
+            $cmdLine = $DefaultCmdLine
+            $workDir = $DefaultWorkDir
+        }
+        $vbs = New-HiddenLaunchVbs -Name $WrapperName -CmdLine $cmdLine -WorkDir $workDir
+        # 任务本身指向的路径没变（同一个 $vbsExpected），但保险起见重设一次
+        $newAction = New-ScheduledTaskAction `
+            -Execute 'wscript.exe' `
+            -Argument "`"$vbs`"" `
+            -WorkingDirectory $workDir
+        Set-ScheduledTask -TaskName $TaskName -Action $newAction | Out-Null
+        return $true
+    }
+
+    # 还没改过：原本是 cmd.exe
     $cmdLine = $action.Execute
     if ($action.Arguments) { $cmdLine += ' ' + $action.Arguments }
-    $workDir = if ($action.WorkingDirectory) { $action.WorkingDirectory } else { $BD }
+    $workDir = if ($action.WorkingDirectory) { $action.WorkingDirectory } else { $DefaultWorkDir }
 
     $vbs = New-HiddenLaunchVbs -Name $WrapperName -CmdLine $cmdLine -WorkDir $workDir
 
@@ -146,8 +186,51 @@ function Repair-TaskWindows {
     $changed = @()
     foreach ($svc in $SERVICES) {
         $wrapper = if ($svc.Key -eq 'comfyui') { 'comfyui' } else { 'workbench' }
+
+        # 兜底命令：老部署没有 .cmd.txt 记录时用这个重建。
+        # ComfyUI 的路径从 data\comfyui.config.json 读，工作台就是 $BD。
+        if ($svc.Key -eq 'comfyui') {
+            $comfyRoot = 'E:\ComfyUI'
+            try {
+                $cfgPath = Join-Path $BD 'data\comfyui.config.json'
+                if (Test-Path $cfgPath) {
+                    $cfg = Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json
+                    $py = [string]$cfg.pythonPath
+                    $idx = $py.ToLower().IndexOf('python_embeded')
+                    if ($idx -gt 0) { $comfyRoot = $py.Substring(0, $idx).TrimEnd('\', '/') }
+                }
+            } catch { }
+            $logDir = Join-Path $BD 'data\logs'
+            $fallbackCmd = 'cmd.exe /c set "HF_ENDPOINT=https://hf-mirror.com" && ' +
+                'set "HF_HUB_DISABLE_TELEMETRY=1" && ' +
+                "`"$comfyRoot\python_embeded\python.exe`" -s ComfyUI\main.py " +
+                '--windows-standalone-build --use-sage-attention --disable-pinned-memory ' +
+                "> `"$logDir\comfyui.log`" 2> `"$logDir\comfyui.err.log`""
+            $fallbackDir = $comfyRoot
+        } else {
+            # 工作台的启动命令必须指向「真正的工作台目录」，不是控制台安装目录。
+            # 控制台只有 25 MB，里面没有 .output；拿它当 cwd 会让
+            # node .output\server\index.mjs 找不到文件，服务起不来 ——
+            # 表现为任务状态成功但端口始终不监听。
+            $wbDir = $BD
+            foreach ($cand in @(
+                (Join-Path $env:USERPROFILE 'Desktop\ComfyUI无线画布'),
+                'C:\Users\Administrator\Desktop\ComfyUI无线画布',
+                'D:\manke\workbench'
+            )) {
+                if (Test-Path (Join-Path $cand '.output\server\index.mjs')) { $wbDir = $cand; break }
+            }
+            $logDir = Join-Path $wbDir 'data\logs'
+            $fallbackCmd = 'cmd.exe /c set "PATH=C:\Program Files\nodejs;%PATH%" && ' +
+                'set PORT=3020 && set BEATDESIGN_GENERATION_PROVIDER=comfyui && ' +
+                "cd /d `"$wbDir`" && node .output\server\index.mjs " +
+                "> `"$logDir\workbench.log`" 2> `"$logDir\workbench.err.log`""
+            $fallbackDir = $wbDir
+        }
+
         try {
-            if (Repair-TaskWindow -TaskName $svc.Task -WrapperName $wrapper) {
+            if (Repair-TaskWindow -TaskName $svc.Task -WrapperName $wrapper `
+                    -DefaultCmdLine $fallbackCmd -DefaultWorkDir $fallbackDir) {
                 $changed += $svc.Name
             }
         } catch {
