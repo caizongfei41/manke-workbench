@@ -61,15 +61,46 @@ if (Test-Path $target) {
 }
 
 # 确认
+# 判断有没有可交互的控制台：从「设置 → 应用」启动时是后台进程，
+# Read-Host 会立刻返回空字符串，当成「取消」，用户看到「点了没反应」。
+# 所以没有控制台时不等待输入，改用弹窗确认。
 if (-not $Silent -and (Test-Path $target)) {
     $msg = "确认卸载？`n`n将删除：$target"
     if ($deployFiles -gt 0 -and -not $Purge) {
         $msg += "`n`n注意：deploy\ 里的 $deployFiles 个文件会被保留。"
     }
-    $answer = Read-Host ($msg + "`n`n(y/N)")
-    if ($answer -ne 'y') {
-        Write-Host '  已取消。'
-        exit 0
+
+    $hasConsole = $true
+    try {
+        $hasConsole = -not [Console]::IsInputRedirected
+        # 后台启动时 WindowHandle 为 0
+        if ($hasConsole -and (Get-Process -Id $selfId).MainWindowHandle -eq 0) {
+            # 还有可能只是没有主窗口（比如从其他程序调用），再用环境判断
+            if (-not $Host.Name -eq 'ConsoleHost') { $hasConsole = $false }
+        }
+    } catch {
+        $hasConsole = $false
+    }
+
+    if ($hasConsole) {
+        $answer = Read-Host ($msg + "`n`n(y/N)")
+        if ($answer -ne 'y') {
+            Write-Host '  已取消。'
+            exit 0
+        }
+    } else {
+        # 没有控制台：弹窗确认
+        try {
+            Add-Type -AssemblyName System.Windows.Forms
+            $r = [System.Windows.Forms.MessageBox]::Show(
+                $msg, '卸载漫客工作台控制台',
+                [System.Windows.Forms.MessageBoxButtons]::YesNo,
+                [System.Windows.Forms.MessageBoxIcon]::Question,
+                [System.Windows.Forms.MessageBoxDefaultButton]::Button2)
+            if ($r -ne [System.Windows.Forms.DialogResult]::Yes) { exit 0 }
+        } catch {
+            # 连弹窗都不行，说明是完全静默的调用，直接继续卸
+        }
     }
 }
 
@@ -120,13 +151,21 @@ if ('$Silent' -ne 'True') { Read-Host '  按回车退出' | Out-Null }
         ) -Wait
         Remove-Item $cleaner -Force -ErrorAction SilentlyContinue
     } else {
-        Write-Host '  删除安装文件，保留 deploy\ …'
+        Write-Host '  删除安装文件，保留 deploy\ 里的分卷 …'
         Get-ChildItem $target -ErrorAction SilentlyContinue | ForEach-Object {
             if ($_.Name -eq 'deploy' -and $_.PSIsContainer) {
-                # deploy 里只删安装时生成的说明文件
+                # deploy 是用户的数据目录，只删安装时生成的说明文件
                 Get-ChildItem $_.FullName -File -ErrorAction SilentlyContinue |
                     Where-Object { $_.Name -like '*把分卷放这里*' } |
                     ForEach-Object { Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue }
+                # 说明文件删掉之后如果目录空了，连目录一起收掉，
+                # 否则卸载完会剩一个空壳，看着像没卸干净
+                $deployLeft = @(Get-ChildItem $_.FullName -ErrorAction SilentlyContinue)
+                if ($deployLeft.Count -eq 0) {
+                    Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
+                } else {
+                    Write-Host "  保留 deploy\ 里的 $($deployLeft.Count) 项（你的分卷）"
+                }
             } else {
                 Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
             }

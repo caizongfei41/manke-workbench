@@ -95,15 +95,41 @@ Write-Host '    ✓ 桌面快捷方式'
 # 记录安装位置，卸载脚本靠它找回目录
 Set-Content (Join-Path $target '.install-location') $target -Encoding UTF8
 
-# 生成「卸载.cmd」放在安装目录，双击就能卸
+# 卸载入口。
+#
+# 这里刻意不生成 .cmd：批处理文件用 ANSI/GBK 保存，一旦路径里有中文
+# （安装目录叫「漫客工作台」）cmd 解码就对不上，报「文件不存在」。
+# 实测过 chcp 65001 也救不回来 —— 那是控制台输出编码，不是参数解码。
+#
+# 改成两个纯 powershell 入口：
+#   卸载.vbs                 双击用，隐藏窗口启动脚本（VBS 是 UTF-16，中文安全）
+#   launcher\uninstall-silent.vbs   给「设置 → 应用」用
+#
+# VBS 替 powershell 传参，路径以字符串字面量出现，不经过 cmd 的 ANSI 解码。
 $uninstPs1 = Join-Path $target 'launcher\uninstall.ps1'
 if (Test-Path $uninstPs1) {
-    $uninstCmd = @"
-@echo off
-powershell -NoProfile -ExecutionPolicy Bypass -File "$uninstPs1"
+    # 双击版：会弹确认
+    $vbsVisible = @"
+' 漫客工作台 · 控制台卸载
+' 用 VBS 而不是 .cmd：cmd 的 ANSI 解码会把中文路径变成乱码。
+Set sh = CreateObject("WScript.Shell")
+sh.Run "powershell -NoProfile -ExecutionPolicy Bypass -File ""$uninstPs1""", 1, False
 "@
-    Set-Content (Join-Path $target '卸载.cmd') $uninstCmd -Encoding OEM
-    Write-Host '    ✓ 卸载.cmd'
+    Set-Content (Join-Path $target '卸载.vbs') $vbsVisible -Encoding Unicode
+
+    # 静默版：设置里点卸载走这个
+    $vbsSilent = @"
+' 漫客工作台 · 控制台卸载（静默，供「设置 → 应用」调用）
+Set sh = CreateObject("WScript.Shell")
+sh.Run "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$uninstPs1"" -Silent", 0, True
+"@
+    Set-Content (Join-Path $target 'launcher\uninstall-silent.vbs') $vbsSilent -Encoding Unicode
+
+    # 保留一份 .cmd 方便命令行用户，但内容只写相对路径，不含中文
+    $cmdBody = "@echo off`r`ncd /d `"%~dp0`"`r`npowershell -NoProfile -ExecutionPolicy Bypass -File `"%~dp0launcher\uninstall.ps1`"`r`npause`r`n"
+    Set-Content (Join-Path $target 'uninstall.cmd') $cmdBody -Encoding ASCII
+
+    Write-Host '    ✓ 卸载.vbs / uninstall.cmd'
 }
 
 # 注册表卸载项：让「设置 → 应用」和控制面板里能看到并卸载。
@@ -121,10 +147,17 @@ try {
     Set-ItemProperty -Path $regPath -Name 'EstimatedSize'   -Value $sizeKb -Type DWord
     Set-ItemProperty -Path $regPath -Name 'NoModify'        -Value 1 -Type DWord
     Set-ItemProperty -Path $regPath -Name 'NoRepair'        -Value 1 -Type DWord
-    $uninstCmdPath = Join-Path $target '卸载.cmd'
-    if (Test-Path $uninstCmdPath) {
-        Set-ItemProperty -Path $regPath -Name 'UninstallString' -Value "`"$uninstCmdPath`""
-        Set-ItemProperty -Path $regPath -Name 'QuietUninstallString' -Value "powershell -NoProfile -ExecutionPolicy Bypass -File `"$uninstPs1`" -Silent"
+    # 「设置 → 应用」点卸载是无窗口启动的，必须用静默版，
+    # 否则 Read-Host 拿不到输入会被当成取消，用户看到「点了没反应」。
+    # 用 wscript 拉起 VBS：VBS 是 UTF-16，中文路径不会像 .cmd 那样被 GBK 解坏。
+    $silentVbs = Join-Path $target 'launcher\uninstall-silent.vbs'
+    if (Test-Path $silentVbs) {
+        Set-ItemProperty -Path $regPath -Name 'UninstallString' -Value "wscript.exe `"$silentVbs`""
+        Set-ItemProperty -Path $regPath -Name 'QuietUninstallString' -Value "wscript.exe `"$silentVbs`""
+    } else {
+        # 没有 VBS 时退回直接调 powershell
+        Set-ItemProperty -Path $regPath -Name 'UninstallString' -Value "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$uninstPs1`" -Silent"
+        Set-ItemProperty -Path $regPath -Name 'QuietUninstallString' -Value "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$uninstPs1`" -Silent"
     }
     Write-Host '    ✓ 已注册到「设置 → 应用」'
 } catch {
