@@ -530,11 +530,28 @@ $script:deployBundleDir = Join-Path $BD 'deploy'
 function Get-DeployJson {
     param([string]$BundleDir)
     $script = Join-Path $BD 'scripts\deploy-bundle.mjs'
-    if (-not (Test-Path $script)) { return $null }
+    if (-not (Test-Path $script)) {
+        $script:deployLastError = "找不到 $script"
+        return $null
+    }
+    # 部署包目录不存在时也要说清楚，别让调用方只看到「检查失败」
+    if ($BundleDir -and -not (Test-Path $BundleDir)) {
+        $script:deployLastError = "部署包目录不存在：$BundleDir"
+        return $null
+    }
     try {
-        $raw = & node $script --bundle $BundleDir --json 2>$null
-        return $raw | ConvertFrom-Json
+        # node 的 JSON 是多行输出，PowerShell 会把它拆成字符串数组。
+        # ConvertFrom-Json 逐行解析会失败，必须先 join 回一整块。
+        $raw = & node $script --bundle $BundleDir --json 2>&1
+        $text = ($raw | Out-String).Trim()
+        if (-not $text.StartsWith('{')) {
+            $script:deployLastError = "脚本输出异常：" + $text.Substring(0, [Math]::Min(120, $text.Length))
+            return $null
+        }
+        $script:deployLastError = $null
+        return $text | ConvertFrom-Json
     } catch {
+        $script:deployLastError = $_.Exception.Message
         return $null
     }
 }
@@ -542,7 +559,7 @@ function Get-DeployJson {
 $deployInspectBtn.Add_Click({
     $data = Get-DeployJson $script:deployBundleDir
     if (-not $data) {
-        Add-Log '✗ 检查失败：找不到 scripts\deploy-bundle.mjs'
+        Add-Log ("✗ 检查失败：" + $(if ($script:deployLastError) { $script:deployLastError } else { '未知原因' }))
         return
     }
     if (-not $data.sevenZip) {
@@ -550,13 +567,17 @@ $deployInspectBtn.Add_Click({
         return
     }
 
-    $found = @($data.bundles | Where-Object { $_.count -gt 0 })
-    if ($found.Count -eq 0) {
-        Add-Log "✗ $($script:deployBundleDir) 下没有部署包"
-        Add-Log '  把 01-models / 02-nodes / 03-app 三类 .7z.001 放进去'
-        # 让用户挑一个目录
+    # 新格式：一个档案流切成若干卷，manke-bundle.7z.001 …
+    $vol = $data.volumes
+    if (-not $vol -or $vol.count -eq 0) {
+        Add-Log "✗ $($script:deployBundleDir) 下没有 $($data.archiveBase).7z.001"
+        if ($data.legacyBundles -and $data.legacyBundles.Count -gt 0) {
+            Add-Log "  ⚠ 发现旧格式的包：$($data.legacyBundles -join '、')"
+            Add-Log '    旧包已不再支持，请下载新的一键部署包。'
+        }
+        Add-Log '  点「检查部署包」可以重新选目录。'
         $dlg = New-Object Windows.Forms.FolderBrowserDialog
-        $dlg.Description = '选择包含 01-models.7z.001 等分卷的目录'
+        $dlg.Description = "选择包含 $($data.archiveBase).7z.001 的目录"
         if ($dlg.ShowDialog() -eq 'OK') {
             $script:deployBundleDir = $dlg.SelectedPath
             Add-Log "部署包目录已设为 $($script:deployBundleDir)"
@@ -564,44 +585,67 @@ $deployInspectBtn.Add_Click({
         return
     }
 
-    foreach ($b in $found) {
-        $state = if ($b.complete) { '完整' } else { "缺第 $($b.missing -join ',') 卷" }
-        $gb = [math]::Round($b.bytes / 1GB, 1)
-        Add-Log "  $($b.label)：$($b.count) 卷 $gb GB —— $state"
+    $gb = [math]::Round($vol.bytes / 1GB, 1)
+    $state = if ($vol.complete) { '完整' } else { "缺第 $($vol.missing -join ',') 卷" }
+    Add-Log "  分卷：$($vol.count) 个 · $gb GB —— $state"
+    Add-Log "  解压到：$($data.target)"
+
+    if ($data.freeBytes -ne $null) {
+        $freeGb = [math]::Round($data.freeBytes / 1GB, 1)
+        $needGb = [math]::Round($vol.bytes / 1GB, 1)
+        if ($data.freeBytes -le $vol.bytes * 1.05) {
+            Add-Log "  ✗ 目标盘只剩 $freeGb GB，解压需要 $needGb GB"
+            Add-Log '    换一个空间足够的盘，或点「一键部署」时指定位置。'
+        } else {
+            Add-Log "  ✓ 目标盘剩余 $freeGb GB，够用"
+        }
     }
-    $required = @($data.bundles | Where-Object { $_.required })
-    $missing = @($required | Where-Object { $_.count -eq 0 -or -not $_.complete })
-    if ($missing.Count -eq 0) {
+
+    if ($vol.complete -and ($data.freeBytes -eq $null -or $data.freeBytes -gt $vol.bytes * 1.05)) {
         Add-Log '部署包齐全，可以点「一键部署」。'
-    } else {
-        Add-Log "还缺 $($missing.Count) 个必需的包。"
     }
 }.GetNewClosure())
 
 $deployBtn.Add_Click({
     $data = Get-DeployJson $script:deployBundleDir
-    if (-not $data) { Add-Log '✗ 找不到 deploy-bundle.mjs'; return }
+    if (-not $data) {
+        Add-Log ("✗ " + $(if ($script:deployLastError) { $script:deployLastError } else { '检查失败' }))
+        return
+    }
     if (-not $data.sevenZip) { Add-Log '✗ 未安装 7-Zip'; return }
-    if (-not $data.comfyRoot) { Add-Log '✗ 未确定 ComfyUI 位置，先用「检查」确认环境'; return }
+    if (-not $data.volumes -or -not $data.volumes.complete) {
+        Add-Log '✗ 分卷不全，先点「检查部署包」看看缺什么'
+        return
+    }
 
-    $total = @($data.bundles | Where-Object { $_.count -gt 0 }) | Measure-Object -Property bytes -Sum
-    $gb = [math]::Round($total.Sum / 1GB, 1)
+    # 让用户选解压位置：默认是部署包所在盘的根目录
+    $dlg = New-Object Windows.Forms.FolderBrowserDialog
+    $dlg.Description = '选择解压到哪个目录（需要约 211 GB 空闲，会在这里生成 manke 文件夹）'
+    $dlg.SelectedPath = $data.target
+    if ($dlg.ShowDialog() -ne 'OK') { Add-Log '已取消部署。'; return }
+    $target = $dlg.SelectedPath
+
+    $gb = [math]::Round($data.volumes.bytes / 1GB, 1)
     $answer = [Windows.Forms.MessageBox]::Show(
-        "将解压 $gb GB 到 $($data.comfyRoot)，已有同名文件会被覆盖。继续？",
+        "将解压 $gb GB 到：`n$target`n`n耗时约 20-40 分钟，中途不要关窗口。继续？",
         '确认部署', 'YesNo', 'Question')
     if ($answer -ne 'Yes') { Add-Log '已取消部署。'; return }
 
-    Add-Log "开始部署（$gb GB），耗时可能较长，进度看日志…"
+    Add-Log "开始部署（$gb GB）→ $target"
+    Add-Log '进度看下方日志，完成前不要关闭窗口…'
     $deployBtn.Enabled = $false
     $deployBtn.Text = '部署中'
     $deployBtn.Refresh()
 
     try {
         $script = Join-Path $BD 'scripts\deploy-bundle.mjs'
-        & node $script --bundle $script:deployBundleDir --deploy 2>&1 | ForEach-Object {
+        & node $script --bundle $script:deployBundleDir --deploy --to $target 2>&1 | ForEach-Object {
             if ($_ -and $_.ToString().Trim()) { Add-Log $_.ToString().Trim() }
         }
-        Add-Log '部署完成。点「检查」确认环境，然后「全部启动」。'
+        Add-Log ''
+        Add-Log "ComfyUI 在：$target\manke\ComfyUI"
+        Add-Log "工作台在：$target\manke\workbench"
+        Add-Log '下一步：cd 到工作台目录，跑 pnpm install 和 pnpm build。'
     } catch {
         Add-Log "✗ 部署失败：$($_.Exception.Message)"
     } finally {

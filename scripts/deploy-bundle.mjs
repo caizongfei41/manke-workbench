@@ -1,19 +1,23 @@
-// 一键部署 · 部署端
+// 部署器：解压一次，得到可运行的 ComfyUI + 工作台
 //
-//   node scripts/deploy-bundle.mjs --inspect          检查部署包是否齐全、能不能装
-//   node scripts/deploy-bundle.mjs --deploy           解压并铺好
-//   node scripts/deploy-bundle.mjs --deploy --dry-run 只打印会做什么，不动文件
+//   node scripts/deploy-bundle.mjs --inspect              检查部署包状态
+//   node scripts/deploy-bundle.mjs --deploy --to "D:\\"   解压到指定位置
+//   node scripts/deploy-bundle.mjs --deploy --to "D:\\" --dry-run
 //
-// 设计目标：新机器上一个命令从零装好。
+// 部署包现在是一个多卷档案：
+//   manke-bundle.7z.001 … .007   共 210.7 GB
+// 解压后得到：
+//   <to>/manke/ComfyUI/      可运行的 ComfyUI（自带 Python、模型、节点）
+//   <to>/manke/workbench/    工作台源码
 //
-// 部署包是三类分卷：
-//   01-models.7z.00N   模型       → 解到 <ComfyUI>/ComfyUI/
-//   02-nodes.7z.00N    节点包     → 解到 <ComfyUI>/ComfyUI/custom_nodes/
-//   03-app.7z.00N      工作台源码 → 解到工作台根目录
+// 为什么重写成这样：
+//   之前按「类别」分四个包（01-models / 02-nodes / 03-app / 04-comfyui），
+//   每个包解到不同目录，逻辑复杂而且卷太多。现在所有内容打成一个档案流，
+//   解压一次就位，检查也只需要看一组卷是否连续。
 //
-// 判断 ComfyUI 位置：跟 check-environment 一致，环境变量优先，其次从
-// data/comfyui.config.json 的 pythonPath 反推。找不到就让用户指定。
-import { execFileSync } from 'node:child_process';
+// 兼容：如果目录里还是旧的四类包，会提示用户改用新包，不再尝试偷偷兼容 ——
+// 两套逻辑并存只会让「为什么检测不到」变成更难查的问题。
+import { execFileSync, execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,11 +33,19 @@ const valueOf = (flag) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 
-const SEVEN_ZIP = [
-  'C:\\Program Files\\7-Zip\\7z.exe',
-  'C:\\Program Files (x86)\\7-Zip\\7z.exe',
-  join(ROOT, 'tools', '7z.exe'),
-].find((p) => existsSync(p));
+/** 部署包内档案的基名。分卷是 manke-bundle.7z.001 … */
+const ARCHIVE_BASE = 'manke-bundle';
+
+/** 7-Zip：系统安装的优先，其次安装包自带的 node/7z.exe。 */
+const findSevenZip = () => {
+  const candidates = [
+    'C:\\Program Files\\7-Zip\\7z.exe',
+    'C:\\Program Files (x86)\\7-Zip\\7z.exe',
+    join(ROOT, 'node', '7z.exe'),
+    join(HERE, '..', 'node', '7z.exe'),
+  ];
+  return candidates.find((p) => existsSync(p)) ?? null;
+};
 
 const readJson = (path, fallback) => {
   try {
@@ -43,44 +55,168 @@ const readJson = (path, fallback) => {
   }
 };
 
+/** 部署包目录：默认工作台根下的 deploy/，可用 --bundle 指定。 */
+const bundleDir = () => resolve(valueOf('--bundle') ?? join(ROOT, 'deploy'));
+
 /**
- * ComfyUI 装在哪 / 装到哪。
- *
- * 三种情况：
- *   1. --comfy 显式指定 → 用它（新机器上是「将要装到这里」）
- *   2. 环境变量 → 用它
- *   3. 从现有配置的 pythonPath 反推 → 已有安装
- * 都没有时返回 null，由调用方决定怎么提示。注意：带 04-comfyui 包时，
- * 这个目录会被创建出来，不需要事先存在。
+ * 解压目标。
+ * 默认放在部署包所在盘的根下，因为解压需要 211 GB，
+ * 而工作台安装目录通常在 C 盘，空间不一定够。
  */
-const resolveComfyRoot = () => {
-  const fromArg = valueOf('--comfy');
-  if (fromArg) return fromArg;
-  if (process.env.BEATDESIGN_COMFYUI_HOME) return process.env.BEATDESIGN_COMFYUI_HOME;
-  const cfg = readJson(CONFIG, {});
-  const py = String(cfg.pythonPath ?? '');
-  const idx = py.toLowerCase().indexOf('python_embeded');
-  if (idx > 0) return py.slice(0, idx).replace(/[\\/]+$/, '');
-  return null;
+const extractTarget = () => {
+  const explicit = valueOf('--to');
+  if (explicit) return resolve(explicit);
+  const dir = bundleDir();
+  const driveRoot = /^[A-Za-z]:/.test(dir) ? `${dir.slice(0, 2)}\\` : join(ROOT, '..');
+  return resolve(driveRoot);
 };
 
-/** 部署包目录：默认工作台根下的 deploy/，可以用 --bundle 指定。 */
-const bundleDir = () => valueOf('--bundle') ?? join(ROOT, 'deploy');
+const human = (bytes) => {
+  if (bytes >= 1024 ** 4) return `${(bytes / 1024 ** 4).toFixed(1)} TB`;
+  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+  return `${Math.round(bytes / 1024 ** 2)} MB`;
+};
 
 /**
- * 进度文件。
- *
- * 解压 197 GB 要 40 分钟以上，HTTP 请求扛不住。所以 POST 只负责启进程，
- * 前端轮询这个 JSON 看进展。/api/app/deploy 读的是同一个文件。
+ * 检查分卷集合。
+ * 返回卷数量、总大小、编号是否连续、以及缺失的编号。
  */
+const inspectVolumes = (dir, base = ARCHIVE_BASE) => {
+  let names;
+  try {
+    names = readdirSync(dir).filter((f) => new RegExp(`^${base}\\.7z\\.\\d+$`).test(f));
+  } catch {
+    return { volumes: [], count: 0, bytes: 0, complete: false, missing: [], base };
+  }
+  const numbered = names
+    .map((name) => ({ name, n: Number(name.slice(`${base}.7z.`.length)) }))
+    .filter((x) => Number.isFinite(x.n) && x.n > 0)
+    .sort((a, b) => a.n - b.n);
+
+  const have = new Set(numbered.map((x) => x.n));
+  const last = numbered.at(-1)?.n ?? 0;
+  const missing = [];
+  for (let i = 1; i <= last; i += 1) if (!have.has(i)) missing.push(i);
+
+  const bytes = numbered.reduce((sum, x) => {
+    try {
+      return sum + statSync(join(dir, x.name)).size;
+    } catch {
+      return sum;
+    }
+  }, 0);
+
+  return {
+    base,
+    volumes: numbered.map((x) => x.name),
+    count: numbered.length,
+    bytes,
+    // 编号连续且至少一卷，才算整套齐了
+    complete: numbered.length > 0 && missing.length === 0,
+    missing,
+  };
+};
+
+/** 目录里是否有旧格式的分卷（提示用户换包用）。 */
+const detectLegacyBundles = (dir) => {
+  const legacyIds = ['01-models', '02-nodes', '03-app', '04-comfyui'];
+  try {
+    const files = readdirSync(dir);
+    return legacyIds.filter((id) => files.some((f) => f.startsWith(`${id}.7z.`)));
+  } catch {
+    return [];
+  }
+};
+
+/** 目标盘的剩余空间。 */
+const freeSpaceAt = (path) => {
+  try {
+    const drive = /^[A-Za-z]:/.exec(path)?.[0];
+    if (!drive) return null;
+    // Windows 下用 fsutil 或 wmic 都慢；这里用 PowerShell 一次调用
+    const out = execSync(
+      `powershell -NoProfile -Command "(Get-PSDrive ${drive[0]}).Free"`,
+      { encoding: 'utf8', windowsHide: true }
+    ).trim();
+    const n = Number(out);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+};
+
+const inspect = () => {
+  const dir = bundleDir();
+  const volumes = inspectVolumes(dir);
+  const legacy = detectLegacyBundles(dir);
+  const target = extractTarget();
+  const sevenZip = findSevenZip();
+  const free = freeSpaceAt(target);
+
+  return {
+    bundleDir: dir,
+    archiveBase: ARCHIVE_BASE,
+    target,
+    sevenZip,
+    freeBytes: free,
+    volumes,
+    legacyBundles: legacy,
+    // 解压后大约占多少：档案 210.7 GB 解开后 211 GB，按卷大小估
+    estimatedExtractBytes: volumes.bytes,
+  };
+};
+
+const printInspect = (r) => {
+  console.log(`  部署包目录: ${r.bundleDir}`);
+  console.log(`  解压到:     ${r.target}`);
+  console.log(`  7-Zip:      ${r.sevenZip ?? '未找到'}`);
+  console.log('');
+
+  if (r.volumes.count === 0) {
+    console.log(`  ✗ 没找到 ${r.archiveBase}.7z.001`);
+    if (r.legacyBundles.length > 0) {
+      console.log('');
+      console.log(`  ⚠ 目录里有旧格式的包：${r.legacyBundles.join('、')}`);
+      console.log('    旧包已不再支持。请改用新的一键部署包（manke-bundle.7z.001 …）。');
+    }
+    return;
+  }
+
+  const state = r.volumes.complete ? '完整' : `缺第 ${r.volumes.missing.join(', ')} 卷`;
+  console.log(`  分卷: ${r.volumes.count} 个 · ${human(r.volumes.bytes)} · ${state}`);
+  console.log('');
+
+  if (r.freeBytes !== null) {
+    const need = r.estimatedExtractBytes;
+    const enough = r.freeBytes > need * 1.05;
+    console.log(
+      `  目标盘剩余 ${human(r.freeBytes)}，解压约需 ${human(need)} ${enough ? '✓' : '✗ 不够'}`
+    );
+    console.log('');
+  }
+
+  const blockers = [];
+  if (!r.sevenZip) blockers.push('找不到 7z.exe（装 7-Zip，或用自带 node/7z.exe）');
+  if (!r.volumes.complete) blockers.push(`分卷不全：${state}`);
+  if (r.freeBytes !== null && r.freeBytes <= r.estimatedExtractBytes * 1.05) {
+    blockers.push('目标盘空间不足');
+  }
+
+  if (blockers.length === 0) {
+    console.log('  可以部署：node scripts/deploy-bundle.mjs --deploy');
+  } else {
+    console.log('  还不能部署：');
+    for (const b of blockers) console.log(`     · ${b}`);
+  }
+};
+
+// ── 进度文件：解压要 20-40 分钟，HTTP 请求扛不住，前端轮询这个
 const PROGRESS_FILE = join(ROOT, '.verify', 'deploy-progress.json');
 
 const writeProgress = (patch) => {
   try {
     mkdirSync(dirname(PROGRESS_FILE), { recursive: true });
-    const prev = existsSync(PROGRESS_FILE)
-      ? JSON.parse(readFileSync(PROGRESS_FILE, 'utf8'))
-      : {};
+    const prev = existsSync(PROGRESS_FILE) ? JSON.parse(readFileSync(PROGRESS_FILE, 'utf8')) : {};
     writeFileSync(
       PROGRESS_FILE,
       JSON.stringify(
@@ -102,238 +238,100 @@ const writeProgress = (patch) => {
       'utf8'
     );
   } catch {
-    // 进度写不进去不该影响部署本身
-  }
-};
-
-const BUNDLES = [
-  {
-    id: '04-comfyui',
-    label: '便携 ComfyUI',
-    // 包内是 python_embeded/ 和 ComfyUI/，解到 ComfyUI 根（python_embeded 的上一层）
-    target: (comfyRoot) => comfyRoot,
-    required: true,
-    // 必须先于模型和节点：那些要解到 ComfyUI/ 里去，目录得先存在
-    order: 0,
-  },
-  {
-    id: '01-models',
-    label: '模型',
-    // 包内路径就是 models/…，所以解到 COMFY_DIR —— 那层下面直接是 models/
-    target: (comfyRoot) => join(comfyRoot, 'ComfyUI'),
-    required: true,
-    order: 1,
-  },
-  {
-    id: '02-nodes',
-    label: '自定义节点包',
-    // 包内路径是 custom_nodes/ComfyUI-xxx/…，同样解到 COMFY_DIR
-    target: (comfyRoot) => join(comfyRoot, 'ComfyUI'),
-    required: true,
-    order: 2,
-  },
-  {
-    id: '03-app',
-    label: '工作台源码',
-    target: () => ROOT,
-    required: false,
-    order: 3,
-  },
-];
-
-const human = (bytes) => {
-  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
-  return `${Math.round(bytes / 1024 ** 2)} MB`;
-};
-
-/** 列出一个包的所有分卷，并检查编号是否连续。 */
-const inspectVolumeSet = (dir, id) => {
-  let names;
-  try {
-    names = readdirSync(dir).filter((f) => f.startsWith(`${id}.7z.`));
-  } catch {
-    return { volumes: [], count: 0, bytes: 0, complete: false, missing: [] };
-  }
-  const numbered = names
-    .map((name) => ({ name, n: Number(name.slice(`${id}.7z.`.length)) }))
-    .filter((x) => Number.isFinite(x.n))
-    .sort((a, b) => a.n - b.n);
-
-  const have = new Set(numbered.map((x) => x.n));
-  const missing = [];
-  for (let i = 1; i <= (numbered.at(-1)?.n ?? 0); i += 1) {
-    if (!have.has(i)) missing.push(i);
-  }
-  const bytes = numbered.reduce((sum, x) => sum + statSync(join(dir, x.name)).size, 0);
-
-  return {
-    volumes: numbered.map((x) => x.name),
-    count: numbered.length,
-    bytes,
-    // 编号连续且至少有一卷，才算整套齐了
-    complete: numbered.length > 0 && missing.length === 0,
-    missing,
-  };
-};
-
-const inspect = () => {
-  const dir = bundleDir();
-  const comfyRoot = resolveComfyRoot();
-  const report = { bundleDir: dir, comfyRoot, sevenZip: SEVEN_ZIP ?? null, bundles: [] };
-
-  for (const spec of BUNDLES) {
-    const info = inspectVolumeSet(dir, spec.id);
-    report.bundles.push({
-      id: spec.id,
-      label: spec.label,
-      ...info,
-      required: spec.required,
-      order: spec.order ?? 9,
-      target: comfyRoot ? spec.target(comfyRoot) : null,
-    });
-  }
-  return report;
-};
-
-const printInspect = (report) => {
-  console.log(`  部署包目录: ${report.bundleDir}`);
-  console.log(`  ComfyUI:    ${report.comfyRoot ?? '（未确定，用 --comfy 指定）'}`);
-  console.log(`  7-Zip:      ${report.sevenZip ?? '未找到（必需）'}`);
-  console.log('');
-  for (const b of report.bundles) {
-    if (b.count === 0) {
-      console.log(`   ${b.id.padEnd(12)} ${b.label.padEnd(10)} 缺失${b.required ? '（必需）' : '（可选）'}`);
-      continue;
-    }
-    const state = b.complete ? '完整' : `缺第 ${b.missing.join(',')} 卷`;
-    console.log(
-      `   ${b.id.padEnd(12)} ${b.label.padEnd(10)} ${String(b.count).padStart(4)} 卷  ${human(b.bytes).padStart(9)}  ${state}`
-    );
-    if (b.target) console.log(`   ${' '.repeat(12)} 解压到 ${b.target}`);
-  }
-  console.log('');
-
-  const blockers = [];
-  if (!report.sevenZip) blockers.push('找不到 7z.exe');
-  // 带了便携 ComfyUI 就不用事先装；没带才必须指向已有的安装
-  const hasPortable = report.bundles.some((b) => b.id === '04-comfyui' && b.count > 0 && b.complete);
-  if (!report.comfyRoot) {
-    blockers.push(
-      hasPortable ? '未指定安装位置（--comfy "D:\\ComfyUI"）' : '未确定 ComfyUI 位置（--comfy 指定）'
-    );
-  }
-  for (const b of report.bundles) {
-    if (b.required && b.count === 0) blockers.push(`${b.label} 缺失`);
-    else if (b.count > 0 && !b.complete) blockers.push(`${b.label} 分卷不全`);
-  }
-
-  if (blockers.length === 0) {
-    console.log('  可以部署：node scripts/deploy-bundle.mjs --deploy');
-  } else {
-    console.log('  还不能部署：');
-    for (const b of blockers) console.log(`     · ${b}`);
+    // 进度写不进去不影响部署本身
   }
 };
 
 const deploy = ({ dryRun }) => {
-  const report = inspect();
-  if (!report.sevenZip) {
-    console.error('  找不到 7z.exe。装 7-Zip，或把 7z.exe 放到 tools/ 下。');
-    writeProgress({ running: false, stage: 'failed', detail: '缺少 7z.exe', percent: 0, error: '7z missing' });
-    return 1;
-  }
-  if (!report.comfyRoot) {
-    console.error('  未确定 ComfyUI 位置。用 --comfy "D:\\ComfyUI" 指定。');
-    writeProgress({ running: false, stage: 'failed', detail: '未指定安装位置', percent: 0, error: 'comfy root missing' });
-    return 1;
-  }
+  const r = inspect();
 
-  const runnable = report.bundles.filter((b) => b.count > 0 && b.complete);
-  if (runnable.length === 0) {
-    console.error('  没有可解压的包。');
-    writeProgress({ running: false, stage: 'failed', detail: '没有可解压的包', percent: 0, error: 'no bundle' });
+  if (!r.sevenZip) {
+    const msg = '找不到 7z.exe';
+    console.error('  ' + msg);
+    writeProgress({ running: false, stage: 'failed', detail: msg, error: msg });
+    return 1;
+  }
+  if (!r.volumes.complete) {
+    const msg = r.volumes.count === 0 ? `没找到 ${ARCHIVE_BASE}.7z.001` : `分卷不全，缺第 ${r.volumes.missing.join(', ')} 卷`;
+    console.error('  ' + msg);
+    writeProgress({ running: false, stage: 'failed', detail: msg, error: msg });
     return 1;
   }
 
-  // 顺序要紧：先装便携 ComfyUI，模型和节点才有地方落。
-  const ordered = [...runnable].sort((a, b) => (a.order ?? 9) - (b.order ?? 9));
-  const totalBytes = ordered.reduce((sum, b) => sum + b.bytes, 0);
-  let doneBytes = 0;
+  const first = join(r.bundleDir, r.volumes.volumes[0]);
+  console.log(`  从 ${r.volumes.volumes[0]} 开始解压 ${r.volumes.count} 个分卷`);
+  console.log(`  解压到 ${r.target}`);
+  console.log('');
 
-  for (const b of ordered) {
-    const first = join(report.bundleDir, b.volumes[0]);
-    // 包内路径都带了各自的第一层（models/、custom_nodes/、python_embeded/、src/），
-    // 所以直接解到 target 就行，不要再往上退一层。
-    const cwd = b.target;
+  if (dryRun) {
+    console.log('  [dry-run] 跳过实际解压');
+    return 0;
+  }
 
-    // 前端每 2 秒轮询一次这个文件，所以每开始一个包就写一次
-    writeProgress({
-      running: true,
-      stage: b.id,
-      detail: `正在解压${b.label}（${b.count} 卷，${human(b.bytes)}）`,
-      percent: Math.round((doneBytes / totalBytes) * 100),
+  writeProgress({
+    running: true,
+    stage: 'extracting',
+    detail: `解压 ${r.volumes.count} 个分卷（${human(r.volumes.bytes)}）`,
+    percent: 5,
+  });
+
+  mkdirSync(r.target, { recursive: true });
+
+  try {
+    // -y 覆盖不询问；只解第一卷，7-Zip 自动接续 001→002→…
+    const out = execFileSync(r.sevenZip, ['x', '-y', `-o${r.target}`, first], {
+      cwd: r.target,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
     });
-
-    console.log('');
-    console.log(`  ── ${b.label}（${b.count} 卷，${human(b.bytes)}）`);
-    console.log(`     解压到 ${cwd}`);
-
-    if (dryRun) {
-      console.log('     [dry-run] 跳过实际解压');
-      continue;
-    }
-
-    mkdirSync(cwd, { recursive: true });
-    try {
-      // -y 覆盖不询问；只解第一卷，7z 会自动接续 002、003…
-      const out = execFileSync(report.sevenZip, ['x', '-y', '-o' + cwd, first], {
-        cwd,
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-      });
-      const tail = out.trim().split('\n').slice(-2).join(' ').trim();
-      console.log(`     ${tail}`);
-    } catch (error) {
-      console.error(`     解压失败: ${String(error.stdout ?? error).slice(0, 300)}`);
-      writeProgress({
-        running: false,
-        stage: 'failed',
-        detail: `${b.label} 解压失败`,
-        percent: Math.round((doneBytes / totalBytes) * 100),
-        error: String(error.stdout ?? error).slice(0, 300),
-      });
-      return 1;
-    }
-
-    doneBytes += b.bytes;
-    writeProgress({
-      running: true,
-      stage: b.id,
-      detail: `${b.label} 完成`,
-      percent: Math.round((doneBytes / totalBytes) * 100),
-    });
+    const tail = out.trim().split('\n').slice(-3).join(' ').trim();
+    console.log(`  ${tail}`);
+  } catch (error) {
+    const msg = String(error.stdout ?? error).slice(0, 400);
+    console.error('  解压失败: ' + msg);
+    writeProgress({ running: false, stage: 'failed', detail: '解压失败', percent: 5, error: msg });
+    return 1;
   }
+
+  // 解压完检查产出
+  const comfyPath = join(r.target, 'manke', 'ComfyUI');
+  const workbenchPath = join(r.target, 'manke', 'workbench');
+  const hasComfy = existsSync(join(comfyPath, 'main.py'));
+  const hasWorkbench = existsSync(join(workbenchPath, 'package.json'));
 
   console.log('');
-  console.log('  全部解压完成。下一步：');
-  console.log('     pnpm install        # 装 Node 依赖');
-  console.log('     pnpm db:push        # 初始化本地数据库');
-  console.log('     pnpm build          # 构建产物');
-  console.log('     node scripts/check-environment.mjs   # 核对');
-  writeProgress({ running: false, stage: 'done', detail: '解压完成', percent: 100 });
-  return 0;
+  if (hasComfy) console.log(`  ✓ ComfyUI    ${comfyPath}`);
+  else console.log(`  ✗ 未找到 ${comfyPath}\\main.py`);
+  if (hasWorkbench) console.log(`  ✓ 工作台     ${workbenchPath}`);
+  else console.log(`  ✗ 未找到 ${workbenchPath}\\package.json`);
+
+  writeProgress({
+    running: false,
+    stage: 'done',
+    detail: hasComfy && hasWorkbench ? '解压完成' : '解压完成但内容不完整',
+    percent: 100,
+    error: hasComfy && hasWorkbench ? null : '解压后未找到预期的 ComfyUI 或工作台目录',
+  });
+
+  console.log('');
+  console.log('  下一步：');
+  console.log(`     cd ${workbenchPath}`);
+  console.log('     pnpm install');
+  console.log('     pnpm build');
+  console.log('     pnpm start');
+  return hasComfy && hasWorkbench ? 0 : 1;
 };
 
 const main = () => {
-  const report = inspect();
+  // --json 给 API 用
   if (has('--json')) {
-    console.log(JSON.stringify(report, null, 2));
+    console.log(JSON.stringify(inspect(), null, 2));
     return 0;
   }
   if (has('--deploy')) {
     return deploy({ dryRun: has('--dry-run') });
   }
-  printInspect(report);
+  printInspect(inspect());
   return 0;
 };
 
