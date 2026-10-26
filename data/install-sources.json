@@ -35,23 +35,14 @@
   },
   "bundles": [
     {
-      "name": "漫客工作台 · 一键部署包（203.7 GB，119 卷）",
+      "name": "漫客工作台 · 一键部署包（210.7 GB，7 个包）",
       "kind": "quark",
-      "url": "https://pan.quark.cn/s/5ed114d7e32a",
-      "code": "~79173bl7Nd~:/",
-      "note": "含便携 ComfyUI、模型、13 个节点包、工作台源码。解压后控制台点「一键部署」即可",
-      "covers": "全部 / 119 个分卷",
+      "url": "https://pan.quark.cn/s/28cc8fa8c284",
+      "code": "~183a3bmW7K~:/",
+      "note": "含便携 ComfyUI（Python+torch）、26 个模型、13 个节点包、工作台源码。解压 .001 即可，7-Zip 自动接续",
+      "covers": "全部 / 7 个分卷",
       "primary": true,
       "deployBundle": true
-    },
-    {
-      "name": "漫客工作台 · 模型包（197 GB，仅模型）",
-      "kind": "quark",
-      "url": "https://pan.quark.cn/s/ebc77c7d9817",
-      "code": "/~72003bgWcO~/",
-      "note": "旧版渠道，只含 25 个模型，不含节点和便携 ComfyUI。新用户请用上面的一键部署包",
-      "covers": "全部 / 25 个文件",
-      "primary": false
     },
     {
       "name": "ModelScope · MiniMax H3 官方仓",

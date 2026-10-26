@@ -175,7 +175,12 @@ const buildParts = () => {
   const comfyCore = join(comfyRoot, 'ComfyUI');
 
   /** ComfyUI 本体不含 model / output / custom_nodes / input / temp —— 那些在别的分卷里。 */
-  const COMFY_EXCLUDE = new Set(['models', 'output', 'custom_nodes', 'input', 'temp', '__pycache__', 'user', 'logs']);
+  // 只排 ComfyUI 根下的这几个目录。注意必须限定路径 ——
+  // 用 -xr!models 这类递归匹配会连 python_embeded 里 torchvision/models
+  // 一起排掉，解压后 import torchvision 就崩，ComfyUI 起不来。
+  const COMFY_EXCLUDE = new Set(['models', 'output', 'custom_nodes', 'input', 'temp', 'user', 'logs']);
+  /** 生成相对于 baseDir 的排除路径，交给 7z 精确排除。 */
+  const excludePathsFor = (base, names) => names.map((n) => (base === resolve(COMFY_DIR) ? `ComfyUI\\${n}` : n));
   const measureComfyCore = (dir, depth = 0) => {
     let total = 0;
     let entries;
@@ -278,7 +283,10 @@ const main = () => {
 
     const listFile = join(OUT, `.${part.id}.list`);
     // ComfyUI 本体要排除 models/output 等，用 7z 的 -xr! 递归排除
-    const excludes = (part.exclude ?? []).flatMap((name) => [`-xr!${name}`]);
+    // 精确排除：-x! 带完整相对路径，不会误伤同名子目录
+    const excludes = part.exclude?.length
+      ? part.exclude.map((name) => `-x!ComfyUI\\${name}\\*`)
+      : [];
     writeFileSync(listFile, relPaths.join('\r\n'), 'utf8');
 
     try {

@@ -26,8 +26,7 @@
 
 | 渠道 | 地址 | 提取码 | 覆盖 |
 | --- | --- | --- | --- |
-| 漫客工作台 · 一键部署包（203.7 GB，119 卷） | https://pan.quark.cn/s/5ed114d7e32a | ~79173bl7Nd~:/ | 全部 / 119 个分卷 |
-| 漫客工作台 · 模型包（197 GB，仅模型） | https://pan.quark.cn/s/ebc77c7d9817 | /~72003bgWcO~/ | 全部 / 25 个文件 |
+| 漫客工作台 · 一键部署包（210.7 GB，7 个包） | https://pan.quark.cn/s/28cc8fa8c284 | ~183a3bmW7K~:/ | 全部 / 7 个分卷 |
 | ModelScope · MiniMax H3 官方仓 | https://modelscope.cn/models/MiniMaxAI/MiniMax_H3 | — | Minimax-h3/minimax_h3_ |
 | HuggingFace · H3 社区量化索引 | https://huggingface.co/models?search=MiniMax%20H3 | — | minimax_h3 |
 | HuggingFace · Qwen-Image GGUF 索引 | https://huggingface.co/models?search=qwen-image%20gguf | — | qwen-image |

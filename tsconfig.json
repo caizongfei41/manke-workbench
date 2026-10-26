@@ -33,6 +33,7 @@
     "node_modules",
     ".output",
     ".nitro",
-    ".tanstack"
+    ".tanstack",
+    "dist"
   ]
 }
