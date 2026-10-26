@@ -1269,5 +1269,9 @@
   "services.deploy.bundleModels": "モデル",
   "services.deploy.bundleNodes": "カスタムノード",
   "services.deploy.bundleApp": "ワークベンチ本体",
-  "services.deploy.bundleComfy": "ポータブル ComfyUI"
+  "services.deploy.bundleComfy": "ポータブル ComfyUI",
+  "studio.audioLyricsPlaceholderCreate": "ここに歌詞を書きます（1行1フレーズ、[verse] / [chorus] で区分できます）。空欄ならスタイルに任せます。",
+  "studio.audioLyricsPlaceholderCover": "歌う歌詞をここに書きます（元のメロディを保ち、歌詞と歌い方を変えます）。空欄なら元の歌詞を使います。",
+  "services.deploy.bundleVolumes": "パッケージ分割ファイル",
+  "services.deploy.freeSpace": "出力先ドライブの空き容量"
 }

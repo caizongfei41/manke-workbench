@@ -27,23 +27,24 @@ import { m } from '@/paraglide/messages.js';
  * too long to hold a request open.
  */
 
-type BundleInfo = {
-  id: string;
-  label: string;
+type VolumeSet = {
+  base: string;
+  volumes: string[];
   count: number;
   bytes: number;
   complete: boolean;
   missing: number[];
-  required: boolean;
-  order: number;
-  target: string | null;
 };
 
 type Inspect = {
   bundleDir: string;
-  comfyRoot: string | null;
+  archiveBase: string;
+  target: string;
   sevenZip: string | null;
-  bundles: BundleInfo[];
+  freeBytes: number | null;
+  volumes: VolumeSet;
+  legacyBundles: string[];
+  estimatedExtractBytes: number;
 };
 
 type Progress = {
@@ -61,14 +62,6 @@ type DeployResponse = {
   inspect: Inspect | null;
   inspectError: string | null;
   progress: Progress | null;
-};
-
-/** Bundle display names come from i18n; the script's own label is Chinese. */
-const BUNDLE_LABEL: Record<string, () => string> = {
-  '01-models': () => m['services.deploy.bundleModels'](),
-  '02-nodes': () => m['services.deploy.bundleNodes'](),
-  '03-app': () => m['services.deploy.bundleApp'](),
-  '04-comfyui': () => m['services.deploy.bundleComfy'](),
 };
 
 const human = (bytes: number) => {
@@ -104,7 +97,9 @@ export function DeployWizard() {
       const json = (await res.json()) as DeployResponse;
       setData(json);
       if (json.inspect?.bundleDir) setBundleDir((prev) => prev || json.inspect!.bundleDir);
-      if (json.inspect?.comfyRoot) setComfyDir((prev) => prev || json.inspect!.comfyRoot!);
+      // The inspect payload calls the extraction destination "target", not
+      // "comfyRoot" -- that name only existed in the old four-bundle layout.
+      if (json.inspect?.target) setComfyDir((prev) => prev || json.inspect!.target);
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -161,11 +156,20 @@ export function DeployWizard() {
   const inspect = data?.inspect ?? null;
   const progress = data?.progress ?? null;
 
-  const requiredBundles = inspect?.bundles.filter((b) => b.required) ?? [];
-  const missingRequired = requiredBundles.filter((b) => b.count === 0 || !b.complete);
-  const totalBytes = inspect?.bundles.reduce((sum, b) => sum + b.bytes, 0) ?? 0;
-  const hasPortable = inspect?.bundles.some((b) => b.id === '04-comfyui' && b.complete) ?? false;
-  const ready = Boolean(inspect?.sevenZip) && missingRequired.length === 0 && Boolean(comfyDir);
+  // The deploy script now ships one archive stream split into N volumes
+  // (manke-bundle.7z.001 …) instead of four category bundles. Reading
+  // inspect.bundles here used to throw "Cannot read properties of undefined
+  // (reading 'filter')" and blank the whole page, because the optional chain
+  // guards inspect but not the property under it.
+  const volumeSet = inspect?.volumes ?? null;
+  const volumesFound = volumeSet?.count ?? 0;
+  const volumesComplete = Boolean(volumeSet?.complete);
+  const missingVolumes = volumeSet?.missing ?? [];
+  const totalBytes = volumeSet?.bytes ?? 0;
+  const freeBytes = inspect?.freeBytes ?? null;
+  const enoughSpace = freeBytes === null || freeBytes > totalBytes * 1.05;
+  const ready =
+    Boolean(inspect?.sevenZip) && volumesComplete && Boolean(comfyDir) && enoughSpace;
   const deployed = progress?.stage === 'done';
 
   // Which step the wizard is on.
@@ -175,7 +179,7 @@ export function DeployWizard() {
       ? 3
       : ready
         ? 1
-        : missingRequired.length > 0
+        : volumesFound === 0 || !volumesComplete
           ? 0
           : 1;
 
@@ -281,37 +285,47 @@ export function DeployWizard() {
         </p>
       ) : inspect ? (
         <ul className="mb-4 space-y-1.5">
-          {inspect.bundles.map((b) => {
-            const ok = b.count > 0 && b.complete;
-            return (
-              <li
-                key={b.id}
-                className="flex items-center gap-2 rounded-[8px] bg-[var(--beat-control)] px-2.5 py-1.5 text-[13px]"
-              >
-                {ok ? (
-                  <CheckCircle2 className="size-4 shrink-0 text-[var(--beat-accent)]" />
-                ) : (
-                  <AlertCircle className="size-4 shrink-0 text-[var(--beat-warn-text)]" />
-                )}
-                <span className="min-w-0 flex-1 truncate text-[var(--beat-text-1)]">
-                  {(BUNDLE_LABEL[b.id] ?? (() => b.label))()}
-                </span>
-                <span className="shrink-0 text-[12px] text-[var(--beat-text-3)]">
-                  {b.count > 0
-                    ? `${b.count} × ${human(b.bytes)}${
-                        ok
-                          ? ''
-                          : ` · ${m['services.deploy.missingVolumes']({
-                              volumes: b.missing.join(','),
-                            })}`
-                      }`
-                    : b.required
-                      ? m['services.deploy.missing']()
-                      : m['services.deploy.notProvided']()}
-                </span>
-              </li>
-            );
-          })}
+          {/* One row for the whole volume set: the archive is a single stream
+              split into manke-bundle.7z.001 … so per-category rows no longer
+              exist. */}
+          <li className="flex items-center gap-2 rounded-[8px] bg-[var(--beat-control)] px-2.5 py-1.5 text-[13px]">
+            {volumesComplete ? (
+              <CheckCircle2 className="size-4 shrink-0 text-[var(--beat-accent)]" />
+            ) : (
+              <AlertCircle className="size-4 shrink-0 text-[var(--beat-warn-text)]" />
+            )}
+            <span className="min-w-0 flex-1 truncate text-[var(--beat-text-1)]">
+              {m['services.deploy.bundleVolumes']()}
+            </span>
+            <span className="shrink-0 text-[12px] text-[var(--beat-text-3)]">
+              {volumesFound > 0
+                ? `${volumesFound} × ${human(totalBytes)}${
+                    volumesComplete
+                      ? ''
+                      : ` · ${m['services.deploy.missingVolumes']({
+                          volumes: missingVolumes.join(','),
+                        })}`
+                  }`
+                : m['services.deploy.missing']()}
+            </span>
+          </li>
+          {/* Free space on the target drive decides whether a 210 GB extract
+              can even start, so surface it next to the bundle state. */}
+          {freeBytes !== null && volumesFound > 0 && (
+            <li className="flex items-center gap-2 rounded-[8px] bg-[var(--beat-control)] px-2.5 py-1.5 text-[13px]">
+              {enoughSpace ? (
+                <CheckCircle2 className="size-4 shrink-0 text-[var(--beat-accent)]" />
+              ) : (
+                <AlertCircle className="size-4 shrink-0 text-[var(--beat-warn-text)]" />
+              )}
+              <span className="min-w-0 flex-1 truncate text-[var(--beat-text-1)]">
+                {m['services.deploy.freeSpace']()}
+              </span>
+              <span className="shrink-0 text-[12px] text-[var(--beat-text-3)]">
+                {human(freeBytes)}
+              </span>
+            </li>
+          )}
         </ul>
       ) : (
         <p className="mb-4 rounded-[8px] bg-[var(--beat-warn-text)]/10 px-3 py-2 text-[13px] text-[var(--beat-warn-text)]">
@@ -378,7 +392,6 @@ export function DeployWizard() {
         </button>
         <span className="text-[12.5px] text-[var(--beat-text-3)]">
           {m['services.deploy.total']({ size: human(totalBytes) })}
-          {!hasPortable && m['services.deploy.noPortable']()}
         </span>
       </div>
     </section>

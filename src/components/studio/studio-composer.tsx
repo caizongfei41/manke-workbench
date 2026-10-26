@@ -21,6 +21,7 @@ import { WorkspaceSelect } from '@/components/app/workspace-select';
 import { StudioMusicPanel } from '@/components/studio/studio-music-panel';
 import { StudioDirectorConsole } from '@/components/studio/studio-director-console';
 import type { DirectorSettings } from '@/core/effects/aicg3d-director';
+import { getWorkspaceEffectRegistryEntry } from '@/core/effects/effect-registry';
 import type { ScriptAsset } from '@/core/effects/script-document';
 import type { MusicLyricsExample } from '@/core/effects/music-style';
 import { BeatCanvasComposerParameterPicker } from '@/components/beatcanvas/beatcanvas-composer-parameter-picker';
@@ -154,6 +155,25 @@ export function StudioComposer({
         : imageModels;
   const selectedModel =
     findWorkspaceModelOption(models, draft.modelId) ?? models[0] ?? null;
+  /**
+   * In audio mode this field holds lyrics, not a free-form idea.
+   *
+   * The old placeholder said "paste lyrics, or describe what to write",
+   * which left it ambiguous whether the box takes a song or a brief. The
+   * cover workflow made it worse: its melody comes from the uploaded
+   * audio, so lyrics are optional there, yet it showed the same prompt.
+   * Each workflow now gets its own wording.
+   */
+  const audioModelId = selectedModel?.id ?? '';
+  // The model option object does not carry a route slug, and the raw id is
+  // CJK, which this directory forbids. Look the slug up in the registry.
+  const audioRouteSlug = (() => {
+    if (!audioModelId) return '';
+    const entry = getWorkspaceEffectRegistryEntry(audioModelId);
+    return String((entry as { routeSlug?: string } | null)?.routeSlug ?? '');
+  })();
+  const isCoverSong = audioRouteSlug.includes('song-cover');
+  const isCreateSong = audioRouteSlug.includes('song-create');
   const promptRequired = getGenerationPromptConstraints({
     modelId: isAnalysis ? 'video-analysis' : selectedModel?.id,
   }).required;
@@ -545,7 +565,11 @@ export function StudioComposer({
               isAnalysis
                 ? t('promptPlaceholder')
                 : media === 'audio'
-                ? m['studio.audioPromptPlaceholder']()
+                ? isCoverSong
+                  ? m['studio.audioLyricsPlaceholderCover']()
+                  : isCreateSong
+                    ? m['studio.audioLyricsPlaceholderCreate']()
+                    : m['studio.audioPromptPlaceholder']()
                 : media === 'video'
                 ? labels.videoPromptPlaceholder
                 : labels.imagePromptPlaceholder

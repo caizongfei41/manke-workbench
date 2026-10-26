@@ -25,9 +25,9 @@ const ROOT = (() => {
     const i = process.argv.indexOf('--root');
     return i >= 0 ? process.argv[i + 1] : undefined;
   })();
-  if (rootArg) return resolve(rootArg);
+  if (rootArg) return resolve(rootArg.trim());
   const envHome = process.env.BEATDESIGN_WORKBENCH_HOME;
-  if (envHome) return resolve(envHome);
+  if (envHome) return resolve(envHome.trim());
   return resolve(process.argv[1], '../..');
 })();
 const JSON_MODE = process.argv.includes('--json');
@@ -113,9 +113,15 @@ const isLocalComfy =
 // 关键：用户的配置说在哪就在哪。找不到就如实报「你说的位置没东西」，
 // 不要偷偷退回某个默认路径 —— 那样检查的是别的目录，结果全是误导。
 const comfyRootSource = (() => {
-  const envRoot = process.env.BEATDESIGN_COMFYUI_HOME;
+  // Trim every path that comes from outside.
+  // `set VAR=E:\ComfyUI && node ...` in cmd.exe folds the space before `&&`
+  // into the value, so the variable arrives as "E:\ComfyUI " and existsSync
+  // reports the directory as missing even though it is right there. The same
+  // trailing-space hazard shows up when a user pastes a path with a trailing
+  // space into the console's folder picker.
+  const envRoot = String(process.env.BEATDESIGN_COMFYUI_HOME ?? '').trim();
   if (envRoot) return { root: envRoot, source: 'BEATDESIGN_COMFYUI_HOME' };
-  const py = String(config.pythonPath ?? '');
+  const py = String(config.pythonPath ?? '').trim();
   if (py) {
     const idx = py.toLowerCase().indexOf('python_embeded');
     if (idx > 0) {

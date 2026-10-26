@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -22,8 +23,52 @@ import { createFileRoute } from '@tanstack/react-router';
 
 const TIMEOUT_MS = 90_000;
 
-/** Repo root: the server is started from there by the launcher. */
-const resolveRoot = () => process.env.BEATDESIGN_ROOT?.trim() || process.cwd();
+/**
+ * Repo root.
+ *
+ * Do NOT trust process.cwd() alone. The server can be launched through
+ * Scheduled Task -> cmd -> node, and if any wrapper fails to set the working
+ * directory, cwd ends up wherever the launcher happened to be. The check
+ * script then looks for data/ under the wrong tree, fails to find the config,
+ * falls back to a guessed ComfyUI path, and reports 「directory does not
+ * exist」 for a machine that is perfectly set up.
+ *
+ * Resolution order:
+ *   1. BEATDESIGN_ROOT, if the launcher set it
+ *   2. Walk up from cwd looking for the repo marker
+ *   3. Walk up from this module's own file URL (stable regardless of cwd)
+ *   4. cwd as the last resort
+ */
+const hasMarker = (dir: string) => existsSync(join(dir, 'scripts', 'check-environment.mjs'));
+
+const walkUp = (start: string): string | null => {
+  let dir = start;
+  for (let i = 0; i < 8; i += 1) {
+    if (hasMarker(dir)) return dir;
+    const parent = join(dir, '..');
+    if (parent === dir) return null;
+    dir = parent;
+  }
+  return null;
+};
+
+const resolveRoot = () => {
+  const explicit = process.env.BEATDESIGN_ROOT?.trim();
+  if (explicit && hasMarker(explicit)) return explicit;
+
+  const fromCwd = walkUp(process.cwd());
+  if (fromCwd) return fromCwd;
+
+  try {
+    const here = fileURLToPath(import.meta.url);
+    const fromModule = walkUp(dirname(here));
+    if (fromModule) return fromModule;
+  } catch {
+    /* import.meta.url unavailable in some bundlers */
+  }
+
+  return explicit || process.cwd();
+};
 
 const runCheck = () =>
   new Promise<{ ok: boolean; raw: string; error?: string }>((resolve) => {
@@ -78,7 +123,14 @@ async function GET() {
   }
 
   try {
-    return Response.json(JSON.parse(result.raw) as Record<string, unknown>);
+    const parsed = JSON.parse(result.raw) as Record<string, unknown>;
+    // Surface which directory the check actually ran against. When the server
+    // is launched with a different working directory than the repo root, the
+    // script reads a config that is not there, silently falls back to a guess,
+    // and reports 「directory does not exist」 for a path the user never chose.
+    // Without this field that failure looks identical to a genuinely missing
+    // ComfyUI install.
+    return Response.json({ ...parsed, checkedRoot: resolveRoot() });
   } catch {
     return failure(
       'Check runner',

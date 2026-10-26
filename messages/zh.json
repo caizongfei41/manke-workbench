@@ -1269,5 +1269,9 @@
   "services.deploy.bundleModels": "模型",
   "services.deploy.bundleNodes": "自定义节点包",
   "services.deploy.bundleApp": "工作台源码",
-  "services.deploy.bundleComfy": "便携 ComfyUI"
+  "services.deploy.bundleComfy": "便携 ComfyUI",
+  "studio.audioLyricsPlaceholderCreate": "在这里写歌词（每行一句，可用 [verse] / [chorus] 分段）。留空则由风格自由发挥。",
+  "studio.audioLyricsPlaceholderCover": "在这里写要唱的歌词（保留原曲旋律，换词换唱腔）。留空则沿用原曲歌词。",
+  "services.deploy.bundleVolumes": "部署包分卷",
+  "services.deploy.freeSpace": "目标盘剩余空间"
 }

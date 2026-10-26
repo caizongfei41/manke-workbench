@@ -9,6 +9,16 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_RESPONSE_BYTES = 2_000_000;
 const MAX_LOCAL_IMAGE_ASSET_BYTES = 25 * 1024 * 1024;
 const MAX_LOCAL_VIDEO_ASSET_BYTES = 1024 * 1024 * 1024;
+/**
+ * 音频单独一档。
+ *
+ * 之前音频没有自己的上限，掉进了图片的 25 MB 判断里 ——
+ * 而 YuE2 生成的完整歌曲 mp3 常在 30-60 MB（320 kbps、两三分钟），
+ * 于是每个结果都被当成「太大」静默丢弃，界面永远是空的，
+ * ComfyUI 那边却明明产出了文件。音频和无损 song 差别很大，
+ * 给到和视频同一档也不合适（视频上限 1 GB 太宽），单独定 256 MB。
+ */
+const MAX_LOCAL_AUDIO_ASSET_BYTES = 256 * 1024 * 1024;
 /** 视频生成使用的帧率（Minimax H3 官方 24fps）。 */
 const VIDEO_FPS = 24;
 
@@ -151,6 +161,63 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
 
 const readString = (value: unknown) =>
   typeof value === 'string' && value.trim() ? value.trim() : null;
+
+/**
+ * 把 ComfyUI 的 /prompt 拒绝响应翻译成一句人能读懂的话。
+ *
+ * ComfyUI 返回的结构长这样：
+ *   {
+ *     error: { type: "prompt_outputs_failed_validation", message: "..." },
+ *     node_errors: {
+ *       "69": {
+ *         class_type: "AudioEncoderLoader",
+ *         errors: [{ type: "value_not_in_list",
+ *                    details: "audio_encoder_name: 'x.safetensors' not in []" }]
+ *       }
+ *     }
+ *   }
+ *
+ * 最有用的信息在 errors[].details —— 它直接说明了哪个输入的值不被接受。
+ * 之前这里直接把整个响应丢掉只留状态码，用户只能看到一个 400，
+ * 完全不知道是模型没装、节点版本不对、还是参数越界。
+ */
+export const describePromptFailure = (status: number, rawBody: string) => {
+  const prefix = `ComfyUI 拒绝了这个工作流 (HTTP ${status})`;
+  const parsed = (() => {
+    try {
+      return asRecord(JSON.parse(rawBody));
+    } catch {
+      return null;
+    }
+  })();
+  if (!parsed) {
+    const snippet = rawBody.trim().slice(0, 200);
+    return snippet ? `${prefix}：${snippet}` : prefix;
+  }
+
+  const parts: string[] = [];
+  const nodeErrors = asRecord(parsed.node_errors);
+  if (nodeErrors) {
+    for (const [nodeId, entry] of Object.entries(nodeErrors).slice(0, 3)) {
+      const node = asRecord(entry);
+      if (!node) continue;
+      const className = readString(node.class_type) ?? `节点 ${nodeId}`;
+      const errors = Array.isArray(node.errors) ? node.errors : [];
+      const details = errors
+        .map((e) => readString(asRecord(e)?.details))
+        .filter((d): d is string => Boolean(d))
+        .slice(0, 2);
+      parts.push(details.length ? `${className}：${details.join('；')}` : className);
+    }
+  }
+
+  if (parts.length === 0) {
+    const message = readString(asRecord(parsed.error)?.message);
+    if (message) parts.push(message);
+  }
+
+  return parts.length ? `${prefix} —— ${parts.join(' ／ ')}` : prefix;
+};
 
 async function resolveDataRoot(): Promise<string> {
   const { getBeatDesignDataRoot } = await import('@/config/data-root');
@@ -1867,7 +1934,14 @@ export class ComfyUiAdapter extends BaseAdapter {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
       if (!response.ok) {
-        throw new Error(`ComfyUI prompt submission failed (${response.status}).`);
+        // 把 ComfyUI 的 node_errors 解析成人能看懂的一句话。
+        //
+        // 之前这里只抛 `(400)`，用户看到「ComfyUI prompt submission failed (400)」
+        // 完全不知道为什么 —— 实际原因可能是某个模型文件没装
+        // （value_not_in_list: sheetsage2_bf16.safetensors not in []），
+        // 这种信息必须传出来，否则用户只能猜。
+        const raw = await response.text().catch(() => '');
+        throw new Error(describePromptFailure(response.status, raw));
       }
       const payload = asRecord(await readBoundedJson(response));
       const promptId = readString(payload?.prompt_id);
@@ -1979,14 +2053,14 @@ export class ComfyUiAdapter extends BaseAdapter {
                 const bytes = new Uint8Array(await fileResponse.arrayBuffer());
                 const mimeType = mimeTypeForFilename(ref.filename);
                 const isVideo = mimeType.startsWith('video/');
+                const isAudio = mimeType.startsWith('audio/');
+                const maxBytes = isVideo
+                  ? MAX_LOCAL_VIDEO_ASSET_BYTES
+                  : isAudio
+                    ? MAX_LOCAL_AUDIO_ASSET_BYTES
+                    : MAX_LOCAL_IMAGE_ASSET_BYTES;
 
-                if (
-                  bytes.byteLength === 0 ||
-                  bytes.byteLength >
-                    (isVideo
-                      ? MAX_LOCAL_VIDEO_ASSET_BYTES
-                      : MAX_LOCAL_IMAGE_ASSET_BYTES)
-                ) {
+                if (bytes.byteLength === 0 || bytes.byteLength > maxBytes) {
                   return null;
                 }
                 return { viewUrl, filename: ref.filename, mimeType, bytes };

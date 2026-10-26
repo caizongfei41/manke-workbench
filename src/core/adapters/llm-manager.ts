@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 /**
  * Local llama.cpp server lifecycle manager.
@@ -20,7 +21,11 @@ import { spawn, type ChildProcess } from 'node:child_process';
 const DEFAULT_SERVER_DIR = 'C:\\llama-xiaofeng';
 const DEFAULT_MODEL =
   'models\\Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-IQ2_M.gguf';
-const DEFAULT_PORT = 8080;
+// Port is configurable because 8080 is a crowded default -- anything else
+// bound there (an ESP32 audio server, a dev proxy) makes llama-server fail to
+// bind and the manager then waits the full readiness timeout for a server that
+// never started.
+const DEFAULT_PORT = Number(process.env.BEATDESIGN_LLAMA_PORT) || 8081;
 
 let child: ChildProcess | null = null;
 let starting: Promise<void> | null = null;
@@ -103,6 +108,27 @@ export function ensureLlamaServer(): Promise<void> {
     const dir = serverDir();
     const exe = `${dir}\\llama-server.exe`;
     const model = `${dir}\\${modelPath()}`;
+
+    // Fail with an actionable message instead of letting spawn throw ENOENT.
+    //
+    // The default directory is a junction that points at a drive which is not
+    // always mounted. When it is gone, spawn raises a bare ENOENT and the user
+    // only sees "AI 扩写失败" with no idea that a whole directory vanished.
+    // Naming the exact missing path and the env var that overrides it turns a
+    // mystery into a one-line fix.
+    if (!existsSync(exe)) {
+      throw new Error(
+        `找不到 llama-server.exe：${exe}\n` +
+          `请确认 ${dir} 存在，或用环境变量 BEATDESIGN_LLAMA_DIR 指向 llama.cpp 所在目录。`
+      );
+    }
+    if (!existsSync(model)) {
+      throw new Error(
+        `找不到本地模型：${model}\n` +
+          `请把 GGUF 放进 ${dir}，或用 BEATDESIGN_LLAMA_MODEL 指定相对路径。`
+      );
+    }
+
     child = spawn(
       exe,
       [

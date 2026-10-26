@@ -1269,5 +1269,9 @@
   "services.deploy.bundleModels": "Models",
   "services.deploy.bundleNodes": "Custom nodes",
   "services.deploy.bundleApp": "Workbench source",
-  "services.deploy.bundleComfy": "Portable ComfyUI"
+  "services.deploy.bundleComfy": "Portable ComfyUI",
+  "studio.audioLyricsPlaceholderCreate": "Write the lyrics here (one line per phrase; use [verse] / [chorus] to mark sections). Leave blank to let the style decide.",
+  "studio.audioLyricsPlaceholderCover": "Write the lyrics to sing (keeps the source melody, swaps words and delivery). Leave blank to reuse the original lyrics.",
+  "services.deploy.bundleVolumes": "Bundle volumes",
+  "services.deploy.freeSpace": "Free space on target drive"
 }
