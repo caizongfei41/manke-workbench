@@ -80,6 +80,84 @@ $SERVICES = @(
     }
 )
 
+# ---------------------------------------------------------------- 计划任务
+#
+# 计划任务原来的 Execute 是 cmd.exe。cmd 是控制台程序，每次启动都会弹一个
+# 黑窗口闪一下 —— 用户以为是 bug 或者病毒，实际只是任务在跑。
+# cmd 没有可靠的自隐藏方式（START /MIN 仍会闪，powershell -WindowStyle Hidden
+# 只是隐藏 PowerShell 自己的窗口，它拉起的子进程照样可见）。
+#
+# 可靠做法：用 wscript.exe 跑一个 VBS，WshShell.Run 的第 3 个参数是窗口样式，
+# 传 0 = 完全隐藏。wscript 本身是 GUI 程序，不占控制台。
+#
+# 这段代码在控制台启动时检查一次，发现任务还指向 cmd.exe 就自动改写。
+# 幂等：已经改过的不会再改。
+
+# 生成隐藏启动用的 VBS 包装器。
+function New-HiddenLaunchVbs {
+    param([string]$Name, [string]$CmdLine, [string]$WorkDir)
+
+    $vbsPath = Join-Path $BD "launcher\run-$Name.vbs"
+    $escaped = $CmdLine -replace '"', '""'
+    $content = @"
+' 隐藏窗口启动 $Name
+'
+' 计划任务直接跑 cmd.exe 会弹控制台窗口，每次启动闪一下。
+' WshShell.Run 的第 3 个参数传 0 = 窗口完全隐藏。
+'
+Set sh = CreateObject("WScript.Shell")
+sh.CurrentDirectory = "$WorkDir"
+sh.Run "$escaped", 0, False
+"@
+    Set-Content $vbsPath $content -Encoding Unicode
+    return $vbsPath
+}
+
+# 把计划任务从「直接跑 cmd.exe」改成「wscript 跑 VBS」。
+# 返回 $true 表示做了修改。
+function Repair-TaskWindow([string]$TaskName, [string]$WrapperName) {
+    $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if (-not $task) { return $false }
+    if ($task.Actions.Count -eq 0) { return $false }
+
+    $action = $task.Actions[0]
+
+    # 已经是 wscript 就走人，别重复改
+    if ($action.Execute -and $action.Execute.ToLower().EndsWith('wscript.exe')) {
+        return $false
+    }
+
+    $cmdLine = $action.Execute
+    if ($action.Arguments) { $cmdLine += ' ' + $action.Arguments }
+    $workDir = if ($action.WorkingDirectory) { $action.WorkingDirectory } else { $BD }
+
+    $vbs = New-HiddenLaunchVbs -Name $WrapperName -CmdLine $cmdLine -WorkDir $workDir
+
+    $newAction = New-ScheduledTaskAction `
+        -Execute 'wscript.exe' `
+        -Argument "`"$vbs`"" `
+        -WorkingDirectory $workDir
+    Set-ScheduledTask -TaskName $TaskName -Action $newAction | Out-Null
+    return $true
+}
+
+# 检查并修复两个任务的弹窗问题。失败不影响控制台使用。
+function Repair-TaskWindows {
+    $changed = @()
+    foreach ($svc in $SERVICES) {
+        $wrapper = if ($svc.Key -eq 'comfyui') { 'comfyui' } else { 'workbench' }
+        try {
+            if (Repair-TaskWindow -TaskName $svc.Task -WrapperName $wrapper) {
+                $changed += $svc.Name
+            }
+        } catch {
+            # 权限不足或任务被锁定时忽略 —— 弹窗只是观感问题，
+            # 不该让整个控制台启动失败
+        }
+    }
+    return $changed
+}
+
 # ---------------------------------------------------------------- 探测
 
 # 端口探测：ConnectAsync + 120ms 上限。连接成功通常 <1ms；
@@ -273,6 +351,8 @@ $form.Controls.Add((New-Label '本机运行，不随开机启动；需要时在�
 $y += 70
 
 # ── 服务卡片
+# 每个服务一个忙标志，防止启动/停止重入
+$script:busy = @{}
 $rows = @{}
 
 foreach ($svc in $SERVICES) {
@@ -516,10 +596,98 @@ function Update-Status {
 }
 
 function Start-One($svc) {
-    if (Test-PortOpen $svc.Port) { Add-Log "$($svc.Name) 已在运行，跳过。"; return }
+    if (Test-PortOpen $svc.Port) {
+        Add-Log "$($svc.Name) 已在运行，跳过。"
+        return
+    }
+
+    # 立刻切到「启动中」，让用户看到点击生效了。
+    # 之前只有 Start-ScheduledTask 一行，端口起来之前界面一直显示「已停止」，
+    # 看起来就像按钮没反应 —— ComfyUI 要 30-90 秒才监听端口。
+    $row = $rows[$svc.Key]
+    if ($row) { Set-RowState $row 'starting' }
+    $row.Act.Enabled = $false
+    $row.Act.Refresh()
+    if ($form) { $form.Update() }
+
+    $startAt = Get-Date
     Add-Log "启动 $($svc.Name)（计划任务 $($svc.Task)）…"
-    Start-ScheduledTask -TaskName $svc.Task -ErrorAction SilentlyContinue
-    Add-Log "已下发。$($svc.Name) 就绪约需 $($svc.ReadySeconds) 秒。"
+
+    # 停掉自动刷新定时器。它每 2 秒跑一次 Update-Status，
+    # 而下面等待循环里的 DoEvents() 会让它插进来 —— 端口还没开时
+    # 它会把状态刷回「已停止」，盖住我们刚设的「启动中」。
+    # 等完了再恢复。
+    $timerWasRunning = $false
+    if ($timer) {
+        $timerWasRunning = $timer.Enabled
+        if ($timerWasRunning) { $timer.Stop() }
+    }
+    try {
+        Start-ScheduledTask -TaskName $svc.Task -ErrorAction Stop
+    } catch {
+        Add-Log "✗ 计划任务 $($svc.Task) 启动失败：$($_.Exception.Message)"
+        Add-Log '  可以在「任务计划程序」里手动运行该任务看报错。'
+        if ($row) { Set-RowState $row 'stopped' }
+        if ($row) { $row.Act.Enabled = $true }
+        return
+    }
+
+    # 等端口真正监听。每 500ms 探一次，最多等 ReadySeconds * 2。
+    # 期间保持「启动中」状态，界面上能看出是在等而不是死了。
+    $deadline = [DateTime]::Now.AddSeconds($svc.ReadySeconds * 2)
+    $opened = $false
+    $ticks = 0
+    while ([DateTime]::Now -lt $deadline) {
+        $ticks++
+        if (Test-PortOpen $svc.Port) {
+            Add-Log "$($svc.Name) 端口在第 $ticks 次探测时打开"
+            $opened = $true
+            break
+        }
+        Start-Sleep -Milliseconds 500
+        # 让 WinForms 有机会重绘，否则界面在等待期间完全冻结
+        if ($form) { [Windows.Forms.Application]::DoEvents() }
+    }
+    if (-not $opened) { Add-Log "  已探测 $ticks 次仍未打开端口" }
+
+    if ($row) { $row.Act.Enabled = $true }
+
+    if ($opened) {
+        Add-Log "$($svc.Name) 端口 $($svc.Port) 已监听，等待就绪检查…"
+        # 端口开了但服务未必能响应（ComfyUI 加载模型要时间）。
+        # 这里再等健康检查通过，过程中保持「启动中」。
+        $healthOk = $false
+        $hDeadline = [DateTime]::Now.AddSeconds($svc.ReadySeconds * 2)
+        while ([DateTime]::Now -lt $hDeadline) {
+            try {
+                $probe = Invoke-WebRequest -Uri $svc.Url -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+                if ($probe.StatusCode -ge 200 -and $probe.StatusCode -lt 400) { $healthOk = $true; break }
+            } catch {
+                # 还没准备好，继续等
+            }
+            Start-Sleep -Milliseconds 700
+            if ($form) { [Windows.Forms.Application]::DoEvents() }
+        }
+        if ($healthOk) {
+            Add-Log "$($svc.Name) 已就绪。"
+            # 关键：把结果写回全局状态表。不写的话 Update-Status 拿到的还是
+            # 上一次的 false，界面会一直停在「启动中…」。
+            $st = $health[$svc.Key]
+            if ($st) { $st.Ok = $true; $st.Task = $null }
+            if ($row) { Set-RowState $row 'running' }
+        } else {
+            Add-Log "⚠ $($svc.Name) 端口已开但 HTTP 无响应，可能还在加载模型。"
+            Add-Log '  界面会保持「启动中」，稍等再点「刷新」。'
+        }
+    } else {
+        Add-Log "✗ $($svc.Name) 在 $($svc.ReadySeconds * 2) 秒内没有监听端口 $($svc.Port)。"
+        Add-Log '  查日志：data\logs\ 下对应的 .log 文件。'
+        $st = $health[$svc.Key]
+        if ($st) { $st.Ok = $false; $st.Task = $null }
+        if ($row) { Set-RowState $row 'stopped' }
+    }
+
+    Update-Status
 }
 
 function Stop-One($svc) {
@@ -539,7 +707,20 @@ function Stop-One($svc) {
 }
 
 function Toggle-One($svc) {
-    if (Test-PortOpen $svc.Port) { Stop-One $svc } else { Start-One $svc }
+    # 防重入：启动过程要等 30-90 秒，这期间用户可能又点一次，
+    # 或者界面重绘误触发。不加锁的话会变成「启动 → 立刻停止」，
+    # 日志里表现为服务刚就绪就被停掉。
+    if ($script:busy -and $script:busy.ContainsKey($svc.Key) -and $script:busy[$svc.Key]) {
+        Add-Log "$($svc.Name) 正在处理中，请稍候…"
+        return
+    }
+    if (-not $script:busy) { $script:busy = @{} }
+    $script:busy[$svc.Key] = $true
+    try {
+        if (Test-PortOpen $svc.Port) { Stop-One $svc } else { Start-One $svc }
+    } finally {
+        $script:busy[$svc.Key] = $false
+    }
 }
 
 foreach ($key in $rows.Keys) {
@@ -548,13 +729,38 @@ foreach ($key in $rows.Keys) {
 }
 
 $startAll.Add_Click({
-    foreach ($key in $rows.Keys) { Start-One $rows[$key].Svc }
-    Update-Status
+    # 全部启动要串行等 60-180 秒，期间按钮必须禁用 ——
+    # 否则用户以为没反应会再点，第二次点击看到端口已开就转去停止。
+    $this.Enabled = $false
+    $this.Text = '启动中'
+    $this.Refresh()
+    try {
+        foreach ($key in $rows.Keys) {
+            $svc = $rows[$key].Svc
+            if (Test-PortOpen $svc.Port) {
+                Add-Log "$($svc.Name) 已在运行，跳过。"
+                continue
+            }
+            Start-One $svc
+        }
+        Update-Status
+    } finally {
+        $this.Enabled = $true
+        $this.Text = '全部启动'
+    }
 }.GetNewClosure())
 
 $stopAll.Add_Click({
-    foreach ($key in $rows.Keys) { Stop-One $rows[$key].Svc }
-    Update-Status
+    $this.Enabled = $false
+    $this.Text = '停止中'
+    $this.Refresh()
+    try {
+        foreach ($key in $rows.Keys) { Stop-One $rows[$key].Svc }
+        Update-Status
+    } finally {
+        $this.Enabled = $true
+        $this.Text = '全部停止'
+    }
 }.GetNewClosure())
 
 $refreshBtn.Add_Click({ Update-Status; Add-Log '状态已刷新。' }.GetNewClosure())
@@ -1191,6 +1397,20 @@ $form.Add_FormClosing({
 
 $form.Add_Shown({
     Add-Log '就绪。服务不随开机启动，需要时点「全部启动」。'
+
+    # 首次启动时把计划任务改成隐藏窗口启动。
+    # 老版本任务直接跑 cmd.exe，每次启动都弹黑窗口 —— 用户会以为出问题了。
+    # 幂等：已经改过的不再动。
+    try {
+        $repaired = Repair-TaskWindows
+        if ($repaired -and $repaired.Count -gt 0) {
+            Add-Log ("已修正计划任务的弹窗问题：" + ($repaired -join '、'))
+            Add-Log '  改为后台隐藏启动，以后不会再闪窗口。'
+        }
+    } catch {
+        # 修复失败不影响使用，弹窗只是观感问题
+    }
+
     Update-Status
     # 换新机器时设 BD_CHECK_ON_START=1，开窗即自检。
     if ($env:BD_CHECK_ON_START -eq '1') { $checkBtn.PerformClick() }
