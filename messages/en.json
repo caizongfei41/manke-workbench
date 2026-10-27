@@ -1273,5 +1273,19 @@
   "studio.audioLyricsPlaceholderCreate": "Write the lyrics here (one line per phrase; use [verse] / [chorus] to mark sections). Leave blank to let the style decide.",
   "studio.audioLyricsPlaceholderCover": "Write the lyrics to sing (keeps the source melody, swaps words and delivery). Leave blank to reuse the original lyrics.",
   "services.deploy.bundleVolumes": "Bundle volumes",
-  "services.deploy.freeSpace": "Free space on target drive"
+  "services.deploy.freeSpace": "Free space on target drive",
+  "services.llm.title": "AI prompt enhance",
+  "services.llm.subtitle": "Expands a short description into the full prompt a workflow expects. Works with an online API or local llama.cpp.",
+  "services.llm.preset": "Quick setup",
+  "services.llm.baseUrl": "Endpoint",
+  "services.llm.apiKey": "API key",
+  "services.llm.keySaved": "(saved)",
+  "services.llm.model": "Model",
+  "services.llm.save": "Save",
+  "services.llm.saving": "Saving…",
+  "services.llm.saved": "Saved",
+  "services.llm.recheck": "Re-check",
+  "services.llm.reachable": "Reachable",
+  "services.llm.unreachable": "Unreachable",
+  "services.llm.hint": "The key stays in data/llm.config.json on this machine."
 }

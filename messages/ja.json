@@ -1273,5 +1273,19 @@
   "studio.audioLyricsPlaceholderCreate": "ここに歌詞を書きます（1行1フレーズ、[verse] / [chorus] で区分できます）。空欄ならスタイルに任せます。",
   "studio.audioLyricsPlaceholderCover": "歌う歌詞をここに書きます（元のメロディを保ち、歌詞と歌い方を変えます）。空欄なら元の歌詞を使います。",
   "services.deploy.bundleVolumes": "パッケージ分割ファイル",
-  "services.deploy.freeSpace": "出力先ドライブの空き容量"
+  "services.deploy.freeSpace": "出力先ドライブの空き容量",
+  "services.llm.title": "AI プロンプト拡張",
+  "services.llm.subtitle": "短い説明をワークフローが必要とする完全なプロンプトに拡張します。オンライン API とローカル llama.cpp に対応。",
+  "services.llm.preset": "クイック設定",
+  "services.llm.baseUrl": "エンドポイント",
+  "services.llm.apiKey": "API キー",
+  "services.llm.keySaved": "（保存済み）",
+  "services.llm.model": "モデル",
+  "services.llm.save": "保存",
+  "services.llm.saving": "保存中…",
+  "services.llm.saved": "保存しました",
+  "services.llm.recheck": "再確認",
+  "services.llm.reachable": "接続可",
+  "services.llm.unreachable": "接続不可",
+  "services.llm.hint": "キーはこのマシンの data/llm.config.json にのみ保存されます。"
 }

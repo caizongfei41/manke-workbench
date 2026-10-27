@@ -1273,5 +1273,19 @@
   "studio.audioLyricsPlaceholderCreate": "在这里写歌词（每行一句，可用 [verse] / [chorus] 分段）。留空则由风格自由发挥。",
   "studio.audioLyricsPlaceholderCover": "在这里写要唱的歌词（保留原曲旋律，换词换唱腔）。留空则沿用原曲歌词。",
   "services.deploy.bundleVolumes": "部署包分卷",
-  "services.deploy.freeSpace": "目标盘剩余空间"
+  "services.deploy.freeSpace": "目标盘剩余空间",
+  "services.llm.title": "AI 扩写服务",
+  "services.llm.subtitle": "把简短的描述扩写成工作流需要的完整提示词。支持在线 API 或本地 llama.cpp。",
+  "services.llm.preset": "快速配置",
+  "services.llm.baseUrl": "接口地址",
+  "services.llm.apiKey": "API Key",
+  "services.llm.keySaved": "（已保存）",
+  "services.llm.model": "模型名称",
+  "services.llm.save": "保存",
+  "services.llm.saving": "保存中…",
+  "services.llm.saved": "已保存",
+  "services.llm.recheck": "重新检测",
+  "services.llm.reachable": "可连接",
+  "services.llm.unreachable": "无法连接",
+  "services.llm.hint": "Key 只保存在本机 data/llm.config.json，不会上传。"
 }

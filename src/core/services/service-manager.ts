@@ -3,7 +3,12 @@ import { createWriteStream } from 'node:fs';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
-import { ensureLlamaServer, stopLlamaServer } from '@/core/adapters/llm-manager';
+import {
+  baseUrl as resolveLlmBaseUrl,
+  ensureLlamaServer,
+  isRemoteProvider,
+  stopLlamaServer,
+} from '@/core/adapters/llm-manager';
 
 /**
  * Unified local service manager for the Manke workbench.
@@ -106,11 +111,40 @@ export async function getServicesStatus(): Promise<{
   comfyUiRoot: string;
   comfyUiPython: string;
   llamaManaged: boolean;
+  llmRemote: boolean;
+  llmBaseUrl: string;
 }> {
+  // The prompt enhancer can be a remote OpenAI-compatible service instead of
+  // a local llama.cpp process. Report whichever is configured: probing a local
+  // port for a remote endpoint would always show "stopped" and invite the user
+  // to start a server that is not supposed to exist.
+  const remote = isRemoteProvider();
+  const llmBase = resolveLlmBaseUrl();
+
   const [comfyUp, llamaUp] = await Promise.all([
     probe(COMFYUI_PORT),
-    probe(LLAMA_PORT),
+    remote ? Promise.resolve(true) : probe(LLAMA_PORT),
   ]);
+
+  const llmEntry = remote
+    ? {
+        id: 'llama',
+        label: 'AI 扩写（在线）',
+        port: 0,
+        up: true,
+        url: llmBase,
+        detail: llmBase,
+        remote: true,
+      }
+    : {
+        id: 'llama',
+        label: 'AI 扩写 (llama.cpp)',
+        port: LLAMA_PORT,
+        up: llamaUp,
+        url: `http://127.0.0.1:${LLAMA_PORT}`,
+        detail: '按需启动，空闲自动停止',
+        remote: false,
+      };
   // The workbench is this process, so it is up by definition.
   return {
     services: [
@@ -129,18 +163,13 @@ export async function getServicesStatus(): Promise<{
         url: `http://127.0.0.1:${COMFYUI_PORT}`,
         detail: comfyUiRoot(),
       },
-      {
-        id: 'llama',
-        label: 'AI 扩写 (llama.cpp)',
-        port: LLAMA_PORT,
-        up: llamaUp,
-        url: `http://127.0.0.1:${LLAMA_PORT}`,
-        detail: '按需启动，空闲自动停止',
-      },
+      llmEntry,
     ],
     comfyUiRoot: comfyUiRoot(),
     comfyUiPython: comfyUiPython(),
-    llamaManaged: true,
+    llamaManaged: !remote,
+    llmRemote: remote,
+    llmBaseUrl: llmBase,
   };
 }
 

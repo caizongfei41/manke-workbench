@@ -201,9 +201,14 @@ function Repair-TaskWindows {
                 }
             } catch { }
             $logDir = Join-Path $BD 'data\logs'
+            # main.py 在部署包是 <root>\main.py，手动安装是 <root>\ComfyUI\main.py
+            $comfyMainRel = 'main.py'
+            if (-not (Test-Path (Join-Path $comfyRoot 'main.py'))) { $comfyMainRel = 'ComfyUI\main.py' }
+            # 节点启动打印 emoji，GBK 下抛 UnicodeEncodeError 会直接退出
+            $env:PYTHONUTF8 = '1'
             $fallbackCmd = 'cmd.exe /c set "HF_ENDPOINT=https://hf-mirror.com" && ' +
                 'set "HF_HUB_DISABLE_TELEMETRY=1" && ' +
-                "`"$comfyRoot\python_embeded\python.exe`" -s ComfyUI\main.py " +
+                "`"$comfyRoot\python_embeded\python.exe`" -s $comfyMainRel " +
                 '--windows-standalone-build --use-sage-attention --disable-pinned-memory ' +
                 "> `"$logDir\comfyui.log`" 2> `"$logDir\comfyui.err.log`""
             $fallbackDir = $comfyRoot
@@ -1045,7 +1050,12 @@ $pickComfyBtn.Add_Click({
         }
 
         $pyPath = Join-Path $root 'python_embeded\python.exe'
-        $mainPath = Join-Path $root 'ComfyUI\main.py'
+        $mainPath = Join-Path $root 'main.py'
+        $layout = 'bundle'
+        if (-not (Test-Path $mainPath)) {
+            $altMain = Join-Path $root 'ComfyUI\main.py'
+            if (Test-Path $altMain) { $mainPath = $altMain; $layout = 'nested' }
+        }
         if (-not (Test-Path $pyPath)) {
             Add-Log "✗ $root 下没有 python_embeded\python.exe"
             Add-Log '  请选 ComfyUI 的根目录（含 python_embeded 和 ComfyUI 两个子目录）。'
@@ -1061,6 +1071,19 @@ $pickComfyBtn.Add_Click({
         if (-not $cfg['baseUrl']) { $cfg['baseUrl'] = 'http://127.0.0.1:8188' }
         if (-not $cfg['workflowDir']) { $cfg['workflowDir'] = 'comfyui/workflows' }
         $cfg | ConvertTo-Json -Depth 6 | Set-Content $cfgPath -Encoding UTF8
+
+        # 工作台读它自己目录下的 data/comfyui.config.json。只写控制台这份的话，
+        # 新机器上控制台看着配置好了，工作台却还在用默认路径，生成直接失败。
+        $wbRoot = Resolve-WorkbenchRoot
+        $writtenTo = @($cfgPath)
+        if ($wbRoot -and $wbRoot -ne $BD) {
+            $wbCfgDir = Join-Path $wbRoot 'data'
+            if (Test-Path $wbCfgDir) {
+                $wbCfg = Join-Path $wbCfgDir 'comfyui.config.json'
+                $cfg | ConvertTo-Json -Depth 6 | Set-Content $wbCfg -Encoding UTF8
+                $writtenTo += $wbCfg
+            }
+        }
 
         Add-Log "✓ ComfyUI 位置已设为 $root"
         Add-Log "  python: $pyPath"
@@ -1491,7 +1514,24 @@ $form.Add_Shown({
             Add-Log '  改为后台隐藏启动，以后不会再闪窗口。'
         }
     } catch {
-        # 修复失败不影响使用，弹窗只是观感问题
+        # 异常必须说出来。之前这里全静默，导致「修复没生效」和
+        # 「不需要修复」在界面上完全一样，排查时毫无线索。
+        Add-Log ("计划任务修复失败：" + $_.Exception.Message)
+        Add-Log "  位置：$($_.InvocationInfo.ScriptLineNumber) 行"
+    }
+
+    # 修完之后再确认一次：任务指向 wscript 但 VBS 不存在 = 一定起不来。
+    # 这种状态比弹窗严重得多，必须让用户看到。
+    foreach ($svc in $SERVICES) {
+        $wrapper = if ($svc.Key -eq 'comfyui') { 'comfyui' } else { 'workbench' }
+        $vbs = Join-Path $BD "launcherun-$wrapper.vbs"
+        $task = Get-ScheduledTask -TaskName $svc.Task -ErrorAction SilentlyContinue
+        if (-not $task -or $task.Actions.Count -eq 0) { continue }
+        $isWscript = $task.Actions[0].Execute -and $task.Actions[0].Execute.ToLower().EndsWith('wscript.exe')
+        if ($isWscript -and -not (Test-Path $vbs)) {
+            Add-Log ("⚠ " + $svc.Name + " 的启动包装器缺失：" + $vbs)
+            Add-Log '  点「全部启动」会一直卡在启动中。请重装控制台。'
+        }
     }
 
     Update-Status

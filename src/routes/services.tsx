@@ -12,6 +12,7 @@ import {
 import { Link } from '@/core/i18n/navigation';
 import { EnvironmentPanel } from '@/components/services/environment-panel';
 import { DeployWizard } from '@/components/services/deploy-wizard';
+import { LlmConfigPanel } from '@/components/services/llm-config-panel';
 import { apiJsonGet, apiJsonPost } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
 
@@ -296,6 +297,10 @@ function ServicesRouteComponent() {
 
         <div className="mb-6">
           <DeployWizard />
+        </div>
+
+        <div className="mb-6">
+          <LlmConfigPanel />
         </div>
 
         <EnvironmentPanel />

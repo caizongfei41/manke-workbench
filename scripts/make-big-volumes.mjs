@@ -144,17 +144,28 @@ const WORKBENCH_ITEMS = [
   'drizzle.config.ts', 'README.md', 'AGENTS.md', 'CHANGELOG.md', '.gitignore',
 ];
 
-/** 把 src 链到 dst。同分区硬链接，跨分区退化成复制。 */
-const linkDir = (src, dst, skip = new Set()) => {
+/**
+ * 把 src 链到 dst。同分区硬链接，跨分区退化成复制。
+ *
+ * skipTopOnly 只在最外层生效。
+ *
+ * 这一点必须区分清楚：排除规则原本对每一层递归都生效，于是
+ * comfy_api/input、comfy/ldm/models、custom_nodes 里各节点包自己的
+ * models/ 和 user/ 全被跳过了 —— 整整 18 个目录，解压后 ComfyUI
+ * 起不来，报 ModuleNotFoundError: comfy_api.input。只有 ComfyUI 根下
+ * 那几个真正的数据目录（models/ output/ custom_nodes/）需要排除，
+ * 深层的同名单目录是库代码，必须原样保留。
+ */
+const linkDir = (src, dst, skipTopOnly = new Set()) => {
   let linked = 0;
   let copied = 0;
-  const walk = (s, d) => {
+  const walk = (s, d, depth) => {
     const st = statSync(s);
     if (st.isDirectory()) {
       mkdirSync(d, { recursive: true });
       for (const e of readdirSync(s, { withFileTypes: true })) {
-        if (skip.has(e.name)) continue;
-        walk(join(s, e.name), join(d, e.name));
+        if (depth === 0 && skipTopOnly.has(e.name)) continue;
+        walk(join(s, e.name), join(d, e.name), depth + 1);
       }
       return;
     }
@@ -172,7 +183,7 @@ const linkDir = (src, dst, skip = new Set()) => {
       }
     }
   };
-  walk(src, dst);
+  walk(src, dst, 0);
   return { linked, copied };
 };
 
@@ -246,7 +257,21 @@ const make = () => {
   let r = linkDir(join(COMFY_ROOT, 'python_embeded'), join(STAGE, 'ComfyUI', 'python_embeded'), skipCommon);
   console.log(`    python_embeded  ${r.linked} 链接 / ${r.copied} 复制`);
 
-  // manke/ComfyUI/ 本体（排除 models/custom_nodes/output 等）
+  // python313._pth 里原本写的是 ../ComfyUI，那是「安装根/ComfyUI」的相对路径。
+  // 但打包后源码直接铺在 manke/ComfyUI/ 下（没有第二层 ComfyUI），
+  // 于是 ../ComfyUI 指向一个不存在的空目录，import comfy 直接失败。
+  // 改写成 ..，让 sys.path[0] 落在 manke/ComfyUI。
+  const pthDir = join(STAGE, 'ComfyUI', 'python_embeded');
+  for (const name of readdirSync(pthDir)) {
+    if (!/^python\d+\._pth$/i.test(name)) continue;
+    const pthPath = join(pthDir, name);
+    const lines = readFileSync(pthPath, 'utf8').split(/\r?\n/);
+    const fixed = lines.map((line) => (line.trim() === '../ComfyUI' ? '..' : line));
+    writeFileSync(pthPath, fixed.join('\r\n'), 'utf8');
+    console.log(`    ${name}        ../ComfyUI → ..`);
+  }
+
+  // manke/ComfyUI/ 本体（只排除根下这几个数据目录）
   r = linkDir(
     COMFY_DIR,
     join(STAGE, 'ComfyUI'),
@@ -269,6 +294,30 @@ const make = () => {
     }
   }
   console.log(`    models          ${n} 个文件`);
+
+  // manke/ComfyUI/user/default/workflows/…
+  //
+  // 这是用户自己在 ComfyUI 里存的工作流，属于配置而非缓存：
+  // 换台机器部署后打开 ComfyUI 找不到自己存的模板，等于丢东西。
+  // output/ input/ temp/ 是运行时产物，那些才该排除。
+  const userWorkflows = join(COMFY_DIR, 'user', 'default', 'workflows');
+  if (existsSync(userWorkflows)) {
+    const rr = linkDir(
+      userWorkflows,
+      join(STAGE, 'ComfyUI', 'user', 'default', 'workflows'),
+      new Set(['__pycache__'])
+    );
+    console.log(`    user/workflows  ${rr.linked} 链接 / ${rr.copied} 复制`);
+  }
+
+  // manke/ComfyUI/alembic_db/…
+  // ComfyUI 的数据库迁移脚本。缺了它启动时报 missing revision，
+  // 虽然能跑但每次都在日志里刷错误。
+  const alembic = join(COMFY_DIR, 'alembic_db');
+  if (existsSync(alembic)) {
+    const rr = linkDir(alembic, join(STAGE, 'ComfyUI', 'alembic_db'), new Set(['__pycache__']));
+    console.log(`    alembic_db      ${rr.linked} 链接 / ${rr.copied} 复制`);
+  }
 
   // manke/ComfyUI/custom_nodes/…
   n = 0;
