@@ -576,8 +576,12 @@ $envPanel.Controls.Add((New-Label '点「检查」看看模板依赖的模型、
 $y += 206
 $form.Controls.Add((New-Label '运行日志' 20 $y 200 22 10.5 $TXT1 'Bold'))
 
-$openLogsBtn = New-Button '打开日志目录' 372 ($y - 4) 128 30
+$openLogsBtn = New-Button '打开日志目录' 286 ($y - 4) 116 30
 $form.Controls.Add($openLogsBtn)
+
+# 出问题时让用户一键拿到可发出去的报告，而不是让他自己翻日志目录找关键行
+$diagBtn = New-Button '生成诊断报告' 410 ($y - 4) 128 30
+$form.Controls.Add($diagBtn)
 
 $y += 30
 $logBox = New-Object Windows.Forms.TextBox
@@ -1373,6 +1377,49 @@ $openLogsBtn.Add_Click({
     Add-Log "已打开日志目录：$logs"
 }.GetNewClosure())
 
+$diagBtn.Add_Click({
+    try {
+        $diagScript = Join-Path $BD 'scripts\make-diagnostic.mjs'
+        if (-not (Test-Path $diagScript)) {
+            Add-Log 'X 缺少 scripts\make-diagnostic.mjs'
+            return
+        }
+        $nodeExe = Join-Path $BD 'node\node.exe'
+        if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
+
+        $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+        $outDir = [Environment]::GetFolderPath('Desktop')
+        if (-not (Test-Path $outDir)) { $outDir = $env:USERPROFILE }
+        $outFile = Join-Path $outDir "漫客诊断-$stamp.md"
+
+        Add-Log '> 正在收集诊断信息…'
+        $root = Resolve-WorkbenchRoot
+        if (-not $root) { $root = $BD }
+        $env:BEATDESIGN_ROOT = $root
+
+        $p = Start-Process -FilePath $nodeExe `
+            -ArgumentList @($diagScript, '--out', $outFile) `
+            -WorkingDirectory $root -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput (Join-Path $BD 'data\logs\diag-out.txt') `
+            -RedirectStandardError (Join-Path $BD 'data\logs\diag-err.txt')
+
+        if (Test-Path $outFile) {
+            $size = [math]::Round((Get-Item $outFile).Length / 1KB, 0)
+            Add-Log "OK 诊断报告已生成：$outFile（$size KB）"
+            Add-Log '  把它整份发给 AI，并说明你遇到的现象。'
+            Start-Process explorer.exe "/select,`"$outFile`""
+        } else {
+            Add-Log 'X 生成失败，看 data\logs\diag-err.txt'
+            $err = Join-Path $BD 'data\logs\diag-err.txt'
+            if (Test-Path $err) {
+                Get-Content $err -Tail 5 | ForEach-Object { Add-Log "  $_" }
+            }
+        }
+    } catch {
+        Add-Log ("X 生成诊断报告失败：" + $_.Exception.Message)
+    }
+}.GetNewClosure())
+
 # 环境自检
 #
 # 走 --json 而不是文本输出：node 输出 UTF-8，GUI 进程的控制台代码页是 936，
@@ -1524,7 +1571,8 @@ $form.Add_Shown({
     # 这种状态比弹窗严重得多，必须让用户看到。
     foreach ($svc in $SERVICES) {
         $wrapper = if ($svc.Key -eq 'comfyui') { 'comfyui' } else { 'workbench' }
-        $vbs = Join-Path $BD "launcherun-$wrapper.vbs"
+        $vbs = Join-Path $BD "launcher
+un-$wrapper.vbs"
         $task = Get-ScheduledTask -TaskName $svc.Task -ErrorAction SilentlyContinue
         if (-not $task -or $task.Actions.Count -eq 0) { continue }
         $isWscript = $task.Actions[0].Execute -and $task.Actions[0].Execute.ToLower().EndsWith('wscript.exe')
