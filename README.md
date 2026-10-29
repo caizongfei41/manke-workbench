@@ -19,7 +19,7 @@
 
 不想读源码，只想用起来？看这份：
 
-> **[漫客工作台 · 完整图文教程](docs/漫客工作台-完整图文教程.pdf)**（20 页）
+> **[漫客工作台 · 完整图文教程](docs/漫客工作台-完整图文教程.pdf)**（22 页）
 >
 > 下载 → 安装控制台 → 解压部署 → 首次启动 → 每个功能怎么用 → 常见问题。
 > 带截图，照着做就行。
@@ -28,6 +28,30 @@
 [夸克网盘 `manke-big`](https://pan.quark.cn/s/8d1ed42563d4)　口令 `~9d1f3bt6QP~:/`
 
 **控制台安装包**（25.7 MB）：`dist/漫客工作台控制台-Setup/漫客工作台控制台-Setup.exe`
+
+---
+
+## 从源码构建
+
+`src/paraglide/` 是编译产物、不入库，所以克隆后必须构建一次才有文案。
+
+```bash
+pnpm install
+pnpm build
+pnpm start
+```
+
+**注意**：`project.inlang/settings.json` 指向
+`./node_modules/@inlang/plugin-message-format/dist/index.js`。这个包是构建期依赖，
+`pnpm install` 会装好。如果构建时看到
+
+```
+ERROR [paraglide-js] SyntaxError / PluginImportError
+```
+
+说明插件没装上 —— 那一步失败时编译器**不会报错，只会产出空的语言包**，
+运行时表现为每个页面 `TypeError: (void 0) is not a function` 加 500。
+确认 `node_modules/@inlang/plugin-message-format/dist/index.js` 存在即可。
 
 ---
 
