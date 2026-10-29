@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
-  "releasedAt": "2026-10-26",
-  "note": "Hand-updated on each release. The updater compares this against the copy in the repo to decide whether the local install is behind."
+  "version": "1.1.0",
+  "releasedAt": "2026-10-29",
+  "note": "一键诊断报告；部署向导自动扫描分卷；完整图文教程（21 页）；修复六个阻止全新安装的故障。"
 }
