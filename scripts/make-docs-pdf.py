@@ -1,13 +1,12 @@
-# 生成两份图文 PDF 教程
+# 【已退役】改用 scripts/make-tutorial-pdf.py
 #
-#   python scripts/make-docs-pdf.py
+# 这个脚本产出「部署安装教程」和「使用教程」两份 PDF，读者要在两份之间来回翻。
+# 现在合并成一份 docs/漫客工作台-完整图文教程.pdf，按真实使用顺序走完整个流程。
+# 保留本文件仅作为排版函数的参考，不再单独运行。
 #
-# 产出：
+# 历史产出（已删除）：
 #   docs/漫客工作台-部署安装教程.pdf
 #   docs/漫客工作台-使用教程.pdf
-#
-# 用 reportlab 而不是浏览器打印：这台机器上没装 Edge/Chrome，
-# 夸克客户端也不支持 headless 打印，所以直接用 Python 画 PDF。
 
 import os
 import sys

@@ -34,6 +34,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  unlinkSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -261,14 +262,20 @@ const make = () => {
   // 但打包后源码直接铺在 manke/ComfyUI/ 下（没有第二层 ComfyUI），
   // 于是 ../ComfyUI 指向一个不存在的空目录，import comfy 直接失败。
   // 改写成 ..，让 sys.path[0] 落在 manke/ComfyUI。
+  //
+  // 必须先断开硬链接再写。linkDir 给 ._pth 建的是硬链接，两个路径指向同一份
+  // 数据；直接 writeFileSync 会把源环境的 E:\ComfyUI\python_embeded\python313._pth
+  // 一起改掉，导致本机 ComfyUI 再也起不来（import comfy 失败）。
+  // 删掉链接再写新文件，就只影响暂存区这份。
   const pthDir = join(STAGE, 'ComfyUI', 'python_embeded');
   for (const name of readdirSync(pthDir)) {
     if (!/^python\d+\._pth$/i.test(name)) continue;
     const pthPath = join(pthDir, name);
     const lines = readFileSync(pthPath, 'utf8').split(/\r?\n/);
     const fixed = lines.map((line) => (line.trim() === '../ComfyUI' ? '..' : line));
+    unlinkSync(pthPath);
     writeFileSync(pthPath, fixed.join('\r\n'), 'utf8');
-    console.log(`    ${name}        ../ComfyUI → ..`);
+    console.log(`    ${name}        ../ComfyUI → ..（已断开硬链接，源环境未受影响）`);
   }
 
   // manke/ComfyUI/ 本体（只排除根下这几个数据目录）
