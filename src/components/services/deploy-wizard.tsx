@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Download,
   FolderOpen,
+  FolderSearch,
   HardDriveDownload,
   Loader2,
   Package,
@@ -83,7 +84,42 @@ export function DeployWizard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  /** Directories that actually contain manke-bundle volumes, found by scanning. */
+  const [found, setFound] = useState<
+    { dir: string; count: number; bytes: number; complete: boolean; missing: number[] }[]
+  >([]);
+  const [scanning, setScanning] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /**
+   * Look for already-downloaded volumes instead of asking the user to type a
+   * path. People forget where the cloud client put a 211 GB download, and the
+   * folder name is not always obvious.
+   */
+  const scanForVolumes = useCallback(async () => {
+    setScanning(true);
+    try {
+      const res = await fetch('/api/app/deploy/scan', {
+        headers: { 'x-beatapi-workspace-request': '1' },
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { candidates: typeof found };
+        setFound(json.candidates ?? []);
+        // Auto-fill the first complete set: nothing is worse than showing a
+        // valid folder and still making the user copy the path by hand.
+        const best = json.candidates?.find((c) => c.complete);
+        if (best) setBundleDir(best.dir);
+      }
+    } catch {
+      /* scanning is a convenience; ignore failures */
+    } finally {
+      setScanning(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void scanForVolumes();
+  }, [scanForVolumes]);
 
   const load = useCallback(async () => {
     try {
@@ -249,6 +285,51 @@ export function DeployWizard() {
           <p className="mt-2 text-[12.5px] leading-5 text-[var(--beat-text-2)]">
             {m['services.deploy.downloadHint']({ code: '~9d1f3bt6QP~:/' })}
           </p>
+        </div>
+      )}
+
+      {/* Volumes already on disk: fill the path instead of asking for it. */}
+      {found.length > 0 && (
+        <div className="mb-4 rounded-[12px] border border-[var(--beat-border)] bg-[var(--beat-control)] p-3">
+          <p className="mb-2 flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--beat-text-1)]">
+            <FolderSearch className="size-3.5" />
+            {m['services.deploy.foundVolumes']()}
+            <button
+              type="button"
+              onClick={() => void scanForVolumes()}
+              disabled={scanning}
+              className="ml-auto inline-flex items-center gap-1 rounded-full border border-[var(--beat-border)] px-2 py-0.5 text-[11.5px] text-[var(--beat-text-2)] disabled:opacity-50"
+            >
+              <RefreshCw className={`size-3 ${scanning ? 'animate-spin' : ''}`} />
+              {m['services.deploy.rescan']()}
+            </button>
+          </p>
+          <ul className="space-y-1">
+            {found.map((c) => (
+              <li key={c.dir}>
+                <button
+                  type="button"
+                  onClick={() => setBundleDir(c.dir)}
+                  className={`flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left text-[12.5px] transition-colors ${
+                    bundleDir === c.dir
+                      ? 'bg-[var(--beat-accent)]/12 text-[var(--beat-accent)]'
+                      : 'hover:bg-[var(--beat-surface)] text-[var(--beat-text-2)]'
+                  }`}
+                >
+                  {c.complete ? (
+                    <CheckCircle2 className="size-3.5 shrink-0" />
+                  ) : (
+                    <AlertCircle className="size-3.5 shrink-0 text-[var(--beat-warn-text)]" />
+                  )}
+                  <span className="min-w-0 flex-1 truncate">{c.dir}</span>
+                  <span className="shrink-0 text-[11.5px] text-[var(--beat-text-3)]">
+                    {m['services.deploy.volumeCount']({ count: c.count, size: human(c.bytes) })}
+                    {!c.complete && ` · ${m['services.deploy.missingVolumes']({ volumes: c.missing.join(',') })}`}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
