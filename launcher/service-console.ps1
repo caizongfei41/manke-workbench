@@ -1135,13 +1135,7 @@ $updateApplyBtn.Add_Click({
         $nodeExe = Join-Path $BD 'node\node.exe'
         if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
 
-        $answer = [Windows.Forms.MessageBox]::Show(
-            "将从 GitHub 下载最新代码并重新构建。`n`n" +
-            "会更新：src / scripts / messages / public 等代码目录`n" +
-            "不会动：data\（你的作品和素材）、node_modules、.output`n`n" +
-            "构建失败会自动回滚。继续？",
-            '更新工作台', 'YesNo', 'Question')
-        if ($answer -ne 'Yes') { Add-Log '已取消。'; return }
+        Add-Log '  将下载最新代码并重新构建；data\ 里的作品不动，失败自动回滚。'
 
         $updateApplyBtn.Enabled = $false
         $updateApplyBtn.Text = '更新中'
@@ -1160,9 +1154,38 @@ $updateApplyBtn.Add_Click({
 
         Add-Log '  正在下载并构建，约 1~2 分钟，窗口保持可操作…'
 
+        # 解析工作台目录。
+        # $script:workbenchRoot 初值是 $null，只有 Resolve-WorkbenchRoot 会填；
+        # 但那个函数在 .GetNewClosure() 闭包里调用不到（返回空）。
+        # 直接拿未初始化的变量拼 -ArgumentList 会因数组含 $null 报参数验证失败。
+        $wbTarget = $null
+        $wbTask = Get-ScheduledTask -TaskName 'BD-Workbench' -ErrorAction SilentlyContinue
+        if ($wbTask -and $wbTask.Actions.Count -gt 0 -and $wbTask.Actions[0].WorkingDirectory) {
+            $wbCand = $wbTask.Actions[0].WorkingDirectory.Trim('"')
+            if (Test-Path (Join-Path $wbCand 'package.json')) { $wbTarget = $wbCand }
+        }
+        if (-not $wbTarget -and (Test-Path (Join-Path $BD 'package.json'))) { $wbTarget = $BD }
+        if (-not $wbTarget) {
+            foreach ($wbGuess in @(
+                (Join-Path $env:USERPROFILE 'Desktop\ComfyUI无线画布'),
+                'C:\Users\Administrator\Desktop\ComfyUI无线画布',
+                'D:\manke\workbench'
+            )) {
+                if (Test-Path (Join-Path $wbGuess 'package.json')) { $wbTarget = $wbGuess; break }
+            }
+        }
+        if (-not $wbTarget) {
+            Add-Log 'X 找不到工作台目录，先点「打开工作台」确认位置。'
+            $updateApplyBtn.Enabled = $true
+            $updateApplyBtn.Text = '更新工作台'
+            return
+        }
+        Add-Log ("  目标：" + $wbTarget)
+        Set-Content -Path (Join-Path $logDir '.update-running') -Value (Get-Date -Format 'o') -Encoding UTF8
+
         $script:updateProc = Start-Process -FilePath $nodeExe `
-            -ArgumentList @($script, '--root', $script:workbenchRoot) `
-            -WorkingDirectory $script:workbenchRoot `
+            -ArgumentList @($script, '--root', $wbTarget) `
+            -WorkingDirectory $wbTarget `
             -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput $script:updateOut `
             -RedirectStandardError $script:updateErr
@@ -1211,13 +1234,7 @@ $syncDepsBtn.Add_Click({
         }
 
         # 有缺失 → 问用户要不要下载
-        $answer = [Windows.Forms.MessageBox]::Show(
-            "检测到缺失的模型或节点包。`n`n" +
-            "补齐会下载文件到 ComfyUI 目录，体积可能很大（几十 GB 到几百 GB）。`n" +
-            "标了「需手动下载」的没有直链，要去网盘手动拿。`n`n" +
-            "现在开始补齐？",
-            '补齐依赖', 'YesNo', 'Question')
-        if ($answer -ne 'Yes') { Add-Log '已跳过补齐。'; return }
+        Add-Log '  将检查并下载缺失的模型/节点包，体积可能很大。'
 
         Add-Log '开始补齐依赖，进度看日志…'
         $syncDepsBtn.Enabled = $false
@@ -1343,10 +1360,7 @@ $deployBtn.Add_Click({
     $target = $script:pickResult
 
     Add-Log "解压到：$target\manke"
-    $answer = [Windows.Forms.MessageBox]::Show(
-        "将解压 $needGb GB 到：`n$target`n`n耗时约 20-40 分钟，中途不要关窗口。继续？",
-        '确认部署', 'YesNo', 'Question')
-    if ($answer -ne 'Yes') { Add-Log '已取消部署。'; return }
+    Add-Log '  将解压部署包到选定目录，耗时较长，中途不要关闭窗口。'
 
     Add-Log "开始部署（$needGb GB）→ $target"
     Add-Log '进度看下方日志，完成前不要关闭窗口…'
@@ -1595,36 +1609,36 @@ $timer.Add_Tick({
         }
     }
 
-    # 更新工作的异步收尾。和诊断一样：主线程绝不等待子进程。
-    if ($script:updateProc) {
-        $proc = $script:updateProc
-        $finished = $false
-        try { $finished = $proc.HasExited } catch { $finished = $true }
 
-        if ($finished) {
-            foreach ($f in @($script:updateOut, $script:updateErr)) {
-                if (Test-Path $f) {
-                    Get-Content $f -ErrorAction SilentlyContinue |
-                        Where-Object { $_.Trim() } |
-                        ForEach-Object { Add-Log ('  ' + $_.Trim()) }
-                }
+    # 更新工作台收尾。只看文件不看进程：
+    # Start-Process -PassThru 的对象在闭包里可能已失效。
+    $updDir = Join-Path $BD 'data\logs'
+    $updMark = Join-Path $updDir '.update-running'
+    if (Test-Path $updMark) {
+        $updOut = Join-Path $updDir 'update-out.txt'
+        $idleSec = 999
+        if (Test-Path $updOut) {
+            $idleSec = ((Get-Date) - (Get-Item $updOut).LastWriteTime).TotalSeconds
+        }
+        $elapsedMin = ((Get-Date) - (Get-Item $updMark).LastWriteTime).TotalMinutes
+        if ($idleSec -gt 20 -or $elapsedMin -gt 30) {
+            if (Test-Path $updOut) {
+                Get-Content $updOut -Encoding UTF8 -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Trim() } |
+                    ForEach-Object { Add-Log ('  ' + $_.Trim()) }
             }
-            $code = 0
-            try { $code = $proc.ExitCode } catch { }
-
-            if ($code -eq 0) {
+            $tailText = ''
+            if (Test-Path $updOut) {
+                $tailText = ((Get-Content $updOut -Encoding UTF8 -Tail 4 -ErrorAction SilentlyContinue) -join ' ')
+            }
+            if ($elapsedMin -gt 30) {
+                Add-Log 'X 更新超时（30 分钟）。'
+            } elseif ($tailText -match '更新完成') {
                 Add-Log '更新流程结束。要生效请点「全部停止」再「全部启动」。'
             } else {
-                Add-Log ("X 更新失败（退出码 " + $code + "），已自动回滚。")
+                Add-Log 'X 更新未完成，原因见上面的输出。'
             }
-            $script:updateProc = $null
-            $updateApplyBtn.Enabled = $true
-            $updateApplyBtn.Text = '更新工作台'
-            Update-Status
-        } elseif ((Get-Date) -gt $script:updateDeadline) {
-            Add-Log 'X 更新超时（30 分钟），停止进程。'
-            try { $proc.Kill() } catch { }
-            $script:updateProc = $null
+            Remove-Item $updMark -Force -ErrorAction SilentlyContinue
             $updateApplyBtn.Enabled = $true
             $updateApplyBtn.Text = '更新工作台'
         }
