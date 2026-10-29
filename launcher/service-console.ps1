@@ -1147,11 +1147,25 @@ $updateApplyBtn.Add_Click({
         $updateApplyBtn.Text = '更新中'
         $updateApplyBtn.Refresh()
 
-        $raw = & cmd /c "`"$nodeExe`" `"$script`" --root `"$script:workbenchRoot`" 2>&1"
-        $text = ($raw | Out-String).Trim()
-        foreach ($line in ($text -split "`r?`n")) {
-            if ($line.Trim()) { Add-Log ('  ' + $line.Trim()) }
-        }
+        # 异步执行。原本这里是 & cmd /c 同步等待 apply-update.mjs ——
+        # 它内部要跑 pnpm install + pnpm build，一分钟起步、CPU 全程占满，
+        # 期间 WinForms 消息泵完全停止，窗口被系统标成「未响应」，
+        # 用户只能强制关闭，而关闭会把进行中的构建留在半截状态。
+        $logDir = Join-Path $BD 'data\logs'
+        if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir | Out-Null }
+        $script:updateOut = Join-Path $logDir 'update-out.txt'
+        $script:updateErr = Join-Path $logDir 'update-err.txt'
+        Remove-Item $script:updateOut, $script:updateErr -Force -ErrorAction SilentlyContinue
+        $script:updateDeadline = (Get-Date).AddMinutes(30)
+
+        Add-Log '  正在下载并构建，约 1~2 分钟，窗口保持可操作…'
+
+        $script:updateProc = Start-Process -FilePath $nodeExe `
+            -ArgumentList @($script, '--root', $script:workbenchRoot) `
+            -WorkingDirectory $script:workbenchRoot `
+            -WindowStyle Hidden -PassThru `
+            -RedirectStandardOutput $script:updateOut `
+            -RedirectStandardError $script:updateErr
         Add-Log '更新流程结束。要生效请点「全部停止」再「全部启动」。'
     } catch {
         Add-Log "✗ 更新失败：$($_.Exception.Message)"
@@ -1579,6 +1593,41 @@ $timer.Add_Tick({
             $script:diagOutFile = $null
             $diagBtn.Enabled = $true
             $diagBtn.Text = '生成诊断报告'
+        }
+    }
+
+    # 更新工作的异步收尾。和诊断一样：主线程绝不等待子进程。
+    if ($script:updateProc) {
+        $proc = $script:updateProc
+        $finished = $false
+        try { $finished = $proc.HasExited } catch { $finished = $true }
+
+        if ($finished) {
+            foreach ($f in @($script:updateOut, $script:updateErr)) {
+                if (Test-Path $f) {
+                    Get-Content $f -ErrorAction SilentlyContinue |
+                        Where-Object { $_.Trim() } |
+                        ForEach-Object { Add-Log ('  ' + $_.Trim()) }
+                }
+            }
+            $code = 0
+            try { $code = $proc.ExitCode } catch { }
+
+            if ($code -eq 0) {
+                Add-Log '更新流程结束。要生效请点「全部停止」再「全部启动」。'
+            } else {
+                Add-Log ("X 更新失败（退出码 " + $code + "），已自动回滚。")
+            }
+            $script:updateProc = $null
+            $updateApplyBtn.Enabled = $true
+            $updateApplyBtn.Text = '更新工作台'
+            Update-Status
+        } elseif ((Get-Date) -gt $script:updateDeadline) {
+            Add-Log 'X 更新超时（30 分钟），停止进程。'
+            try { $proc.Kill() } catch { }
+            $script:updateProc = $null
+            $updateApplyBtn.Enabled = $true
+            $updateApplyBtn.Text = '更新工作台'
         }
     }
 })
