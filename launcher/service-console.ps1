@@ -1166,7 +1166,6 @@ $updateApplyBtn.Add_Click({
             -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput $script:updateOut `
             -RedirectStandardError $script:updateErr
-        Add-Log '更新流程结束。要生效请点「全部停止」再「全部启动」。'
     } catch {
         Add-Log "✗ 更新失败：$($_.Exception.Message)"
     } finally {
