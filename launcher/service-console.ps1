@@ -1392,31 +1392,45 @@ $diagBtn.Add_Click({
         if (-not (Test-Path $outDir)) { $outDir = $env:USERPROFILE }
         $outFile = Join-Path $outDir "漫客诊断-$stamp.md"
 
-        Add-Log '> 正在收集诊断信息…'
         $root = Resolve-WorkbenchRoot
         if (-not $root) { $root = $BD }
         $env:BEATDESIGN_ROOT = $root
 
-        $p = Start-Process -FilePath $nodeExe `
-            -ArgumentList @($diagScript, '--out', $outFile) `
-            -WorkingDirectory $root -NoNewWindow -Wait -PassThru `
-            -RedirectStandardOutput (Join-Path $BD 'data\logs\diag-out.txt') `
-            -RedirectStandardError (Join-Path $BD 'data\logs\diag-err.txt')
+        $logDir = Join-Path $BD 'data\logs'
+        if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir | Out-Null }
+        $stdout = Join-Path $logDir 'diag-out.txt'
+        $stderr = Join-Path $logDir 'diag-err.txt'
+        Remove-Item $stdout, $stderr -Force -ErrorAction SilentlyContinue
 
-        if (Test-Path $outFile) {
-            $size = [math]::Round((Get-Item $outFile).Length / 1KB, 0)
-            Add-Log "OK 诊断报告已生成：$outFile（$size KB）"
-            Add-Log '  把它整份发给 AI，并说明你遇到的现象。'
-            Start-Process explorer.exe "/select,`"$outFile`""
-        } else {
-            Add-Log 'X 生成失败，看 data\logs\diag-err.txt'
-            $err = Join-Path $BD 'data\logs\diag-err.txt'
-            if (Test-Path $err) {
-                Get-Content $err -Tail 5 | ForEach-Object { Add-Log "  $_" }
-            }
-        }
+        # 绝不能用 -Wait。
+        #
+        # 这个按钮跑在 WinForms 的消息泵里。Start-Process -NoNewWindow -Wait
+        # 会同步等待子进程，期间不处理任何消息 —— 窗口立刻变成「未响应」，
+        # 用户只能强制关掉。诊断脚本正好是最慢的操作：它要跑 powershell
+        # 查显卡、查磁盘、查计划任务，还要跑一次完整的环境自检，几十秒起步。
+        #
+        # 改成 fire-and-forget，然后用已有那个 2 秒 Timer 轮询结果。
+        $script:diagOutFile = $outFile
+        $script:diagStdout = $stdout
+        $script:diagStderr = $stderr
+        $script:diagStarted = Get-Date
+        $script:diagDeadline = (Get-Date).AddMinutes(5)
+        $script:diagFailStreak = 0
+
+        Add-Log '> 正在收集诊断信息（约 30 秒）…'
+        $diagBtn.Enabled = $false
+        $diagBtn.Text = '收集中…'
+
+        Start-Process -FilePath $nodeExe `
+            -ArgumentList @($diagScript, '--out', $outFile) `
+            -WorkingDirectory $root `
+            -WindowStyle Hidden `
+            -RedirectStandardOutput $stdout `
+            -RedirectStandardError $stderr | Out-Null
     } catch {
         Add-Log ("X 生成诊断报告失败：" + $_.Exception.Message)
+        $diagBtn.Enabled = $true
+        $diagBtn.Text = '生成诊断报告'
     }
 }.GetNewClosure())
 
@@ -1537,7 +1551,37 @@ $checkBtn.Add_Click({
 # 每 2 秒刷新一次；成本只有端口探测（≤120ms ×2），HTTP 走异步。
 $timer = New-Object Windows.Forms.Timer
 $timer.Interval = 2000
-$timer.Add_Tick({ Update-Status })
+$timer.Add_Tick({
+    Update-Status
+
+    # 诊断报告的异步收尾。
+    # 按钮只负责启动进程，结果在这里轮询 —— 主线程要一直能响应消息，
+    # 否则窗口会显示「未响应」。
+    if ($script:diagOutFile) {
+        $done = Test-Path $script:diagOutFile
+        $timedOut = (Get-Date) -gt $script:diagDeadline
+
+        if ($done) {
+            $size = [math]::Round((Get-Item $script:diagOutFile).Length / 1KB, 0)
+            Add-Log "OK 诊断报告已生成（$size KB）"
+            Add-Log "  $($script:diagOutFile)"
+            Add-Log '  把它整份发给 AI，并说明你遇到的现象。'
+            Start-Process explorer.exe "/select,`"$($script:diagOutFile)`""
+            $script:diagOutFile = $null
+            $diagBtn.Enabled = $true
+            $diagBtn.Text = '生成诊断报告'
+        } elseif ($timedOut) {
+            Add-Log 'X 诊断报告超时（5 分钟）。'
+            if (Test-Path $script:diagStderr) {
+                Get-Content $script:diagStderr -Tail 5 -ErrorAction SilentlyContinue |
+                    ForEach-Object { Add-Log "  $_" }
+            }
+            $script:diagOutFile = $null
+            $diagBtn.Enabled = $true
+            $diagBtn.Text = '生成诊断报告'
+        }
+    }
+})
 $timer.Start()
 
 $closeBtn.Add_Click({ $form.Close() }.GetNewClosure())
