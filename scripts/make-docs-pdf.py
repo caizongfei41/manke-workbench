@@ -283,7 +283,7 @@ def build_deploy(path: Path):
     story.extend([H3("需要准备的东西"), TABLE([
         ["内容", "大小", "来源"],
         ["控制台安装程序", "25.6 MB", "漫客工作台控制台-Setup.exe"],
-        ["部署包", "210.7 GB", "夸克网盘，7 个分卷"],
+        ["部署包", "211.1 GB", "夸克网盘，7 个分卷"],
     ], widths=[48, 30, 92])])
 
     a(P("控制台只管「装什么、装到哪」，本身不含模型。真正的 ComfyUI、模型、节点包都在部署包里。"
@@ -319,7 +319,7 @@ def build_deploy(path: Path):
     a(PageBreak())
     story.extend(H2("3. 第二步：下载部署包"))
 
-    a(P("部署包在夸克网盘上，共 <b>7 个分卷，210.7 GB</b>。"))
+    a(P("部署包在夸克网盘上，共 <b>7 个分卷，211.1 GB</b>。"))
     a(TABLE([
         ["文件", "大小", "说明"],
         ["manke-bundle.7z.001", "34.00 GB", "开头"],
@@ -361,7 +361,7 @@ def build_deploy(path: Path):
     story.extend([H3("第 1 步：检查部署包"),
                   P("点 <b>「检查部署包」</b>。如果分卷不在默认的 deploy\\ 目录里，会弹出文件夹选择框，"
                     "选你放分卷的那个目录。检查通过后日志显示："),
-                  CODE("""volumes: 7  |  210.7 GB  |  complete
+                  CODE("""volumes: 7  |  211.1 GB  |  complete
 extract to: D:\\
 [done] target drive has 425 GB free
 ready to deploy""")])
@@ -486,11 +486,11 @@ Remove-Item "D:\\manke-deploy" -Recurse -Force""")])
     a(TABLE([
         ["阶段", "占用"],
         ["控制台", "约 100 MB"],
-        ["7 个分卷", "210.7 GB"],
+        ["7 个分卷", "211.1 GB"],
         ["解压后", "211 GB"],
         ["峰值合计", "<b>约 422 GB</b>"],
     ], widths=[85, 85]))
-    a(P("解压完成并验证通过后，可以删掉那 7 个分卷，省回 210.7 GB。"
+    a(P("解压完成并验证通过后，可以删掉那 7 个分卷，省回 211.1 GB。"
         "建议保留至少一周，确认系统稳定再删。", "note"))
 
     doc = Doc(path, "漫客工作台 · 部署安装教程")

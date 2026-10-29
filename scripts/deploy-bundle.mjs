@@ -5,7 +5,7 @@
 //   node scripts/deploy-bundle.mjs --deploy --to "D:\\" --dry-run
 //
 // 部署包现在是一个多卷档案：
-//   manke-bundle.7z.001 … .007   共 210.7 GB
+//   manke-bundle.7z.001 … .007   共 211.1 GB
 // 解压后得到：
 //   <to>/manke/ComfyUI/      可运行的 ComfyUI（自带 Python、模型、节点）
 //   <to>/manke/workbench/    工作台源码
@@ -161,7 +161,7 @@ const inspect = () => {
     freeBytes: free,
     volumes,
     legacyBundles: legacy,
-    // 解压后大约占多少：档案 210.7 GB 解开后 211 GB，按卷大小估
+    // 解压后大约占多少：档案 211.1 GB 解开后 211 GB，按卷大小估
     estimatedExtractBytes: volumes.bytes,
   };
 };
