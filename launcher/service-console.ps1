@@ -1664,14 +1664,20 @@ $form.Add_Shown({
     # 这种状态比弹窗严重得多，必须让用户看到。
     foreach ($svc in $SERVICES) {
         $wrapper = if ($svc.Key -eq 'comfyui') { 'comfyui' } else { 'workbench' }
-        $vbs = Join-Path $BD "launcher
-un-$wrapper.vbs"
+        $vbs = Join-Path $BD "launcher\run-$wrapper.vbs"
         $task = Get-ScheduledTask -TaskName $svc.Task -ErrorAction SilentlyContinue
         if (-not $task -or $task.Actions.Count -eq 0) { continue }
         $isWscript = $task.Actions[0].Execute -and $task.Actions[0].Execute.ToLower().EndsWith('wscript.exe')
         if ($isWscript -and -not (Test-Path $vbs)) {
-            Add-Log ("⚠ " + $svc.Name + " 的启动包装器缺失：" + $vbs)
-            Add-Log '  点「全部启动」会一直卡在启动中。请重装控制台。'
+            # 只在真的起不来时提示。Repair-TaskWindow 自己会在文件存在时
+            # 直接返回（L144），这里再调一次没有意义，反而因为调用时序
+            # 产生误报 —— 更新过程中 launcher 被覆盖的那一瞬间正好读不到文件。
+            # 改成延迟确认：等一秒再判断，避免和更新写入撞车。
+            Start-Sleep -Milliseconds 1000
+            if (-not (Test-Path $vbs)) {
+                Add-Log ("X " + $svc.Name + " 的启动包装器缺失：" + $vbs)
+                Add-Log '  点「全部启动」会一直卡在启动中。重装控制台即可（作品不受影响）。'
+            }
         }
     }
 
