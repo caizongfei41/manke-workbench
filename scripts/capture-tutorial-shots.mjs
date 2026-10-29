@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 const APP = 'http://127.0.0.1:3020';
 const OUT = 'C:\\Users\\Administrator\\Desktop\\ComfyUI无线画布\\.verify\\shots\\tutorial';
-const CDP_PORT = 9231;
+const CDP_PORT = 9232;
 
 mkdirSync(OUT, { recursive: true });
 
