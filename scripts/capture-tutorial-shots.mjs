@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 const APP = 'http://127.0.0.1:3020';
 const OUT = 'C:\\Users\\Administrator\\Desktop\\ComfyUI无线画布\\.verify\\shots\\tutorial';
-const CDP_PORT = 9232;
+const CDP_PORT = 9233;
 
 mkdirSync(OUT, { recursive: true });
 
@@ -18,7 +18,7 @@ const PAGES = [
   { path: '/zh/projects', name: '04-projects', label: '项目' },
   { path: '/zh/assets', name: '05-assets', label: '素材库' },
   { path: '/zh/services', name: '06-services', label: '服务控制台' },
-  { path: '/zh/settings', name: '07-settings', label: '设置' },
+  { path: '/zh/studio', name: '07-studio-detail', label: '创作台详情' },
 ];
 
 const connect = async () => {
