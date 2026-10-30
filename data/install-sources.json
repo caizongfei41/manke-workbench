@@ -37,8 +37,8 @@
     {
       "name": "漫客工作台 · 控制台安装包 + 图文教程（69.22 MB）",
       "kind": "quark",
-      "url": "https://pan.quark.cn/s/4314730b6178",
-      "code": "~aaaa3bv3Vb~:/",
+      "url": "https://pan.quark.cn/s/b6bfa6e4d9ac",
+      "code": "~69363bvVoR~:/",
       "note": "控制台安装包（67.8 MB，自带 7-Zip 和 14 个首页展示素材，不要求预装任何东西）加一份 22 页图文教程。展示素材会写进工作台目录，旧部署包也能补齐。不含模型和 ComfyUI 本体 —— 那些在下面的部署包里。",
       "covers": "控制台 + 教程",
       "consoleBundle": true
