@@ -319,6 +319,9 @@ function New-Button([string]$text, [int]$x, [int]$y, [int]$w, [int]$h, [bool]$pr
     $b.Location = New-Object Drawing.Point($x, $y)
     $b.Size = New-Object Drawing.Size($w, $h)
     $b.FlatStyle = 'Flat'
+    # 关掉系统视觉样式背景。默认 True 时 WinForms 会用系统主题给按钮
+    # 上色，BackColor 被静默忽略 —— 颜色属性读出来对，屏幕上却是系统蓝。
+    $b.UseVisualStyleBackColor = $false
     $b.FlatAppearance.BorderSize = 1
     $b.FlatAppearance.BorderColor = $(if ($primary) { $ACCENTL } else { $LINE })
     $b.FlatAppearance.MouseOverBackColor = $(if ($primary) { $ACCENTD } else { $BTNHOV })
@@ -375,7 +378,13 @@ function New-Label([string]$text, [int]$x, [int]$y, [int]$w, [int]$h, [single]$s
 $W = 520
 $form = New-Object Windows.Forms.Form
 $form.Text = '漫客工作台 · 服务控制台'
-$form.FormBorderStyle = 'None'
+# 用系统标题栏，不用无边框 + 自绘。
+#
+# 无边框窗口会让 DWM 走不同的合成路径，虚拟显示驱动（向日葵 OrayIddDriver、
+# GameViewer 等）在这条路径上会把窗口内容画成纯色块 —— 实测 DrawToBitmap
+# 离屏渲染完全正常，屏幕上却是蓝色方块，因为问题出在合成而不是绘制。
+# 用系统标题栏就没有这个分支，代价是标题栏跟着系统主题走。
+$form.FormBorderStyle = 'FixedSingle'
 $form.StartPosition = 'CenterScreen'
 $form.BackColor = $BG
 $form.Font = F 9
@@ -396,8 +405,10 @@ if (Test-Path $iconPath) { try { $form.Icon = New-Object Drawing.Icon($iconPath)
 $bar = New-Object Windows.Forms.Panel
 $bar.Location = New-Object Drawing.Point(0, 0)
 $bar.Size = New-Object Drawing.Size($W, 44)
+# 系统标题栏已提供关闭/最小化，这个自绘条不再显示。
+# 保留控件本身是为了不拆已经有的事件绑定。
 $bar.BackColor = $BG
-$form.Controls.Add($bar)
+# $form.Controls.Add($bar)
 
 if (Test-Path $iconPath) {
     try {
@@ -420,6 +431,7 @@ $closeBtn.Text = '✕'
 $closeBtn.Location = New-Object Drawing.Point(($W - 44), 0)
 $closeBtn.Size = New-Object Drawing.Size(44, 44)
 $closeBtn.FlatStyle = 'Flat'
+    $closeBtn.UseVisualStyleBackColor = $false
 $closeBtn.FlatAppearance.BorderSize = 0
 $closeBtn.FlatAppearance.MouseOverBackColor = $BAD
 $closeBtn.BackColor = $BG
@@ -433,6 +445,7 @@ $minBtn.Text = '—'
 $minBtn.Location = New-Object Drawing.Point(($W - 88), 0)
 $minBtn.Size = New-Object Drawing.Size(44, 44)
 $minBtn.FlatStyle = 'Flat'
+    $minBtn.UseVisualStyleBackColor = $false
 $minBtn.FlatAppearance.BorderSize = 0
 $minBtn.FlatAppearance.MouseOverBackColor = $BTNHOV
 $minBtn.BackColor = $BG
@@ -459,7 +472,7 @@ foreach ($ctl in @($bar, $barTitle)) {
 }
 
 # ── 页头
-$y = 62
+$y = 24   # 原本 62 是给自绘标题栏留的 44px，现在用系统标题栏
 $form.Controls.Add((New-Label '服务控制台' 20 $y 300 30 16 $TXT1 'Bold'))
 $form.Controls.Add((New-Label '本机运行，不随开机启动；需要时在这里手动启停。' 20 ($y + 34) 460 20 9 $TXT3))
 $y += 70
