@@ -34,6 +34,7 @@ $ErrorActionPreference = 'Continue'
 
 # ---------------------------------------------------------------- 配色
 
+
 function C([string]$hex) {
     $h = $hex.TrimStart('#')
     return [Drawing.Color]::FromArgb(
@@ -42,21 +43,25 @@ function C([string]$hex) {
         [Convert]::ToInt32($h.Substring(4, 2), 16))
 }
 
-$BG      = C '#09090A'   # 窗口底
-$CARD    = C '#131416'   # 卡片底
-$CARD2   = C '#1A1B1F'   # 次级面（日志）
-$LINE    = C '#26272B'   # 描边
-$TXT1    = C '#F4F4F5'
-$TXT2    = C '#A3A3AB'
-$TXT3    = C '#71717A'
-$ACCENT  = C '#38BDF8'
-$ACCENTD = C '#12242E'
-$ACCENTL = C '#1E4C63'
-$OK      = C '#34D399'
-$WARN    = C '#FBBF24'
-$BAD     = C '#F87171'
-$BTN     = C '#1C1D21'
-$BTNHOV  = C '#26272C'
+# ── 浅色玻璃配色
+#
+# 底色取极浅的冷灰，让白色卡片浮起来；层次靠 1px 描边 + 投影，
+# 而不是深色对比。强调色沿用工作台界面的青色，保持同一套产品语言。
+$BG      = C '#F1F4F9'   # 窗口底：偏冷的浅灰
+$CARD    = C '#FFFFFF'   # 卡片：纯白，玻璃面
+$CARD2   = C '#F8FAFC'   # 次级面（日志、内嵌区）
+$LINE    = C '#E2E8F0'   # 描边：浅灰蓝
+$TXT1    = C '#0F172A'   # 主文字：近黑
+$TXT2    = C '#475569'   # 次文字
+$TXT3    = C '#94A3B8'   # 弱文字
+$ACCENT  = C '#0891B2'   # 强调：青
+$ACCENTD = C '#ECFEFF'   # 强调底（浅青，主按钮背景）
+$ACCENTL = C '#A5F3FC'   # 强调描边
+$OK      = C '#059669'
+$WARN    = C '#D97706'
+$BAD     = C '#DC2626'
+$BTN     = C '#FFFFFF'   # 按钮：白底
+$BTNHOV  = C '#F1F5F9'   # 悬停：浅灰
 
 $FONTFACE = 'Microsoft YaHei UI'
 function F([single]$size, [string]$style = 'Regular') {
@@ -330,11 +335,25 @@ function New-Card([int]$x, [int]$y, [int]$w, [int]$h) {
     $p.Location = New-Object Drawing.Point($x, $y)
     $p.Size = New-Object Drawing.Size($w, $h)
     $p.BackColor = $CARD
+    # 玻璃层次：圆角 + 1px 浅描边，靠下方的浅灰背景衬托卡片浮起。
+    # WinForms 的 Panel 没有原生投影，用圆角描边表达层次比造阴影更轻。
     $p.Add_Paint({
         param($s, $e)
+        $g = $e.Graphics
+        $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
+        $w = $s.Width - 1
+        $h = $s.Height - 1
+        $r = 12
+        $path = New-Object Drawing.Drawing2D.GraphicsPath
+        $path.AddArc(0, 0, $r, $r, 180, 90)
+        $path.AddArc($w - $r, 0, $r, $r, 270, 90)
+        $path.AddArc($w - $r, $h - $r, $r, $r, 0, 90)
+        $path.AddArc(0, $h - $r, $r, $r, 90, 90)
+        $path.CloseFigure()
         $pen = New-Object Drawing.Pen($LINE, 1)
-        $e.Graphics.DrawRectangle($pen, 0, 0, $s.Width - 1, $s.Height - 1)
+        $g.DrawPath($pen, $path)
         $pen.Dispose()
+        $path.Dispose()
     }.GetNewClosure())
     return $p
 }
@@ -362,6 +381,13 @@ $form.BackColor = $BG
 $form.Font = F 9
 $form.KeyPreview = $true
 $form.ShowInTaskbar = $true
+
+# 暂停布局直到所有控件加完。不这么做，每加一个控件都会触发一次重排与
+# 重绘，用户会看到窗口从空白逐渐长出来 —— 视频里那些蓝色块就是控件
+# 外框先画、文字还没渲染时的中间状态。
+# 表单也要双缓冲，否则整窗重绘时子控件会逐个闪一下
+
+$form.SuspendLayout()
 
 $iconPath = Join-Path $BD 'assets\branding\app-icon.ico'
 if (Test-Path $iconPath) { try { $form.Icon = New-Object Drawing.Icon($iconPath) } catch { } }
@@ -450,7 +476,7 @@ foreach ($svc in $SERVICES) {
     $dot = New-Object Windows.Forms.Panel
     $dot.Location = New-Object Drawing.Point(18, 26)
     $dot.Size = New-Object Drawing.Size(10, 10)
-    $dot.BackColor = $CARD
+    $dot.BackColor = $CARD   # 与卡片同色，看起来就是透明的
     $dot.Add_Paint({
         param($s, $e)
         $e.Graphics.SmoothingMode = 'AntiAlias'
@@ -590,7 +616,7 @@ $logBox.Size = New-Object Drawing.Size(480, 104)
 $logBox.Multiline = $true
 $logBox.ReadOnly = $true
 $logBox.ScrollBars = 'Vertical'
-$logBox.BorderStyle = 'FixedSingle'
+    $logBox.BorderStyle = 'None'   # 浅色主题下系统边框太硬，靠卡片描边分层
 $logBox.BackColor = $CARD2
 $logBox.ForeColor = $TXT2
 $logBox.Font = New-Object Drawing.Font($FONTFACE, 8.5)
@@ -1686,11 +1712,18 @@ $form.Add_Shown({
             # 直接返回（L144），这里再调一次没有意义，反而因为调用时序
             # 产生误报 —— 更新过程中 launcher 被覆盖的那一瞬间正好读不到文件。
             # 改成延迟确认：等一秒再判断，避免和更新写入撞车。
-            Start-Sleep -Milliseconds 1000
-            if (-not (Test-Path $vbs)) {
-                Add-Log ("X " + $svc.Name + " 的启动包装器缺失：" + $vbs)
-                Add-Log '  点「全部启动」会一直卡在启动中。重装控制台即可（作品不受影响）。'
-            }
+            # 不在这里同步等待 —— Add_Shown 跑在窗口绘制之前，sleep
+            # 会让界面卡成一片色块。后台等 1.2 秒再判断并写日志。
+            $chkPath = $vbs
+            $chkName = $svc.Name
+            $chkLog = ${function:Add-Log}
+            $null = [System.Threading.Tasks.Task]::Run([Action]{
+                Start-Sleep -Milliseconds 1200
+                if (-not (Test-Path $chkPath)) {
+                    & $chkLog ("X " + $chkName + " 的启动包装器缺失：" + $chkPath)
+                    & $chkLog '  点「全部启动」会一直卡在启动中。重装控制台即可（作品不受影响）。'
+                }
+            })
         }
     }
 
@@ -1703,6 +1736,9 @@ $form.Add_KeyDown({
     param($s, $e)
     if ($e.KeyCode -eq 'Escape') { $form.Close() }
 }.GetNewClosure())
+
+# 一次性完成布局和绘制，再交给消息循环
+$form.ResumeLayout($true)
 
 [void]$form.ShowDialog()
 
