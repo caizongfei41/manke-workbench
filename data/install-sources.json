@@ -35,6 +35,15 @@
   },
   "bundles": [
     {
+      "name": "漫客工作台 · 控制台安装包 + 图文教程（28.8 MB）",
+      "kind": "quark",
+      "url": "https://pan.quark.cn/s/e90a11e7ed70",
+      "code": "~7caf3buhl5~:/",
+      "note": "控制台安装包（25.7 MB，装完即可用它启停服务）加一份 22 页的图文教程。不含模型和 ComfyUI 本体 —— 那些在下面的部署包里。",
+      "covers": "控制台 + 教程",
+      "consoleBundle": true
+    },
+    {
       "name": "漫客工作台 · 一键部署包（211.06 GB，7 个分卷）",
       "kind": "quark",
       "url": "https://pan.quark.cn/s/8d1ed42563d4",
