@@ -1,4 +1,4 @@
-﻿// 生成 Setup.exe：带安装向导的安装程序
+// 生成 Setup.exe：带安装向导的安装程序
 //
 //   node scripts/make-setup-exe.mjs
 //
@@ -133,18 +133,25 @@ static class SetupApp
             Directory.CreateDirectory(workDir);
             try
             {
-                string sevenZip = null;
-                string[] tries = {
-                    @"C:\Program Files\7-Zip\7z.exe",
-                    @"C:\Program Files (x86)\7-Zip\7z.exe",
-                    Path.Combine(workDir, "files", "node", "7z.exe")
-                };
-                foreach (var t in tries) { if (File.Exists(t)) { sevenZip = t; break; } }
-
+                // 先释放随安装包内嵌的 7z。安装包自己带着解压工具，
+                // 用户不该为了装这个软件先去装别的。
+                string bundled7z = ExtractBundled7z(workDir);
+                
+                string sevenZip = bundled7z;
                 if (sevenZip == null)
                 {
-                    MessageBox.Show("需要 7-Zip 才能解压安装包。\n\n请先安装：https://www.7-zip.org/",
-                        "漫客工作台", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    // 兜底：内嵌的解不开才试系统装的
+                    string[] tries = {
+                        @"C:\Program Files\7-Zip\7z.exe",
+                        @"C:\Program Files (x86)\7-Zip\7z.exe"
+                    };
+                    foreach (var t in tries) { if (File.Exists(t)) { sevenZip = t; break; } }
+                }
+                
+                if (sevenZip == null)
+                {
+                    MessageBox.Show("安装包损坏：内置的解压程序无法释放。\n\n请重新下载安装包。",
+                        "漫客工作台", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
 
