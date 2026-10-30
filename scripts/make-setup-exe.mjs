@@ -1,4 +1,4 @@
-// 生成 Setup.exe：带安装向导的安装程序
+﻿// 生成 Setup.exe：带安装向导的安装程序
 //
 //   node scripts/make-setup-exe.mjs
 //
@@ -185,6 +185,37 @@ static class SetupApp
             return false;
         }
     }
+
+        /// <summary>
+        /// 把内嵌的 7z.exe 与依赖 dll 释放到目录，返回 exe 路径。
+        /// 失败返回 null（调用方会退回系统安装的 7-Zip）。
+        ///
+        /// 为什么必须自带：安装器要解 payload 才能装东西，而 payload 是 7z 格式。
+        /// 之前它去临时目录找 7z.exe，可那个目录解压前是空的 —— 死循环。
+        /// </summary>
+        static string ExtractBundled7z(string dir)
+        {
+            try
+            {
+                var asm = Assembly.GetExecutingAssembly();
+                string[] names = { "7z.exe", "7z.dll", "7-zip.dll" };
+                foreach (var name in names)
+                {
+                    using (Stream s = asm.GetManifestResourceStream("sevenzip." + name))
+                    {
+                        if (s == null) return null;
+                        string dst = Path.Combine(dir, name);
+                        using (var f = File.Create(dst)) { s.CopyTo(f); }
+                    }
+                }
+                string exe = Path.Combine(dir, "7z.exe");
+                return File.Exists(exe) ? exe : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
 }
 
 /// 三页式安装向导
@@ -543,6 +574,21 @@ const main = () => {
   const iconArg = existsSync(ICON) ? ['/win32icon:' + ICON] : [];
 
   try {
+  // 7z.exe + 两个 dll 一起嵌进 exe：安装包必须自带解压工具。
+  // 不自带的话，用户要先装 7-Zip 才能装这个软件 —— 死循环。
+  const sevenZipDir = 'C:\\Program Files\\7-Zip';
+  const sevenZipFiles = ['7z.exe', '7z.dll', '7-zip.dll'];
+  const sevenZipMissing = sevenZipFiles.filter((n) => !existsSync(join(sevenZipDir, n)));
+  if (sevenZipMissing.length) {
+    console.error('  缺少 7-Zip 组件：' + sevenZipMissing.join(', '));
+    console.error('  位置：' + sevenZipDir);
+    return 1;
+  }
+  const sevenZipResources = sevenZipFiles.map(
+    (n) => '/resource:' + join(sevenZipDir, n) + ',sevenzip.' + n
+  );
+  console.log('  内嵌 7z 组件：' + sevenZipFiles.length + ' 个');
+
     execFileSync(
       csc,
       [
@@ -554,6 +600,7 @@ const main = () => {
         '/reference:System.Drawing.dll',
         '/reference:System.Core.dll',
         '/resource:' + PAYLOAD + ',payload.7z',
+        ...sevenZipResources,
         '/out:' + exe,
         join(build, 'Setup.cs'),
       ],
