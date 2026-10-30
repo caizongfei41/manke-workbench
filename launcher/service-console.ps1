@@ -1795,15 +1795,15 @@ $checkBtn.Add_Click({
         # 刚点过「启动」时 ComfyUI 要 30-90 秒才监听 8188，
         # 立刻自检会误报「无响应」——进程明明在起，看结果却像是坏了。
         # 先等端口，最多 90 秒；等不到也继续检查，让用户看到真实状态。
-        if (-not (Test-Port 8188)) {
+        if (-not (Test-PortOpen 8188)) {
             $pyProcs = @(Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue)
             if ($pyProcs.Count -gt 0) {
                 Add-Log '  ComfyUI 正在启动，等它就绪（最多 90 秒）…'
                 for ($w = 0; $w -lt 30; $w++) {
                     Start-Sleep -Seconds 3
-                    if (Test-Port 8188) { Add-Log "  ComfyUI 已就绪（等了 $(($w + 1) * 3) 秒）"; break }
+                    if (Test-PortOpen 8188) { Add-Log "  ComfyUI 已就绪（等了 $(($w + 1) * 3) 秒）"; break }
                 }
-                if (-not (Test-Port 8188)) { Add-Log '  ✗ 90 秒内没起来，继续检查其余项' }
+                if (-not (Test-PortOpen 8188)) { Add-Log '  ✗ 90 秒内没起来，继续检查其余项' }
             }
         }
 
