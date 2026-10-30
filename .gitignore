@@ -92,6 +92,10 @@ src/config/db/schema.ts
 *.webm
 *.wav
 *.flac
+# ...except the showcase clips, which ship with the product. Without this the
+# six front-page videos never reach the repository and a fresh install gets a
+# half-empty carousel while the stills show fine — a confusing failure.
+!public/showcase/*.mp4
 
 # Junk the render scripts drop next to their output
 **/run.log
