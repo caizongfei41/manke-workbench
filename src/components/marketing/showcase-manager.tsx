@@ -156,7 +156,7 @@ export function ShowcaseManager({ locale }: { locale?: string }) {
   const videos = items.filter((i) => i.type === 'video');
 
   return (
-    <section className="flex flex-col gap-4" data-showcase-manager="true">
+    <section className="flex w-full flex-col gap-5" data-showcase-manager="true">
       <header className="flex items-end justify-between gap-3">
         <div>
           <h2 className="text-[19px] font-semibold text-[var(--beat-text)]">
@@ -205,7 +205,7 @@ export function ShowcaseManager({ locale }: { locale?: string }) {
               {m['showcase.manager.empty']({}, { locale: messageLocale })}
             </p>
           ) : (
-            <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-4" data-showcase-grid={group.key}>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" data-showcase-grid={group.key}>
               {group.list.map((item) => {
                 const hidden = readHidden(item.metadata);
                 return (

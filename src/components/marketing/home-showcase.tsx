@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Pause, Play, Sparkles } from 'lucide-react';
 
 import { normalizeLocale } from '@/config/locale';
+import { Link } from '@/core/i18n/navigation';
 import { SHOWCASE_PROJECT_NAME, rankShowcaseClip, rankShowcaseStill } from '@/core/showcase/curation';
 
 /** The curated set is hand-picked, so it skips the variance filter the raw library needs. */
@@ -43,6 +44,7 @@ const copy = (locale: string) => {
     pause: m['home.showcase.pause']({}, { locale: messageLocale }),
     play: m['home.showcase.play']({}, { locale: messageLocale }),
     untitled: m['home.showcase.untitled']({}, { locale: messageLocale }),
+    manage: m['home.showcase.manage']({}, { locale: messageLocale }),
   };
 };
 
@@ -356,6 +358,15 @@ export function HomeShowcase({ locale }: { locale: string }) {
               {text.gallerySubtitle}
             </p>
           </div>
+          {/* Curation lives on its own page: the first screenful is the product, not
+              a control panel. One quiet link is enough of a door. */}
+          <Link
+            href="/showcase"
+            className="shrink-0 text-[13px] text-[var(--beat-text-3)] underline-offset-4 transition hover:text-[var(--beat-text-2)] hover:underline"
+            data-showcase-manage-link="true"
+          >
+            {text.manage}
+          </Link>
 
         </div>
 

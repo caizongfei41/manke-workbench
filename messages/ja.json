@@ -1300,5 +1300,7 @@
   "showcase.manager.hide": "トップから隠す",
   "showcase.manager.show": "再表示",
   "showcase.manager.remove": "トップから外す",
-  "showcase.manager.builtin": "内蔵"
+  "showcase.manager.builtin": "内蔵",
+  "home.showcase.manage": "表示内容を管理",
+  "showcase.page.title": "トップページ表示"
 }

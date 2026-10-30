@@ -15,7 +15,6 @@ import { normalizeLocale } from '@/config/locale';
 import { m } from '@/paraglide/messages.js';
 import { HeroSlogan } from './hero-slogan';
 import { HomeShowcase } from './home-showcase';
-import { ShowcaseManager } from './showcase-manager';
 import { BeatApiProductShell } from './beatapi-product-shell';
 
 function getCopy(locale: string) {
@@ -145,8 +144,6 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
           </section>
 
           <HomeShowcase locale={locale} />
-
-          <ShowcaseManager locale={locale} />
 
           {/* Capabilities */}
           <section className="mt-20">

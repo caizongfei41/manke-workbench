@@ -1300,5 +1300,7 @@
   "showcase.manager.hide": "从首页隐藏",
   "showcase.manager.show": "重新显示",
   "showcase.manager.remove": "移出展示",
-  "showcase.manager.builtin": "内置"
+  "showcase.manager.builtin": "内置",
+  "home.showcase.manage": "管理展示内容",
+  "showcase.page.title": "首页展示"
 }

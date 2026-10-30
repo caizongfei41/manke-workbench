@@ -1300,5 +1300,7 @@
   "showcase.manager.hide": "Hide from front page",
   "showcase.manager.show": "Show again",
   "showcase.manager.remove": "Remove from front page",
-  "showcase.manager.builtin": "Built-in"
+  "showcase.manager.builtin": "Built-in",
+  "home.showcase.manage": "Manage showcase",
+  "showcase.page.title": "Front page"
 }
