@@ -9,7 +9,7 @@
 // 更糟的是失败发生在更新流程里，用户看到的是「更新失败」而不是这条提示。
 //
 // 改成 Node 脚本，行为与平台无关。
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,6 +43,36 @@ if (!existsSync(schema)) {
     console.error(`  postinstall: db-setup 失败 —— ${String(error).slice(0, 200)}`);
     // 不阻断安装：schema 缺失可以让 prebuild 再生成一次
   }
+}
+
+// 建表。
+//
+// data/local.db 可能不存在，也可能是 0 字节的空壳 —— 有文件没表时工作台
+// 能启动、页面能打开，但每个项目操作都会失败：
+//   Failed query: select "project"."id", "project"."name", ...
+// 这个错在执行层才冒出来，看起来像代码 bug，实际是库没初始化。
+//
+// drizzle-kit push 是幂等的：表结构一致时它什么都不做。
+const dbFile = join(ROOT, 'data', 'local.db');
+const needPush = !existsSync(dbFile) || statSync(dbFile).size < 8192;
+if (needPush) {
+  console.log('  postinstall: 初始化数据库表结构');
+  try {
+    // drizzle-kit 在 node_modules/.bin 下，Windows 上是 .cmd，不能直接
+    // spawn，走 pnpm exec 最稳
+    execFileSync(
+      'pnpm',
+      ['exec', 'drizzle-kit', 'push', '--config=drizzle.config.ts'],
+      { cwd: ROOT, stdio: 'inherit', shell: true }
+    );
+  } catch (error) {
+    console.error(`  postinstall: db push 失败 —— ${String(error).slice(0, 200)}`);
+    console.error('  工作台仍能启动，但新建/打开项目会报错。手动修复：pnpm db:push');
+  }
+} else {
+  console.log(
+    `  postinstall: 数据库已有表（${(statSync(dbFile).size / 1024).toFixed(0)} KB），跳过`
+  );
 }
 
 console.log('  postinstall: 完成');
