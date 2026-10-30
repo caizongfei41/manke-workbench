@@ -242,6 +242,10 @@ function Start-WorkbenchBuild([string]$Root) {
 
     $env:CI = 'true'
     $env:PATH = $nodeDir + ';' + $env:PATH
+    # 告诉 seeding 去哪里找展示素材。用户手上的部署包可能是旧的，解压出来的
+    # public/showcase 是空的；控制台自带一份 showcase-assets，seeding 发现
+    # 工作台缺文件就从这里复制过去，首页才不会空着。
+    $env:BEATDESIGN_CONSOLE_ROOT = $BD
 
     $ok = $true
     # Windows 上 pnpm 是 pnpm.cmd，Start-Process 直接跑会报

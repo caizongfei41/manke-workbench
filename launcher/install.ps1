@@ -1,4 +1,4 @@
-﻿
+
 # 漫客工作台控制台 · 安装脚本
 #
 # 由 Setup.exe 自解压后自动运行；也可以手工执行：
@@ -64,7 +64,7 @@ if (-not (Test-Path $files)) {
 # 它可能把源目录整个塞进目标下（变成 scripts\scripts\），也可能只是合并。
 # 覆盖安装时这个差异会让新文件悄悄漏掉。
 # 所以先删掉旧目录再整份拷，保证「装完 = 包里有」。
-foreach ($dir in @('launcher', 'scripts', 'docs', 'node')) {
+foreach ($dir in @('launcher', 'scripts', 'docs', 'node', 'showcase-assets')) {
     $src = Join-Path $files $dir
     if (-not (Test-Path $src)) { continue }
 

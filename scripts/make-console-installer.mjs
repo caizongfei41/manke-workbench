@@ -43,6 +43,10 @@ const PAYLOAD = [
   // version.json 决定控制台能否判断「本地是新是旧」。打包时漏掉它，
   // 装好的控制台就永远认为自己落后于远程。
   { src: join(ROOT, 'version.json'), name: 'version.json', label: '版本号', file: true },
+  // 首页展示素材。工作台源码里本来就有，但用户手上的部署包是旧的 ——
+  // 那些包解压出来的 public/showcase 是空的，seeding 会找不到文件，
+  // 首页就只剩空状态。控制台自带一份，seeding 发现缺了就补进去。
+  { src: join(ROOT, 'public', 'showcase'), name: 'showcase-assets', label: '首页展示素材' },
 ];
 
 /** 便携 Node：只要 node.exe 和必要的 dll，不要 npm 那一堆。 */

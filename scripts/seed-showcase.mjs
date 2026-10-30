@@ -12,7 +12,7 @@
  *
  * Invoked from scripts/postinstall.mjs so a fresh install has content before first launch.
  */
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,11 +45,45 @@ const CLIPS = [
 const PROJECT_NAME = '首页展示';
 const SHOWCASE_DIR = join(ROOT, 'public', 'showcase');
 
+/**
+ * Where the console keeps its own copy of these files.
+ *
+ * The workbench source tree normally carries public/showcase, but the deploy bundle
+ * a user already has on disk was cut before these files existed — extracting it gives
+ * an empty folder, seeding finds nothing, and the front page renders the empty state
+ * with no explanation. The console installs a copy under its own root, so pull from
+ * there when the workbench is missing one.
+ *
+ * The console passes its own root explicitly through BEATDESIGN_CONSOLE_ROOT, which is
+ * the only reliable signal: the workbench and the console are unrelated directories and
+ * guessing at relative paths breaks the moment either moves.
+ */
+const consoleRoot = process.env.BEATDESIGN_CONSOLE_ROOT?.trim().replace(/["']+$/, '');
+
+const assetSources = [
+  SHOWCASE_DIR,
+  ...(consoleRoot ? [join(consoleRoot, 'showcase-assets')] : []),
+  // Last resort for a checkout where the two live side by side.
+  join(ROOT, '..', 'showcase-assets'),
+];
+
 const dataRoot = process.env.BEATDESIGN_DATA_DIR?.trim() || join(ROOT, 'data');
 const dbPath = join(dataRoot, 'local.db');
 
-if (!existsSync(SHOWCASE_DIR)) {
-  console.log('  showcase-seed: public/showcase 不存在，跳过');
+/** Locate a showcase file across every candidate source, first hit wins. */
+const findAsset = (name) => {
+  for (const dir of assetSources) {
+    const full = join(dir, name);
+    if (existsSync(full)) return full;
+  }
+  return null;
+};
+
+/** True when at least one source can supply the files, even if not the first. */
+const anySourceExists = () => assetSources.some((dir) => existsSync(dir));
+
+if (!anySourceExists()) {
+  console.log('  showcase-seed: 找不到展示素材目录，跳过');
   process.exit(0);
 }
 if (!existsSync(dbPath)) {
@@ -89,13 +123,27 @@ const files = [...WIDE.map((n) => ({ name: n, type: 'image' })), ...CLIPS.map((n
 
 let added = 0;
 let skipped = 0;
+let restored = 0;
+
+// The workbench has to serve these files itself, so anything pulled from the
+// console copy gets written into public/showcase first. Without that the rows would
+// exist while /showcase/<name> returned 404.
+mkdirSync(SHOWCASE_DIR, { recursive: true });
 
 for (const file of files) {
-  const full = join(SHOWCASE_DIR, file.name);
+  let full = join(SHOWCASE_DIR, file.name);
+
   if (!existsSync(full)) {
-    console.log(`  showcase-seed: 缺文件 ${file.name}`);
-    skipped += 1;
-    continue;
+    const source = findAsset(file.name);
+    if (!source) {
+      console.log(`  showcase-seed: 缺文件 ${file.name}`);
+      skipped += 1;
+      continue;
+    }
+    if (source !== full) {
+      cpSync(source, full);
+      restored += 1;
+    }
   }
 
   const existing = db
@@ -145,4 +193,4 @@ for (const file of files) {
 }
 
 db.close();
-console.log(`  showcase-seed: 新增 ${added} 个，已有 ${skipped} 个`);
+console.log(`  showcase-seed: 新增 ${added} 个，已有 ${skipped} 个，补齐文件 ${restored} 个`);
