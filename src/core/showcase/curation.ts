@@ -37,41 +37,22 @@ export const orderShowcase = <T extends ShowcaseCandidate>(items: T[]) => {
 export const isCurated = (item: ShowcaseCandidate) => item.projectName === SHOWCASE_PROJECT_NAME;
 
 /**
- * The nine wide frames the front page rotates, in the order they should appear.
+ * The wide frames the front page rotates, in the order they should appear.
  *
- * Naming beats counting: the project also holds older test renders, so the rotation asks for
- * these filenames by name instead of taking whatever happens to be newest.
+ * These ship with the app under public/showcase/ and are seeded into the curated
+ * project on first run, so a fresh install has something to show before the machine
+ * has rendered anything of its own. Naming beats counting: the project also holds
+ * whatever the user generates later, and the rotation asks for these by name.
  */
 export const SHOWCASE_WIDE_ORDER = [
-  'brutalist-light.png',
-  'mist-forest.png',
-  'crystal-still.png',
-  'neon-rain.png',
-  'desert-dusk.png',
-  'ink-water.png',
-  'steel-macro.png',
-  'fractal-flow.png',
-  'quiet-interior.png',
-  'aurora-lake.png',
-  'autumn-road.png',
-  'marble-vein.png',
-  'oil-rainbow.png',
-  'snow-ridge.png',
-  'copper-dust.png',
-  'paper-fold.png',
-  'tide-pool.png',
-  'city-rain-lights.png',
-  'silk-shadow.png',
-  'model-studio-portrait.png',
-  'model-window-light.png',
-  'model-street-night.png',
-  'model-golden-hour.png',
-  'model-monochrome.png',
-  'model-wind-coast.png',
-  'model-studio-color.png',
-  'model-rain-glass.png',
-  'model-soft-smoke.png',
-  'model-daylight-close.png',
+  'abstract-liquid.png',
+  'architecture.png',
+  'cinematic-portrait.png',
+  'film-nostalgia.png',
+  'ink-landscape.png',
+  'macro-nature.png',
+  'neon-street.png',
+  'product-still.png',
 ] as const;
 
 /** -1 for anything that is not part of the rotation. */
@@ -86,14 +67,16 @@ export const showcaseOrderOf = (filename: string | null | undefined) => {
  * Top row is landscape and abstract — establishing shots. Bottom row is people, shot with
  * deliberate camera language, because "can this thing make a professional clip" is the
  * question a visitor is actually asking.
+ *
+ * Also shipped in public/showcase/ and seeded alongside the stills.
  */
 export const SHOWCASE_CLIP_ORDER = [
   'concrete-shadow.mp4',
   'forest-mist.mp4',
   'ink-water.mp4',
-  'portrait-shallow-track.mp4',
-  'portrait-low-angle-walk.mp4',
-  'portrait-orbit-backlight.mp4',
+  'desert-dusk.mp4',
+  'neon-rain.mp4',
+  'studio-still.mp4',
 ] as const;
 
 /** -1 for anything that is not one of the six. */

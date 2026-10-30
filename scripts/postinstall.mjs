@@ -10,6 +10,7 @@
 //
 // 改成 Node 脚本，行为与平台无关。
 import { existsSync, mkdirSync, statSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -52,10 +53,27 @@ if (!existsSync(schema)) {
 //   Failed query: select "project"."id", "project"."name", ...
 // 这个错在执行层才冒出来，看起来像代码 bug，实际是库没初始化。
 //
-// drizzle-kit push 是幂等的：表结构一致时它什么都不做。
+// 不能只看主文件大小：SQLite 开着 WAL，建表后新数据可能在 local.db-wal 里，
+// 主文件还是小。所以直接问库有没有 asset 表，最可靠。
 const dbFile = join(ROOT, 'data', 'local.db');
-const needPush = !existsSync(dbFile) || statSync(dbFile).size < 8192;
-if (needPush) {
+
+const hasSchema = () => {
+  if (!existsSync(dbFile)) return false;
+  try {
+    // node:sqlite 从 22.5 起随 Node 提供，控制台自带的 node 就是这一版
+    const probe = new DatabaseSync(dbFile, { readOnly: true });
+    const row = probe
+      .prepare("SELECT COUNT(*) AS c FROM sqlite_master WHERE type='table' AND name='asset'")
+      .get();
+    probe.close();
+    return Boolean(row && row.c > 0);
+  } catch {
+    // 文件存在但读不了（损坏、被占用、或是旧格式）—— 当作没建，让 push 去修
+    return false;
+  }
+};
+
+if (!hasSchema()) {
   console.log('  postinstall: 初始化数据库表结构');
   try {
     // drizzle-kit 在 node_modules/.bin 下，Windows 上是 .cmd，不能直接
@@ -70,9 +88,24 @@ if (needPush) {
     console.error('  工作台仍能启动，但新建/打开项目会报错。手动修复：pnpm db:push');
   }
 } else {
-  console.log(
-    `  postinstall: 数据库已有表（${(statSync(dbFile).size / 1024).toFixed(0)} KB），跳过`
-  );
+  console.log('  postinstall: 数据库表结构已就绪，跳过');
+}
+
+// 把随包分发的展示素材写进数据库。
+//
+// 首页轮播读的是 asset 表，不是 public/showcase/ 目录本身：它按文件名过滤
+// SHOWCASE_WIDE_ORDER / SHOWCASE_CLIP_ORDER，还要求记录属于「首页展示」项目。
+// 没有这些行，全新安装打开首页只有「还没有生成记录」，而文件就躺在磁盘上。
+//
+// 幂等：按项目内的文件名匹配，重复跑只多一次小查询。
+try {
+  execFileSync(process.execPath, [join(ROOT, 'scripts', 'seed-showcase.mjs')], {
+    cwd: ROOT,
+    stdio: 'inherit',
+  });
+} catch (error) {
+  console.error(`  postinstall: 展示素材写入失败 —— ${String(error).slice(0, 200)}`);
+  console.error('  首页会显示空状态。手动修复：node scripts/seed-showcase.mjs');
 }
 
 console.log('  postinstall: 完成');

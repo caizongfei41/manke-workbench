@@ -1,5 +1,0 @@
-fix(data): restore the workflow templates
-
-Restore the workflow templates deleted along with the runtime data directory.
-
-data/comfyui/workflows holds 22 tracked JSON templates. When I cleared the runtime data to simulate a fresh machine I removed data/comfyui wholesale, which took the templates with it -- they live under the same path but are source, not generated output. Restored from the parent commit.

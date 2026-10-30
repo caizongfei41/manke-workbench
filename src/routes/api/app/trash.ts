@@ -2,14 +2,20 @@ import { createFileRoute } from '@tanstack/react-router';
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { getBeatDesignDataRoot } from '@/config/data-root';
+
 /**
  * What the trash holds.
  *
  * Deletes in this app move directories here rather than removing them, so an accidental
  * sweep is recoverable. This endpoint is the only thing that reads the trash: it lists
  * entries with their size and age, and never touches the live asset tree.
+ *
+ * Resolved per request through the shared data root, so a workspace that relocates data
+ * with BEATDESIGN_DATA_DIR keeps reading its own trash instead of a stale folder.
  */
-const TRASH_ROOT = join(process.cwd(), 'data', 'trash', 'project-assets');
+
+const trashRoot = () => join(getBeatDesignDataRoot(), 'trash', 'project-assets');
 
 type TrashEntry = {
   name: string;
@@ -41,10 +47,10 @@ export const Route = createFileRoute('/api/app/trash')({
       GET: async () => {
         let entries: TrashEntry[] = [];
         try {
-          entries = readdirSync(TRASH_ROOT, { withFileTypes: true })
+          entries = readdirSync(trashRoot(), { withFileTypes: true })
             .filter((entry) => entry.isDirectory())
             .map((entry) => {
-              const full = join(TRASH_ROOT, entry.name);
+              const full = join(trashRoot(), entry.name);
               const { bytes, files } = measure(full);
               return {
                 name: entry.name,
