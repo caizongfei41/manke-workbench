@@ -187,6 +187,77 @@ function Repair-TaskWindow([string]$TaskName, [string]$WrapperName, [string]$Def
 }
 
 # 检查并修复两个任务的弹窗问题。失败不影响控制台使用。
+# 从零创建一个服务的计划任务。
+#
+# 场景：重装控制台、手动删过任务、或换了安装位置之后，任务不见了。
+# 原来的代码只会「修」已有任务，遇到任务不存在就直接把
+# 「系统找不到指定的文件」甩给用户 —— 那是个死胡同，他除了重装没别的办法。
+# 这里按当前 ComfyUI 位置现建一个，建完直接能启动。
+function New-ServiceTask($svc) {
+    $wrapper = if ($svc.Key -eq 'comfyui') { 'comfyui' } else { 'workbench' }
+    $wrapperName = $wrapper   # New-HiddenLaunchVbs 内部会加 run- 前缀
+
+    # 优先复用上次记录的命令行；没有就按当前配置拼一条
+    $cmdRecord = Join-Path $BD "launcher$wrapperName.cmd.txt"
+    $workDir = $BD
+    $cmdLine = $null
+
+    if (Test-Path $cmdRecord) {
+        $cmdLine = (Get-Content $cmdRecord -Raw -Encoding UTF8).Trim()
+    } else {
+        if ($svc.Key -eq 'comfyui') {
+            # ComfyUI 的根目录从 data\comfyui.config.json 读
+            $comfyRoot = $null
+            try {
+                $cfgPath = Join-Path $BD 'data\comfyui.config.json'
+                if (Test-Path $cfgPath) {
+                    $cfg = Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json
+                    if ($cfg.pythonPath) { $comfyRoot = Split-Path (Split-Path $cfg.pythonPath -Parent) -Parent }
+                }
+            } catch { }
+            if (-not $comfyRoot -and (Test-Path 'E:\ComfyUI')) { $comfyRoot = 'E:\ComfyUI' }
+            if (-not $comfyRoot) { return $false }
+
+            # 两种布局都要认：根下直接有 main.py，或者在 ComfyUI 子目录里
+            $mainPy = Join-Path $comfyRoot 'main.py'
+            if (-not (Test-Path $mainPy)) { $mainPy = Join-Path $comfyRoot 'ComfyUI\main.py' }
+            if (-not (Test-Path $mainPy)) { return $false }
+
+            $py = Join-Path $comfyRoot 'python_embeded\python.exe'
+            if (-not (Test-Path $py)) { return $false }
+
+            $cmdLine = "`"$py`" -s `"$mainPy`" --listen 127.0.0.1 --port $($svc.Port)"
+            $workDir = Split-Path $mainPy -Parent
+        } else {
+            $nodeExe = Join-Path $BD 'node\node.exe'
+            if (-not (Test-Path $nodeExe)) { return $false }
+            $entry = Join-Path $BD '.output\server\index.mjs'
+            $cmdLine = "`"$nodeExe`" `"$entry`""
+        }
+    }
+
+    # 生成隐藏窗口的 VBS 包装器（避免每次启动闪一个黑框）
+    try {
+        $vbs = New-HiddenLaunchVbs -Name $wrapper -CmdLine $cmdLine -WorkDir $workDir
+    } catch {
+        Add-Log ("  生成启动包装器失败：" + $_.Exception.Message)
+        return $false
+    }
+
+    $action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument "`"$vbs`"" -WorkingDirectory $workDir
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero)
+    try {
+        Register-ScheduledTask -TaskName $svc.Task -Action $action -Settings $settings -Force -ErrorAction Stop | Out-Null
+    } catch {
+        Add-Log ("  注册计划任务失败：" + $_.Exception.Message)
+        return $false
+    }
+
+    Add-Log "  已创建计划任务 $($svc.Task)"
+    Add-Log "    命令：$cmdLine"
+    return $true
+}
+
 function Repair-TaskWindows {
     $changed = @()
     foreach ($svc in $SERVICES) {
@@ -756,12 +827,35 @@ function Start-One($svc) {
     try {
         Start-ScheduledTask -TaskName $svc.Task -ErrorAction Stop
     } catch {
-        Add-Log "✗ 计划任务 $($svc.Task) 启动失败：$($_.Exception.Message)"
-        Add-Log '  可以在「任务计划程序」里手动运行该任务看报错。'
-        if ($row) { Set-RowState $row 'stopped' }
-        if ($row) { $row.Act.Enabled = $true }
-        return
-    }
+            # 任务不见了（重装、手动删过、或换了安装位置）。
+            # 别直接把错误甩给用户 —— 先尝试按当前配置重建一次任务，
+            # 建好了就直接重试启动。
+            Add-Log "计划任务 $($svc.Task) 不存在，按当前配置重建…"
+            $recreated = $false
+            try {
+                $recreated = New-ServiceTask $svc
+            } catch {
+                Add-Log ("  重建出错：" + $_.Exception.Message)
+            }
+        
+            if ($recreated) {
+                try {
+                    Start-ScheduledTask -TaskName $svc.Task -ErrorAction Stop
+                    Add-Log "  ✓ 任务已重建并启动"
+                } catch {
+                    Add-Log "  ✗ 重建后仍无法启动：$($_.Exception.Message)"
+                    if ($row) { Set-RowState $row 'stopped' }
+                    if ($row) { $row.Act.Enabled = $true }
+                    return
+                }
+            } else {
+                Add-Log "  ✗ 无法重建任务：$($svc.Task)"
+                Add-Log "    启动包装器或路径缺失。点「ComfyUI 位置」重新指定后再试。"
+                if ($row) { Set-RowState $row 'stopped' }
+                if ($row) { $row.Act.Enabled = $true }
+                return
+            }
+        }
 
     # 等端口真正监听。每 500ms 探一次，最多等 ReadySeconds * 2。
     # 期间保持「启动中」状态，界面上能看出是在等而不是死了。
