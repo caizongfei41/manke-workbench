@@ -1,0 +1,282 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    }
+  },
+  "6": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "images": [
+        "12",
+        0
+      ],
+      "audio": [
+        "12",
+        1
+      ],
+      "fps": [
+        "12",
+        2
+      ],
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "codec": "none"
+    }
+  },
+  "7": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": [
+        "6",
+        0
+      ],
+      "filename_prefix": "video/MiniMaxH3_Director",
+      "format": "mp4",
+      "format.codec": "h264",
+      "format.codec.encoding": "auto",
+      "codec": "auto"
+    }
+  },
+  "12": {
+    "class_type": "MiniMaxH3Director",
+    "inputs": {
+      "model": [
+        "53",
+        0
+      ],
+      "video_vae": [
+        "3",
+        0
+      ],
+      "audio_vae": [
+        "4",
+        0
+      ],
+      "clip": [
+        "2",
+        0
+      ],
+      "refine": [
+        "44",
+        0
+      ],
+      "task_type": "r2v — 参考主体生视频(Reference to Video)",
+      "global_prompt": "<Picture 1>是橘猫，<Picture 2>是柯基。生成时严格保持参考图1中橘猫的圆脸、胖体型、橘白毛色、短毛、严肃眼神和整体外貌特征一致；严格保持参考图2中柯基的黄白毛色、短腿、大屁股、立耳、圆眼睛、憨憨表情和体型比例一致。真实手机宠物短视频风格，真实居家客厅环境，自然窗光，真实毛发，真实动作，真实表情，不要卡通化，不要二次元，不要动画，不要人物，不要字幕，不要文字，不要水印，不要贴纸。\n\n",
+      "bd_grp_sample": "采样设置",
+      "cfg": 1,
+      "seed": 3213014,
+      "frame_rate": 24,
+      "width": 352,
+      "height": 608,
+      "ref_max_size": 608,
+      "total_frames": 277,
+      "timeline_data": "{\"version\":5,\"editMode\":\"segment\",\"totalFrames\":277,\"frameRate\":24,\"video\":{\"fileName\":\"\",\"videoFile\":\"\",\"subfolder\":\"\",\"type\":\"input\",\"frames\":[],\"frameMap\":[],\"deletedSourceRanges\":[],\"sourceFrameCount\":192,\"width\":0,\"height\":0,\"storageWidth\":608,\"storageHeight\":32},\"videoClips\":[],\"global\":{\"taskType\":\"r2v — 参考主体生视频(Reference to Video)\",\"prompt\":\"<Picture 1>是橘猫，<Picture 2>是柯基。生成时严格保持参考图1中橘猫的圆脸、胖体型、橘白毛色、短毛、严肃眼神和整体外貌特征一致；严格保持参考图2中柯基的黄白毛色、短腿、大屁股、立耳、圆眼睛、憨憨表情和体型比例一致。真实手机宠物短视频风格，真实居家客厅环境，自然窗光，真实毛发，真实动作，真实表情，不要卡通化，不要二次元，不要动画，不要人物，不要字幕，不要文字，不要水印，不要贴纸。\\n\\n\",\"refs\":[{\"index\":0,\"imageFile\":\"角色形象生成大师 (12).png\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"},{\"index\":1,\"imageFile\":\"角色形象生成大师 (13).png\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"}],\"referenceVideo\":{\"videoFile\":\"\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"},\"continuousReference\":false,\"genImage\":{\"imageFile\":\"\"},\"sourceWidth\":2816,\"sourceHeight\":1584,\"refAudios\":[],\"refVideos\":[],\"commonEnabled\":false,\"commonCollapsed\":true},\"output\":{\"mode\":\"fixed\",\"aspectRatio\":\"9:16 (竖屏)\",\"megapixels\":0.2,\"multiple\":32,\"longEdge\":608,\"width\":352,\"height\":608,\"maxExportFrames\":0,\"exportMode\":\"segments\",\"audioMode\":\"source\",\"exportSourceImages\":false,\"refImageSize\":\"match\",\"continuityEnabled\":true,\"continuityOverlapFrames\":22,\"continuityMode\":\"guide\",\"continuityRedraw\":0.1,\"continuityKeepTail\":true},\"runSelectEnabled\":false,\"runSelection\":[],\"segments\":[{\"id\":\"mtlkasxghfb90\",\"start\":0,\"length\":277,\"frameCount\":277,\"durationSec\":11,\"prompt\":\"提示词：\\n\\n[主视觉]\\n以 <Picture 1>作为视频主角与背景，人物身份必须全程一致，保留原图脸部、发型、服装和整体气质。\\n\\n[动作来源]\\n参考 <Video 1>中的舞蹈动作、肢体摆动、身体转向和节奏感，让主角在新场景中完成相同或高度相似的运动动作。\\n\\n\\n[场景]\\n房间中\\n\\n[画面要求]\\n画面清晰，人物真实，动作流畅，镜头稳定，光线柔和，整体有生活感和电影感。人物不要变形，脸部不要崩坏，身体比例自然，不要出现多余文字和水印。\",\"negativePrompt\":\"\",\"taskType\":\"\",\"refs\":[{\"index\":0,\"imageFile\":\"图片信息.png\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"}],\"refAudios\":[],\"refVideos\":[{\"index\":0,\"videoFile\":\"AnimateDiff_00004.mp4\",\"fileName\":\"AnimateDiff_00004.mp4\",\"type\":\"input\",\"subfolder\":\"\",\"durationSec\":11.333333,\"pairedAudioFile\":\"\",\"previewImageFile\":\"\",\"previewImageUrl\":\"\",\"linked\":true}],\"genImage\":{\"imageFile\":\"\",\"fileName\":\"\"},\"startImage\":null,\"endImage\":null,\"continuityFromPrev\":false,\"refImageSize\":\"match\"}],\"timelineMode\":\"prompt_batch\",\"width\":352,\"height\":608,\"refMaxSize\":608,\"gen\":{\"defaultFrameCount\":124},\"keyframes\":[{\"id\":\"msdtx3zi62ktv_s\",\"imageFile\":\"豆包 (5).png\",\"width\":2848,\"height\":1600,\"start\":0,\"length\":113,\"frameCount\":113,\"durationSec\":9,\"prompt\":\"#全局提示词\\n9:16竖屏，写实室内，柔和暖光，画面连贯顺滑，24fps，人脸五官保持一致。\\n\\n#分镜脚本 0‑9秒\\n人物表情从平静，慢慢转变委屈难过，眼眶慢慢泛红，肩膀微微低落，没有大幅度肢体动作，镜头保持固定机位。环境安静室内底噪，无台词无字幕。\\n\\n#负面提示词\\n人脸变形，跳帧，画面剧烈变化，字幕水印。\",\"negativePrompt\":\"bad video\",\"isStartFrame\":true,\"isEndFrame\":false},{\"id\":\"msdtx3zi62ktv_e\",\"imageFile\":\"豆包 (18).png\",\"width\":1600,\"height\":2848,\"start\":113,\"length\":113,\"frameCount\":113,\"durationSec\":9,\"prompt\":\"\",\"negativePrompt\":\"bad video\",\"isStartFrame\":false,\"isEndFrame\":true}],\"durationSec\":9,\"shots\":[{\"id\":\"msdtx3zi62ktv\",\"durationSec\":9,\"prompt\":\"#全局提示词\\n9:16竖屏，写实室内，柔和暖光，画面连贯顺滑，24fps，人脸五官保持一致。\\n\\n#分镜脚本 0‑9秒\\n人物表情从平静，慢慢转变委屈难过，眼眶慢慢泛红，肩膀微微低落，没有大幅度肢体动作，镜头保持固定机位。环境安静室内底噪，无台词无字幕。\\n\\n#负面提示词\\n人脸变形，跳帧，画面剧烈变化，字幕水印。\",\"negativePrompt\":\"bad video\",\"startImage\":{\"imageFile\":\"豆包 (5).png\",\"width\":2848,\"height\":1600},\"endImage\":{\"imageFile\":\"豆包 (18).png\",\"width\":1600,\"height\":2848}}],\"liveTaePreview\":false,\"batchDetailMode\":\"solo\",\"batchWorkspaces\":{\"r2v\":{\"selectedIndex\":0,\"editMode\":\"segment\",\"runSelectEnabled\":false,\"runSelection\":[],\"segments\":[{\"id\":\"mtlkasxghfb90\",\"start\":0,\"length\":277,\"frameCount\":277,\"durationSec\":11,\"prompt\":\"提示词：\\n\\n[主视觉]\\n以 <Picture 1>作为视频主角与背景，人物身份必须全程一致，保留原图脸部、发型、服装和整体气质。\\n\\n[动作来源]\\n参考 <Video 1>中的舞蹈动作、肢体摆动、身体转向和节奏感，让主角在新场景中完成相同或高度相似的运动动作。\\n\\n\\n[场景]\\n房间中\\n\\n[画面要求]\\n画面清晰，人物真实，动作流畅，镜头稳定，光线柔和，整体有生活感和电影感。人物不要变形，脸部不要崩坏，身体比例自然，不要出现多余文字和水印。\",\"negativePrompt\":\"\",\"taskType\":\"\",\"refs\":[{\"index\":0,\"imageFile\":\"图片信息.png\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"}],\"refAudios\":[],\"refVideos\":[{\"index\":0,\"videoFile\":\"AnimateDiff_00004.mp4\",\"fileName\":\"AnimateDiff_00004.mp4\",\"type\":\"input\",\"subfolder\":\"\",\"durationSec\":11.333333,\"pairedAudioFile\":\"\",\"previewImageFile\":\"\",\"previewImageUrl\":\"\",\"linked\":true}],\"genImage\":{\"imageFile\":\"\",\"fileName\":\"\"},\"continuityFromPrev\":false,\"refImageSize\":\"match\",\"referenceVideo\":{\"videoFile\":\"\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"},\"_videoFrameCount\":277,\"previewFps\":24}],\"globalCommon\":{\"commonEnabled\":false,\"commonCollapsed\":true,\"prompt\":\"<Picture 1>是橘猫，<Picture 2>是柯基。生成时严格保持参考图1中橘猫的圆脸、胖体型、橘白毛色、短毛、严肃眼神和整体外貌特征一致；严格保持参考图2中柯基的黄白毛色、短腿、大屁股、立耳、圆眼睛、憨憨表情和体型比例一致。真实手机宠物短视频风格，真实居家客厅环境，自然窗光，真实毛发，真实动作，真实表情，不要卡通化，不要二次元，不要动画，不要人物，不要字幕，不要文字，不要水印，不要贴纸。\\n\\n\",\"refs\":[{\"index\":0,\"imageFile\":\"角色形象生成大师 (12).png\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"},{\"index\":1,\"imageFile\":\"角色形象生成大师 (13).png\",\"fileName\":\"\",\"type\":\"input\",\"subfolder\":\"\"}],\"refAudios\":[],\"refVideos\":[]}}}}",
+      "bd_grp_advanced": "高级采样",
+      "steps": 8,
+      "sampler": "res_multistep",
+      "scheduler": "simple",
+      "shift_video": 12,
+      "shift_audio": 3,
+      "bd_grp_perf": false,
+      "clear_vram_between_segments": "性能",
+      "clear_vram_before_refine": true,
+      "export_source_images": "",
+      "clear_vram_before_face_refine": false,
+      "cache_frames_codec": "raw",
+      "export_pre_face_refine": false
+    }
+  },
+  "16": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 1
+    }
+  },
+  "40": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "59",
+        0
+      ],
+      "lora_name": "Minimax H3真实电影质感V0.1.safetensors",
+      "strength_model": 1
+    }
+  },
+  "43": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+      "model_name": "4x-UltraSharp.pth"
+    }
+  },
+  "44": {
+    "class_type": "MiniMaxH3DirectorRefine",
+    "inputs": {
+      "upscale_model": [
+        "43",
+        0
+      ],
+      "mode": "refine",
+      "upscale_method": "lanczos",
+      "latent_upscale_model": "minimax_h3_latent_upscaler_3d_bf16.safetensors",
+      "sampler": "euler",
+      "passes": 1,
+      "seed_mode": "inherit",
+      "aspect_ratio": "16:9 (宽屏)",
+      "megapixels": 2,
+      "width": 1920,
+      "height": 1088,
+      "skip_fl2v": true,
+      "confirm_first_pass": false,
+      "enable_latent_chunking": false,
+      "enable_tiling": false,
+      "tile_count": 2,
+      "tile_overlap": 128,
+      "seed": 0
+    }
+  },
+  "49": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "images": [
+        "12",
+        6
+      ],
+      "fps": 24,
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "codec": "none"
+    }
+  },
+  "50": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": [
+        "49",
+        0
+      ],
+      "filename_prefix": "video/MiniMaxH3_Director",
+      "format": "mp4",
+      "format.codec": "h264",
+      "format.codec.encoding": "auto",
+      "codec": "auto"
+    }
+  },
+  "52": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "40",
+        0
+      ],
+      "lora_name": "H3_Combat_V2.safetensors",
+      "strength_model": 0.5
+    }
+  },
+  "53": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "52",
+        0
+      ],
+      "lora_name": "Minimax H3真实电影质感V0.1.safetensors",
+      "strength_model": 0.5
+    }
+  },
+  "54": {
+    "class_type": "VHS_VideoCombine",
+    "inputs": {
+      "images": [
+        "56",
+        0
+      ],
+      "frame_rate": 24,
+      "loop_count": 0,
+      "filename_prefix": "AnimateDiff",
+      "format": "video/h264-mp4",
+      "pingpong": false,
+      "save_output": true
+    }
+  },
+  "55": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "BD_sample_clip.mp4",
+      "force_rate": 24,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1,
+      "format": "AnimateDiff"
+    }
+  },
+  "56": {
+    "class_type": "DepthAnything_V2",
+    "inputs": {
+      "da_model": [
+        "60",
+        0
+      ],
+      "images": [
+        "55",
+        0
+      ]
+    }
+  },
+  "59": {
+    "class_type": "ModelAttentionBackend",
+    "inputs": {
+      "model": [
+        "16",
+        0
+      ],
+      "attention": "comfy kitchen attention"
+    }
+  },
+  "60": {
+    "class_type": "DownloadAndLoadDepthAnythingV2Model",
+    "inputs": {
+      "model": "depth_anything_v2_vits_fp16.safetensors",
+      "precision": "auto"
+    }
+  },
+  "_beatdesign": {
+    "positive": "12",
+    "seed": "12",
+    "size": "12",
+    "image": "12",
+    "lora": {
+      "node": "16"
+    }
+  }
+}

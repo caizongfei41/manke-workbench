@@ -1,0 +1,168 @@
+{
+  "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "qwen-image-2.1-Q6_K.gguf"
+    }
+  },
+  "3": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "4": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+      "clip": [
+        "3",
+        0
+      ],
+      "prompt": "Cinematic close-up portrait, a young woman standing on a grassland at dusk; the frame focuses on her head, shoulders and upper body, with the subject occupying the visual center slightly right of frame. **The low setting sun blasts from behind as strong backlight, rimming her hair and shoulders with a bright golden halo, a few stray strands rendered translucent by the light; her face is softly filled by warm sky bounce light, with natural highlights on the bridge of the nose and cheekbones, shadow transitions smooth with no blocked-up blacks.** She looks up toward the camera with a serene expression; her skin has a healthy honey tone with visible fine peach fuzz. Light beige hair lifted by the breeze, a few strands resting against her cheek.\nThe background is **completely blurred golden grassland and pink-purple distant mountains**, dissolving into soft golden-orange and pink-purple bokeh that serves only as atmosphere. Occasional foreground grass blades drift across the lens as soft blur streaks.\n85mm full-frame portrait lens, f/1.8, extremely shallow depth of field, tack-sharp focus on both eyes with crisp circular catchlights, natural realistic skin texture, Kodak Portra 400 film palette, cinematic color grading, photorealistic, 8K, 16:9 widescreen, subject at the right third with breathing room on the left.",
+      "negative_prompt": "",
+      "resolution": 768
+    }
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1920,
+      "height": 1088,
+      "batch_size": 1
+    }
+  },
+  "6": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 95042601177619
+    }
+  },
+  "7": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "model": [
+        "15",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "4",
+        1
+      ],
+      "cfg": 1
+    }
+  },
+  "8": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    }
+  },
+  "9": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "6",
+        0
+      ],
+      "guider": [
+        "7",
+        0
+      ],
+      "sampler": [
+        "8",
+        0
+      ],
+      "sigmas": [
+        "16",
+        0
+      ],
+      "latent_image": [
+        "5",
+        0
+      ]
+    }
+  },
+  "10": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+  },
+  "11": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "9",
+        0
+      ],
+      "vae": [
+        "10",
+        0
+      ]
+    }
+  },
+  "12": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "11",
+        0
+      ],
+      "filename_prefix": "qwen_image_2_1_4step"
+    }
+  },
+  "14": {
+    "class_type": "QwenImage21BlockCacheT8",
+    "inputs": {
+      "model": [
+        "15",
+        0
+      ],
+      "residual_diff_threshold": 0.08,
+      "start_percent": 0.1,
+      "end_percent": 0.85,
+      "max_consecutive_hits": 2,
+      "cache_device": "cpu",
+      "metric_stride": 8,
+      "max_cache_mb": 1024,
+      "split_ratio": 0.5,
+      "late_threshold": 0.03,
+      "threshold_mode": "constant"
+    }
+  },
+  "15": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "lora_name": "qwen-image-2.1-lightning-4step-int8_convrot.safetensors",
+      "strength_model": 1
+    }
+  },
+  "16": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+      "model": [
+        "15",
+        0
+      ],
+      "scheduler": "simple",
+      "steps": 4,
+      "denoise": 1
+    }
+  },
+  "_beatdesign": {
+    "positive": "4",
+    "seed": "6",
+    "unet": "1",
+    "size": "5"
+  }
+}

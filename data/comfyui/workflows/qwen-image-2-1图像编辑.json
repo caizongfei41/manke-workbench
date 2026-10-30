@@ -1,0 +1,174 @@
+{
+  "13": {
+    "class_type": "ResolutionSelector",
+    "inputs": {
+      "aspect_ratio": "3:4 (Portrait Standard)",
+      "megapixels": 2,
+      "multiple": 32
+    }
+  },
+  "461": {
+    "class_type": "SaveImageAdvanced",
+    "inputs": {
+      "images": [
+        "478",
+        0
+      ],
+      "filename_prefix": "Qwen_image_2.1",
+      "format": "png",
+      "format.bit_depth": "8-bit",
+      "format.input_color_space": "sRGB"
+    }
+  },
+  "476": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "352474e31ab5d0bf4e5da57a32b957f4.jpg"
+    }
+  },
+  "477": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "352474e31ab5d0bf4e5da57a32b957f4.jpg"
+    }
+  },
+  "478": {
+    "class_type": "easy cleanGpuUsed",
+    "inputs": {
+      "anything": [
+        "483",
+        0
+      ]
+    }
+  },
+  "479": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "qwen-image-2.1-Q8_0.gguf"
+    }
+  },
+  "480": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "481": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+  },
+  "482": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": [
+        "13",
+        0
+      ],
+      "height": [
+        "13",
+        1
+      ],
+      "batch_size": 1
+    }
+  },
+  "483": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "484",
+        0
+      ],
+      "vae": [
+        "481",
+        0
+      ]
+    }
+  },
+  "484": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "486",
+        0
+      ],
+      "positive": [
+        "487",
+        0
+      ],
+      "negative": [
+        "487",
+        1
+      ],
+      "latent_image": [
+        "485",
+        0
+      ],
+      "seed": 362787195139721,
+      "steps": 30,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "485": {
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "on_false": [
+        "487",
+        2
+      ],
+      "on_true": [
+        "482",
+        0
+      ],
+      "switch": false
+    }
+  },
+  "486": {
+    "class_type": "QwenImage21Cache",
+    "inputs": {
+      "model": [
+        "479",
+        0
+      ],
+      "device": "auto",
+      "dtype": "default"
+    }
+  },
+  "487": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+      "clip": [
+        "480",
+        0
+      ],
+      "images.image_1": [
+        "476",
+        0
+      ],
+      "vae": [
+        "481",
+        0
+      ],
+      "prompt": "换成红色服装露出乳沟",
+      "negative_prompt": "",
+      "resolution": 1024,
+      "images.image_2": [
+        "477",
+        0
+      ]
+    }
+  },
+  "_beatdesign": {
+    "size": "482",
+    "seed": "484",
+    "positive": "487",
+    "image": "476",
+    "multi_image": "476"
+  }
+}

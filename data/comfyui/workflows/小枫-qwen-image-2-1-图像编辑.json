@@ -1,0 +1,126 @@
+{
+  "461": {
+    "class_type": "SaveImageAdvanced",
+    "inputs": {
+      "images": [
+        "506",
+        0
+      ],
+      "filename_prefix": "Qwen_image_2.1",
+      "format": "png",
+      "format.bit_depth": "8-bit",
+      "format.input_color_space": "sRGB"
+    }
+  },
+  "484": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "502",
+        0
+      ],
+      "positive": [
+        "501",
+        0
+      ],
+      "negative": [
+        "501",
+        1
+      ],
+      "latent_image": [
+        "505",
+        0
+      ],
+      "seed": 974157159228315,
+      "steps": 30,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "501": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+      "clip": [
+        "502_89cq",
+        0
+      ],
+      "images.image_1": [
+        "507",
+        0
+      ],
+      "images.image_2": [
+        "508",
+        0
+      ],
+      "vae": [
+        "502_7dkz",
+        0
+      ],
+      "prompt": "将图1和图2的人物，在商场中手牵手面对镜头",
+      "negative_prompt": "",
+      "resolution": 1024
+    }
+  },
+  "502": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "qwen-image-2.1-Q8_0.gguf"
+    }
+  },
+  "505": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "batch_size": 1,
+      "width": 1024,
+      "height": 1024
+    }
+  },
+  "506": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "484",
+        0
+      ],
+      "vae": [
+        "502_7dkz",
+        0
+      ]
+    }
+  },
+  "507": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "352474e31ab5d0bf4e5da57a32b957f4.jpg"
+    }
+  },
+  "508": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "91cc60179b7e9830e32d96bb89ba517a.jpg"
+    }
+  },
+  "502_89cq": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "502_7dkz": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+  },
+  "_beatdesign": {
+    "seed": "484",
+    "positive": "501",
+    "size": "505",
+    "multi_image": "507",
+    "image": "507"
+  }
+}

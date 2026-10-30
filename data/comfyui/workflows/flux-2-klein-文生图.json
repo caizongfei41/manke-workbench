@@ -1,0 +1,113 @@
+{
+  "84": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "98",
+        0
+      ],
+      "vae": [
+        "92",
+        0
+      ]
+    }
+  },
+  "85": {
+    "class_type": "EmptyFlux2LatentImage",
+    "inputs": {
+      "width": 720,
+      "height": 1280,
+      "batch_size": 1
+    }
+  },
+  "86": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "91",
+        0
+      ],
+      "text": ""
+    }
+  },
+  "90": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "Flux\\Flux.2-Klein\\flux-2-klein-base-9b-fp8.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "91": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "Flux.2-Klein\\qwen_3_8b_fp8mixed.safetensors",
+      "type": "flux2",
+      "device": "default"
+    }
+  },
+  "92": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "Flux\\flux2-vae.safetensors"
+    }
+  },
+  "93": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "91",
+        0
+      ],
+      "text": "A young woman with a calm, composed expression gazes directly at the camera while sitting in a weathered green wooden boat on a serene river. She wears a white ribbed off-the-shoulder crop top with long sleeves and thin black straps, paired with black ruffled bottoms. Behind her, the calm water stretches toward lush green trees and faint distant structures in the haze. Soft, diffused natural daylight from an overcast sky bathes the scene in cool teal and muted green tones, gently illuminating her skin, catching individual hair strands, and revealing the intricate weave of the fabric while casting subtle soft shadows. Cinematic moody editorial aesthetic, photorealistic, shallow depth of field like a 50mm f/1.8 lens, with razor-sharp focus on the subject and delicate ripples visible on the water surface."
+    }
+  },
+  "98": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "111",
+        0
+      ],
+      "positive": [
+        "93",
+        0
+      ],
+      "negative": [
+        "86",
+        0
+      ],
+      "latent_image": [
+        "85",
+        0
+      ],
+      "seed": 77,
+      "steps": 6,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "105": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "84",
+        0
+      ],
+      "filename_prefix": "Flux2-Klein"
+    }
+  },
+  "111": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "Flux\\Flux.2-Klein\\flux-2-klein-base-9b-fp8.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "_beatdesign": {
+    "positive": "86",
+    "seed": "98",
+    "size": "85"
+  }
+}
