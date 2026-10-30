@@ -11,6 +11,7 @@
 //   node scripts/check-environment.mjs           # 人读
 //   node scripts/check-environment.mjs --json    # 机器读（控制台 / API 用）
 //   node scripts/check-environment.mjs --quiet   # 只输出结论行
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
@@ -131,9 +132,45 @@ const comfyRootSource = (() => {
     const guess = dirname(dirname(py));
     if (guess) return { root: guess, source: 'data/comfyui.config.json（推断）' };
   }
-  for (const candidate of ['E:\\ComfyUI', 'D:\\ComfyUI', 'C:\\ComfyUI']) {
+  // 自动探测：遍历所有固定磁盘，不再只看 C/D/E。
+  //
+  // 部署包解压目标由用户选，D: F: G: 都常见；写死三个盘符会让自检在别的盘上
+  // 误报「未配置 ComfyUI」，而实际上 ComfyUI 就在那里。
+  //
+  // 每个盘试三处：根下的 ComfyUI、根下的 manke\ComfyUI（部署包布局）、
+  // 以及盘符根自身（把 ComfyUI 直接解到根目录的情况）。
+  const roots = [];
+  try {
+    const drives = execFileSync(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        '(Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root) -join [char]10',
+      ],
+      { encoding: 'utf8', windowsHide: true, timeout: 5000 }
+    );
+    for (const line of drives.split(/\r?\n/)) {
+      const d = line.trim();
+      if (!d) continue;
+      roots.push(join(d, 'ComfyUI'), join(d, 'manke', 'ComfyUI'), d);
+    }
+  } catch {
+    // 极少数受限环境下 PowerShell 叫不出来，退回最常见的三个盘
+    roots.push('E:\\ComfyUI', 'D:\\ComfyUI', 'C:\\ComfyUI');
+  }
+
+  for (const candidate of roots) {
     try {
+      // 布局一：<candidate>\python_embeded\python.exe（源码树或部署包根）
       if (existsSync(join(candidate, 'python_embeded', 'python.exe'))) {
+        return { root: candidate, source: '自动探测' };
+      }
+      // 布局二：<candidate>\ComfyUI\main.py + <candidate>\python_embeded
+      if (
+        existsSync(join(candidate, 'ComfyUI', 'main.py')) &&
+        existsSync(join(candidate, 'python_embeded', 'python.exe'))
+      ) {
         return { root: candidate, source: '自动探测' };
       }
     } catch {

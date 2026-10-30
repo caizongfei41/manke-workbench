@@ -199,6 +199,29 @@ const make = () => {
     writeFileSync(path, Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), buf]));
     return true;
   };
+
+  // 打包前先查源文件。fixPs1 会在拷贝后补 BOM，所以装出来的能跑 —— 但源文件
+  // 缺 BOM 意味着任何人直接用编辑器打开、用 PowerShell 解析都会看到乱码和
+  // 语法错误。那种「打包能过、源码是坏的」状态最难查，所以在这里直接点出来。
+  const missingBom = [];
+  const scanBom = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) scanBom(full);
+      else if (e.name.endsWith('.ps1')) {
+        const buf = readFileSync(full);
+        if (!(buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF)) {
+          missingBom.push(relative(ROOT, full));
+        }
+      }
+    }
+  };
+  scanBom(join(ROOT, 'launcher'));
+  if (missingBom.length > 0) {
+    console.log('  ! 源文件缺 UTF-8 BOM（打包时会补，但源码本身不干净）：');
+    for (const f of missingBom) console.log('      ' + f);
+  }
+
   writeFileSync(join(STAGE, 'install.ps1'), INSTALL_SCRIPT, 'utf8');
   ensureBom(join(STAGE, 'install.ps1'));
   // 负载里的 .ps1 也要有 BOM，否则装到目标机器一样跑不起来

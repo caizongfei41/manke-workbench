@@ -73,11 +73,33 @@ static class SetupApp
         Application.SetCompatibleTextRenderingDefault(false);
 
         // 支持静默安装：Setup.exe /S /D=C:\path
+        //
+        // /D= 的值里有空格时必须整体加引号。命令行 "Setup.exe /S /D=C:\a b" 会被
+        // 拆成两个参数，installTarget 只剩 C:\a —— 装出来的目录名被截断，
+        // 而进程仍然返回 0，调用方看不出失败。这里显式检查：如果 /D 的值
+        // 之后还有以空格开的分段，说明用户漏了引号，直接报错比静默装错强。
         bool silent = false;
+        bool targetHasSpace = false;
         foreach (var a in args)
         {
             if (a.Equals("/S", StringComparison.OrdinalIgnoreCase)) silent = true;
-            if (a.StartsWith("/D=", StringComparison.OrdinalIgnoreCase)) installTarget = a.Substring(3).Trim('"');
+            if (a.StartsWith("/D=", StringComparison.OrdinalIgnoreCase))
+            {
+                installTarget = a.Substring(3).Trim('"');
+            }
+            else if (installTarget != null && a.Length > 0 && !a.StartsWith("/"))
+            {
+                // /D= 后面的孤立参数：多半是未加引号的路径被空格切开了
+                targetHasSpace = true;
+            }
+        }
+
+        if (targetHasSpace)
+        {
+            MessageBox.Show(
+                "安装路径里有空格但参数没加引号。\n\n正确写法：\nSetup.exe /S /D=\"C:\\你的 路径\"\n\n或者直接双击安装，用向导选目录。",
+                "漫客工作台", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return 2;
         }
 
         if (installTarget == null) installTarget = DefaultTarget;

@@ -233,11 +233,40 @@ function Start-WorkbenchBuild([string]$Root) {
     $bErr = Join-Path $logDir 'build-err.txt'
     Remove-Item $bLog, $bErr -Force -EA SilentlyContinue
 
-    # 用 npx 形式的入口：项目里的 pnpm 是 .cmd，Windows 上不能直接 CreateProcess
-    $pnpmCli = Join-Path $Root 'node_modules\pnpm\bin\pnpm.cjs'
-    if (-not (Test-Path $pnpmCli)) {
-        # 没本地 pnpm 就用 corepack 自带的，或退回 npm
-        $pnpmCli = $null
+    # 找一个能用的 pnpm。
+    #
+    # 目标机器上可能根本没有 pnpm —— 控制台只带了 node.exe，没带 pnpm。
+    # 这时用 node 官方自带的 corepack：它按 package.json 的 packageManager
+    # 字段去取对应版本，第一次会联网下载一次，之后走缓存。
+    #
+    # 优先级：项目里装好的 pnpm → corepack 提供的 pnpm → PATH 里的 pnpm。
+    # 前两个都通过 node 直跑 .cjs/.js，不依赖 .cmd 的 CreateProcess 行为。
+    $pnpmCmd = $null
+    $pnpmViaNode = $null
+
+    $localPnpm = Join-Path $Root 'node_modules\pnpm\bin\pnpm.cjs'
+    if (Test-Path $localPnpm) {
+        $pnpmViaNode = $localPnpm
+    }
+
+    if (-not $pnpmViaNode) {
+        $corepackMain = Join-Path $nodeDir 'node_modules\corepack\dist\corepack.js'
+        if (Test-Path $corepackMain) {
+            # 用 corepack 的 pnpm shim：corepack pnpm <args>
+            $pnpmViaNode = $corepackMain
+            $pnpmCmd = 'corepack'
+        }
+    }
+
+    if (-not $pnpmViaNode) {
+        # 最后退回 PATH。用户装了 pnpm 就走这条。
+        if (Get-Command pnpm -ErrorAction SilentlyContinue) {
+            $pnpmCmd = 'path'
+        } else {
+            Add-Log '  ✗ 找不到 pnpm，也没有可用的 corepack'
+            Add-Log '    控制台自带 node.exe，但缺 corepack —— 安装包可能不完整。'
+            return $false
+        }
     }
 
     $env:CI = 'true'
@@ -253,7 +282,20 @@ function Start-WorkbenchBuild([string]$Root) {
     
     foreach ($step in @('install', 'build')) {
         Add-Log ("  pnpm " + $step + " …")
-        $cmd = 'set "PATH=' + $nodeDir + ';%PATH%" && set CI=true && pnpm ' + $step
+
+        # 组命令。走 node 直跑时，把 corepack 当作 pnpm 的启动器：
+        #   node corepack.js pnpm install
+        # 项目自带 pnpm 时：
+        #   node pnpm.cjs install
+        if ($pnpmCmd -eq 'path') {
+            $invoke = 'pnpm ' + $step
+        } elseif ($pnpmCmd -eq 'corepack') {
+            $invoke = '"' + $nodeExe + '" "' + $pnpmViaNode + '" pnpm ' + $step
+        } else {
+            $invoke = '"' + $nodeExe + '" "' + $pnpmViaNode + '" ' + $step
+        }
+
+        $cmd = 'set "PATH=' + $nodeDir + ';%PATH%" && set CI=true && ' + $invoke
         try {
             $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $cmd `
                 -WorkingDirectory $Root -NoNewWindow -PassThru -Wait `
