@@ -205,6 +205,73 @@ function Repair-TaskWindow([string]$TaskName, [string]$WrapperName, [string]$Def
 # 原来的代码只会「修」已有任务，遇到任务不存在就直接把
 # 「系统找不到指定的文件」甩给用户 —— 那是个死胡同，他除了重装没别的办法。
 # 这里按当前 ComfyUI 位置现建一个，建完直接能启动。
+# 在工作台目录里跑 pnpm install + build，同步等待完成。
+#
+# 全新安装只有源码，没有 node_modules 和 .output。这是唯一必须由
+# 控制台代劳的一步：它自己带着 node.exe，用户没必要为此开终端。
+#
+# 同步等待是有意的 —— 调用方（启动流程）在拿到构建结果之前无法继续，
+# 而这一步发生在「启动中」状态里，界面显示的是进度而不是卡死。
+#
+# 返回 $true 表示 .output\server\index.mjs 已就位。
+function Start-WorkbenchBuild([string]$Root) {
+    if (-not $Root -or -not (Test-Path (Join-Path $Root 'package.json'))) {
+        Add-Log "  找不到工作台目录或 package.json：$Root"
+        return $false
+    }
+
+    $nodeDir = Join-Path $BD 'node'
+    $nodeExe = Join-Path $nodeDir 'node.exe'
+    if (-not (Test-Path $nodeExe)) {
+        Add-Log "  控制台缺少 node.exe：$nodeExe"
+        return $false
+    }
+
+    $logDir = Join-Path $BD 'data\logs'
+    if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force -EA SilentlyContinue | Out-Null }
+    $bLog = Join-Path $logDir 'build-out.txt'
+    $bErr = Join-Path $logDir 'build-err.txt'
+    Remove-Item $bLog, $bErr -Force -EA SilentlyContinue
+
+    # 用 npx 形式的入口：项目里的 pnpm 是 .cmd，Windows 上不能直接 CreateProcess
+    $pnpmCli = Join-Path $Root 'node_modules\pnpm\bin\pnpm.cjs'
+    if (-not (Test-Path $pnpmCli)) {
+        # 没本地 pnpm 就用 corepack 自带的，或退回 npm
+        $pnpmCli = $null
+    }
+
+    $env:CI = 'true'
+    $env:PATH = $nodeDir + ';' + $env:PATH
+
+    $ok = $true
+    # Windows 上 pnpm 是 pnpm.cmd，Start-Process 直接跑会报
+    # 「%1 不是有效的 Win32 应用程序」—— 必须交给 cmd.exe。
+    
+    foreach ($step in @('install', 'build')) {
+        Add-Log ("  pnpm " + $step + " …")
+        $cmd = 'set "PATH=' + $nodeDir + ';%PATH%" && set CI=true && pnpm ' + $step
+        try {
+            $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $cmd `
+                -WorkingDirectory $Root -NoNewWindow -PassThru -Wait `
+                -RedirectStandardOutput $bLog -RedirectStandardError $bErr -ErrorAction Stop
+            if ($p.ExitCode -ne 0) {
+                Add-Log ("  ✗ pnpm " + $step + " 退出码 " + $p.ExitCode)
+                $tail = Get-Content $bErr -Tail 3 -Encoding UTF8 -EA SilentlyContinue
+                foreach ($l in $tail) { Add-Log ("    " + $l) }
+                $ok = $false
+                break
+            }
+        } catch {
+            Add-Log ("  ✗ pnpm " + $step + " 无法启动：" + $_.Exception.Message)
+            $ok = $false
+            break
+        }
+    }
+    
+    if (-not $ok) { return $false }
+    return (Test-Path (Join-Path $Root '.output\server\index.mjs'))
+}
+
 function New-ServiceTask($svc) {
     $wrapper = if ($svc.Key -eq 'comfyui') { 'comfyui' } else { 'workbench' }
     $wrapperName = $wrapper   # New-HiddenLaunchVbs 内部会加 run- 前缀
@@ -254,9 +321,19 @@ function New-ServiceTask($svc) {
             if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
             $entry = Join-Path $wbRoot '.output\server\index.mjs'
             if (-not (Test-Path $entry)) {
-                Add-Log ("  工作台还没构建：" + $entry)
-                Add-Log '  点「全部启动」会自动跑 install + build。'
-                return $false
+                # 还没构建。控制台自己带着 node，应该由它来装依赖和构建 ——
+                # 让用户自己去开终端跑 pnpm 是最没道理的做法。
+                Add-Log "  工作台还没构建，先装依赖再构建（约 2-5 分钟）…"
+                $built = Start-WorkbenchBuild $wbRoot
+                if (-not $built) {
+                    Add-Log "  ✗ 构建失败，看 data\logs\build-out.txt"
+                    return $false
+                }
+                if (-not (Test-Path $entry)) {
+                    Add-Log "  ✗ 构建完成但产物仍缺失：$entry"
+                    return $false
+                }
+                Add-Log "  ✓ 工作台构建完成"
             }
             
             # 这三个环境变量缺一不可：
