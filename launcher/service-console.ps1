@@ -104,6 +104,18 @@ function New-HiddenLaunchVbs {
 
     $vbsPath = Join-Path $BD "launcher\run-$Name.vbs"
     $escaped = $CmdLine -replace '"', '""'
+
+    # 命令里含 && 或重定向就是 cmd 语法，必须 cmd /c 包一层。
+    # 裸给 wscript 会把整串当成一个可执行文件名，静默失败 ——
+    # 表现是任务 Running 但端口永远不监听。
+    if ($CmdLine -match '&&|>|<') {
+        # cmd 语法：包一层 cmd /c，然后整串再交给 VBS 转义一次
+        $runTarget = 'cmd.exe /c ' + $CmdLine
+    } else {
+        $runTarget = $CmdLine
+    }
+    # VBS 字符串里的双引号要写两遍
+    $runEscaped = $runTarget -replace '"', '""'
     $content = @"
 ' 隐藏窗口启动 $Name
 '
@@ -115,7 +127,7 @@ function New-HiddenLaunchVbs {
 '
 Set sh = CreateObject("WScript.Shell")
 sh.CurrentDirectory = "$WorkDir"
-sh.Run "$escaped", 0, False
+sh.Run "$runEscaped", 0, False
 "@
     Set-Content $vbsPath $content -Encoding Unicode
 
@@ -229,10 +241,53 @@ function New-ServiceTask($svc) {
             $cmdLine = "`"$py`" -s `"$mainPy`" --listen 127.0.0.1 --port $($svc.Port)"
             $workDir = Split-Path $mainPy -Parent
         } else {
+            # 工作台源码在用户自己放的位置，不在控制台安装目录里。
+            # 用 Resolve-WorkbenchRoot 定位 —— 它先读计划任务记录的工作目录，
+            # 再试常见路径。直接拼 $BD 永远指向安装目录，那里没有 .output。
+            # 工作台源码在用户自己放的位置，不在控制台安装目录里。
+            # 用 Resolve-WorkbenchRoot 定位 —— 它先读计划任务记录的工作目录，
+            # 再试常见路径。直接拼 $BD 永远指向安装目录，那里没有 .output。
+            $wbRoot = Resolve-WorkbenchRoot
+            if (-not $wbRoot) { return $false }
+            
             $nodeExe = Join-Path $BD 'node\node.exe'
-            if (-not (Test-Path $nodeExe)) { return $false }
-            $entry = Join-Path $BD '.output\server\index.mjs'
-            $cmdLine = "`"$nodeExe`" `"$entry`""
+            if (-not (Test-Path $nodeExe)) { $nodeExe = 'node' }
+            $entry = Join-Path $wbRoot '.output\server\index.mjs'
+            if (-not (Test-Path $entry)) {
+                Add-Log ("  工作台还没构建：" + $entry)
+                Add-Log '  点「全部启动」会自动跑 install + build。'
+                return $false
+            }
+            
+            # 这三个环境变量缺一不可：
+            #   PORT                          不给就默认端口，服务起来但不在 3020
+            #   BEATDESIGN_COMFYUI_HOME       服务端靠它找本机 ComfyUI
+            #   BEATDESIGN_GENERATION_PROVIDER 指定走 comfyui 而不是别的后端
+            # 另外把输出重定向到日志，不然出错了在控制台里看不到任何线索。
+            $comfyHome = $null
+            try {
+                $cfgPath = Join-Path $BD 'data\comfyui.config.json'
+                if (Test-Path $cfgPath) {
+                    $cfg = Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json
+                    if ($cfg.pythonPath) { $comfyHome = Split-Path (Split-Path $cfg.pythonPath -Parent) -Parent }
+                }
+            } catch { }
+            if (-not $comfyHome -and (Test-Path 'E:\ComfyUI')) { $comfyHome = 'E:\ComfyUI' }
+            
+            # 工作台的 data\logs 在源码目录下
+            $wbLogDir = Join-Path $wbRoot 'data\logs'
+            if (-not (Test-Path $wbLogDir)) { New-Item -ItemType Directory -Path $wbLogDir -Force -EA SilentlyContinue | Out-Null }
+            $logOut = Join-Path $wbLogDir 'workbench.log'
+            $logErr = Join-Path $wbLogDir 'workbench.err.log'
+            
+            $nodeDir = Split-Path $nodeExe -Parent
+            $cmdLine = 'cd /d "' + $wbRoot + '" && set "PATH=' + $nodeDir + ';%PATH%" && set PORT=' + $svc.Port + ' && set BEATDESIGN_GENERATION_PROVIDER=comfyui'
+            if ($comfyHome) { $cmdLine += ' && set BEATDESIGN_COMFYUI_HOME=' + $comfyHome }
+            $cmdLine += ' && "' + $nodeExe + '" "' + $entry + '" > "' + $logOut + '" 2> "' + $logErr + '"'
+            
+            # 命令里有 && 和重定向，必须交给 cmd.exe 跑
+            $workDir = $wbRoot
+            $useCmd = $true
         }
     }
 
