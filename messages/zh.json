@@ -1290,5 +1290,15 @@
   "services.llm.hint": "Key 只保存在本机 data/llm.config.json，不会上传。",
   "services.deploy.foundVolumes": "在本机找到这些分卷",
   "services.deploy.rescan": "重新扫描",
-  "services.deploy.volumeCount": "{count} 卷 · {size}"
+  "services.deploy.volumeCount": "{count} 卷 · {size}",
+  "showcase.manager.title": "首页展示",
+  "showcase.manager.subtitle": "这里放的东西会出现在首页轮播。可以隐藏内置素材，也可以上传自己的。",
+  "showcase.manager.upload": "上传素材",
+  "showcase.manager.images": "图片",
+  "showcase.manager.videos": "片子",
+  "showcase.manager.empty": "还没有素材",
+  "showcase.manager.hide": "从首页隐藏",
+  "showcase.manager.show": "重新显示",
+  "showcase.manager.remove": "移出展示",
+  "showcase.manager.builtin": "内置"
 }

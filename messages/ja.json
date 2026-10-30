@@ -1290,5 +1290,15 @@
   "services.llm.hint": "キーはこのマシンの data/llm.config.json にのみ保存されます。",
   "services.deploy.foundVolumes": "この PC で見つかった分割ファイル",
   "services.deploy.rescan": "再スキャン",
-  "services.deploy.volumeCount": "{count} 分割 · {size}"
+  "services.deploy.volumeCount": "{count} 分割 · {size}",
+  "showcase.manager.title": "トップページ表示",
+  "showcase.manager.subtitle": "ここにあるものがトップのカルーセルに出ます。内蔵素材を隠したり、自分のをアップロードできます。",
+  "showcase.manager.upload": "アップロード",
+  "showcase.manager.images": "画像",
+  "showcase.manager.videos": "クリップ",
+  "showcase.manager.empty": "まだ何もありません",
+  "showcase.manager.hide": "トップから隠す",
+  "showcase.manager.show": "再表示",
+  "showcase.manager.remove": "トップから外す",
+  "showcase.manager.builtin": "内蔵"
 }

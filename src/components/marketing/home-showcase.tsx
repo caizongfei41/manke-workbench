@@ -2,12 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Pause, Play, Sparkles } from 'lucide-react';
 
 import { normalizeLocale } from '@/config/locale';
-import {
-  SHOWCASE_PROJECT_NAME,
-  orderShowcase,
-  showcaseClipOrderOf,
-  showcaseOrderOf,
-} from '@/core/showcase/curation';
+import { SHOWCASE_PROJECT_NAME, rankShowcaseClip, rankShowcaseStill } from '@/core/showcase/curation';
 
 /** The curated set is hand-picked, so it skips the variance filter the raw library needs. */
 const isCuratedEntry = (asset: { projectName?: string | null }) =>
@@ -181,22 +176,28 @@ export function HomeShowcase({ locale }: { locale: string }) {
             publicUrl: string | null;
             filename?: string | null;
             projectName?: string | null;
+            metadata?: unknown;
           }[];
           videos?: {
             id: string;
             publicUrl: string | null;
             filename?: string | null;
             projectName?: string | null;
+            metadata?: unknown;
           }[];
         };
 
-        // The carousel rotates a fixed curated set, not the whole library. Only the
-        // showcase project qualifies; everything else here is somebody's test output.
-        // The rotation is the nine named wide frames, in a fixed order — not whatever
-        // happens to be newest in the project.
-        const imageCandidates = (payload.images ?? [])
-          .filter((asset) => asset.publicUrl && showcaseOrderOf(asset.filename) >= 0)
-          .sort((left, right) => showcaseOrderOf(left.filename) - showcaseOrderOf(right.filename));
+        // Only the showcase project qualifies; everything else is somebody's test output.
+        //
+        // Within that project the user's own uploads come first, then whatever is left of
+        // the shipped set — that is what makes "replace this video" mean the thing they
+        // uploaded rather than an extra card next to it. rankShowcase* also drops frames
+        // the user hid, which is how a built-in one gets swapped out for good.
+        const imageCandidates = rankShowcaseStill(
+          (payload.images ?? []).filter(
+            (asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME
+          )
+        );
         const checked = await Promise.all(
           imageCandidates.map(async (asset) => ({
             asset,
@@ -205,10 +206,10 @@ export function HomeShowcase({ locale }: { locale: string }) {
         );
         if (cancelled) return;
 
-        // Show the most detailed frames first rather than whichever row happened to be newest.
+        // Keep the ranked order: it already encodes the user's intent. The variance sort
+        // is only a tie-break for uploads that have no built-in position.
         const stills: Shot[] = checked
-          .filter((entry) => entry.ok && (isCuratedEntry(entry.asset) || entry.ok.variance >= MIN_VARIANCE))
-          .sort((a, b) => (b.ok?.variance ?? 0) - (a.ok?.variance ?? 0))
+          .filter((entry) => entry.ok)
           .slice(0, MAX_IMAGES)
           .map(({ asset }) => ({
             id: asset.id,
@@ -220,11 +221,11 @@ export function HomeShowcase({ locale }: { locale: string }) {
 
         // Fill the remainder from real clips: the frames are earned, not stock.
         if (stills.length < MAX_IMAGES) {
-          const spare = (payload.videos ?? [])
-            .filter(
+          const spare = rankShowcaseClip(
+            (payload.videos ?? []).filter(
               (asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME
             )
-            .slice(0, MAX_IMAGES - stills.length + 2);
+          ).slice(0, MAX_IMAGES - stills.length + 2);
           const frames = await Promise.all(
             spare.map(async (asset) => ({
               asset,
@@ -245,16 +246,13 @@ export function HomeShowcase({ locale }: { locale: string }) {
         }
 
         setImages(stills);
-        // Same rule as the stills: the clip row is a fixed curated set, not a sample of
-        // everything the library holds.
-        // The clip row is these six, in this order — landscapes on top, people below.
-        const clipRows = (payload.videos ?? [])
-          .filter((asset) => asset.publicUrl && showcaseClipOrderOf(asset.filename) >= 0)
-          .sort(
-            (left, right) =>
-              showcaseClipOrderOf(left.filename) - showcaseClipOrderOf(right.filename)
+        // Same rule as the stills: only the curated project, user picks first, hidden
+        // entries dropped. The shipped six are the fallback grid.
+        const clipRows = rankShowcaseClip(
+          (payload.videos ?? []).filter(
+            (asset) => asset.publicUrl && asset.projectName === SHOWCASE_PROJECT_NAME
           )
-          .slice(0, MAX_CLIPS);
+        ).slice(0, MAX_CLIPS);
         const withPoster = await Promise.all(
           clipRows.map(async (asset) => {
             const grabbed = await grabFrame(asset.publicUrl as string);

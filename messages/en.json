@@ -1290,5 +1290,15 @@
   "services.llm.hint": "The key stays in data/llm.config.json on this machine.",
   "services.deploy.foundVolumes": "Volumes found on this machine",
   "services.deploy.rescan": "Rescan",
-  "services.deploy.volumeCount": "{count} volumes · {size}"
+  "services.deploy.volumeCount": "{count} volumes · {size}",
+  "showcase.manager.title": "Front page",
+  "showcase.manager.subtitle": "Whatever lives here appears in the home carousel. Hide a built-in, or upload your own.",
+  "showcase.manager.upload": "Upload",
+  "showcase.manager.images": "Frames",
+  "showcase.manager.videos": "Clips",
+  "showcase.manager.empty": "Nothing here yet",
+  "showcase.manager.hide": "Hide from front page",
+  "showcase.manager.show": "Show again",
+  "showcase.manager.remove": "Remove from front page",
+  "showcase.manager.builtin": "Built-in"
 }
