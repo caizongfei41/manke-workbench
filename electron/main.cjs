@@ -22,6 +22,7 @@ const { createServer } = require('node:net');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { ensureSchema, seedShowcase } = require('./db-bootstrap.cjs');
+const { inspectBundle, extractBundle } = require('./bundle.cjs');
 
 const APP_ROOT = path.dirname(__dirname);
 /** 打包后服务端产物在 resources/ 下（asar 外），开发时在 build-resources/。 */
@@ -555,6 +556,86 @@ ipcMain.handle('app:openLogs', () => shell.openPath(logDir()));
 ipcMain.handle('app:quit', () => {
   quitting = true;
   app.quit();
+});
+
+// ── 部署包
+//
+// 新机器上最费时的一步：把 211 GB 的 ComfyUI 和模型放到该去的地方。
+// 分卷放哪都行，检查时让用户选；解压完直接把结果记进 ComfyUI 配置。
+const bundlePaths = () => {
+  const guesses = [
+    path.join(RESOURCES, 'deploy'),
+    path.join(path.dirname(RESOURCES), 'deploy'),
+    path.join(app.getPath('userData'), 'deploy'),
+    path.join(app.getPath('downloads'), 'manke'),
+  ];
+  return guesses.filter((p) => {
+    try {
+      return fs.existsSync(p);
+    } catch {
+      return false;
+    }
+  });
+};
+
+
+ipcMain.handle('bundle:guess', () => {
+  const dirs = bundlePaths();
+  // 第一个真有分卷的直接用；没有就把候选目录都返回让用户挑
+  for (const dir of dirs) {
+    const r = inspectBundle(dir);
+    if (r.base) return { dir, ...r };
+  }
+  return { dir: dirs[0] ?? '', ok: false, message: '没找到部署包目录' };
+});
+
+ipcMain.handle('bundle:inspect', (_e, dir) => inspectBundle(dir));
+
+ipcMain.handle('bundle:pickDir', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: '选择部署包分卷所在目录（里面应有 .7z.001）',
+    properties: ['openDirectory'],
+  });
+  if (result.canceled || !result.filePaths[0]) return { ok: false, canceled: true };
+  const dir = result.filePaths[0];
+  return { ok: true, dir, ...inspectBundle(dir) };
+});
+
+ipcMain.handle('bundle:pickTarget', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: '选择解压到哪里（建议选空间充足的盘，需要 250 GB 以上）',
+    properties: ['openDirectory', 'createDirectory'],
+  });
+  if (result.canceled || !result.filePaths[0]) return { ok: false, canceled: true };
+  return { ok: true, dir: result.filePaths[0] };
+});
+
+ipcMain.handle('bundle:extract', async (_e, { firstVolume, targetDir }) => {
+  log(`解压部署包 → ${targetDir}`);
+  const result = await extractBundle({
+    firstVolume,
+    targetDir,
+    resources: RESOURCES,
+    onProgress: (p) => {
+      try {
+        mainWindow?.webContents.send('bundle:progress', p);
+      } catch {
+        /* 窗口关了就算了 */
+      }
+    },
+  });
+  log(`部署包解压: ${result.message}`);
+
+  // 成功就把它记成 ComfyUI 位置，省得用户再选一次
+  if (result.ok) {
+    const root = result.targetDir;
+    const py = path.join(root, 'python_embeded', 'python.exe');
+    if (fs.existsSync(py)) {
+      writeComfyConfig(root, py);
+      log(`ComfyUI 已指向 ${root}`);
+    }
+  }
+  return result;
 });
 
 // ── 生命周期

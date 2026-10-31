@@ -19,6 +19,19 @@ contextBridge.exposeInMainWorld('mankeDesktop', {
     check: () => ipcRenderer.invoke('env:check'),
   },
 
+  bundle: {
+    guess: () => ipcRenderer.invoke('bundle:guess'),
+    inspect: (dir) => ipcRenderer.invoke('bundle:inspect', dir),
+    pickDir: () => ipcRenderer.invoke('bundle:pickDir'),
+    pickTarget: () => ipcRenderer.invoke('bundle:pickTarget'),
+    extract: (payload) => ipcRenderer.invoke('bundle:extract', payload),
+    onProgress: (handler) => {
+      const listener = (_event, data) => handler(data);
+      ipcRenderer.on('bundle:progress', listener);
+      return () => ipcRenderer.removeListener('bundle:progress', listener);
+    },
+  },
+
   comfy: {
     status: () => ipcRenderer.invoke('comfy:status'),
     start: () => ipcRenderer.invoke('comfy:start'),

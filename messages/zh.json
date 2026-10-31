@@ -1346,6 +1346,14 @@
       "pickOrDownload": "可以下面指定目录，或者下载一键部署包",
       "startIt": "找到目录后可以在这里点启动",
       "lowVram": "显存偏小，大模型可能跑不动"
-    }
+    },
+    "bundleTitle": "已经下载了部署包？",
+    "bundleBody": "把所有分卷放到一个目录，这里检查齐不齐，然后解压到空间充足的盘。",
+    "bundleNoDir": "还没选目录",
+    "bundleVolumes": "个分卷",
+    "bundleInspect": "检查分卷",
+    "bundlePickDir": "选择分卷目录",
+    "bundleExtract": "解压到…",
+    "extracting": "正在解压，211 GB 可能要几十分钟…"
   }
 }

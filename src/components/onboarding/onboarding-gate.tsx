@@ -43,7 +43,31 @@ type DesktopApi = {
     stop: () => Promise<{ ok: boolean; message: string }>;
     pickRoot: () => Promise<{ ok: boolean; root?: string; message?: string }>;
   };
+  bundle: {
+    guess: () => Promise<BundleState>;
+    inspect: (dir: string) => Promise<BundleState>;
+    pickDir: () => Promise<BundleState & { canceled?: boolean }>;
+    pickTarget: () => Promise<{ ok: boolean; dir?: string; canceled?: boolean }>;
+    extract: (payload: { firstVolume: string; targetDir: string }) => Promise<{
+      ok: boolean;
+      targetDir: string;
+      message: string;
+    }>;
+    onProgress: (handler: (p: { percent: number; line: string }) => void) => () => void;
+  };
   openLogs: () => Promise<string>;
+};
+
+/** What bundle:inspect reports back about a folder of .7z volumes. */
+type BundleState = {
+  dir: string;
+  ok: boolean;
+  base?: string | null;
+  volumes?: number;
+  totalBytes?: number;
+  firstVolume?: string | null;
+  missing?: number[];
+  message: string;
 };
 
 declare global {
@@ -102,6 +126,10 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [env, setEnv] = useState<EnvState | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [bundle, setBundle] = useState<BundleState | null>(null);
+  const [bundleTarget, setBundleTarget] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [percent, setPercent] = useState(0);
 
   // Desktop shell only; a browser session goes straight through.
   useEffect(() => {
@@ -159,6 +187,68 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       setBusy(false);
     }
   }, [runCheck, t]);
+
+  // Bundle handling: inspect finds the volumes, extract runs 7z and writes the
+  // resulting folder into the ComfyUI config so the next check goes green.
+  const handleInspectBundle = useCallback(async () => {
+    const api = window.mankeDesktop;
+    if (!api) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const found = await api.bundle.guess();
+      setBundle(found);
+      if (!found.ok) {
+        setMessage(found.message);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const handlePickBundleDir = useCallback(async () => {
+    const api = window.mankeDesktop;
+    if (!api) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const picked = await api.bundle.pickDir();
+      if (picked.canceled) return;
+      setBundle(picked);
+      setMessage(picked.message);
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const handleExtract = useCallback(async () => {
+    const api = window.mankeDesktop;
+    if (!api || !bundle?.firstVolume) return;
+
+    const target = await api.bundle.pickTarget();
+    if (!target.ok || !target.dir) return;
+    setBundleTarget(target.dir);
+
+    setExtracting(true);
+    setPercent(0);
+    setMessage(t('extracting'));
+
+    const stop = api.bundle.onProgress((p) => setPercent(p.percent));
+    try {
+      const result = await api.bundle.extract({
+        firstVolume: bundle.firstVolume,
+        targetDir: target.dir,
+      });
+      setMessage(result.message);
+      if (result.ok) {
+        await runCheck();
+      }
+    } finally {
+      stop();
+      setExtracting(false);
+      setPercent(0);
+    }
+  }, [bundle, runCheck, t]);
 
   const handleFinish = useCallback(async () => {
     const api = window.mankeDesktop;
@@ -274,14 +364,23 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
               </p>
             ) : null}
 
-            {/* ComfyUI missing: three ways forward */}
-            {env && !env.checks.find((c) => c.id === 'comfyui')?.ok ? (
+            {/* ComfyUI setup. The outer card renders whenever the check has run --
+                not only when ComfyUI is missing. A machine that already has one
+                may still want a second copy or more models, and hiding the bundle
+                panel behind "not found" made it unreachable where it worked. */}
+            {env ? (
               <div className="beat-glass rounded-2xl p-5">
-                <p className="text-[14px] font-semibold text-[var(--beat-text-1)]">
-                  {t('missingComfyTitle')}
-                </p>
+                {!env.checks.find((c) => c.id === 'comfyui')?.ok ? (
+                  <p className="text-[14px] font-semibold text-[var(--beat-text-1)]">
+                    {t('missingComfyTitle')}
+                  </p>
+                ) : (
+                  <p className="text-[14px] font-semibold text-[var(--beat-text-1)]">
+                    {t('bundleTitle')}
+                  </p>
+                )}
                 <p className="mt-1.5 text-[13px] leading-6 text-[var(--beat-text-3)]">
-                  {t('missingComfyBody')}
+                  {t('bundleBody')}
                 </p>
 
                 <div className="mt-4 flex flex-col gap-2">
@@ -305,6 +404,82 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                       {t('downloadBundleHint')} {BONUS_LINK_CODE}
                     </span>
                   </a>
+
+                  {/* Step two after downloading: check the volumes, then extract. */}
+                  <div className="mt-1 rounded-xl border border-dashed border-[var(--beat-line)] p-3">
+                    <p className="text-[12px] font-medium text-[var(--beat-text-2)]">
+                      {t('bundleTitle')}
+                    </p>
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--beat-text-3)]">
+                      {t('bundleBody')}
+                    </p>
+
+                    {bundle ? (
+                      <div className="mt-2 rounded-lg bg-[var(--beat-surface)] px-3 py-2">
+                        <p className="truncate text-[11px] text-[var(--beat-text-3)]" title={bundle.dir}>
+                          {bundle.dir || t('bundleNoDir')}
+                        </p>
+                        <p
+                          className={
+                            bundle.ok
+                              ? 'mt-0.5 text-[12px] font-medium text-emerald-600'
+                              : 'mt-0.5 text-[12px] font-medium text-amber-600'
+                          }
+                        >
+                          {bundle.message}
+                        </p>
+                        {bundle.base ? (
+                          <p className="mt-0.5 text-[11px] text-[var(--beat-text-3)]">
+                            {bundle.base}.001 · {bundle.volumes} {t('bundleVolumes')} ·{' '}
+                            {((bundle.totalBytes ?? 0) / 1024 ** 3).toFixed(1)} GB
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {extracting ? (
+                      <div className="mt-2">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--beat-line)]">
+                          <div
+                            className="h-full rounded-full bg-[var(--beat-accent)] transition-all"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] text-[var(--beat-text-3)]">
+                          {percent}% {bundleTarget ? `→ ${bundleTarget}` : ''}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={busy || extracting}
+                        onClick={() => void handleInspectBundle()}
+                        className="rounded-full border border-[var(--beat-line)] px-3 py-1.5 text-[11px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-50"
+                      >
+                        {t('bundleInspect')}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy || extracting}
+                        onClick={() => void handlePickBundleDir()}
+                        className="rounded-full border border-[var(--beat-line)] px-3 py-1.5 text-[11px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-50"
+                      >
+                        {t('bundlePickDir')}
+                      </button>
+                      {bundle?.ok ? (
+                        <button
+                          type="button"
+                          disabled={busy || extracting}
+                          onClick={() => void handleExtract()}
+                          className="rounded-full bg-[var(--beat-accent)] px-3 py-1.5 text-[11px] font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                        >
+                          {t('bundleExtract')}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
 
                   <button
                     type="button"

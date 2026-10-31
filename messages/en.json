@@ -1346,6 +1346,14 @@
       "pickOrDownload": "Pick a folder below, or download the bundle.",
       "startIt": "Start it here once the folder is set.",
       "lowVram": "Low VRAM -- large models may not fit."
-    }
+    },
+    "bundleTitle": "Already downloaded the bundle?",
+    "bundleBody": "Put every volume in one folder, check them here, then extract to a drive with space.",
+    "bundleNoDir": "No folder chosen",
+    "bundleVolumes": "volumes",
+    "bundleInspect": "Check volumes",
+    "bundlePickDir": "Choose folder",
+    "bundleExtract": "Extract to…",
+    "extracting": "Extracting — 211 GB can take a while…"
   }
 }

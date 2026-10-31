@@ -1346,6 +1346,14 @@
       "pickOrDownload": "下のフォルダを指定するか、パッケージをダウンロードしてください。",
       "startIt": "フォルダ設定後にここから起動できます。",
       "lowVram": "VRAM が少なめです。大きなモデルは載らない可能性があります。"
-    }
+    },
+    "bundleTitle": "パッケージをダウンロード済みですか？",
+    "bundleBody": "すべての分割ファイルを 1 つのフォルダに置き、ここで確認してから余裕のあるドライブに展開します。",
+    "bundleNoDir": "フォルダ未選択",
+    "bundleVolumes": "分割",
+    "bundleInspect": "分割を確認",
+    "bundlePickDir": "フォルダを選択",
+    "bundleExtract": "展開先を選ぶ…",
+    "extracting": "展開中 — 211 GB は時間がかかります…"
   }
 }
