@@ -766,7 +766,8 @@
           "saved": "Storage configuration saved"
         }
       },
-      "standard": "Standard"
+      "standard": "Standard",
+      "drama": "AI Drama"
     }
   },
   "BeatAPI": {
@@ -1157,7 +1158,7 @@
   "home.workspaces.studioTitle": "Studio",
   "home.workspaces.studioOutput": "Get an image, a clip or a song",
   "home.workspaces.canvasTitle": "Canvas",
-  "home.workspaces.canvasOutput": "Get segments, a final cut and a shot list",
+  "home.workspaces.canvasOutput": "Produces sequenced footage and a deliverable shot list",
   "home.workspaces.projectsOutput": "Pick up where you left off",
   "startHere.styles.title": "Start from a style",
   "startHere.recent.title": "Recent output in this project",

@@ -3,7 +3,7 @@
   "product.shell.home": "ホーム",
   "product.shell.create": "作成",
   "product.shell.studio": "Studio",
-  "product.shell.canvas": "Canvas",
+  "product.shell.canvas": "キャンバス",
   "product.shell.projects": "プロジェクト",
   "product.shell.openNavigation": "ナビゲーションを開く",
   "product.shell.closeNavigation": "ナビゲーションを閉じる",
@@ -681,7 +681,7 @@
       "servicesLabel": "サービスコンソールを開く（ローカルサービス管理）",
       "studio": "Studio",
       "studioDescription": "生成と分析に集中",
-      "canvas": "Canvas",
+      "canvas": "キャンバス",
       "canvasDescription": "視覚的な複数ステップのワークフロー",
       "editor": "編集",
       "assets": "Assets",
@@ -766,7 +766,8 @@
           "saved": "ストレージ設定を保存しました"
         }
       },
-      "standard": "標準"
+      "standard": "標準",
+      "drama": "AI ドラマモード"
     }
   },
   "BeatAPI": {
@@ -1157,7 +1158,7 @@
   "home.workspaces.studioTitle": "スタジオ",
   "home.workspaces.studioOutput": "画像・映像・楽曲を 1 本ずつ",
   "home.workspaces.canvasTitle": "キャンバス",
-  "home.workspaces.canvasOutput": "カット結合とショットリストまで",
+  "home.workspaces.canvasOutput": "分割された映像と受け渡し可能な絵コンテを出力",
   "home.workspaces.projectsOutput": "前回の続きから",
   "startHere.styles.title": "スタイルから始める",
   "startHere.recent.title": "このプロジェクトの最近の出力",

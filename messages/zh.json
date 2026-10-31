@@ -766,7 +766,8 @@
           "saved": "存储配置已保存"
         }
       },
-      "standard": "标准画布"
+      "standard": "标准画布",
+      "drama": "AI 短剧模式"
     }
   },
   "BeatAPI": {
