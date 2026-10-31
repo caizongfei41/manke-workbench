@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { CommandPalette } from '@/components/app/command-palette';
+import { OnboardingGate } from '@/components/onboarding/onboarding-gate';
 import {
   createRootRoute,
   HeadContent,
@@ -55,7 +56,9 @@ function RootComponent() {
         enableSystem
         disableTransitionOnChange
       >
-        <Outlet />
+        <OnboardingGate>
+          <Outlet />
+        </OnboardingGate>
         <CommandPalette />
         <Toaster position="top-center" richColors />
       </ThemeProvider>

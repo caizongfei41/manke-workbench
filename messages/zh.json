@@ -1303,5 +1303,49 @@
   "showcase.manager.remove": "移出展示",
   "showcase.manager.builtin": "内置",
   "home.showcase.manage": "管理展示内容",
-  "showcase.page.title": "首页展示"
+  "showcase.page.title": "首页展示",
+  "Onboarding": {
+    "brand": "漫客工作台 · 桌面版",
+    "welcomeTitle": "先花一分钟把机器配好",
+    "welcomeBody": "这是第一次启动，下面三屏带你确认环境。之后不会再来打扰。",
+    "welcomeBuiltinTitle": "已经装好的",
+    "welcomeBuiltinBody": "界面、本地服务、展示素材、数据库都在这个程序里，不需要另外安装。",
+    "welcomeNeedTitle": "还缺的",
+    "welcomeNeedBody": "ComfyUI 本体和模型（约 211 GB）。可以现在配，也可以稍后在控制台里配。",
+    "startCheck": "开始检测",
+    "skip": "跳过，直接进",
+    "checkTitle": "环境检测",
+    "checkBody": "下面几项决定能不能跑起来。标黄的可以先跳过，但生成会不可用。",
+    "checking": "正在检测…",
+    "comfyPicked": "已记录 ComfyUI 位置。",
+    "comfyStarting": "正在启动 ComfyUI，首次加载模型可能要几分钟…",
+    "missingComfyTitle": "没找到 ComfyUI",
+    "missingComfyBody": "选一个已有的目录，或者下载一键部署包（含 ComfyUI、26 个模型和节点包）。",
+    "pickRoot": "选择已有的 ComfyUI 目录",
+    "downloadBundle": "下载一键部署包",
+    "downloadBundleHint": "211 GB / 7 个分卷，夸克网盘提取码",
+    "later": "稍后再说，先看看界面",
+    "startComfy": "启动 ComfyUI",
+    "next": "下一步",
+    "recheck": "重新检测",
+    "readyTitle": "可以开始了",
+    "readyBody": "配置已保存，下次直接进工作台。想再跑一次这个引导，在控制台里点「重新检测环境」。",
+    "readyNote": "ComfyUI 没配好也能进界面看看，只是生成会失败。",
+    "bundleLink": "打开部署包",
+    "openLogs": "打开日志目录",
+    "enter": "进入工作台",
+    "back": "返回检测",
+    "check": {
+      "server": "工作台服务",
+      "comfyui": "ComfyUI",
+      "comfyuiRunning": "ComfyUI 服务",
+      "gpu": "显卡",
+      "data": "数据目录"
+    },
+    "hint": {
+      "pickOrDownload": "可以下面指定目录，或者下载一键部署包",
+      "startIt": "找到目录后可以在这里点启动",
+      "lowVram": "显存偏小，大模型可能跑不动"
+    }
+  }
 }

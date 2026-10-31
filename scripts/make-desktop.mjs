@@ -54,11 +54,30 @@ for (const name of ['server', 'public']) {
 }
 cpSync(join(OUT, 'nitro.json'), join(RES, 'nitro.json'));
 
-// 建表 SQL：桌面程序首次启动时在用户数据目录执行
-cpSync(join(ROOT, 'drizzle'), join(RES, 'migrations'), {
-  recursive: true,
-  filter: (src) => !src.endsWith('.json') || true,
-});
+// 建表 SQL：桌面程序首次启动时在用户数据目录执行。
+//
+// drizzle 把迁移放在 drizzle/sqlite/，meta/ 下是 snapshot JSON —— 那些只在
+// drizzle-kit 生成下一个迁移时用得到，运行时不需要。这里只搬 .sql，摊平到
+// migrations/，db-bootstrap 按文件名排序执行。
+const MIGRATIONS = join(RES, 'migrations');
+mkdirSync(MIGRATIONS, { recursive: true });
+let sqlCount = 0;
+const collectSql = (dir) => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) collectSql(full);
+    else if (entry.name.endsWith('.sql')) {
+      cpSync(full, join(MIGRATIONS, entry.name));
+      sqlCount += 1;
+    }
+  }
+};
+collectSql(join(ROOT, 'drizzle'));
+if (sqlCount === 0) {
+  console.error('  迁移 SQL 缺失：drizzle/ 下没有 .sql');
+  process.exit(1);
+}
+console.log(`  迁移 SQL: ${sqlCount} 个`);
 
 // 图标：有就用，没有 electron-builder 会用默认图标
 const icon = join(ROOT, 'assets', 'branding', 'app-icon.ico');

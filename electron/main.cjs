@@ -389,6 +389,118 @@ const createTray = () => {
   }
 };
 
+// ── 引导状态
+//
+// 首次启动进引导页：检测环境 → 选 ComfyUI 或下载部署包 → 进工作台。
+// 状态落在 DATA_DIR/onboarding.json，跟作品放一起。
+const onboardingPath = () => path.join(DATA_DIR, 'onboarding.json');
+
+const readOnboarding = () => {
+  try {
+    const raw = JSON.parse(fs.readFileSync(onboardingPath(), 'utf8'));
+    return { completed: Boolean(raw.completed), completedAt: raw.completedAt ?? null };
+  } catch {
+    return { completed: false, completedAt: null };
+  }
+};
+
+const writeOnboarding = (completed) => {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(
+    onboardingPath(),
+    JSON.stringify({ completed, completedAt: completed ? new Date().toISOString() : null }, null, 2)
+  );
+};
+
+/**
+ * 环境自检。
+ *
+/**
+ * Environment probe.
+ *
+ * Returns facts only -- paths, port numbers, VRAM. All user-facing wording is
+ * produced by the renderer's i18n layer from the check id, so nothing here
+ * needs translating when a locale is added.
+ */
+const checkEnvironment = async () => {
+  const checks = [];
+
+  // 1. Built-in service (running if we got here at all)
+  checks.push({
+    id: 'server',
+    ok: true,
+    detail: serverUrl ?? '',
+  });
+
+  // 2. ComfyUI directory
+  const roots = findComfyRoots();
+  const target = resolveComfy();
+  checks.push({
+    id: 'comfyui',
+    ok: Boolean(target),
+    detail: target ? target.root : '',
+    hintId: target ? null : 'pickOrDownload',
+  });
+
+  // 3. Is ComfyUI running
+  const comfyRunning = await isPortOpen(8188);
+  checks.push({
+    id: 'comfyuiRunning',
+    ok: comfyRunning,
+    detail: comfyRunning ? '8188' : '',
+    hintId: comfyRunning ? null : 'startIt',
+  });
+
+  // 4. GPU: read VRAM from nvidia-smi
+  let gpu = { ok: false, detail: '', name: null, vramMb: null };
+  try {
+    const out = spawnSync(
+      'nvidia-smi',
+      ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits'],
+      { encoding: 'utf8', windowsHide: true, timeout: 5000 }
+    );
+    const line = (out.stdout || '')
+      .split('\n')
+      .map((l) => l.trim())
+      .find(Boolean);
+    if (line) {
+      const [name, vram] = line.split(',').map((s) => s.trim());
+      gpu = { ok: true, detail: `${name} · ${vram} MB`, name, vramMb: Number(vram) };
+    }
+  } catch {
+    /* no nvidia-smi means no NVIDIA card; keep the default */
+  }
+  checks.push({
+    id: 'gpu',
+    ok: gpu.ok,
+    detail: gpu.detail,
+    hintId: gpu.ok && gpu.vramMb < 8000 ? 'lowVram' : null,
+  });
+
+  // 5. Data directory writable
+  let diskOk = false;
+  let diskDetail = DATA_DIR;
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const probe = path.join(DATA_DIR, '.write-probe');
+    fs.writeFileSync(probe, '1');
+    fs.unlinkSync(probe);
+    diskOk = true;
+  } catch (e) {
+    diskDetail = `${DATA_DIR} · ${e && e.message}`;
+  }
+  checks.push({ id: 'data', ok: diskOk, detail: diskDetail });
+
+  return {
+    checks,
+    ok: checks.every((c) => c.ok),
+    // 最低限度能进工作台：服务和数据目录在就行，ComfyUI 可以后补
+    ready: checks.filter((c) => c.id === 'server' || c.id === 'data').every((c) => c.ok),
+    comfyRoot: readComfyConfig().root,
+    comfyFound: roots,
+  };
+};
+
 // ── IPC
 ipcMain.handle('app:info', () => ({
   version: app.getVersion(),
@@ -397,6 +509,20 @@ ipcMain.handle('app:info', () => ({
   resources: RESOURCES,
   packaged: app.isPackaged,
 }));
+
+ipcMain.handle('onboarding:state', () => readOnboarding());
+
+ipcMain.handle('onboarding:complete', () => {
+  writeOnboarding(true);
+  return { ok: true };
+});
+
+ipcMain.handle('onboarding:reset', () => {
+  writeOnboarding(false);
+  return { ok: true };
+});
+
+ipcMain.handle('env:check', () => checkEnvironment());
 
 ipcMain.handle('comfy:status', async () => {
   const running = (comfyProcess && !comfyProcess.killed) || (await isPortOpen(8188));

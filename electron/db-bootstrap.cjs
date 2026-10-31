@@ -18,17 +18,25 @@ const ensureSchema = (dataDir, migrationsDir) => {
   fs.mkdirSync(dataDir, { recursive: true });
   const dbPath = path.join(dataDir, 'local.db');
 
+  // drizzle 把迁移放在 migrations/sqlite/*.sql，但打包布局可能变，所以递归找。
+  // 只认 .sql，meta/ 下的 snapshot JSON 忽略。
   let files = [];
   try {
-    files = fs
-      .readdirSync(migrationsDir)
-      .filter((f) => f.endsWith('.sql'))
-      .sort();
+    const walk = (dir) => {
+      const out = [];
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) out.push(...walk(full));
+        else if (entry.name.endsWith('.sql')) out.push(full);
+      }
+      return out;
+    };
+    files = walk(migrationsDir).sort();
   } catch {
     return { ok: false, applied: 0, skipped: 0, message: `迁移目录不存在：${migrationsDir}` };
   }
   if (files.length === 0) {
-    return { ok: false, applied: 0, skipped: 0, message: '没有迁移 SQL' };
+    return { ok: false, applied: 0, skipped: 0, message: `没有迁移 SQL：${migrationsDir}` };
   }
 
   const db = new DatabaseSync(dbPath);
@@ -36,10 +44,10 @@ const ensureSchema = (dataDir, migrationsDir) => {
   let skipped = 0;
 
   // 迁移文件里用 `--> statement-breakpoint` 分隔语句
-  for (const rel of files) {
+  for (const full of files) {
     let sql = '';
     try {
-      sql = fs.readFileSync(path.join(migrationsDir, rel), 'utf8');
+      sql = fs.readFileSync(full, 'utf8');
     } catch {
       continue;
     }

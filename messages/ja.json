@@ -1303,5 +1303,49 @@
   "showcase.manager.remove": "トップから外す",
   "showcase.manager.builtin": "内蔵",
   "home.showcase.manage": "表示内容を管理",
-  "showcase.page.title": "トップページ表示"
+  "showcase.page.title": "トップページ表示",
+  "Onboarding": {
+    "brand": "マンケワークベンチ · デスクトップ",
+    "welcomeTitle": "1 分だけ初期設定",
+    "welcomeBody": "初回起動です。3 画面で環境を確認します。以後は表示されません。",
+    "welcomeBuiltinTitle": "同梱済み",
+    "welcomeBuiltinBody": "UI、ローカルサービス、展示素材、データベースはこのプログラムに含まれます。",
+    "welcomeNeedTitle": "必要なもの",
+    "welcomeNeedBody": "ComfyUI 本体とモデル（約 211 GB）。",
+    "startCheck": "チェック開始",
+    "skip": "スキップ",
+    "checkTitle": "環境チェック",
+    "checkBody": "生成できるかどうかを判定します。",
+    "checking": "確認中…",
+    "comfyPicked": "ComfyUI の場所を保存しました。",
+    "comfyStarting": "ComfyUI を起動中。初回は数分かかります…",
+    "missingComfyTitle": "ComfyUI が見つかりません",
+    "missingComfyBody": "既存フォルダを指定するか、同梱パッケージをダウンロードしてください。",
+    "pickRoot": "ComfyUI フォルダを選択",
+    "downloadBundle": "パッケージをダウンロード",
+    "downloadBundleHint": "211 GB / 7 分割、Quark パスコード",
+    "later": "後で（画面だけ見る）",
+    "startComfy": "ComfyUI を起動",
+    "next": "次へ",
+    "recheck": "再チェック",
+    "readyTitle": "準備完了",
+    "readyBody": "保存しました。次回は直接ワークベンチに入ります。",
+    "readyNote": "ComfyUI なしでも閲覧できますが、生成は失敗します。",
+    "bundleLink": "パッケージを開く",
+    "openLogs": "ログを開く",
+    "enter": "ワークベンチに入る",
+    "back": "戻る",
+    "check": {
+      "server": "ワークベンチサービス",
+      "comfyui": "ComfyUI",
+      "comfyuiRunning": "ComfyUI サービス",
+      "gpu": "GPU",
+      "data": "データディレクトリ"
+    },
+    "hint": {
+      "pickOrDownload": "下のフォルダを指定するか、パッケージをダウンロードしてください。",
+      "startIt": "フォルダ設定後にここから起動できます。",
+      "lowVram": "VRAM が少なめです。大きなモデルは載らない可能性があります。"
+    }
+  }
 }

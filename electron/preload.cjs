@@ -9,6 +9,16 @@ contextBridge.exposeInMainWorld('mankeDesktop', {
 
   info: () => ipcRenderer.invoke('app:info'),
 
+  onboarding: {
+    state: () => ipcRenderer.invoke('onboarding:state'),
+    complete: () => ipcRenderer.invoke('onboarding:complete'),
+    reset: () => ipcRenderer.invoke('onboarding:reset'),
+  },
+
+  env: {
+    check: () => ipcRenderer.invoke('env:check'),
+  },
+
   comfy: {
     status: () => ipcRenderer.invoke('comfy:status'),
     start: () => ipcRenderer.invoke('comfy:start'),

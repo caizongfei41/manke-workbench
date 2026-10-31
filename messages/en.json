@@ -1303,5 +1303,49 @@
   "showcase.manager.remove": "Remove from front page",
   "showcase.manager.builtin": "Built-in",
   "home.showcase.manage": "Manage showcase",
-  "showcase.page.title": "Front page"
+  "showcase.page.title": "Front page",
+  "Onboarding": {
+    "brand": "Manke Workbench · Desktop",
+    "welcomeTitle": "One minute of setup",
+    "welcomeBody": "First launch. Three screens to check the environment, then it leaves you alone.",
+    "welcomeBuiltinTitle": "Already included",
+    "welcomeBuiltinBody": "The UI, local service, showcase assets and database all live in this program.",
+    "welcomeNeedTitle": "Still needed",
+    "welcomeNeedBody": "ComfyUI itself and the models (~211 GB). Configure now, or later from the console.",
+    "startCheck": "Run the check",
+    "skip": "Skip",
+    "checkTitle": "Environment",
+    "checkBody": "These decide whether generation works. Amber items can wait.",
+    "checking": "Checking…",
+    "comfyPicked": "ComfyUI location saved.",
+    "comfyStarting": "Starting ComfyUI. First model load can take minutes…",
+    "missingComfyTitle": "ComfyUI not found",
+    "missingComfyBody": "Point at an existing folder, or download the bundle with ComfyUI, 26 models and node packs.",
+    "pickRoot": "Choose an existing ComfyUI folder",
+    "downloadBundle": "Download the bundle",
+    "downloadBundleHint": "211 GB / 7 volumes, Quark passcode",
+    "later": "Later — just show me the UI",
+    "startComfy": "Start ComfyUI",
+    "next": "Next",
+    "recheck": "Check again",
+    "readyTitle": "Ready",
+    "readyBody": "Saved. Next launch goes straight in.",
+    "readyNote": "You can browse without ComfyUI; generation will fail until it is configured.",
+    "bundleLink": "Open the bundle",
+    "openLogs": "Open logs",
+    "enter": "Enter the workbench",
+    "back": "Back",
+    "check": {
+      "server": "Workbench service",
+      "comfyui": "ComfyUI",
+      "comfyuiRunning": "ComfyUI service",
+      "gpu": "GPU",
+      "data": "Data directory"
+    },
+    "hint": {
+      "pickOrDownload": "Pick a folder below, or download the bundle.",
+      "startIt": "Start it here once the folder is set.",
+      "lowVram": "Low VRAM -- large models may not fit."
+    }
+  }
 }
