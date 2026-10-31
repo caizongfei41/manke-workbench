@@ -61,6 +61,25 @@ type DesktopApi = {
       message: string;
     }>;
     freeSpace: (dir: string) => Promise<{ free: number | null }>;
+    resumable: () => Promise<{
+      phase: string;
+      targetDir: string;
+      percent: number;
+      entries: number;
+      error?: string | null;
+    } | null>;
+    resume: () => Promise<{
+      ok: boolean;
+      comfyRoot?: string | null;
+      message: string;
+    }>;
+    discard: () => Promise<{ ok: boolean }>;
+    state: () => Promise<{
+      phase: string;
+      percent: number;
+      message: string;
+      targetDir: string;
+    } | null>;
     onProgress: (
       handler: (p: { phase?: string; percent: number; line?: string; message?: string }) => void
     ) => () => void;
@@ -141,6 +160,13 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [extracting, setExtracting] = useState(false);
   const [percent, setPercent] = useState(0);
   const [progressNote, setProgressNote] = useState('');
+  const [resumable, setResumable] = useState<{
+    phase: string;
+    targetDir: string;
+    percent: number;
+    entries: number;
+    error?: string | null;
+  } | null>(null);
 
   // Desktop shell only; a browser session goes straight through.
   useEffect(() => {
@@ -162,6 +188,8 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     try {
       const result = await api.env.check();
       setEnv(result);
+      // Also check whether the last deploy left a half-finished target.
+      setResumable(await api.bundle.resumable());
     } finally {
       setBusy(false);
     }
@@ -281,6 +309,45 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       setProgressNote('');
     }
   }, [bundle, runCheck, t]);
+
+  // An interrupted deploy leaves files on disk and a state file behind. Offer to
+  // pick it up instead of making the user sit through another hour.
+  const handleResume = useCallback(async () => {
+    const api = window.mankeDesktop;
+    if (!api) return;
+    setExtracting(true);
+    setPercent(0);
+    setProgressNote(t('resuming'));
+    setMessage(null);
+
+    const stop = api.bundle.onProgress((p) => {
+      setPercent(p.percent ?? 0);
+      const note = p.message ?? p.line ?? '';
+      if (note) setProgressNote(note);
+    });
+
+    try {
+      const result = await api.bundle.resume();
+      setMessage(result.message);
+      if (result.ok) {
+        setResumable(null);
+        await runCheck();
+      }
+    } finally {
+      stop();
+      setExtracting(false);
+      setPercent(0);
+      setProgressNote('');
+    }
+  }, [runCheck, t]);
+
+  const handleDiscard = useCallback(async () => {
+    const api = window.mankeDesktop;
+    if (!api) return;
+    await api.bundle.discard();
+    setResumable(null);
+    setMessage(t('discarded'));
+  }, [t]);
 
   const handleFinish = useCallback(async () => {
     const api = window.mankeDesktop;
@@ -481,6 +548,38 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                           {percent}% · {progressNote}
                           {bundleTarget ? ` → ${bundleTarget}` : ''}
                         </p>
+                      </div>
+                    ) : null}
+
+                    {/* A previous run died mid-extract. The files are still on
+                        disk and -aos will skip them, so resuming costs minutes
+                        instead of the full hour. */}
+                    {resumable ? (
+                      <div className="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+                        <p className="text-[12px] font-medium text-amber-800">
+                          {t('resumeTitle')}
+                        </p>
+                        <p className="mt-0.5 truncate text-[11px] text-amber-700" title={resumable.targetDir}>
+                          {t('resumeBody')} {resumable.percent}% · {resumable.targetDir}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={busy || extracting}
+                            onClick={() => void handleResume()}
+                            className="rounded-full bg-amber-600 px-3 py-1.5 text-[11px] font-medium text-white transition hover:bg-amber-700 disabled:opacity-50"
+                          >
+                            {t('resumeButton')}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy || extracting}
+                            onClick={() => void handleDiscard()}
+                            className="rounded-full px-3 py-1.5 text-[11px] text-amber-700 transition hover:text-amber-900 disabled:opacity-50"
+                          >
+                            {t('resumeDiscard')}
+                          </button>
+                        </div>
                       </div>
                     ) : null}
 

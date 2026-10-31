@@ -1357,6 +1357,12 @@
     "extracting": "正在解压，211 GB 可能要几十分钟…",
     "deployOneClick": "一键部署",
     "deployRunning": "部署中…",
-    "deployStarting": "准备部署…"
+    "deployStarting": "准备部署…",
+    "resumeTitle": "上次的部署没做完",
+    "resumeBody": "已解出的文件会跳过，继续下去比重新来快很多。进度",
+    "resumeButton": "继续部署",
+    "resumeDiscard": "放弃，重新开始",
+    "resuming": "正在继续上次的部署…",
+    "discarded": "已放弃上次的部署，磁盘上的文件没有删。"
   }
 }

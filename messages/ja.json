@@ -1357,6 +1357,12 @@
     "extracting": "展開中 — 211 GB は時間がかかります…",
     "deployOneClick": "ワンクリック導入",
     "deployRunning": "導入中…",
-    "deployStarting": "準備中…"
+    "deployStarting": "準備中…",
+    "resumeTitle": "前回の導入が完了していません",
+    "resumeBody": "展開済みのファイルはスキップされます。進捗",
+    "resumeButton": "続きから",
+    "resumeDiscard": "破棄してやり直す",
+    "resuming": "前回の続きを実行中…",
+    "discarded": "破棄しました。ディスク上のファイルは残しています。"
   }
 }

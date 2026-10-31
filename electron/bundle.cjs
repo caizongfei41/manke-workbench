@@ -49,6 +49,42 @@ const find7z = (resources) => {
   return null;
 };
 
+/**
+ * 问 7z 这个档案能不能打开。
+ *
+ * 缺末卷时编号是连续的，光靠文件名看不出问题，但 7z 读头就知道：
+ *
+ *   OK      -> 列出内容（0）
+ *   缺卷    -> 退出码 2，"Cannot open the file as [7z] archive"
+ *
+ * 用 `l -slt` 只读头，不解压，几十毫秒就回来。
+ */
+const probeArchive = (firstVolume) => {
+  const sevenZip = find7z(path.dirname(firstVolume));
+  if (!sevenZip) {
+    // 没有 7z 就没法验证，别因此挡住用户
+    return { ok: true, message: '' };
+  }
+  try {
+    const { execFileSync } = require('node:child_process');
+    execFileSync(sevenZip, ['l', '-slt', firstVolume], {
+      windowsHide: true,
+      timeout: 30_000,
+      stdio: 'pipe',
+    });
+    return { ok: true, message: '' };
+  } catch (e) {
+    const text = `${e.stdout ?? ''}${e.stderr ?? ''}`;
+    const missingVolume = /Cannot open the file as \[7z\] archive|Missing volume/i.test(text);
+    return {
+      ok: false,
+      message: missingVolume
+        ? '最后一卷可能没下完或者下载不完整'
+        : '压缩包头读不了，文件可能损坏',
+    };
+  }
+};
+
 /** 磁盘剩余空间。Windows 上用 wmic，失败返回 null。 */
 const freeSpaceOf = (dir) => {
   try {
@@ -144,18 +180,33 @@ const inspectBundle = (dir) => {
     if (!present.has(i)) missing.push(i);
   }
 
+  // 缺末卷是看不出编号断层的 —— 最后一卷往往只有几百字节，用户下载时最容易
+  // 漏掉一个。7z 的文件头里记着真实卷数，问它最可靠：能列出内容说明完整，
+  // "Cannot open the file as [7z] archive" 就是缺卷。
+  //
+  // 只在编号连续时才需要问，断层已经能看出来。
+  let headerOk = true;
+  let headerMessage = '';
+  if (missing.length === 0) {
+    const probe = probeArchive(path.join(dir, `${base}.001`));
+    headerOk = probe.ok;
+    headerMessage = probe.message;
+  }
+
   const gb = (total / 1024 ** 3).toFixed(1);
+  const complete = missing.length === 0 && headerOk;
   Object.assign(result, {
-    ok: missing.length === 0,
+    ok: complete,
     base,
     volumes: volumes.length,
     totalBytes: total,
     firstVolume: path.join(dir, `${base}.001`),
     missing,
-    message:
-      missing.length === 0
-        ? `分卷齐全：${volumes.length} 个 · ${gb} GB`
-        : `缺 ${missing.length} 个分卷（第 ${missing.slice(0, 6).join('、')}${missing.length > 6 ? '…' : ''} 卷）`,
+    message: complete
+      ? `分卷齐全：${volumes.length} 个 · ${gb} GB`
+      : missing.length > 0
+        ? `缺 ${missing.length} 个分卷（第 ${missing.slice(0, 6).join('、')}${missing.length > 6 ? '…' : ''} 卷）`
+        : `分卷编号连续但压缩包头不完整，通常是最末一卷没下完。${headerMessage}`,
   });
   return result;
 };
@@ -205,11 +256,17 @@ const extractBundle = ({ firstVolume, targetDir, resources, onProgress }) =>
     }
 
     // -bsp1 把百分比打到 stdout，好做进度条；-y 覆盖不提问
-    const child = spawn(sevenZip, ['x', '-bsp1', '-y', `-o${targetDir}`, firstVolume], {
-      windowsHide: true,
-      cwd: path.dirname(firstVolume),
-    });
-
+    // -aos = skip files that already exist. This is what makes resume work:
+    // a run that died at 80 GB skips those 80 GB on the next attempt instead
+    // of overwriting them, which is the difference between minutes and an hour.
+    const child = spawn(
+      sevenZip,
+      ['x', '-bsp1', '-aos', '-y', `-o${targetDir}`, firstVolume],
+      {
+        windowsHide: true,
+        cwd: path.dirname(firstVolume),
+      }
+    );
     let lastPercent = 0;
     let lastLine = '';
     const handle = (chunk) => {
@@ -311,4 +368,4 @@ const deployBundle = async ({ dir, targetDir, resources, onProgress }) => {
   return { ok: extracted.ok, comfyRoot: extracted.comfyRoot, message: extracted.message };
 };
 
-module.exports = { find7z, freeSpaceOf, inspectBundle, extractBundle, deployBundle };
+module.exports = { find7z, freeSpaceOf, probeArchive, inspectBundle, extractBundle, deployBundle };

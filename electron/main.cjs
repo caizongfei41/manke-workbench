@@ -23,6 +23,7 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { ensureSchema, seedShowcase } = require('./db-bootstrap.cjs');
 const { inspectBundle, extractBundle, deployBundle, freeSpaceOf } = require('./bundle.cjs');
+const { createStore } = require('./deploy-state.cjs');
 
 const APP_ROOT = path.dirname(__dirname);
 /** 打包后服务端产物在 resources/ 下（asar 外），开发时在 build-resources/。 */
@@ -642,7 +643,11 @@ ipcMain.handle('bundle:extract', async (_e, { firstVolume, targetDir }) => {
 //
 // 这是「全流程内置」的那个按钮。用户只需要选一个目录（放分卷的）和一个
 // 目标盘，剩下的都在这儿做完，不用再点第二次。
-ipcMain.handle('bundle:deploy', async (_e, { dir, targetDir }) => {
+//
+// 状态全程落盘（deploy-state.json），所以断电、关机、程序崩溃之后重开，
+// 界面能拿回来接着跑，而不是让用户再等一小时。
+const runDeploy = async ({ dir, targetDir, resumed = false }) => {
+  const store = createStore(DATA_DIR);
   const send = (p) => {
     try {
       mainWindow?.webContents.send('bundle:progress', p);
@@ -651,20 +656,54 @@ ipcMain.handle('bundle:deploy', async (_e, { dir, targetDir }) => {
     }
   };
 
-  log(`一键部署：${dir} → ${targetDir}`);
+  // 先探一遍分卷，拿到总量和卷数写进状态
+  const inspected = inspectBundle(dir);
+  if (!inspected.ok) {
+    // Nothing was written yet, so fail() has no state to mark. Seed one first.
+    store.start({
+      bundleDir: dir,
+      firstVolume: '',
+      targetDir,
+      totalBytes: 0,
+      volumes: 0,
+    });
+    store.fail(inspected.message);
+    return { ok: false, comfyRoot: null, message: inspected.message };
+  }
+
+  // 状态文件可能被清掉或者坏了 —— update 会返回 null。这种情况下用 start
+  // 重新建一份，否则后面所有 update/finish 都是空操作，状态永远对不上。
+  let state = resumed ? store.update({ phase: 'extract', message: '恢复中…' }) : null;
+  if (!state) {
+    state = store.start({
+      bundleDir: dir,
+      firstVolume: inspected.firstVolume,
+      targetDir,
+      totalBytes: inspected.totalBytes,
+      volumes: inspected.volumes,
+    });
+  }
+
+  log(`一键部署${resumed ? '（恢复）' : ''}：${dir} → ${targetDir}`);
+
   const result = await deployBundle({
     dir,
     targetDir,
     resources: RESOURCES,
-    onProgress: send,
+    onProgress: (p) => {
+      store.update({ phase: p.phase, percent: p.percent, message: p.message ?? '' });
+      send(p);
+    },
   });
 
   if (!result.ok) {
     log(`一键部署失败：${result.message}`);
+    store.fail(result.message);
     return result;
   }
 
   // 写配置
+  store.update({ phase: 'configure', percent: 100, message: '写入配置…' });
   const root = result.comfyRoot;
   const py = path.join(root, 'python_embeded', 'python.exe');
   if (fs.existsSync(py)) {
@@ -672,20 +711,64 @@ ipcMain.handle('bundle:deploy', async (_e, { dir, targetDir }) => {
     log(`ComfyUI 已指向 ${root}`);
   }
 
+  // 到这儿文件全部就位，部署本身已经成功。
+  //
+  // 先把状态封成 done，再去起 ComfyUI：启动最长要等 180 秒（首次加载模型），
+  // 如果把它算进部署状态，界面会在这三分钟里一直显示「部署中」，用户以为
+  // 卡死了；中途关窗口还会让状态停在 start，下次打开误报「上次没做完」。
+  store.finish();
+
   // 顺手把 ComfyUI 起起来 —— 用户点完这个按钮就该能直接生成
   send({ phase: 'start', percent: 100, message: '启动 ComfyUI…' });
   const started = await startComfyUI();
   log(`自动启动 ComfyUI: ${started.message}`);
 
+  if (!started.ok) {
+    return {
+      ok: true,
+      comfyRoot: root,
+      comfyStarted: false,
+      message: `部署完成，但 ComfyUI 没起来：${started.message}`,
+    };
+  }
+
   return {
     ok: true,
     comfyRoot: root,
-    comfyStarted: started.ok,
-    message: started.ok
-      ? `部署完成，ComfyUI 已就绪。${result.message}`
-      : `部署完成，但 ComfyUI 没起来：${started.message}`,
+    comfyStarted: true,
+    message: `部署完成，ComfyUI 已就绪。${result.message}`,
   };
+};
+
+ipcMain.handle('bundle:deploy', (_e, { dir, targetDir }) => runDeploy({ dir, targetDir }));
+
+// 上次部署中断了？告诉界面，好提示「继续」。
+ipcMain.handle('bundle:resumable', () => {
+  const store = createStore(DATA_DIR);
+  return store.resumable();
 });
+
+// 继续上次的部署。走的是同一套流程，只是 7z 带着 -aos 会跳过已解出的文件。
+ipcMain.handle('bundle:resume', () => {
+  const store = createStore(DATA_DIR);
+  const pending = store.resumable();
+  if (!pending) return { ok: false, message: '没有可恢复的部署' };
+  return runDeploy({
+    dir: pending.bundleDir,
+    targetDir: pending.targetDir,
+    resumed: true,
+  });
+});
+
+// 放弃恢复，清掉状态（目标目录里的文件不动）
+ipcMain.handle('bundle:discard', () => {
+  const store = createStore(DATA_DIR);
+  store.clear();
+  return { ok: true };
+});
+
+// 当前部署状态，界面用来画进度条和阶段
+ipcMain.handle('bundle:state', () => createStore(DATA_DIR).read());
 
 // 目标盘的可用空间，界面上用来提示够不够
 ipcMain.handle('bundle:freeSpace', (_e, dir) => ({ free: freeSpaceOf(dir) }));

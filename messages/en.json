@@ -1357,6 +1357,12 @@
     "extracting": "Extracting — 211 GB can take a while…",
     "deployOneClick": "Deploy in one click",
     "deployRunning": "Deploying…",
-    "deployStarting": "Preparing…"
+    "deployStarting": "Preparing…",
+    "resumeTitle": "The last deploy did not finish",
+    "resumeBody": "Files already extracted will be skipped. Progress",
+    "resumeButton": "Resume",
+    "resumeDiscard": "Discard and start over",
+    "resuming": "Resuming the previous deploy…",
+    "discarded": "Discarded. Files on disk were left alone."
   }
 }

@@ -24,7 +24,7 @@ const SRC = join(ROOT, 'electron');
 rmSync(APP, { recursive: true, force: true });
 mkdirSync(APP, { recursive: true });
 
-const files = ['main.cjs', 'preload.cjs', 'db-bootstrap.cjs', 'bundle.cjs'];
+const files = ['main.cjs', 'preload.cjs', 'db-bootstrap.cjs', 'bundle.cjs', 'deploy-state.cjs'];
 for (const f of files) {
   const from = join(SRC, f);
   if (!existsSync(from)) {
