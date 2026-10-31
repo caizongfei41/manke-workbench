@@ -51,9 +51,19 @@ type DesktopApi = {
     extract: (payload: { firstVolume: string; targetDir: string }) => Promise<{
       ok: boolean;
       targetDir: string;
+      comfyRoot?: string | null;
       message: string;
     }>;
-    onProgress: (handler: (p: { percent: number; line: string }) => void) => () => void;
+    deploy: (payload: { dir: string; targetDir: string }) => Promise<{
+      ok: boolean;
+      comfyRoot?: string | null;
+      comfyStarted?: boolean;
+      message: string;
+    }>;
+    freeSpace: (dir: string) => Promise<{ free: number | null }>;
+    onProgress: (
+      handler: (p: { phase?: string; percent: number; line?: string; message?: string }) => void
+    ) => () => void;
   };
   openLogs: () => Promise<string>;
 };
@@ -130,6 +140,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [bundleTarget, setBundleTarget] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [percent, setPercent] = useState(0);
+  const [progressNote, setProgressNote] = useState('');
 
   // Desktop shell only; a browser session goes straight through.
   useEffect(() => {
@@ -221,24 +232,44 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const handleExtract = useCallback(async () => {
+  // One-button flow: inspect, size check, extract, write the config and start
+  // ComfyUI. The user picks the volume folder and the target drive; everything
+  // after that happens here so there is nothing else to click.
+  const handleDeploy = useCallback(async () => {
     const api = window.mankeDesktop;
-    if (!api || !bundle?.firstVolume) return;
+    if (!api) return;
 
+    // Volume folder: reuse a healthy check, otherwise ask.
+    let dir = bundle?.dir ?? '';
+    if (!bundle?.ok) {
+      const picked = await api.bundle.pickDir();
+      if (picked.canceled) return;
+      setBundle(picked);
+      dir = picked.dir ?? '';
+      if (!picked.ok) {
+        setMessage(picked.message);
+        return;
+      }
+    }
+
+    // Target drive.
     const target = await api.bundle.pickTarget();
     if (!target.ok || !target.dir) return;
     setBundleTarget(target.dir);
 
     setExtracting(true);
     setPercent(0);
-    setMessage(t('extracting'));
+    setProgressNote(t('deployStarting'));
+    setMessage(null);
 
-    const stop = api.bundle.onProgress((p) => setPercent(p.percent));
+    const stop = api.bundle.onProgress((p) => {
+      setPercent(p.percent ?? 0);
+      const note = p.message ?? p.line ?? '';
+      if (note) setProgressNote(note);
+    });
+
     try {
-      const result = await api.bundle.extract({
-        firstVolume: bundle.firstVolume,
-        targetDir: target.dir,
-      });
+      const result = await api.bundle.deploy({ dir, targetDir: target.dir });
       setMessage(result.message);
       if (result.ok) {
         await runCheck();
@@ -247,6 +278,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       stop();
       setExtracting(false);
       setPercent(0);
+      setProgressNote('');
     }
   }, [bundle, runCheck, t]);
 
@@ -445,13 +477,25 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                             style={{ width: `${percent}%` }}
                           />
                         </div>
-                        <p className="mt-1 text-[11px] text-[var(--beat-text-3)]">
-                          {percent}% {bundleTarget ? `→ ${bundleTarget}` : ''}
+                        <p className="mt-1 truncate text-[11px] text-[var(--beat-text-3)]" title={progressNote}>
+                          {percent}% · {progressNote}
+                          {bundleTarget ? ` → ${bundleTarget}` : ''}
                         </p>
                       </div>
                     ) : null}
 
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    {/* One button. Picking the folder and the target drive are the
+                        only two decisions; inspect, extract, config and start all
+                        happen behind it. */}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={busy || extracting}
+                        onClick={() => void handleDeploy()}
+                        className="rounded-full bg-[var(--beat-accent)] px-4 py-2 text-[12px] font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                      >
+                        {extracting ? t('deployRunning') : t('deployOneClick')}
+                      </button>
                       <button
                         type="button"
                         disabled={busy || extracting}
@@ -460,24 +504,6 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                       >
                         {t('bundleInspect')}
                       </button>
-                      <button
-                        type="button"
-                        disabled={busy || extracting}
-                        onClick={() => void handlePickBundleDir()}
-                        className="rounded-full border border-[var(--beat-line)] px-3 py-1.5 text-[11px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-50"
-                      >
-                        {t('bundlePickDir')}
-                      </button>
-                      {bundle?.ok ? (
-                        <button
-                          type="button"
-                          disabled={busy || extracting}
-                          onClick={() => void handleExtract()}
-                          className="rounded-full bg-[var(--beat-accent)] px-3 py-1.5 text-[11px] font-medium text-white transition hover:opacity-90 disabled:opacity-50"
-                        >
-                          {t('bundleExtract')}
-                        </button>
-                      ) : null}
                     </div>
                   </div>
 

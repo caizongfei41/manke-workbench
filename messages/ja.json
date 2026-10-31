@@ -1354,6 +1354,9 @@
     "bundleInspect": "分割を確認",
     "bundlePickDir": "フォルダを選択",
     "bundleExtract": "展開先を選ぶ…",
-    "extracting": "展開中 — 211 GB は時間がかかります…"
+    "extracting": "展開中 — 211 GB は時間がかかります…",
+    "deployOneClick": "ワンクリック導入",
+    "deployRunning": "導入中…",
+    "deployStarting": "準備中…"
   }
 }

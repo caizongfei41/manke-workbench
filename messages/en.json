@@ -1354,6 +1354,9 @@
     "bundleInspect": "Check volumes",
     "bundlePickDir": "Choose folder",
     "bundleExtract": "Extract to…",
-    "extracting": "Extracting — 211 GB can take a while…"
+    "extracting": "Extracting — 211 GB can take a while…",
+    "deployOneClick": "Deploy in one click",
+    "deployRunning": "Deploying…",
+    "deployStarting": "Preparing…"
   }
 }

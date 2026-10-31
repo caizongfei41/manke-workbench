@@ -22,7 +22,7 @@ const { createServer } = require('node:net');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { ensureSchema, seedShowcase } = require('./db-bootstrap.cjs');
-const { inspectBundle, extractBundle } = require('./bundle.cjs');
+const { inspectBundle, extractBundle, deployBundle, freeSpaceOf } = require('./bundle.cjs');
 
 const APP_ROOT = path.dirname(__dirname);
 /** 打包后服务端产物在 resources/ 下（asar 外），开发时在 build-resources/。 */
@@ -638,8 +638,65 @@ ipcMain.handle('bundle:extract', async (_e, { firstVolume, targetDir }) => {
   return result;
 });
 
-// ── 生命周期
+// 一键部署：检查 → 备空间 → 解压 → 写配置 → 起服务。
+//
+// 这是「全流程内置」的那个按钮。用户只需要选一个目录（放分卷的）和一个
+// 目标盘，剩下的都在这儿做完，不用再点第二次。
+ipcMain.handle('bundle:deploy', async (_e, { dir, targetDir }) => {
+  const send = (p) => {
+    try {
+      mainWindow?.webContents.send('bundle:progress', p);
+    } catch {
+      /* 窗口关了就算了 */
+    }
+  };
+
+  log(`一键部署：${dir} → ${targetDir}`);
+  const result = await deployBundle({
+    dir,
+    targetDir,
+    resources: RESOURCES,
+    onProgress: send,
+  });
+
+  if (!result.ok) {
+    log(`一键部署失败：${result.message}`);
+    return result;
+  }
+
+  // 写配置
+  const root = result.comfyRoot;
+  const py = path.join(root, 'python_embeded', 'python.exe');
+  if (fs.existsSync(py)) {
+    writeComfyConfig(root, py);
+    log(`ComfyUI 已指向 ${root}`);
+  }
+
+  // 顺手把 ComfyUI 起起来 —— 用户点完这个按钮就该能直接生成
+  send({ phase: 'start', percent: 100, message: '启动 ComfyUI…' });
+  const started = await startComfyUI();
+  log(`自动启动 ComfyUI: ${started.message}`);
+
+  return {
+    ok: true,
+    comfyRoot: root,
+    comfyStarted: started.ok,
+    message: started.ok
+      ? `部署完成，ComfyUI 已就绪。${result.message}`
+      : `部署完成，但 ComfyUI 没起来：${started.message}`,
+  };
+});
+
+// 目标盘的可用空间，界面上用来提示够不够
+ipcMain.handle('bundle:freeSpace', (_e, dir) => ({ free: freeSpaceOf(dir) }));
+
+
 app.whenReady().then(async () => {
+  // Drop the default File/Edit/View/Window/Help menu. Those items are for
+  // developers -- Reload, Toggle DevTools, Zoom -- and they are in English.
+  // Everything the user needs lives in the UI and the tray menu.
+  Menu.setApplicationMenu(null);
+
   try {
     const diag = {
       isPackaged: app.isPackaged,

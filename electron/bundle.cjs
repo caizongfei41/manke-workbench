@@ -1,19 +1,22 @@
-// 部署包：检查分卷 + 一键解压。
+// 部署包：检查分卷 + 一键全流程部署。
 //
-// 目标机器上最费时的一步是把 211 GB 的 ComfyUI 和模型装到该去的地方。
+// 目标机器上最费时的一步是把 200 GB 的 ComfyUI 和模型装到该去的地方。
 // 部署包是一串分卷 manke-bundle.7z.001 … .7z.119，解压 .001 即可（7-Zip 会
-// 自动接续后面的卷）。旧控制台把这件事做成了两个按钮，这里复刻成 IPC：
+// 自动接续后面的卷）。
 //
-//   bundle:inspect  列出分卷、算总量、判断齐不齐
-//   bundle:extract  调 7-Zip 解压到目标目录，边解边报进度
+// 两条路：
 //
-// 7-Zip 从哪来：程序旁边如果有 7z.exe 就用它；否则用系统装的。
-// 都不行就让用户去装 —— 解 200 GB 的分卷，自己实现一个解压器不现实。
+//   inspectBundle  只报告分卷状态，让用户看清楚
+//   deployBundle   选一个目录，全自动：检查 → 备空间 → 解压 → 找 ComfyUI 根
+//                  → 写配置 → 起服务。只有一个按钮，中间不用再点。
+//
+// 7-Zip 从哪来：优先程序自带的（打包时和 7z.dll 一起放进 resources），
+// 其次系统装的。解 200 GB 分卷自己实现一个解压器不现实。
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 
-/** 分卷命名：manke-bundle.7z.001。基名由打包脚本决定，这里只认前缀。 */
+/** 分卷命名：manke-bundle.7z.001。基名由打包脚本决定，这里只认后缀。 */
 const VOLUME_RE = /^(.*\.7z)\.\d{3}$/i;
 
 /**
@@ -34,7 +37,6 @@ const find7z = (resources) => {
       /* ignore */
     }
   }
-  // PATH 上的 7z
   for (const dir of (process.env.PATH || '').split(path.delimiter)) {
     if (!dir) continue;
     const p = path.join(dir, '7z.exe');
@@ -47,13 +49,31 @@ const find7z = (resources) => {
   return null;
 };
 
+/** 磁盘剩余空间。Windows 上用 wmic，失败返回 null。 */
+const freeSpaceOf = (dir) => {
+  try {
+    const { execFileSync } = require('node:child_process');
+    const drive = path.parse(path.resolve(dir)).root.replace(/\\$/, '');
+    const out = execFileSync(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `(Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Root -eq '${drive}\\' } | Select-Object -First 1).Free`,
+      ],
+      { encoding: 'utf8', windowsHide: true, timeout: 8000 }
+    );
+    const n = Number(String(out).trim());
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * 检查一个目录里的部署包分卷。
  *
  * @param {string} dir 分卷所在目录
- * @returns {{ok:boolean, dir:string, base:string|null, volumes:number,
- *            totalBytes:number, firstVolume:string|null, missing:number[],
- *            message:string}}
  */
 const inspectBundle = (dir) => {
   const result = {
@@ -148,7 +168,7 @@ const inspectBundle = (dir) => {
  * @param {string} opts.targetDir    解到哪
  * @param {string} opts.resources    resources 目录，用来找随包 7z.exe
  * @param {(p:{percent:number,line:string})=>void} [opts.onProgress]
- * @returns {Promise<{ok:boolean, targetDir:string, message:string}>}
+ * @returns {Promise<{ok:boolean, targetDir:string, comfyRoot:string|null, message:string}>}
  */
 const extractBundle = ({ firstVolume, targetDir, resources, onProgress }) =>
   new Promise((resolve) => {
@@ -157,20 +177,30 @@ const extractBundle = ({ firstVolume, targetDir, resources, onProgress }) =>
       resolve({
         ok: false,
         targetDir,
-        message:
-          '没有找到 7z.exe。请安装 7-Zip（https://www.7-zip.org/），或把 7z.exe 放到程序目录下。',
+        comfyRoot: null,
+        message: '没有找到 7z.exe。这个构建没有内置解压组件，请反馈。',
       });
       return;
     }
     if (!firstVolume || !fs.existsSync(firstVolume)) {
-      resolve({ ok: false, targetDir, message: `分卷不存在：${firstVolume}` });
+      resolve({
+        ok: false,
+        targetDir,
+        comfyRoot: null,
+        message: `分卷不存在：${firstVolume}`,
+      });
       return;
     }
 
     try {
       fs.mkdirSync(targetDir, { recursive: true });
     } catch (e) {
-      resolve({ ok: false, targetDir, message: `目标目录建不了：${e && e.message}` });
+      resolve({
+        ok: false,
+        targetDir,
+        comfyRoot: null,
+        message: `目标目录建不了：${e && e.message}`,
+      });
       return;
     }
 
@@ -181,15 +211,22 @@ const extractBundle = ({ firstVolume, targetDir, resources, onProgress }) =>
     });
 
     let lastPercent = 0;
+    let lastLine = '';
     const handle = (chunk) => {
       const text = chunk.toString();
-      // 7z 的进度形如 " 12% 5 - filename"
       const m = text.match(/(\d{1,3})%/);
       if (m) {
         const percent = Math.min(100, Number(m[1]));
         if (percent !== lastPercent) {
           lastPercent = percent;
-          onProgress?.({ percent, line: text.trim().split('\n').pop() ?? '' });
+          lastLine = text.trim().split('\n').pop() ?? '';
+          onProgress?.({ percent, line: lastLine });
+        }
+      } else {
+        const line = text.trim().split('\n').pop();
+        if (line) {
+          lastLine = line;
+          onProgress?.({ percent: lastPercent, line: lastLine });
         }
       }
     };
@@ -198,33 +235,80 @@ const extractBundle = ({ firstVolume, targetDir, resources, onProgress }) =>
     child.stderr?.on('data', handle);
 
     child.on('error', (e) => {
-      resolve({ ok: false, targetDir, message: String(e && e.message) });
+      resolve({ ok: false, targetDir, comfyRoot: null, message: String(e && e.message) });
     });
 
     child.on('close', (code) => {
-      if (code === 0) {
-        onProgress?.({ percent: 100, line: '' });
-
-        // 解压出来的结构可能是 <target>/manke 或者直接是 <target>/ComfyUI
-        const candidates = [
-          path.join(targetDir, 'manke'),
-          targetDir,
-          path.join(targetDir, 'ComfyUI'),
-        ];
-        const found = candidates.find((p) =>
-          fs.existsSync(path.join(p, 'python_embeded', 'python.exe'))
-        );
+      if (code !== 0) {
         resolve({
-          ok: true,
-          targetDir: found ?? targetDir,
-          message: found
-            ? `解压完成：${found}`
-            : '解压完成，但没找到 python_embeded\\python.exe，请检查部署包内容。',
+          ok: false,
+          targetDir,
+          comfyRoot: null,
+          message: `解压失败（7-Zip 退出码 ${code}）：${lastLine}`,
         });
-      } else {
-        resolve({ ok: false, targetDir, message: `7-Zip 退出码 ${code}` });
+        return;
       }
+
+      onProgress?.({ percent: 100, line: '' });
+
+      // 部署包可能解成 <target>/manke，也可能直接是 <target>/ComfyUI
+      const candidates = [
+        targetDir,
+        path.join(targetDir, 'manke'),
+        path.join(targetDir, 'ComfyUI'),
+        path.join(targetDir, 'manke', 'ComfyUI'),
+      ];
+      const found = candidates.find((p) =>
+        fs.existsSync(path.join(p, 'python_embeded', 'python.exe'))
+      );
+
+      resolve({
+        ok: Boolean(found),
+        targetDir,
+        comfyRoot: found ?? null,
+        message: found
+          ? `解压完成：${found}`
+          : '解压完成，但没有 python_embeded\\python.exe —— 部署包可能不完整。',
+      });
     });
   });
 
-module.exports = { find7z, inspectBundle, extractBundle };
+/**
+ * 一键部署：检查 → 备空间 → 解压 → 返回 ComfyUI 根。
+ *
+ * 调用方拿到 comfyRoot 后自己写配置、起服务。这里只管把文件放到该去的地方。
+ */
+const deployBundle = async ({ dir, targetDir, resources, onProgress }) => {
+  onProgress?.({ phase: 'inspect', percent: 0, message: '检查分卷…' });
+
+  const inspected = inspectBundle(dir);
+  if (!inspected.ok) {
+    return { ok: false, comfyRoot: null, message: inspected.message };
+  }
+
+  // 空间检查：解压出来大约是分卷总量的 1.05 倍
+  const need = inspected.totalBytes * 1.05;
+  const free = freeSpaceOf(targetDir);
+  if (free !== null && free < need) {
+    return {
+      ok: false,
+      comfyRoot: null,
+      message: `目标盘空间不够：需要约 ${(need / 1024 ** 3).toFixed(0)} GB，可用 ${(free / 1024 ** 3).toFixed(0)} GB`,
+    };
+  }
+
+  onProgress?.({ phase: 'extract', percent: 0, message: '开始解压…' });
+
+  const extracted = await extractBundle({
+    firstVolume: inspected.firstVolume,
+    targetDir,
+    resources,
+    onProgress: (p) => {
+      onProgress?.({ phase: 'extract', percent: p.percent, message: p.line });
+    },
+  });
+
+  return { ok: extracted.ok, comfyRoot: extracted.comfyRoot, message: extracted.message };
+};
+
+module.exports = { find7z, freeSpaceOf, inspectBundle, extractBundle, deployBundle };

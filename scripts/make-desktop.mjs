@@ -79,6 +79,37 @@ if (sqlCount === 0) {
 }
 console.log(`  迁移 SQL: ${sqlCount} 个`);
 
+// 内置 7-Zip：解压部署包要用。
+//
+// 目标机器上不保证装了 7-Zip，而解 211 GB 的分卷又必须有它。旧控制台把
+// 7z.exe 和 7z.dll 一起带上了，这里照做 —— 两个文件 2.4 MB，换掉「请先安装
+// 7-Zip」这类人肉步骤。
+const SEVEN_ZIP_SOURCES = [
+  'C:\\Program Files\\7-Zip',
+  'C:\\Program Files (x86)\\7-Zip',
+];
+// 运行 7z.exe 需要这两个；7z.dll 是它压缩/解压格式的引擎
+const SEVEN_ZIP_FILES = ['7z.exe', '7z.dll'];
+
+let sevenZipDir = null;
+for (const dir of SEVEN_ZIP_SOURCES) {
+  if (existsSync(join(dir, '7z.exe')) && existsSync(join(dir, '7z.dll'))) {
+    sevenZipDir = dir;
+    break;
+  }
+}
+
+if (sevenZipDir) {
+  for (const name of SEVEN_ZIP_FILES) {
+    cpSync(join(sevenZipDir, name), join(RES, name));
+  }
+  const bytes = SEVEN_ZIP_FILES.reduce((sum, n) => sum + statSync(join(RES, n)).size, 0);
+  console.log(`  7-Zip: 已内置（${human(bytes)}）`);
+} else {
+  // 不致命，但部署包解压会退回到找系统 7-Zip
+  console.log('  7-Zip: 本机没装，跳过。打包后的程序解压部署包时需要系统有 7-Zip');
+}
+
 // 图标：有就用，没有 electron-builder 会用默认图标
 const icon = join(ROOT, 'assets', 'branding', 'app-icon.ico');
 if (existsSync(icon)) {

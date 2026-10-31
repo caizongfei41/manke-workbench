@@ -29,6 +29,11 @@ extraResources:
     to: nitro.json
   - from: build-resources/icon.ico
     to: icon.ico
+  # 解压部署包要用，目标机器不保证装了 7-Zip
+  - from: build-resources/7z.exe
+    to: 7z.exe
+  - from: build-resources/7z.dll
+    to: 7z.dll
 
 # build-app 里没有 node_modules，别让 builder 去重建原生模块
 npmRebuild: false

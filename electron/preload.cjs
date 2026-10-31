@@ -25,6 +25,8 @@ contextBridge.exposeInMainWorld('mankeDesktop', {
     pickDir: () => ipcRenderer.invoke('bundle:pickDir'),
     pickTarget: () => ipcRenderer.invoke('bundle:pickTarget'),
     extract: (payload) => ipcRenderer.invoke('bundle:extract', payload),
+    deploy: (payload) => ipcRenderer.invoke('bundle:deploy', payload),
+    freeSpace: (dir) => ipcRenderer.invoke('bundle:freeSpace', dir),
     onProgress: (handler) => {
       const listener = (_event, data) => handler(data);
       ipcRenderer.on('bundle:progress', listener);

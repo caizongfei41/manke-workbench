@@ -1354,6 +1354,9 @@
     "bundleInspect": "检查分卷",
     "bundlePickDir": "选择分卷目录",
     "bundleExtract": "解压到…",
-    "extracting": "正在解压，211 GB 可能要几十分钟…"
+    "extracting": "正在解压，211 GB 可能要几十分钟…",
+    "deployOneClick": "一键部署",
+    "deployRunning": "部署中…",
+    "deployStarting": "准备部署…"
   }
 }
