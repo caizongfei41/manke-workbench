@@ -77,16 +77,6 @@ export function CommandPalette() {
     };
     const nav: Command[] = [
       { id: 'home', label: m['cmd.home'](), keywords: ['home', 'index'], run: go('/') },
-      {
-        id: 'standard',
-        label: m['cmd.standard'](),
-        keywords: ['standard', 'canvas', 'board', 'node'],
-        run: () => {
-          close();
-          const newest = projects?.[0]?.id;
-          void navigate({ to: newest ? `/standard/${newest}` : '/projects' });
-        },
-      },
   { id: 'projects', label: m['cmd.projects'](), keywords: ['projects', 'list'], run: go('/projects') },
       { id: 'services', label: m['cmd.services'](), keywords: ['services', 'status'], run: go('/services') },
       { id: 'new', label: m['cmd.newProject'](), keywords: ['new', 'create'], run: go('/projects') },

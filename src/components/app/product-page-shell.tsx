@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Layers, Images, LayoutPanelTop, Scissors, Server, Workflow  } from 'lucide-react';
+import { Images, LayoutPanelTop, Scissors, Server, Workflow } from 'lucide-react';
 
 import { WorkspaceApiConfigDialog } from '@/components/app/workspace-api-config-dialog';
 import { LanguageSwitcher } from '@/components/app/language-switcher';
@@ -30,7 +30,6 @@ export function ProductPageShell({
 }) {
   const t = useTranslations('AppShell');
   const pathname = useLocation({ select: (location) => location.pathname });
-  const onStandardCanvas = /\/standard\//.test(pathname);
   const untitledWorkspaceName = t('header.untitledCanvas');
   const getDisplayWorkspaceName = useCallback(
     (name: string | null | undefined) => {
@@ -159,22 +158,12 @@ export function ProductPageShell({
                   </Link>
                   <Link
                     href={`/canvas/${projectId}`}
-                    aria-current={workspaceMode === 'canvas' && !onStandardCanvas ? 'page' : undefined}
+                    aria-current={workspaceMode === 'canvas' ? 'page' : undefined}
                     aria-label={t('header.canvas')}
-                    className={workspaceTabClassName(workspaceMode === 'canvas' && !onStandardCanvas)}
+                    className={workspaceTabClassName(workspaceMode === 'canvas')}
                   >
                     <Workflow className="size-3.5" aria-hidden="true" />
                     <span className="hidden sm:inline">{t('header.canvas')}</span>
-                  </Link>
-                  <Link
-                    href={`/standard/${projectId}`}
-                    aria-current={onStandardCanvas ? 'page' : undefined}
-                    aria-label={t('header.standard')}
-                    data-workspace-tab="standard"
-                    className={workspaceTabClassName(onStandardCanvas)}
-                  >
-                    <Layers className="size-3.5" aria-hidden="true" />
-                    <span className="hidden sm:inline">{t('header.standard')}</span>
                   </Link>
                   <Link
                     href={`/editor/${projectId}`}

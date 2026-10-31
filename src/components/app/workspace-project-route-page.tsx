@@ -20,11 +20,6 @@ const BeatCanvasShell = lazy(() =>
 const DramaCanvasRoute = lazy(() =>
   import('@/components/drama/drama-canvas-route').then((m) => ({ default: m.DramaCanvasRoute }))
 );
-const StandardCanvasRoute = lazy(() =>
-  import('@/components/standard/standard-canvas-route').then((m) => ({
-    default: m.StandardCanvasRoute,
-  }))
-);
 const VideoEditorWorkspace = lazy(() =>
   import('@/components/editor/video-editor-workspace').then((m) => ({
     default: m.VideoEditorWorkspace,
@@ -75,14 +70,6 @@ export function WorkspaceProjectRoutePage({
             key={data.project.id}
             projectId={data.project.id}
             projectName={data.project.name}
-          />
-        ) : data.snapshot?.canvasKind === 'standard' ? (
-          <StandardCanvasRoute
-            key={data.project.id}
-            projectId={data.project.id}
-            projectName={data.project.name}
-            snapshot={data.snapshot}
-            snapshotVersion={data.snapshotVersion}
           />
         ) : data.snapshot?.canvasKind === 'drama' ? (
           <DramaCanvasRoute
