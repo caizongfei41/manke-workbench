@@ -140,3 +140,7 @@ _m.txt
 build-app/
 build-resources/
 dist-desktop/
+
+# 模块化部署包产物
+dist-bundles/
+.bundle-tmp/

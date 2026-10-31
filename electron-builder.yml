@@ -34,6 +34,9 @@ extraResources:
     to: 7z.exe
   - from: build-resources/7z.dll
     to: 7z.dll
+  # 部署包清单：哪些包、多大、解哪个
+  - from: build-resources/bundles
+    to: bundles
 
 # build-app 里没有 node_modules，别让 builder 去重建原生模块
 npmRebuild: false

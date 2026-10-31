@@ -24,6 +24,7 @@ const { pathToFileURL } = require('node:url');
 const { ensureSchema, seedShowcase } = require('./db-bootstrap.cjs');
 const { inspectBundle, extractBundle, deployBundle, freeSpaceOf } = require('./bundle.cjs');
 const { createStore } = require('./deploy-state.cjs');
+const { inspectModules, extractModule } = require('./modules.cjs');
 
 const APP_ROOT = path.dirname(__dirname);
 /** 打包后服务端产物在 resources/ 下（asar 外），开发时在 build-resources/。 */
@@ -772,6 +773,85 @@ ipcMain.handle('bundle:state', () => createStore(DATA_DIR).read());
 
 // 目标盘的可用空间，界面上用来提示够不够
 ipcMain.handle('bundle:freeSpace', (_e, dir) => ({ free: freeSpaceOf(dir) }));
+
+// ── 模块化部署
+//
+// 部署包按模型拆成 9 个独立 7z，每解完一个就能删。工作台负责：读 manifest、
+// 看哪些已解、解下一个、标记完成。磁盘峰值只有最大单包的大小。
+ipcMain.handle('modules:manifest', () => {
+  // manifest 随程序分发（打包时从 dist-bundles 复制进 resources）
+  const local = path.join(RESOURCES, 'bundles', 'manifest.json');
+  try {
+    return JSON.parse(fs.readFileSync(local, "utf8"));
+  } catch {
+    return null;
+  }
+});
+
+ipcMain.handle('modules:inspect', (_e, { targetDir, manifest }) =>
+  inspectModules(targetDir, manifest ?? readBundlesManifest())
+);
+
+ipcMain.handle('modules:locate', (_e, partId) => {
+  // 用户把包下载到哪了？按常见目录找一遍
+  const manifest = readBundlesManifest();
+  const part = manifest?.parts?.find((p) => p.id === partId);
+  if (!part) return { ok: false, message: "manifest 里没有这个包" };
+  const dirs = bundlePaths();
+  for (const dir of dirs) {
+    const candidate = path.join(dir, part.file);
+    if (fs.existsSync(candidate)) return { ok: true, archive: candidate, part };
+  }
+  return { ok: false, part, message: `没找到 ${part.file}` };
+});
+
+ipcMain.handle('modules:extractOne', async (_e, { partId, targetDir }) => {
+  const manifest = readBundlesManifest();
+  const part = manifest?.parts?.find((p) => p.id === partId);
+  if (!part) return { ok: false, message: "manifest 里没有这个包" };
+
+  const locate = await new Promise((resolve) => {
+    const dirs = bundlePaths();
+    for (const dir of dirs) {
+      const candidate = path.join(dir, part.file);
+      if (fs.existsSync(candidate)) return resolve({ ok: true, archive: candidate });
+    }
+    resolve({ ok: false });
+  });
+  if (!locate.ok) return { ok: false, message: `没找到 ${part.file}` };
+
+  const result = await extractModule({
+    archive: locate.archive,
+    targetDir,
+    part,
+    resources: RESOURCES,
+    onProgress: (p) => {
+      try {
+        mainWindow?.webContents.send('modules:progress', { partId, ...p });
+      } catch { /* 窗口关了 */ }
+    },
+  });
+
+  // Python 和 ComfyUI 代码解开后，ComfyUI 就在 targetDir 下了
+  if (result.ok && (partId === '01-python' || partId === '02-comfyui')) {
+    const py = path.join(targetDir, 'python_embeded', 'python.exe');
+    if (fs.existsSync(py)) {
+      writeComfyConfig(targetDir, py);
+      log(`ComfyUI 已指向 ${targetDir}`);
+    }
+  }
+  return result;
+});
+
+// 读随程序分发的 manifest
+function readBundlesManifest() {
+  const local = path.join(RESOURCES, 'bundles', 'manifest.json');
+  try {
+    return JSON.parse(fs.readFileSync(local, "utf8"));
+  } catch {
+    return null;
+  }
+}
 
 
 app.whenReady().then(async () => {

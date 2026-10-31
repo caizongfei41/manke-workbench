@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import type { ModulesApi } from '@/components/onboarding/module-deploy-panel';
 import { useTranslations } from '@/core/workspace-lib/shims/next-intl';
 
 /**
@@ -84,6 +85,7 @@ type DesktopApi = {
       handler: (p: { phase?: string; percent: number; line?: string; message?: string }) => void
     ) => () => void;
   };
+    modules: ModulesApi;
   openLogs: () => Promise<string>;
 };
 

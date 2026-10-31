@@ -1363,6 +1363,18 @@
     "resumeButton": "続きから",
     "resumeDiscard": "破棄してやり直す",
     "resuming": "前回の続きを実行中…",
-    "discarded": "破棄しました。ディスク上のファイルは残しています。"
+    "discarded": "破棄しました。ディスク上のファイルは残しています。",
+    "moduleTitle": "モジュール分割導入",
+    "moduleIntro": "パッケージはモデルごとに分割されています。1 つ展開したら削除でき、ディスクには最大の 1 つ分だけ必要です。",
+    "modulePickTarget": "展開先を選択",
+    "moduleTarget": "展開先：",
+    "moduleParts": "分割",
+    "moduleExtracting": "展開中",
+    "moduleDone": "展開完了",
+    "moduleCanDelete": "削除できます",
+    "moduleExtractNext": "次を展開",
+    "moduleExtractAll": "すべて展開",
+    "moduleChangeTarget": "ドライブを変更",
+    "moduleAllDone": "すべて展開完了。圧縮ファイルは削除できます。"
   }
 }

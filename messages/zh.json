@@ -1363,6 +1363,18 @@
     "resumeButton": "继续部署",
     "resumeDiscard": "放弃，重新开始",
     "resuming": "正在继续上次的部署…",
-    "discarded": "已放弃上次的部署，磁盘上的文件没有删。"
+    "discarded": "已放弃上次的部署，磁盘上的文件没有删。",
+    "moduleTitle": "分模块部署",
+    "moduleIntro": "部署包按模型拆成多个独立压缩包。解完一个就能删掉那个包，磁盘只需容纳最大的一个。",
+    "modulePickTarget": "选择解压到哪里",
+    "moduleTarget": "目标：",
+    "moduleParts": "个包",
+    "moduleExtracting": "正在解",
+    "moduleDone": "已解压完成",
+    "moduleCanDelete": "可以删除压缩包",
+    "moduleExtractNext": "解压下一个",
+    "moduleExtractAll": "全部解完",
+    "moduleChangeTarget": "换个目标盘",
+    "moduleAllDone": "全部解压完成，现在可以删除所有压缩包了。"
   }
 }

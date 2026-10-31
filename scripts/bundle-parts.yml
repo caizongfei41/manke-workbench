@@ -1,0 +1,112 @@
+# 按模块打包方案
+#
+# 目标：把 E:\ComfyUI 拆成若干独立压缩包，每解完一个就能删，
+# 磁盘峰值只有「最大单包」的大小。
+#
+# 关键约束：
+#   1. 单个包不超过 45 GB —— 网盘能单文件下载，用户删得动
+#   2. 不把一个大模型拆到两个包里 —— 否则必须同时留着才能解
+#   3. 排除 output/ 和 temp/ —— 那是用户作品，不是部署内容
+#   4. 文件名比较不区分大小写 —— Windows 上 Minimax 和 MiniMax 是同一个
+#
+# 实测体积（源 260.6 GB，output 3 GB 除外 → 257.5 GB）：
+#   python_embeded       6.9 GB   99990 文件
+#   ComfyUI 代码         1.4 GB   16440 文件
+#   models             247.9 GB      34 文件
+#
+# 切完 9 包，最大 39.4 GB。
+
+version: 3
+source: 'E:\ComfyUI'
+archiveBase: 'manke'
+
+parts:
+
+  # ── 01 运行环境：99% 的文件数都在这
+  - id: '01-python'
+    name: '运行环境'
+    label: '便携 Python 3.13（含 torch cu130）'
+    dirs:
+      - 'python_embeded'
+    order: 1
+
+  # ── 02 ComfyUI 代码与节点包
+  - id: '02-comfyui'
+    name: 'ComfyUI 程序'
+    label: 'ComfyUI 本体 + 13 个节点包'
+    dirs:
+      - 'ComfyUI'
+      - 'data'
+      - 'update'
+    excludes:
+      - 'ComfyUI/models/**'
+      - 'ComfyUI/output/**'
+      - 'ComfyUI/temp/**'
+      - 'ComfyUI/input/**'
+    order: 2
+
+  # ── 03-09 模型。按单文件大小配对，每包 26-40 GB
+  - id: '03-minimax-big'
+    name: 'MiniMax 超大模型'
+    label: 'Singularity ref2va 31.7 GB'
+    files:
+      - 'ComfyUI/models/diffusion_models/MiniMax/MiniMax-h3_Singularity_ref2va_v1.3_int8.safetensors'
+    order: 3
+
+  - id: '04-minimax-a'
+    name: 'MiniMax 标准模型 A'
+    label: 'h3 ref2va + h3 fused（19.5×2）'
+    files:
+      - 'ComfyUI/models/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors'
+      - 'ComfyUI/models/diffusion_models/MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors'
+    order: 4
+
+  - id: '05-minimax-b'
+    name: 'MiniMax 标准模型 B'
+    label: 'h3 hybrid 19.5 GB'
+    files:
+      - 'ComfyUI/models/diffusion_models/MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors'
+    order: 5
+
+  - id: '06-fasth3-a'
+    name: 'FastH3 精简版'
+    label: 'fasth3 omniref + Qwen Q6'
+    files:
+      - 'ComfyUI/models/diffusion_models/fasth3_omniref_8step_pruned_int8_convrot.safetensors'
+      - 'ComfyUI/models/diffusion_models/qwen-image-2.1-Q6_K.gguf'
+    order: 6
+
+  - id: '07-fasth3-b'
+    name: 'FastH3 视频版'
+    label: 'fastvideo fasth3 + fl2va + Qwen Q8'
+    files:
+      - 'ComfyUI/models/diffusion_models/fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors'
+      - 'ComfyUI/models/diffusion_models/minimax_h3_fl2va_pruned_w4a8_mixed.safetensors'
+      - 'ComfyUI/models/diffusion_models/qwen-image-2.1-Q8_0.gguf'
+    order: 7
+
+  - id: '08-text-encoders'
+    name: '文本编码器'
+    label: 'qwen3vl 32B / 8B 系列'
+    dirs:
+      - 'ComfyUI/models/text_encoders'
+    order: 8
+
+  - id: '09-models-rest'
+    name: '其他模型'
+    label: 'loras / vae / unet / checkpoints / audio / facerestore / Flux'
+    dirs:
+      - 'ComfyUI/models'
+    excludes:
+      # 已经被 03-08 认领的，一个都不能重复
+      - 'ComfyUI/models/text_encoders/**'
+      - 'ComfyUI/models/diffusion_models/MiniMax/MiniMax-h3_Singularity_ref2va_v1.3_int8.safetensors'
+      - 'ComfyUI/models/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors'
+      - 'ComfyUI/models/diffusion_models/MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors'
+      - 'ComfyUI/models/diffusion_models/MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors'
+      - 'ComfyUI/models/diffusion_models/fasth3_omniref_8step_pruned_int8_convrot.safetensors'
+      - 'ComfyUI/models/diffusion_models/fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors'
+      - 'ComfyUI/models/diffusion_models/minimax_h3_fl2va_pruned_w4a8_mixed.safetensors'
+      - 'ComfyUI/models/diffusion_models/qwen-image-2.1-Q8_0.gguf'
+      - 'ComfyUI/models/diffusion_models/qwen-image-2.1-Q6_K.gguf'
+    order: 9

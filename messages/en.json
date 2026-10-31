@@ -1363,6 +1363,18 @@
     "resumeButton": "Resume",
     "resumeDiscard": "Discard and start over",
     "resuming": "Resuming the previous deploy…",
-    "discarded": "Discarded. Files on disk were left alone."
+    "discarded": "Discarded. Files on disk were left alone.",
+    "moduleTitle": "Modular deploy",
+    "moduleIntro": "The bundle is split per model into separate archives. Delete each one after extracting; only the largest needs to fit on disk at once.",
+    "modulePickTarget": "Choose where to extract",
+    "moduleTarget": "Target:",
+    "moduleParts": "parts",
+    "moduleExtracting": "Extracting",
+    "moduleDone": "extracted",
+    "moduleCanDelete": "You can delete",
+    "moduleExtractNext": "Extract next",
+    "moduleExtractAll": "Extract all",
+    "moduleChangeTarget": "Change drive",
+    "moduleAllDone": "All parts extracted. Every archive can be deleted now."
   }
 }
