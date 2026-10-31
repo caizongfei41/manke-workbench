@@ -200,7 +200,9 @@ export function BeatApiProductHome({ locale }: { locale: string }) {
               </Link>
             </div>
 
-            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+            {/* Three entries, so three columns at xl. The fourth column left the
+                right half of the row empty once the standard canvas was removed. */}
+            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
               {[
                 {
                   title: copy.workspaceStudioTitle,
