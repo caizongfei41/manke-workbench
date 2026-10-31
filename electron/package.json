@@ -1,0 +1,9 @@
+﻿{
+  "name": "manke-workbench",
+  "productName": "漫客工作台",
+  "version": "0.3.0",
+  "description": "本地 ComfyUI 图像、视频与音乐创作工作台",
+  "main": "main.cjs",
+  "author": "漫客工作台",
+  "license": "SEE LICENSE IN LICENSE"
+}

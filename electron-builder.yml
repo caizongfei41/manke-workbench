@@ -1,0 +1,66 @@
+# 单文件桌面程序
+#
+#   portable  —— 单个 exe，双击即运行，不写注册表。
+#   nsis      —— 常规安装器，有开始菜单和卸载项。
+#
+# 入口是 build-app/，由 scripts/make-electron-app.mjs 生成 —— 一个只含主进程
+# 四件套的干净目录。不这么做的话 electron-builder 会把根 package.json 的
+# 全部生产依赖打进 asar（React、drizzle、vite 全家桶），包体翻三倍还启动不了。
+
+appId: com.manke.workbench
+productName: 漫客工作台
+copyright: Copyright © 2026
+
+directories:
+  app: build-app
+  output: dist-desktop
+  buildResources: assets/branding
+
+# 服务端产物和静态资源走 extraResources，不进 asar ——
+# nitro 要在文件系统上 import，asar 里的路径它读不了。
+extraResources:
+  - from: build-resources/server
+    to: server
+  - from: build-resources/public
+    to: public
+  - from: build-resources/migrations
+    to: migrations
+  - from: build-resources/nitro.json
+    to: nitro.json
+  - from: build-resources/icon.ico
+    to: icon.ico
+
+# build-app 里没有 node_modules，别让 builder 去重建原生模块
+npmRebuild: false
+
+asar: true
+compression: maximum
+
+win:
+  target:
+    - target: portable
+      arch: [x64]
+    - target: nsis
+      arch: [x64]
+  icon: build-resources/icon.ico
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+portable:
+  artifactName: 漫客工作台-单文件版-${version}.exe
+  unpackDirName: manke-workbench
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 漫客工作台
+  artifactName: 漫客工作台-安装版-${version}.exe
+  deleteAppDataOnUninstall: false
+
+forceCodeSigning: false
+publish: null
+
+electronDownload:
+  mirror: https://npmmirror.com/mirrors/electron/

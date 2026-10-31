@@ -136,3 +136,7 @@ public/*.bak
 
 # 提交信息临时文件
 _m.txt
+# 桌面程序构建产物
+build-app/
+build-resources/
+dist-desktop/

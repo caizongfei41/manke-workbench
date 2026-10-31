@@ -1,0 +1,110 @@
+// 把工作台打成单文件桌面程序。
+//
+//   node scripts/make-desktop.mjs            构建 + 打包（产出 portable exe 和安装器）
+//   node scripts/make-desktop.mjs --prepare  只准备 build-resources，不打包
+//
+// 流程：
+//   1. pnpm build                 → .output（服务端 + 静态资源）
+//   2. 复制 .output → build-resources
+//   3. electron-builder           → 单文件 exe
+//
+// 单文件（portable）优先：目标用户不想装东西，双击就用。安装器作为备选一起出，
+// 因为它能注册开始菜单和卸载项。
+import { execFileSync } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const OUT = join(ROOT, '.output');
+const RES = join(ROOT, 'build-resources');
+const DIST = join(ROOT, 'dist-desktop');
+
+const args = process.argv.slice(2);
+const prepareOnly = args.includes('--prepare');
+
+const human = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+
+const run = (cmd, cmdArgs, label) => {
+  console.log(`  ${label} …`);
+  try {
+    execFileSync(cmd, cmdArgs, { cwd: ROOT, stdio: 'inherit', shell: true });
+  } catch (error) {
+    console.error(`  失败: ${label}`);
+    process.exit(1);
+  }
+};
+
+// ── 1. 构建
+if (!prepareOnly) {
+  run('pnpm', ['build'], '构建工作台');
+}
+
+if (!existsSync(join(OUT, 'server', 'index.mjs'))) {
+  console.error('  构建产物缺失：.output/server/index.mjs');
+  process.exit(1);
+}
+
+// ── 2. 准备 resources
+rmSync(RES, { recursive: true, force: true });
+mkdirSync(RES, { recursive: true });
+
+for (const name of ['server', 'public']) {
+  cpSync(join(OUT, name), join(RES, name), { recursive: true });
+}
+cpSync(join(OUT, 'nitro.json'), join(RES, 'nitro.json'));
+
+// 建表 SQL：桌面程序首次启动时在用户数据目录执行
+cpSync(join(ROOT, 'drizzle'), join(RES, 'migrations'), {
+  recursive: true,
+  filter: (src) => !src.endsWith('.json') || true,
+});
+
+// 图标：有就用，没有 electron-builder 会用默认图标
+const icon = join(ROOT, 'assets', 'branding', 'app-icon.ico');
+if (existsSync(icon)) {
+  cpSync(icon, join(RES, 'icon.ico'));
+  console.log('  图标: 已复制');
+} else {
+  console.log('  图标: 缺失，将使用默认图标');
+}
+
+const size = (dir) => {
+  let total = 0;
+  const walk = (p) => {
+    for (const entry of readdirSync(p, { withFileTypes: true })) {
+      const full = join(p, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else total += statSync(full).size;
+    }
+  };
+  walk(dir);
+  return total;
+};
+
+console.log(`  build-resources: ${human(size(RES))}`);
+
+if (prepareOnly) {
+  console.log('  完成（只准备，未打包）');
+  process.exit(0);
+}
+
+// ── 3. 打包
+mkdirSync(DIST, { recursive: true });
+run(
+  'pnpm',
+  ['exec', 'electron-builder', '--win', '--config', 'electron-builder.yml'],
+  'electron-builder'
+);
+
+const files = existsSync(DIST)
+  ? require('node:fs')
+      .readdirSync(DIST)
+      .filter((f) => f.endsWith('.exe') || f.endsWith('.zip'))
+  : [];
+console.log('');
+console.log('  产物:');
+for (const f of files) {
+  const p = join(DIST, f);
+  console.log(`    ${f}  ${human(statSync(p).size)}`);
+}

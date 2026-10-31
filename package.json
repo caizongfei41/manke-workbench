@@ -2,7 +2,7 @@
   "name": "manke-workbench",
   "version": "0.3.0",
   "private": false,
-  "description": "漫客工作台 — 本地优先的 ComfyUI 图像与视频创作工作台。A fork of BeatDesign with a local ComfyUI provider.",
+  "description": "本地 ComfyUI 图像、视频与音乐创作工作台",
   "license": "Apache-2.0",
   "author": "the Manke Workbench contributors",
   "homepage": "https://github.com/caizongfei41/manke-workbench",
@@ -59,7 +59,10 @@
     "verify:gpu": "node scripts/run-verify.mjs --group=gpu",
     "stack:up": "node scripts/stack-up.mjs",
     "stack:restart": "node scripts/stack-up.mjs --restart",
-    "verify:vigil": "node scripts/vigil.mjs"
+    "verify:vigil": "node scripts/vigil.mjs",
+    "desktop:prepare": "node scripts/make-desktop.mjs --prepare",
+    "desktop:dev": "node scripts/make-desktop.mjs --prepare && electron .",
+    "desktop:build": "node scripts/make-desktop.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1069.0",
@@ -95,8 +98,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@inlang/plugin-message-format": "^4.4.3",
     "@inlang/paraglide-js": "^2.18.2",
+    "@inlang/plugin-message-format": "^4.4.3",
     "@mdx-js/rollup": "^3.1.1",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.0",
@@ -106,6 +109,8 @@
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^6.0.2",
     "drizzle-kit": "^0.31.4",
+    "electron": "^35.7.5",
+    "electron-builder": "^25.1.8",
     "esbuild": "0.28.1",
     "nitro": "3.0.260603-beta",
     "rollup": "4.62.4",
@@ -129,5 +134,6 @@
       "uuid": "13.0.1",
       "ws": "8.21.2"
     }
-  }
+  },
+  "main": "electron/main.cjs"
 }
