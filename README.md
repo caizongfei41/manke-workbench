@@ -26,7 +26,7 @@
 
 **① 控制台安装包 + 图文教程**（29.55 MB，自带 7-Zip）—— 先下这个：
 
-> [夸克网盘](https://pan.quark.cn/s/b6bfa6e4d9ac)　口令 `~69363bvVoR~:/`
+> [夸克网盘](https://pan.quark.cn/s/419c38f98ad8)　口令 `~76393bzG4r~:/`
 >
 > 解压后得到 Setup.exe 和 PDF。装完控制器就能启停服务、看日志、跑诊断。
 

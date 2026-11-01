@@ -1375,6 +1375,8 @@
     "moduleExtractNext": "次を展開",
     "moduleExtractAll": "すべて展開",
     "moduleChangeTarget": "ドライブを変更",
-    "moduleAllDone": "すべて展開完了。圧縮ファイルは削除できます。"
+    "moduleAllDone": "すべて展開完了。圧縮ファイルは削除できます。",
+    "programLink": "アプリパッケージを開く",
+    "programHint": "別のマシンにインストールする場合はこちら（255 MB、rar に exe 2 つ）"
   }
 }

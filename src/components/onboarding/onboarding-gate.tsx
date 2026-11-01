@@ -109,8 +109,13 @@ declare global {
 
 type Step = 'welcome' | 'check' | 'ready';
 
+// Two shares: the deploy bundle (9 x .7z, mandatory for generation) and the
+// app package (two exes in a rar, only needed when installing on another machine
+// — this machine is already running it).
 const BONUS_LINK_URL = 'https://pan.quark.cn/s/e9a51632e009';
 const BONUS_LINK_CODE = '~f34c3bzCkm~:/';
+const PROGRAM_LINK_URL = 'https://pan.quark.cn/s/419c38f98ad8';
+const PROGRAM_LINK_CODE = '~76393bzG4r~:/';
 
 const StepDot = ({ active, done }: { active: boolean; done: boolean }) => (
   <span
@@ -666,6 +671,15 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                   className="rounded-full border border-[var(--beat-line)] px-4 py-1.5 text-[12px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)]"
                 >
                   {t('bundleLink')}
+                </a>
+                <a
+                  href={PROGRAM_LINK_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={t('programHint')}
+                  className="rounded-full border border-[var(--beat-line)] px-4 py-1.5 text-[12px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)]"
+                >
+                  {t('programLink')}
                 </a>
                 <button
                   type="button"
