@@ -1375,8 +1375,6 @@
     "moduleExtractNext": "解压下一个",
     "moduleExtractAll": "全部解完",
     "moduleChangeTarget": "换个目标盘",
-    "moduleAllDone": "全部解压完成，现在可以删除所有压缩包了。",
-    "programLink": "打开程序包",
-    "programHint": "换台机器装工作台，下这个（255 MB，rar 里两个 exe）"
+    "moduleAllDone": "全部解压完成，现在可以删除所有压缩包了。"
   }
 }

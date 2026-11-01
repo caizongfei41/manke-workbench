@@ -1375,8 +1375,6 @@
     "moduleExtractNext": "Extract next",
     "moduleExtractAll": "Extract all",
     "moduleChangeTarget": "Change drive",
-    "moduleAllDone": "All parts extracted. Every archive can be deleted now.",
-    "programLink": "Open app package",
-    "programHint": "Installing the workbench on another machine? Get it here (255 MB, two exes in a rar)"
+    "moduleAllDone": "All parts extracted. Every archive can be deleted now."
   }
 }
