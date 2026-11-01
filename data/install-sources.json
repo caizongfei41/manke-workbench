@@ -35,10 +35,10 @@
   },
   "bundles": [
     {
-      "name": "漫客工作台 0.3.0 · 程序包（upload.rar，255 MB）",
+      "name": "漫客工作台 0.3.0 · 程序包（upload-new.rar，255 MB）",
       "kind": "quark",
-      "url": "https://pan.quark.cn/s/419c38f98ad8",
-      "code": "~76393bzG4r~:/",
+      "url": "https://pan.quark.cn/s/f918e0ec6500",
+      "code": "~a40b3bzIPm~:/",
       "note": "rar 压缩包，里面是单文件版和安装版两个 exe，选一个用。Windows 11 自带解压；Win10 需要 7-Zip 或 WinRAR。单文件版双击就跑、不写注册表；安装版装到 Program Files、有快捷方式。还有一份安装说明和部署包校验清单。",
       "covers": "程序本体（两个 exe）+ 安装说明 + 校验清单",
       "consoleBundle": true

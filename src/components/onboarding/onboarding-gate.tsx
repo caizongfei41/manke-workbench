@@ -114,8 +114,8 @@ type Step = 'welcome' | 'check' | 'ready';
 // — this machine is already running it).
 const BONUS_LINK_URL = 'https://pan.quark.cn/s/e9a51632e009';
 const BONUS_LINK_CODE = '~f34c3bzCkm~:/';
-const PROGRAM_LINK_URL = 'https://pan.quark.cn/s/419c38f98ad8';
-const PROGRAM_LINK_CODE = '~76393bzG4r~:/';
+const PROGRAM_LINK_URL = 'https://pan.quark.cn/s/f918e0ec6500';
+const PROGRAM_LINK_CODE = '~a40b3bzIPm~:/';
 
 const StepDot = ({ active, done }: { active: boolean; done: boolean }) => (
   <span
