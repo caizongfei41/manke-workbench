@@ -562,16 +562,27 @@ ipcMain.handle('app:quit', () => {
 
 // ── 部署包
 //
-// 新机器上最费时的一步：把 211 GB 的 ComfyUI 和模型放到该去的地方。
-// 分卷放哪都行，检查时让用户选；解压完直接把结果记进 ComfyUI 配置。
+// 新机器上最费时的一步：把 ComfyUI 和模型放到该去的地方。
+// 9 个包放哪都行，检查时让用户选；解压完直接把结果记进 ComfyUI 配置。
 const bundlePaths = () => {
+  const downloads = app.getPath('downloads');
   const guesses = [
+    // 夸克网盘默认下载到 Downloads\manke-bundles\
+    path.join(downloads, 'manke-bundles'),
+    path.join(downloads, 'manke'),
+    // 用户可能直接解压到桌面
+    path.join(app.getPath('desktop'), 'manke-bundles'),
+    // 程序旁边的 deploy/
     path.join(RESOURCES, 'deploy'),
     path.join(path.dirname(RESOURCES), 'deploy'),
+    // 用户数据目录
     path.join(app.getPath('userData'), 'deploy'),
-    path.join(app.getPath('downloads'), 'manke'),
+    downloads,
   ];
+  const seen = new Set();
   return guesses.filter((p) => {
+    if (seen.has(p)) return false;
+    seen.add(p);
     try {
       return fs.existsSync(p);
     } catch {

@@ -94,7 +94,7 @@
     "inputs": {
       "fl2va_model": "MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
       "ref2va_model": "MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors",
-      "text_encoder": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "text_encoder": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
       "video_vae": "minimax_h3_video_vae_fp16.safetensors",
       "audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
       "lora_1": "minimax\\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",

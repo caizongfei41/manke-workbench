@@ -33,16 +33,81 @@ parts:
   # ── 02 ComfyUI 代码与节点包
   - id: '02-comfyui'
     name: 'ComfyUI 程序'
-    label: 'ComfyUI 本体 + 13 个节点包'
+    label: 'ComfyUI 本体 + 节点包 + models 目录骨架 + 启动脚本'
     dirs:
       - 'ComfyUI'
       - 'data'
       - 'update'
+      - 'advanced'
+      # 注意：不要把 'ComfyUI/models' 单独列进 dirs。
+      # walk() 会递归进它，把里面的模型全收进来（实测 02 包从 1 GB 涨到 75 GB）。
+      # models 的目录结构由下面 files 里显式列出的子目录提供。
+    # 启动脚本 + 说明 + models 目录骨架。
+    #
+    # 显式列目录是有原因的：ComfyUI 的加载器按 models/<类型>/ 注册路径，
+    # 目录不存在，模型列表就是空的。而 `ComfyUI/models/**` 把里面的模型文件
+    # 全排掉了，那些目录又因为「非空」不会被当空目录收 —— 两头空。这里逐个
+    # 列出来，7z 会把它们作为目录条目打进包（里面是空的）。
+    files:
+      - 'run_nvidia_gpu.bat'
+      - 'run_nvidia_gpu_fast_fp16_accumulation.bat'
+      - 'run_cpu.bat'
+      - 'README_VERY_IMPORTANT.txt'
+      # 这几个目录在源目录里有模型文件，会被下面的 ComfyUI/models/** 排掉，
+      # 于是成了「非空目录因此不收集 + 文件被排除」的两头空，最后包里没有它们。
+      # 显式列出来后，7z 会把目录条目打进去（空目录）—— 加载器靠它注册路径。
+      - 'ComfyUI/models/checkpoints'
+      - 'ComfyUI/models/loras'
+      - 'ComfyUI/models/vae'
+      - 'ComfyUI/models/unet'
+      - 'ComfyUI/models/diffusion_models'
+      - 'ComfyUI/models/text_encoders'
+      - 'ComfyUI/models/latent_upscale_models'
+      - 'ComfyUI/models/upscale_models'
+      - 'ComfyUI/models/embeddings'
+      - 'ComfyUI/models/controlnet'
+      - 'ComfyUI/models/clip'
+      - 'ComfyUI/models/clip_vision'
+      - 'ComfyUI/models/configs'
+      - 'ComfyUI/models/vae_approx'
+      - 'ComfyUI/models/audio_encoders'
+      - 'ComfyUI/models/facerestore_models'
+      - 'ComfyUI/models/seedvr2'
+      - 'ComfyUI/models/depthanything'
+      - 'ComfyUI/models/gligen'
+      - 'ComfyUI/models/hypernetworks'
+      - 'ComfyUI/models/photomaker'
+      - 'ComfyUI/models/style_models'
+      - 'ComfyUI/models/diffusers'
+      - 'ComfyUI/models/model_patches'
+      - 'ComfyUI/models/TTS'
+      - 'ComfyUI/models/cosyvoice'
+      - 'ComfyUI/models/SenseVoice'
+      - 'ComfyUI/models/ultralytics'
+      - 'ComfyUI/models/insightface'
+      - 'ComfyUI/models/detection'
+      - 'ComfyUI/models/semantic_bridge'
+      - 'ComfyUI/models/background_removal'
+      - 'ComfyUI/models/frame_interpolation'
+      - 'ComfyUI/models/optical_flow'
+      - 'ComfyUI/models/geometry_estimation'
+      - 'ComfyUI/models/nsfw_detector'
+      - 'ComfyUI/models/pdd_acc'
+      - 'ComfyUI/models/reactor'
+      - 'ComfyUI/models/ReActor_nsfw'
     excludes:
+      # 排除 models 下的全部文件，只保留目录结构；模型由 03-09 提供
       - 'ComfyUI/models/**'
       - 'ComfyUI/output/**'
       - 'ComfyUI/temp/**'
       - 'ComfyUI/input/**'
+      # 节点包（cosyvoice 等）会在 ComfyUI\ComfyUI\ 下建自己的 input/output，
+      # 里面是它们跑测试留下的音频。运行时目录，不带。
+      - 'ComfyUI/ComfyUI/**'
+      # 个人工作流目录：里面的 FASTH3 等模板依赖个人模型，不带
+      - 'ComfyUI/user/default/workflows/**'
+      # 节点管理器运行时缓存，会自己重建
+      - 'ComfyUI/user/default/ComfyUI-Manager/**'
     order: 2
 
   # ── 03-09 模型。按单文件大小配对，每包 26-40 GB
@@ -68,19 +133,22 @@ parts:
       - 'ComfyUI/models/diffusion_models/MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors'
     order: 5
 
-  - id: '06-fasth3-a'
-    name: 'FastH3 精简版'
-    label: 'fasth3 omniref + Qwen Q6'
+  # 06/07 只放工作台 22 个模板真正用到的模型。
+  #
+  # fasth3_omniref 和 fastvideo_fasth3（合计 42 GB）不在这里 —— 它们只被
+  # 用户个人目录下的 FASTH3 工作流引用，工作台自带模板一个都不用。这个包
+  # 只服务于工作台，个人工作流的东西一律不带。
+  - id: '06-qwen-a'
+    name: 'Qwen-Image 轻量版'
+    label: 'Qwen-Image Q6 GGUF'
     files:
-      - 'ComfyUI/models/diffusion_models/fasth3_omniref_8step_pruned_int8_convrot.safetensors'
       - 'ComfyUI/models/diffusion_models/qwen-image-2.1-Q6_K.gguf'
     order: 6
 
-  - id: '07-fasth3-b'
-    name: 'FastH3 视频版'
-    label: 'fastvideo fasth3 + fl2va + Qwen Q8'
+  - id: '07-qwen-b'
+    name: 'Qwen-Image 与 fl2va'
+    label: 'Qwen-Image Q8 + Minimax fl2va'
     files:
-      - 'ComfyUI/models/diffusion_models/fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors'
       - 'ComfyUI/models/diffusion_models/minimax_h3_fl2va_pruned_w4a8_mixed.safetensors'
       - 'ComfyUI/models/diffusion_models/qwen-image-2.1-Q8_0.gguf'
     order: 7

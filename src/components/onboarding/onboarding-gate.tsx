@@ -109,8 +109,8 @@ declare global {
 
 type Step = 'welcome' | 'check' | 'ready';
 
-const BONUS_LINK_URL = 'https://pan.quark.cn/s/8d1ed42563d4';
-const BONUS_LINK_CODE = '~9d1f3bt6QP~:/';
+const BONUS_LINK_URL = 'https://pan.quark.cn/s/e9a51632e009';
+const BONUS_LINK_CODE = '~f34c3bzCkm~:/';
 
 const StepDot = ({ active, done }: { active: boolean; done: boolean }) => (
   <span

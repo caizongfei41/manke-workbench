@@ -38,6 +38,23 @@ contextBridge.exposeInMainWorld('mankeDesktop', {
     },
   },
 
+  // 分模块部署：9 个独立包，解一个删一个。
+  //
+  // 和上面 bundle 那组（单个整体包）是两条并行路径 —— 老的整体部署留着给
+  // 已经下载了分卷包的用户，新流程走这组。
+  modules: {
+    manifest: () => ipcRenderer.invoke('modules:manifest'),
+    inspect: (payload) => ipcRenderer.invoke('modules:inspect', payload),
+    locate: (partId) => ipcRenderer.invoke('modules:locate', partId),
+    extractOne: (payload) => ipcRenderer.invoke('modules:extractOne', payload),
+    freeSpace: (dir) => ipcRenderer.invoke('bundle:freeSpace', dir),
+    onProgress: (handler) => {
+      const listener = (_event, data) => handler(data);
+      ipcRenderer.on('modules:progress', listener);
+      return () => ipcRenderer.removeListener('modules:progress', listener);
+    },
+  },
+
   comfy: {
     status: () => ipcRenderer.invoke('comfy:status'),
     start: () => ipcRenderer.invoke('comfy:start'),

@@ -11,7 +11,7 @@
 // 单文件（portable）优先：目标用户不想装东西，双击就用。安装器作为备选一起出，
 // 因为它能注册开始菜单和卸载项。
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -53,6 +53,27 @@ for (const name of ['server', 'public']) {
   cpSync(join(OUT, name), join(RES, name), { recursive: true });
 }
 cpSync(join(OUT, 'nitro.json'), join(RES, 'nitro.json'));
+
+// 部署包清单。
+//
+// 程序靠它知道有哪 9 个包、各多大、解到哪。清单在 dist-bundles 里生成，
+// 上面那句 rmSync(RES) 会连 bundles 一起清掉，所以这里必须重新拷一次 ——
+// 漏了的话打包出来的程序找不到清单，引导页的「分模块部署」整块不显示。
+const manifestCandidates = [
+  join(ROOT, 'dist-bundles', 'manifest.json'),
+  join(ROOT, 'build-resources', 'bundles', 'manifest.json'),
+];
+const manifestSrc = manifestCandidates.find((p) => existsSync(p));
+if (manifestSrc) {
+  mkdirSync(join(RES, 'bundles'), { recursive: true });
+  cpSync(manifestSrc, join(RES, 'bundles', 'manifest.json'));
+  const parsed = JSON.parse(readFileSync(manifestSrc, 'utf8'));
+  console.log(
+    `  部署包清单: ${parsed.parts?.length ?? 0} 个包 / ${((parsed.totalBytes ?? 0) / 1024 ** 3).toFixed(2)} GB`
+  );
+} else {
+  console.log('  部署包清单: 缺失（引导页不会显示分模块部署）');
+}
 
 // 建表 SQL：桌面程序首次启动时在用户数据目录执行。
 //

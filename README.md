@@ -32,7 +32,7 @@
 
 **② 部署包**（211 GB，含便携 Python、26 个模型、13 个节点包）—— 只有控制台没法出片，模型在这里：
 
-> [夸克网盘 `manke-big`](https://pan.quark.cn/s/8d1ed42563d4)　口令 `~9d1f3bt6QP~:/`
+> [夸克网盘 `manke-big`](https://pan.quark.cn/s/e9a51632e009)　口令 `~f34c3bzCkm~:/`
 >
 > 7 个分卷要全下，解压 `.001` 即可，7-Zip 自动接续。
 
@@ -245,9 +245,9 @@ pnpm stack:up
 
 7 个包 / 211.1 GB，含**模型 + 13 个节点包 + 工作台源码**，目录结构已对齐：
 
-> **链接**：https://pan.quark.cn/s/8d1ed42563d4
+> **链接**：https://pan.quark.cn/s/e9a51632e009
 >
-> 或打开夸克 APP 复制这段：`~9d1f3bt6QP~:/`
+> 或打开夸克 APP 复制这段：`~f34c3bzCkm~:/`
 
 | 分卷 | 内容 | 大小 |
 |---|---|---|

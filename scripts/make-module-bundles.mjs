@@ -137,7 +137,13 @@ const matchesAny = (rel, patterns) => {
   });
 };
 
-/** 把一个 part 的相对路径清单摊平出来（含 excludes 过滤）。 */
+/** 把一个 part 的相对路径清单摊平出来（含 excludes 过滤）。
+ *
+ * 空目录也要收进来。ComfyUI 的 models/ 下有几十个空目录（checkpoints、
+ * loras、vae……），它们是加载器的注册路径 —— 目录不存在，模型列表就是空的。
+ * 7z 的 -i@清单 只装列出来的项，所以空目录必须显式写进清单，末尾不带斜杠，
+ * 7z 才会当成目录条目打包（带 /* 反而变成"目录下的文件"）。
+ */
 const resolvePart = (part, source) => {
   const out = [];
   const pushDir = (dirRel) => {
@@ -153,11 +159,22 @@ const resolvePart = (part, source) => {
         const full = join(dir, e.name);
         const rel = relative(source, full).replace(/\\/g, '/');
         if (e.isDirectory()) {
-          if (matchesAny(rel, part.excludes)) continue;
+          // 目录一律进来看看，excludes 只过滤文件。
+          //
+          // models 骨架就是这么来的：`ComfyUI/models/**` 排掉了所有模型文件，
+          // 但 models/vae、models/loras 这些空目录必须留在包里 —— ComfyUI 的
+          // 加载器按目录注册路径，目录不存在，模型列表就是空的。
+          let childCount = 0;
+          try {
+            childCount = readdirSync(full).length;
+          } catch {
+            /* 读不了就当非空 */
+          }
+          if (childCount === 0) out.push({ rel, isDir: true });
           walk(full);
         } else {
           if (matchesAny(rel, part.excludes)) continue;
-          out.push(rel);
+          out.push({ rel, isDir: false });
         }
       }
     };
@@ -168,15 +185,36 @@ const resolvePart = (part, source) => {
 
   for (const file of part.files ?? []) {
     const rel = file.replace(/\\/g, '/');
-    // 显式列出的文件也可能被 excludes 排除 —— 07 包靠这个把已经被
-    // 03/04/05 认领的模型剔掉，否则同一个文件会进两个包，总量虚高。
-    if (matchesAny(rel, part.excludes)) continue;
-    if (existsSync(join(source, rel))) out.push(rel);
-    else console.warn(`    缺少文件：${rel}`);
+    const full = join(source, rel);
+    if (!existsSync(full)) {
+      console.warn(`    缺少文件：${rel}`);
+      continue;
+    }
+    let isDir = false;
+    try {
+      isDir = statSync(full).isDirectory();
+    } catch {
+      /* 当文件处理 */
+    }
+
+    // excludes 过滤只对文件生效。
+    //
+    // 两处都需要它：07 包靠 excludes 把已经被 03/04/05 认领的模型剔掉，否则
+    // 同一个文件进两个包；而 02 包显式列出的 models 子目录（checkpoints、
+    // vae……）恰恰要被 `ComfyUI/models/**` 覆盖 —— 目录留下、里面的模型文件
+    // 不要。按路径一律过滤的话目录也没了，ComfyUI 就注册不到加载路径。
+    if (!isDir && matchesAny(rel, part.excludes)) continue;
+
+    out.push({ rel, isDir });
   }
 
-  // 去重：目录和 files 可能重叠
-  return [...new Set(out)];
+  // 去重：目录和 files 可能重叠。按 rel 去重，目录条目优先保留。
+  const seen = new Map();
+  for (const item of out) {
+    const key = item.rel.toLowerCase();
+    if (!seen.has(key) || item.isDir) seen.set(key, item);
+  }
+  return [...seen.values()];
 };
 
 // 流式算 sha256。
@@ -209,14 +247,14 @@ const main = async () => {
 
     const files = resolvePart(part, source);
     let bytes = 0;
-    for (const rel of files) {
-      try {
-        bytes += statSync(join(source, rel)).size;
-      } catch {
-        /* skip */
-      }
+  for (const f of files) {
+    if (f.isDir) continue; // 目录不占体积
+    try {
+      bytes += statSync(join(source, f.rel)).size;
+    } catch {
+      /* skip */
     }
-
+  }
     plan.push({ part, files, bytes });
     console.log(
       `  ${part.id.padEnd(20)} ${part.name.padEnd(14)} ${human(bytes).padStart(9)}  ${files.length} 个文件`
@@ -302,19 +340,33 @@ const main = async () => {
     if (existsSync(archive) && !registerOnly) {
       console.log(`  跳过（已存在）: ${part.id}`);
     } else if (!existsSync(archive)) {
-      console.log(`  打包 ${part.id}（${human(bytes)}, ${files.length} 文件）…`);
+      console.log(`  打包 ${part.id}（${human(bytes)}, ${files.filter((f) => !f.isDir).length} 文件）…`);
 
       // 用 -i@列表文件 只装清单里的文件，避免临时复制（211 GB 复制不起）
       const listFile = join(TMP, `${part.id}.txt`);
       mkdirSync(TMP, { recursive: true });
-      writeFileSync(listFile, files.join('\r\n'), 'utf8');
+      // 目录条目和文件条目一起写进清单：7z 的 -i@ 对不带斜杠的路径会当作
+      // 目录条目处理，从而在包里保留空目录结构。
+      writeFileSync(
+        listFile,
+        files.map((f) => (f.isDir ? f.rel : f.rel)).join('\r\n'),
+        'utf8'
+      );
 
       const t0 = Date.now();
       try {
         // -mx1：大模型是压缩过的二进制，mx9 只浪费时间
+        //
+        // -xr! 排除：清单里列目录条目时 7z 会递归整个目录。models 的骨架目录
+        // （vae、checkpoints……）在源目录里有模型文件，不排除的话 02 包会从
+        // 1 GB 涨到 75 GB。这里只对 isDir 的条目加排除，把它们打成空目录。
+        const dirExcludes = files
+          .filter((f) => f.isDir)
+          .map((f) => '-xr!' + f.rel + '\\*');
+
         execFileSync(
           sevenZip,
-          ['a', '-t7z', '-mx1', '-bsp1', archive, `-i@${listFile}`],
+          ['a', '-t7z', '-mx1', '-bsp1', archive, `-i@${listFile}`, ...dirExcludes],
           { cwd: source, stdio: 'inherit' }
         );
       } catch (e) {
@@ -323,6 +375,11 @@ const main = async () => {
       }
       const sec = ((Date.now() - t0) / 1000).toFixed(0);
       console.log(`    完成，耗时 ${sec} 秒`);
+      if (process.env.DUMP_LIST) {
+        const dirs = files.filter((f) => f.isDir).map((f) => f.rel);
+        console.log('    DUMP_LIST 目录条目 ' + dirs.length + ' 个');
+        for (const d of dirs.slice(0, 10)) console.log('      ' + d);
+      }
     }
 
     const archiveSize = statSync(archive).size;
@@ -339,7 +396,7 @@ const main = async () => {
       file: `${part.id}.7z`,
       bytes: archiveSize,
       sha256: digest,
-      fileCount: files.length,
+      fileCount: files.filter((f) => !f.isDir).length,
       // 每个包都解到目标根，目录结构在包里
       extractTo: '.',
     });
