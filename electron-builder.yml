@@ -58,11 +58,17 @@ portable:
   unpackDirName: manke-workbench
 
 nsis:
-  oneClick: false
+  # oneClick 必须为 true。
+  #
+  # 设成 false 会拉起完整安装向导（选安装路径、选快捷方式、确认），而且想静默
+  # 部署时 /S 也不管用 —— 用户从网盘下完双击，要连点好几页才能用上。一键模式
+  # 双击就装到用户目录，装完直接启动，全程没有弹窗。
+  oneClick: true
   perMachine: false
-  allowToChangeInstallationDirectory: true
+  allowToChangeInstallationDirectory: false
   createDesktopShortcut: true
   createStartMenuShortcut: true
+  runAfterFinish: true
   shortcutName: 漫客工作台
   artifactName: 漫客工作台-安装版-${version}.exe
   deleteAppDataOnUninstall: false
