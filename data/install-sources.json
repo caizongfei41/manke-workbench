@@ -37,10 +37,11 @@
     {
       "name": "漫客工作台 0.3.0 · 程序本体（单文件版 / 安装版）",
       "kind": "quark",
-      "url": "https://github.com/caizongfei41/manke-workbench/releases",
-      "note": "两个 exe 选一个：单文件版双击就跑、不写注册表，卸载直接删文件；安装版装到 Program Files、有开始菜单快捷方式。工作台本体不含 ComfyUI 和模型，那些在本页的部署包里。",
-      "covers": "程序本体（两个 exe）",
-      "consoleBundle": true
+      "url": "https://pan.quark.cn/s/ca41c14527dd",
+      "note": "两个 exe 选一个，功能一样。单文件版 119.7 MB，双击即跑、不写注册表、卸载直接删文件，换机器拷贝过去就能用；安装版 135.7 MB，装到本地程序目录，有开始菜单和桌面快捷方式。两个版本共用同一份用户数据，换着用配置不会丢。工作台不含 ComfyUI 和模型。",
+      "covers": "程序本体（两个 exe）+ 安装说明 + 部署包校验清单",
+      "consoleBundle": true,
+      "code": "~b3e33bzLU4~:/"
     },
     {
       "name": "漫客工作台 · 部署包（178.95 GB，9 个独立包）",
