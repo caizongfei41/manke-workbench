@@ -185,6 +185,58 @@ const findComfyRoots = () => {
   return [...found];
 };
 
+/** 同步睡眠。只在启动路径上用，主线程卡几百毫秒可接受。 */
+const sleepSync = (ms) => {
+  try {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+  } catch {
+    const end = Date.now() + ms;
+    while (Date.now() < end) {
+      /* 极端环境下的忙等兜底 */
+    }
+  }
+};
+
+/** 端口是不是有人监听（同步版，用于启动流程里的短暂等待）。 */
+const portBusy = (port) => {
+  try {
+    const out = spawnSync(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `(Get-NetTCPConnection -State Listen -LocalPort ${port} -EA SilentlyContinue | Measure-Object).Count`,
+      ],
+      { encoding: 'utf8', windowsHide: true, timeout: 5000 }
+    );
+    return Number(String(out.stdout ?? '').trim()) > 0;
+  } catch {
+    return false;
+  }
+};
+
+/** 占用某端口的进程 PID 列表。 */
+const comfyPidsOnPort = (port) => {
+  try {
+    const out = spawnSync(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `@(Get-NetTCPConnection -State Listen -LocalPort ${port} -EA SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique) -join ','`,
+      ],
+      { encoding: 'utf8', windowsHide: true, timeout: 5000 }
+    );
+    return String(out.stdout ?? '')
+      .trim()
+      .split(',')
+      .map((s) => Number(s.trim()))
+      .filter((n) => Number.isInteger(n) && n > 0);
+  } catch {
+    return [];
+  }
+};
+
 const resolveComfy = () => {
   const cfg = readComfyConfig();
   const root = cfg.root || findComfyRoots()[0] || null;
@@ -196,11 +248,57 @@ const resolveComfy = () => {
   return { root, py, mainPy, workDir: path.dirname(mainPy) };
 };
 
+/**
+ * 8188 上占着的 ComfyUI 如果是个孤儿进程，杀掉等它让开。
+ *
+ * 判据是「它是不是本实例 spawn 出来的」：comfyProcess 只记当前会话启动的那个。
+ * 如果端口有人占着而 comfyProcess 是空的，那就是别的来源 —— 上一次工作台没
+ * 清理干净的残留。这种进程的 stdout 已经断了，复用只会让所有生成任务失败。
+ *
+ * 返回 null 表示「不用重启，继续复用」。返回对象表示已经处理过（重启了或
+ * 处理失败），调用方直接把它当结果返回。
+ */
+const restartOrphanedComfy = () => {
+  // 本实例启动的进程还活着，不用管
+  if (comfyProcess && !comfyProcess.killed) return null;
+
+  const pids = comfyPidsOnPort(8188);
+  if (pids.length === 0) return null; // 查不到具体进程，保守起见不动它
+
+  log(`8188 被非本实例启动的 ComfyUI 占用（PID ${pids.join(', ')}），重启以恢复日志管道`);
+  for (const pid of pids) {
+    try {
+      spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore' });
+    } catch {
+      /* 进程可能刚退出 */
+    }
+  }
+
+  // 等端口让开，最多 15 秒
+  const deadline = Date.now() + 15000;
+  while (Date.now() < deadline) {
+    if (!portBusy(8188)) return { ok: true, message: '已重启此前残留的 ComfyUI' };
+    sleepSync(500);
+  }
+  return { ok: false, message: '8188 被其他程序占用，无法启动 ComfyUI' };
+};
+
 const startComfyUI = async () => {
   if (comfyProcess && !comfyProcess.killed) {
     return { ok: true, message: 'ComfyUI 已在运行' };
   }
   if (await isPortOpen(8188)) {
+    // 端口上已经有 ComfyUI，但不代表它「能用」。
+    //
+    // 最常见的情况：上次工作台退出时没把子进程带走，ComfyUI 变成孤儿继续
+    // 跑着。它的 stdout 管道早就断了，采样器每写一次进度日志就抛
+    // OSError [Errno 22]，任务全部失败 —— 界面上只显示一句 "ComfyUI task
+    // failed"，用户根本查不出原因。
+    //
+    // 所以端口开着也不能无脑复用：先看那个进程是不是本实例的直系子进程，
+    // 不是就杀掉重启，让 stdout 重新挂上。
+    const adopted = restartOrphanedComfy();
+    if (adopted) return adopted;
     return { ok: true, message: '8188 已有 ComfyUI 在跑，直接复用' };
   }
 

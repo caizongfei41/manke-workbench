@@ -173,11 +173,74 @@ export async function getServicesStatus(): Promise<{
   };
 }
 
+/**
+ * 杀掉占着端口、但不是本实例启动的 ComfyUI。
+ *
+ * 这类进程是上一次运行留下的孤儿：工作台退出时没带走它，stdout 管道已断，
+ * 采样器写进度日志会抛 OSError [Errno 22]，所有任务失败。复用它就是把这个
+ * 坏状态接着用下去，所以直接杀掉等端口让开。
+ */
+async function killStaleComfy(): Promise<void> {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const run = promisify(execFile);
+
+  const pids = await new Promise<number[]>((resolve) => {
+    execFile(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `@(Get-NetTCPConnection -State Listen -LocalPort ${COMFYUI_PORT} -EA SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique) -join ','`,
+      ],
+      { windowsHide: true, timeout: 8000 },
+      (err, stdout) => {
+        if (err) return resolve([]);
+        resolve(
+          String(stdout)
+            .trim()
+            .split(',')
+            .map((s) => Number(s.trim()))
+            .filter((n) => Number.isInteger(n) && n > 0)
+        );
+      }
+    );
+  });
+
+  if (pids.length === 0) return; // 查不到进程，保守起见不动
+
+  for (const pid of pids) {
+    try {
+      await run('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true });
+    } catch {
+      /* 进程可能刚好自己退了 */
+    }
+  }
+
+  // 等端口让开
+  const deadline = Date.now() + 20_000;
+  while (Date.now() < deadline) {
+    if (!(await probe(COMFYUI_PORT, 1200))) return;
+    await new Promise((r) => setTimeout(r, 700));
+  }
+}
+
 /** Start ComfyUI headless: hidden window, logs streamed to data/logs/comfyui.log. */
 export function startComfyUi(): Promise<void> {
   if (comfyStarting) return comfyStarting;
   comfyStarting = (async () => {
-    if (await probe(COMFYUI_PORT)) return;
+    // 端口上已经有 ComfyUI 时不等于「能用」。
+    //
+    // 上一次工作台退出后，它启动的 ComfyUI 可能还活着（这里原本 detached:
+    // true，进程会脱离父进程）。那个进程的 stdout 早断了，采样器每写一次
+    // 进度日志就抛 OSError [Errno 22]，所有生成任务失败 —— 界面上只有一句
+    // "ComfyUI task failed"。
+    //
+    // 所以先看是不是自己启动的：不是就杀掉重启，让管道重新挂上。
+    if (await probe(COMFYUI_PORT)) {
+      if (comfyChild && !comfyChild.killed) return; // 自己开的，正常复用
+      await killStaleComfy();
+    }
     const root = comfyUiRoot();
     const python = comfyUiPython();
     if (!existsSync(python)) {
@@ -193,7 +256,9 @@ export function startComfyUi(): Promise<void> {
       {
         cwd: root,
         windowsHide: true,
-        detached: true,
+        // detached 让子进程脱离父进程的进程组 —— 工作台一退出它就成了孤儿，
+        // 端口被占着但日志管道已断。这里必须关掉，让 ComfyUI 跟着工作台走。
+        detached: false,
       }
     );
     comfyChild.stdout?.on('data', (chunk: Buffer) => {
