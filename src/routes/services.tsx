@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ExternalLink,
+  FolderOpen,
   Play,
   Power,
   RefreshCw,
@@ -148,6 +149,11 @@ function ServicesRouteComponent() {
   const [pending, setPending] = useState<Record<string, string | null>>({});
   const [error, setError] = useState<string | null>(null);
   const [log, setLog] = useState('');
+  // Draft value for the ComfyUI root. Written to config only on save, so typing
+  // here never disturbs a service that is already running.
+  const [comfyRootDraft, setComfyRootDraft] = useState('');
+  const [savingRoot, setSavingRoot] = useState(false);
+  const [rootError, setRootError] = useState<string | null>(null);
   const refreshingRef = useRef(false);
   const pendingSinceRef = useRef(0);
 
@@ -158,11 +164,50 @@ function ServicesRouteComponent() {
       const payload = await fetchStatus();
       setData(payload);
       setLog(payload.comfyUiLog ?? '');
+      // Seed the draft once from the server; never overwrite what is being typed.
+      setComfyRootDraft((prev) => prev || payload.comfyUiRoot || '');
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
       refreshingRef.current = false;
+    }
+  };
+
+  /** Open the native folder picker and put the result in the draft. */
+  const pickComfyRoot = async () => {
+    try {
+      const picked = await window.mankeDesktop?.comfy?.pickRoot?.();
+      if (picked?.ok && picked.root) {
+        setComfyRootDraft(picked.root);
+        setRootError(null);
+      }
+    } catch {
+      /* cancelled, or not running in the desktop shell */
+    }
+  };
+
+  /** Persist the draft. The service must restart to pick up a new path. */
+  const saveComfyRoot = async () => {
+    const next = comfyRootDraft.trim();
+    if (!next) return;
+    setSavingRoot(true);
+    setRootError(null);
+    try {
+      const res = await apiJsonPost<{ ok?: boolean; message?: string }>('/api/app/services', {
+        service: 'comfyui',
+        action: 'setRoot',
+        root: next,
+      });
+      if (res?.ok === false) {
+        setRootError(res.message ?? m['services.saveFailed']());
+      } else {
+        await refresh();
+      }
+    } catch (cause) {
+      setRootError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setSavingRoot(false);
     }
   };
 
@@ -287,13 +332,47 @@ function ServicesRouteComponent() {
           ) : null}
         </div>
 
-        {data?.comfyUiRoot ? (
-          <div className="mt-4 rounded-[var(--beat-radius)] border border-ink/[0.07] bg-ink/[0.02] px-4 py-3 text-xs leading-5 text-[var(--beat-text-3)]">
-            ComfyUI {m['services.comfyRoot']()}：{data.comfyUiRoot}
-            <br />
-            {m['services.python']()}：{data.comfyUiPython}
-          </div>
-        ) : null}
+        {/* ComfyUI root. This used to be two lines of read-only text, so a user
+            with a wrong path had no way to fix it here even though the tray
+            menu already offered a folder picker. Editable + inspect + save. */}
+        <div className="mt-4 rounded-[var(--beat-radius)] border border-ink/[0.07] bg-ink/[0.02] px-4 py-3">
+          <label className="block">
+            <span className="mb-1 block text-xs text-[var(--beat-text-3)]">
+              ComfyUI {m['services.comfyRoot']()}
+            </span>
+            <div className="flex gap-2">
+              <input
+                value={comfyRootDraft}
+                onChange={(e) => setComfyRootDraft(e.target.value)}
+                placeholder="E:\ComfyUI"
+                className="h-9 min-w-0 flex-1 rounded-[8px] border border-ink/10 bg-white px-2.5 text-[12.5px] text-[var(--beat-text-1)] outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void pickComfyRoot()}
+                disabled={!window.mankeDesktop?.comfy?.pickRoot}
+                className="inline-flex h-9 shrink-0 items-center gap-1 rounded-[8px] border border-ink/10 px-3 text-[12px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-40"
+              >
+                <FolderOpen className="size-3.5" />
+                {m['services.pickDir']()}
+              </button>
+              <button
+                type="button"
+                onClick={() => void saveComfyRoot()}
+                disabled={savingRoot || comfyRootDraft.trim() === (data?.comfyUiRoot ?? '')}
+                className="inline-flex h-9 shrink-0 items-center rounded-[8px] bg-[var(--beat-accent)] px-3 text-[12px] font-medium text-white transition disabled:opacity-40"
+              >
+                {savingRoot ? m['services.saving']() : m['services.save']()}
+              </button>
+            </div>
+          </label>
+          {data?.comfyUiPython ? (
+            <p className="mt-2 text-xs leading-5 text-[var(--beat-text-3)]">
+              {m['services.python']()}：{data.comfyUiPython}
+            </p>
+          ) : null}
+          {rootError ? <p className="mt-2 text-xs text-red-600">{rootError}</p> : null}
+        </div>
 
         <div className="mb-6">
           <DeployWizard />

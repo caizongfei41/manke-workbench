@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import {
   getServicesStatus,
   readComfyUiLog,
+  setComfyUiRoot,
   startComfyUi,
   startLlama,
   stopComfyUi,
@@ -28,6 +29,8 @@ async function POST({ request }: { request: Request }) {
     const body = (await request.json()) as {
       service?: string;
       action?: string;
+      /** New ComfyUI root, used by action='setRoot'. */
+      root?: string;
     };
     const service = body.service;
     const action = body.action;
@@ -42,6 +45,21 @@ async function POST({ request }: { request: Request }) {
       if (action === 'stop') {
         await stopComfyUi();
         return Response.json({ ok: true, stopping: true });
+      }
+      if (action === 'setRoot') {
+        // Change the ComfyUI root. Validate that the folder really contains
+        // python_embeded\python.exe first; write the config, then stop the
+        // service so the new path takes effect on the next start.
+        const root = String(body.root ?? '').trim();
+        if (!root) {
+          return Response.json({ ok: false, message: 'Empty path' });
+        }
+        const saved = setComfyUiRoot(root);
+        if (!saved.ok) {
+          return Response.json({ ok: false, message: saved.message });
+        }
+        await stopComfyUi();
+        return Response.json({ ok: true, message: 'Saved. Restart ComfyUI to apply.' });
       }
     }
 

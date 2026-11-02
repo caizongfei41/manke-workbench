@@ -1377,5 +1377,10 @@
     "moduleChangeTarget": "ドライブを変更",
     "moduleAllDone": "すべて展開完了。圧縮ファイルは削除できます。"
   },
-  "services.deploy.pickDir": "参照"
+  "services.deploy.pickDir": "参照",
+  "services.pickDir": "参照",
+  "services.save": "保存",
+  "services.saving": "保存中…",
+  "product.shell.console": "コンソール",
+  "services.saveFailed": "保存に失敗しました"
 }

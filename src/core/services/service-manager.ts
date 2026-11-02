@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createWriteStream } from 'node:fs';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
 import {
@@ -94,6 +94,51 @@ async function probe(port: number, timeoutMs = 1200): Promise<boolean> {
     return res.ok || res.status < 500;
   } catch {
     return false;
+  }
+}
+
+/**
+ * 改 ComfyUI 根目录并写进配置。
+ *
+ * 只在目录里真的有 python_embeded\python.exe 时才接受 —— 用户随手点错一个
+ * 空文件夹的话，写进去之后服务永远起不来，界面上只会看到「未连接」，比拒绝
+ * 保存更难排查。
+ */
+export function setComfyUiRoot(root: string): { ok: boolean; message?: string } {
+  const trimmed = root.trim();
+  if (!trimmed) return { ok: false, message: '路径为空' };
+  if (!existsSync(trimmed)) return { ok: false, message: `目录不存在：${trimmed}` };
+
+  // ComfyUI 可能在 <root>\ComfyUI\ 下（便携包常见结构），两种都认
+  const pyCandidates = [
+    join(trimmed, 'python_embeded', 'python.exe'),
+    join(trimmed, 'ComfyUI', 'python_embeded', 'python.exe'),
+  ];
+  const py = pyCandidates.find((p) => existsSync(p));
+  if (!py) {
+    return { ok: false, message: '这个目录里没有 python_embeded\\python.exe，不是 ComfyUI 根目录' };
+  }
+
+  try {
+    const dir = dataRoot();
+    mkdirSync(dir, { recursive: true });
+    const configPath = join(dir, 'comfyui.config.json');
+    let existing: Record<string, unknown> = {};
+    if (existsSync(configPath)) {
+      try {
+        existing = JSON.parse(readFileSync(configPath, 'utf8')) as Record<string, unknown>;
+      } catch {
+        /* 配置坏了就重写 */
+      }
+    }
+    writeFileSync(
+      configPath,
+      JSON.stringify({ ...existing, root: trimmed, pythonPath: py }, null, 2),
+      'utf8'
+    );
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: `写配置失败：${e instanceof Error ? e.message : String(e)}` };
   }
 }
 

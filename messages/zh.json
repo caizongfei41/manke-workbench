@@ -1377,5 +1377,10 @@
     "moduleChangeTarget": "换个目标盘",
     "moduleAllDone": "全部解压完成，现在可以删除所有压缩包了。"
   },
-  "services.deploy.pickDir": "选择目录"
+  "services.deploy.pickDir": "选择目录",
+  "services.pickDir": "选择目录",
+  "services.save": "保存",
+  "services.saving": "保存中…",
+  "product.shell.console": "服务控制台",
+  "services.saveFailed": "保存失败"
 }

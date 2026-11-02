@@ -21,6 +21,7 @@ function getShellCopy(locale: string) {
     create: m['product.shell.create']({}, { locale: messageLocale }),
     projects: m['product.shell.projects']({}, { locale: messageLocale }),
     assets: m['product.shell.assets']({}, { locale: messageLocale }),
+    console: m['product.shell.console']({}, { locale: messageLocale }),
     openNavigation: m['product.shell.openNavigation'](
       {},
       { locale: messageLocale }
@@ -52,6 +53,7 @@ function getNavItems(copy: ShellCopy) {
     { label: copy.create, href: '/studio' },
     { label: copy.projects, href: '/projects' },
     { label: copy.assets, href: '/assets' },
+    { label: copy.console, href: '/services' },
   ] as const;
 }
 
