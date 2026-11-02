@@ -27,7 +27,7 @@
 | 渠道 | 地址 | 提取码 | 覆盖 |
 | --- | --- | --- | --- |
 | 漫客工作台 0.4.0 · 程序本体（单文件版 / 安装版） | https://pan.quark.cn/s/48f2de0199cc | ~c1433c0TC4~:/ | 程序本体（两个 exe）+ 安装说明 + 部署包校验清单 |
-| 漫客工作台 · 部署包（178.95 GB，9 个独立包） | https://pan.quark.cn/s/e9a51632e009 | ~f34c3bzCkm~:/ | 全部 / 9 个独立包 + manifest.json + 校验清单 |
+| 漫客工作台 · 部署包（181.29 GB，9 个独立包） | https://pan.quark.cn/s/41fbf0e530ca | ~fe853c1j5d~:/ | 全部 / 9 个独立包 + manifest.json + 校验清单 |
 | ModelScope · MiniMax H3 官方仓 | https://modelscope.cn/models/MiniMaxAI/MiniMax_H3 | — | Minimax-h3/minimax_h3_ |
 | HuggingFace · H3 社区量化索引 | https://huggingface.co/models?search=MiniMax%20H3 | — | minimax_h3 |
 | HuggingFace · Qwen-Image GGUF 索引 | https://huggingface.co/models?search=qwen-image%20gguf | — | qwen-image |

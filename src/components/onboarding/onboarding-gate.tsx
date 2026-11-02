@@ -114,8 +114,8 @@ type Step = 'welcome' | 'check' | 'ready';
 // The deploy bundle (9 x .7z). Generation needs it; the app itself is already
 // on this machine and is distributed separately as a bare .exe download, so
 // there is no self-referencing link here.
-const BONUS_LINK_URL = 'https://pan.quark.cn/s/e9a51632e009';
-const BONUS_LINK_CODE = '~f34c3bzCkm~:/';
+const BONUS_LINK_URL = 'https://pan.quark.cn/s/41fbf0e530ca';
+const BONUS_LINK_CODE = '~fe853c1j5d~:/';
 
 const StepDot = ({ active, done }: { active: boolean; done: boolean }) => (
   <span

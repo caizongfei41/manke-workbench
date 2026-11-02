@@ -295,7 +295,7 @@ export function DeployWizard() {
             {m['services.deploy.downloadTitle']()}
           </p>
           <a
-            href="https://pan.quark.cn/s/e9a51632e009"
+            href="https://pan.quark.cn/s/41fbf0e530ca"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full bg-[var(--beat-accent)] px-3 py-1.5 text-[13px] font-medium text-[var(--beat-accent-ink)]"
@@ -303,7 +303,7 @@ export function DeployWizard() {
             {m['services.deploy.openQuark']()}
           </a>
           <p className="mt-2 text-[12.5px] leading-5 text-[var(--beat-text-2)]">
-            {m['services.deploy.downloadHint']({ code: '~f34c3bzCkm~:/' })}
+            {m['services.deploy.downloadHint']({ code: '~fe853c1j5d~:/' })}
           </p>
         </div>
       )}
