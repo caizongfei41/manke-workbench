@@ -69,6 +69,42 @@ if (existsSync(DATA_SRC)) {
   console.log('  工作流模板: 缺少 data 目录');
 }
 
+// 节点包。
+//
+// 75 个自定义节点决定「这个工作台能干哪些事」，属于产品能力，不该让用户等
+// 下载完 02 包才看到。这里整体塞进 resources/nodes，首次启动时由主进程解到
+// ComfyUI/custom_nodes 下 —— 节点是 Python 包，必须落到磁盘上才能 import，
+// 放在 asar 里加载不了。
+//
+// 顺手跳过 __pycache__（28 MB）和 .git：前者会在首次 import 时重建，后者是
+// 开发残留。
+const NODES_SRC = 'E:/ComfyUI/ComfyUI/custom_nodes';
+const NODES_DEST = join(RES, 'nodes');
+if (existsSync(NODES_SRC)) {
+  mkdirSync(NODES_DEST, { recursive: true });
+  let copied = 0;
+  let skipped = 0;
+  for (const entry of readdirSync(NODES_SRC, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === '__pycache__') continue;
+    cpSync(join(NODES_SRC, entry.name), join(NODES_DEST, entry.name), {
+      recursive: true,
+      filter: (src) => {
+        const base = src.split(/[\\/]/).pop();
+        if (base === '__pycache__' || base === '.git') {
+          skipped += 1;
+          return false;
+        }
+        return true;
+      },
+    });
+    copied += 1;
+  }
+  console.log(`  节点包: ${copied} 个（跳过 ${skipped} 处缓存/版本库）`);
+} else {
+  console.log('  节点包: 源目录不存在，跳过');
+}
+
 // 部署包清单。
 //
 // 程序靠它知道有哪 9 个包、各多大、解到哪。清单在 dist-bundles 里生成，

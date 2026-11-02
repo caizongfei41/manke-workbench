@@ -283,6 +283,34 @@ const restartOrphanedComfy = () => {
   return { ok: false, message: '8188 被其他程序占用，无法启动 ComfyUI' };
 };
 
+/**
+ * 把随程序分发的节点包补齐到 ComfyUI/custom_nodes。
+ *
+ * resources/nodes 里是 75 个节点包的完整副本。已经存在的目录跳过 —— 用户
+ * 可能自己 git pull 更新过，不能被旧的覆盖回去。只补缺的。
+ */
+const ensureBundledNodes = (comfyDir) => {
+  const src = path.join(RESOURCES, 'nodes');
+  const dest = path.join(comfyDir, 'custom_nodes');
+  if (!fs.existsSync(src)) return { copied: 0, dest };
+
+  fs.mkdirSync(dest, { recursive: true });
+  let copied = 0;
+
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const to = path.join(dest, entry.name);
+    if (fs.existsSync(to)) continue; // 已有就保留用户那份
+    try {
+      fs.cpSync(path.join(src, entry.name), to, { recursive: true });
+      copied += 1;
+    } catch (e) {
+      log(`  节点 ${entry.name} 拷贝失败: ${e.message}`);
+    }
+  }
+  return { copied, dest };
+};
+
 const startComfyUI = async () => {
   if (comfyProcess && !comfyProcess.killed) {
     return { ok: true, message: 'ComfyUI 已在运行' };
@@ -299,6 +327,17 @@ const startComfyUI = async () => {
     // 不是就杀掉重启，让 stdout 重新挂上。
     const adopted = restartOrphanedComfy();
     if (adopted) return adopted;
+    // 节点补齐也要在「复用已有实例」这条路上跑一遍 —— 用户可能删过节点，
+    // 而 ComfyUI 一直在跑没重启，走不到下面那段。
+    const reuseTarget = resolveComfy();
+    if (reuseTarget) {
+      try {
+        const r = ensureBundledNodes(reuseTarget.workDir);
+        if (r.copied > 0) log(`节点包: 复用实例时补齐 ${r.copied} 个`);
+      } catch {
+        /* 补不上也不影响已运行的实例 */
+      }
+    }
     return { ok: true, message: '8188 已有 ComfyUI 在跑，直接复用' };
   }
 
@@ -309,6 +348,21 @@ const startComfyUI = async () => {
       message:
         '没有找到 ComfyUI。点「选择 ComfyUI 位置」指定目录（里面应有 python_embeded\\python.exe）。',
     };
+  }
+
+  // 节点包随程序分发，启动前落到 custom_nodes 下。
+  //
+  // 75 个节点决定这个工作台能干哪些事，属于产品能力 —— 用户不该等下载完
+  // 部署包才看到。节点是 Python 包，必须在磁盘上才能 import，asar 里加载
+  // 不了，所以每次启动都检查一遍：磁盘上已有的不覆盖（用户可能改过），
+  // 缺的才补。
+  try {
+    const nodesResult = ensureBundledNodes(target.workDir);
+    if (nodesResult.copied > 0) {
+      log(`节点包: 补齐 ${nodesResult.copied} 个到 ${nodesResult.dest}`);
+    }
+  } catch (e) {
+    log(`节点包部署失败: ${e.message}`);
   }
 
   writeComfyConfig(target.root, target.py);
@@ -393,6 +447,26 @@ const startServer = async () => {
   }
   const seeded = seedShowcase(DATA_DIR, path.join(RESOURCES, 'public'));
   log(`展示素材: ${seeded.message}`);
+
+  // 节点包随程序分发，开机就补齐，不等用户点「启动 ComfyUI」。
+  //
+  // 75 个节点是产品能力的一部分：用户装完 exe 解完 Python 就想要完整功能，
+  // 不该因为还没启动过 ComfyUI 而缺节点。放在这里还有个好处 —— ComfyUI
+  // 首次启动时节点已经在位，不用再多等一轮扫描。
+  {
+    const target = resolveComfy();
+    if (target) {
+      try {
+        const r = ensureBundledNodes(target.workDir);
+        log(`节点包: ${r.copied > 0 ? `补齐 ${r.copied} 个` : '已齐全'}（${r.dest}）`);
+      } catch (e) {
+        log(`节点包部署失败: ${e.message}`);
+      }
+    } else {
+      log('节点包: 尚未指定 ComfyUI 位置，等用户选目录后再补');
+    }
+  }
+
   const port = await pickPort(3020);
 
   process.env.BEATDESIGN_DATA_DIR = DATA_DIR;

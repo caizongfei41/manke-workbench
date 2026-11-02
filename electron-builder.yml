@@ -43,6 +43,9 @@ extraResources:
   # 工作流模板：创作台的 22 个模板 + 依赖清单
   - from: build-resources/data
     to: data
+  # 节点包：75 个自定义节点，首次启动解到 ComfyUI/custom_nodes
+  - from: build-resources/nodes
+    to: nodes
 
 # build-app 里没有 node_modules，别让 builder 去重建原生模块
 npmRebuild: false
