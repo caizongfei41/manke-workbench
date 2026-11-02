@@ -64,4 +64,16 @@ contextBridge.exposeInMainWorld('mankeDesktop', {
 
   openLogs: () => ipcRenderer.invoke('app:openLogs'),
   quit: () => ipcRenderer.invoke('app:quit'),
+
+  // 自动更新。check 主动查一次，install 重启装已下好的版本。
+  update: {
+    state: () => ipcRenderer.invoke('update:state'),
+    check: () => ipcRenderer.invoke('update:check'),
+    install: () => ipcRenderer.invoke('update:install'),
+    onState: (handler) => {
+      const listener = (_e, s) => handler(s);
+      ipcRenderer.on('update:state', listener);
+      return () => ipcRenderer.removeListener('update:state', listener);
+    },
+  },
 });

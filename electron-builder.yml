@@ -54,17 +54,16 @@ asar: true
 compression: maximum
 
 win:
+  # 只做安装版。
+  #
+  # portable 单文件版不支持差分更新 —— 它没有 blockmap，每次都要用户重下
+  # 完整 620 MB。既然升级走 GitHub Releases，就统一用 nsis：差分只传变化的
+  # 块，通常几 MB 到几十 MB。
   target:
-    - target: portable
-      arch: [x64]
     - target: nsis
       arch: [x64]
   icon: build-resources/icon.ico
   artifactName: ${productName}-${version}-${arch}.${ext}
-
-portable:
-  artifactName: 漫客工作台-单文件版-${version}.exe
-  unpackDirName: manke-workbench
 
 nsis:
   # 保留安装向导，让用户能选安装位置。
@@ -80,14 +79,25 @@ nsis:
   createStartMenuShortcut: true
   runAfterFinish: true
   shortcutName: 漫客工作台
-  artifactName: 漫客工作台-安装版-${version}.exe
+  # 更新源下载时要按这个文件名找，所以必须和 latest.yml 里的 url 一致。
+  # 用 ASCII 名字：中文名在 URL 里会被转义，GitHub Releases 和部分 CI 上
+  # 容易出问题，下载 404 时报错也看不懂。
+  artifactName: manke-workbench-setup-${version}.${ext}
   deleteAppDataOnUninstall: false
   # 向导文案：把「选择安装位置」说清楚
   installerLanguages:
     - zh_CN
 
 forceCodeSigning: false
-publish: null
+# GitHub Releases 作为更新源。
+#
+# 差分更新靠这里的 provider 生成 latest.yml 和 blockmap 文件 —— 用户端
+# electron-updater 读 latest.yml 比对版本，只下变化的块。
+publish:
+  provider: github
+  owner: caizongfei41
+  repo: manke-workbench
+  releaseType: release
 
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

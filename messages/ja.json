@@ -1382,5 +1382,6 @@
   "services.save": "保存",
   "services.saving": "保存中…",
   "product.shell.console": "コンソール",
-  "services.saveFailed": "保存に失敗しました"
+  "services.saveFailed": "保存に失敗しました",
+  "Onboarding.bundleModules": "個のパッケージ"
 }

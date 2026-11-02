@@ -24,7 +24,7 @@ const SRC = join(ROOT, 'electron');
 rmSync(APP, { recursive: true, force: true });
 mkdirSync(APP, { recursive: true });
 
-const files = ['main.cjs', 'preload.cjs', 'db-bootstrap.cjs', 'bundle.cjs', 'deploy-state.cjs', 'modules.cjs'];
+const files = ['main.cjs', 'preload.cjs', 'db-bootstrap.cjs', 'bundle.cjs', 'deploy-state.cjs', 'modules.cjs', 'updater.cjs'];
 for (const f of files) {
   const from = join(SRC, f);
   if (!existsSync(from)) {
@@ -34,8 +34,21 @@ for (const f of files) {
   copyFileSync(from, join(APP, f));
 }
 
-// 运行时清单：CJS，无依赖，只声明入口
+// 运行时清单：CJS 入口 + 真正需要在主进程 require 的依赖。
+//
+// 这个目录会被 electron-builder 当成 app 根，它只会装这里列出的 dependencies。
+// 不列的话 electron-updater 就 require 不到 —— 打包不报错，运行时才炸，而且
+// 只在「检查更新」那一步炸，平时完全看不出来。
+const RUNTIME_DEPS = ['electron-updater'];
+
 const rootPkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+const runtimeDeps = {};
+for (const name of RUNTIME_DEPS) {
+  const version = rootPkg.dependencies?.[name];
+  if (version) runtimeDeps[name] = version;
+  else console.log(`  ⚠ 缺少运行时依赖 ${name}`);
+}
+
 writeFileSync(
   join(APP, 'package.json'),
   JSON.stringify(
@@ -47,10 +60,11 @@ writeFileSync(
       main: 'main.cjs',
       author: '漫客工作台',
       license: 'SEE LICENSE IN LICENSE',
+      dependencies: runtimeDeps,
     },
     null,
     2
   ) + '\n'
 );
 
-console.log(`  build-app: ${files.length + 1} 个文件`);
+console.log(`  build-app: ${files.length + 1} 个文件，依赖 ${Object.keys(runtimeDeps).join(', ') || '无'}`);

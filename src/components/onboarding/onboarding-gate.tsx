@@ -93,6 +93,8 @@ type DesktopApi = {
 type BundleState = {
   dir: string;
   ok: boolean;
+  /** 'modules' = manifest + independent packs; 'volumes' = legacy split volumes */
+  kind?: 'modules' | 'volumes';
   base?: string | null;
   volumes?: number;
   totalBytes?: number;
@@ -161,6 +163,9 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [bundle, setBundle] = useState<BundleState | null>(null);
+  // Editable bundle folder. The guess is only a starting point -- users who put
+  // the packs on D: or a NAS had no way to say so, and "check" always re-guessed.
+  const [bundleDirDraft, setBundleDirDraft] = useState('');
   const [bundleTarget, setBundleTarget] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [percent, setPercent] = useState(0);
@@ -240,15 +245,19 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     setBusy(true);
     setMessage(null);
     try {
-      const found = await api.bundle.guess();
+      // Use what the user typed; only fall back to guessing when the field is
+      // empty. Otherwise a correct manual path would be overwritten every click.
+      const typed = bundleDirDraft.trim();
+      const found = typed ? await api.bundle.inspect(typed) : await api.bundle.guess();
       setBundle(found);
+      if (found.dir) setBundleDirDraft((prev) => prev || found.dir);
       if (!found.ok) {
         setMessage(found.message);
       }
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [bundleDirDraft]);
 
   const handlePickBundleDir = useCallback(async () => {
     const api = window.mankeDesktop;
@@ -518,6 +527,27 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                       {t('bundleBody')}
                     </p>
 
+                    {/* Clickable folder field. Previously this was plain text
+                        showing whatever the auto-guess produced, so anyone who
+                        downloaded the packs to D: or a NAS could not tell the
+                        app where they are. */}
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={bundleDirDraft}
+                        onChange={(e) => setBundleDirDraft(e.target.value)}
+                        placeholder={bundle?.dir || t('bundleNoDir')}
+                        className="h-9 min-w-0 flex-1 rounded-[8px] border border-ink/10 bg-[var(--beat-surface)] px-2.5 text-[11.5px] text-[var(--beat-text-1)] outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void handlePickBundleDir()}
+                        disabled={busy}
+                        className="inline-flex h-9 shrink-0 items-center rounded-[8px] border border-ink/10 px-3 text-[11.5px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-40"
+                      >
+                        {t('bundlePick')}
+                      </button>
+                    </div>
+
                     {bundle ? (
                       <div className="mt-2 rounded-lg bg-[var(--beat-surface)] px-3 py-2">
                         <p className="truncate text-[11px] text-[var(--beat-text-3)]" title={bundle.dir}>
@@ -534,8 +564,13 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                         </p>
                         {bundle.base ? (
                           <p className="mt-0.5 text-[11px] text-[var(--beat-text-3)]">
-                            {bundle.base}.001 · {bundle.volumes} {t('bundleVolumes')} ·{' '}
-                            {((bundle.totalBytes ?? 0) / 1024 ** 3).toFixed(1)} GB
+                            {/* New scheme is a manifest plus independent packs,
+                                so there is no .001; only the legacy volume
+                                scheme shows a base name. */}
+                            {bundle.kind === 'modules'
+                              ? `${bundle.volumes} ${t('bundleModules')}`
+                              : `${bundle.base}.001 · ${bundle.volumes} ${t('bundleVolumes')}`}{' '}
+                            · {((bundle.totalBytes ?? 0) / 1024 ** 3).toFixed(1)} GB
                           </p>
                         ) : null}
                       </div>

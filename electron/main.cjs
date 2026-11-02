@@ -25,6 +25,7 @@ const { ensureSchema, seedShowcase } = require('./db-bootstrap.cjs');
 const { inspectBundle, extractBundle, deployBundle, freeSpaceOf } = require('./bundle.cjs');
 const { createStore } = require('./deploy-state.cjs');
 const { inspectModules, extractModule } = require('./modules.cjs');
+const { initUpdater, checkForUpdates, quitAndInstall, getUpdateState } = require('./updater.cjs');
 
 const APP_ROOT = path.dirname(__dirname);
 /** 打包后服务端产物在 resources/ 下（asar 外），开发时在 build-resources/。 */
@@ -783,6 +784,16 @@ ipcMain.handle('app:quit', () => {
   app.quit();
 });
 
+// ── 更新
+//
+// 界面读 state 显示进度条；点按钮时主动查一次；ready 之后能重启安装。
+ipcMain.handle('update:state', () => getUpdateState());
+ipcMain.handle('update:check', async () => checkForUpdates());
+ipcMain.handle('update:install', () => {
+  quitting = true;
+  return quitAndInstall();
+});
+
 // ── 部署包
 //
 // 新机器上最费时的一步：把 ComfyUI 和模型放到该去的地方。
@@ -1122,6 +1133,23 @@ app.whenReady().then(async () => {
     return;
   }
   createTray();
+
+  // 更新：接好事件后延后检查，别和窗口启动抢时间。
+  //
+  // 延 10 秒是因为启动瞬间同时在起内置服务、解节点、拉 ComfyUI，
+  // 再叠一个网络请求会让首屏更慢。检查失败（断网、GitHub 连不上）只记
+  // 日志，不打扰用户 —— 更新是附加能力，不该影响正常使用。
+  initUpdater({
+    getWindow: () => mainWindow,
+    log,
+    isPackaged: app.isPackaged,
+  });
+  setTimeout(() => {
+    if (!app.isPackaged) return;
+    void checkForUpdates().then((r) => {
+      log(`检查更新: ${r.ok ? (r.state?.message ?? '已发起') : r.message}`);
+    });
+  }, 10000);
 
   // 开机顺手把 ComfyUI 拉起来。
   //

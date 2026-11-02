@@ -1382,5 +1382,6 @@
   "services.save": "Save",
   "services.saving": "Saving…",
   "product.shell.console": "Console",
-  "services.saveFailed": "Save failed"
+  "services.saveFailed": "Save failed",
+  "Onboarding.bundleModules": "packages"
 }

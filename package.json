@@ -1,6 +1,6 @@
 {
   "name": "manke-workbench",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": false,
   "description": "本地 ComfyUI 图像、视频与音乐创作工作台",
   "license": "Apache-2.0",
@@ -62,7 +62,10 @@
     "verify:vigil": "node scripts/vigil.mjs",
     "desktop:prepare": "node scripts/make-desktop.mjs --prepare",
     "desktop:dev": "node scripts/make-desktop.mjs --prepare && electron .",
-    "desktop:build": "node scripts/make-desktop.mjs"
+    "desktop:build": "node scripts/make-desktop.mjs",
+    "release": "node scripts/release.mjs",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1069.0",
@@ -82,6 +85,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
     "drizzle-orm": "^0.45.2",
+    "electron-updater": "^6.8.11",
     "jszip": "^3.10.1",
     "lucide-react": "^0.511.0",
     "mediabunny": "1.25.3",

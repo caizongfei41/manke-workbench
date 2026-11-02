@@ -107,9 +107,17 @@ const freeSpaceOf = (dir) => {
 };
 
 /**
- * 检查一个目录里的部署包分卷。
+ * 检查目录里的部署包。
  *
- * @param {string} dir 分卷所在目录
+ * 两种方案都认：
+ *   · 新方案：manifest.json + 9 个独立包（01-python.7z … 09-models-rest.7z）
+ *   · 旧方案：manke-bundle.7z.001 … 分卷
+ *
+ * 新方案优先 —— 目录里有 manifest.json 就按它核对，缺哪个包说得清清楚楚。
+ * 只认分卷的话，用户把 9 个独立包放进去会看到「目录里没有 .7z.001 分卷」，
+ * 明明文件都在却被告知不存在，比报错还让人困惑。
+ *
+ * @param {string} dir 部署包所在目录
  */
 const inspectBundle = (dir) => {
   const result = {
@@ -121,6 +129,9 @@ const inspectBundle = (dir) => {
     firstVolume: null,
     missing: [],
     message: '',
+    // 新方案专用：present/missing 是 { id, file, bytes } 列表
+    kind: 'volumes',
+    modules: null,
   };
 
   if (!dir || !fs.existsSync(dir)) {
@@ -136,6 +147,57 @@ const inspectBundle = (dir) => {
     return result;
   }
 
+  // ── 新方案：manifest.json + 独立包
+  const manifestPath = path.join(dir, 'manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    let manifest = null;
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch {
+      /* 坏的就当没有，落到分卷逻辑 */
+    }
+    if (manifest && Array.isArray(manifest.parts) && manifest.parts.length > 0) {
+      const names = new Set(entries);
+      const present = [];
+      const missing = [];
+      let totalBytes = 0;
+
+      for (const part of [...manifest.parts].sort((a, b) => (a.order || 0) - (b.order || 0))) {
+        if (names.has(part.file)) {
+          let size = part.bytes || 0;
+          try {
+            size = fs.statSync(path.join(dir, part.file)).size;
+          } catch {
+            /* 用 manifest 记录的大小 */
+          }
+          totalBytes += size;
+          present.push({ id: part.id, file: part.file, bytes: size, order: part.order, name: part.name });
+        } else {
+          missing.push({ id: part.id, file: part.file, bytes: part.bytes || 0, order: part.order, name: part.name });
+        }
+      }
+
+      result.kind = 'modules';
+      result.modules = { present, missing, total: manifest.parts.length, manifest };
+      result.base = 'manifest';
+      result.volumes = present.length;
+      result.totalBytes = totalBytes;
+      result.firstVolume = present.length > 0 ? path.join(dir, present[0].file) : null;
+      result.missing = missing.map((m) => m.file);
+
+      if (present.length === 0) {
+        result.message = '目录里有 manifest.json，但一个包都没找到';
+      } else if (missing.length === 0) {
+        result.ok = true;
+        result.message = `${present.length} 个包齐全（${(totalBytes / 1024 ** 3).toFixed(2)} GB）`;
+      } else {
+        result.message = `找到 ${present.length} / ${manifest.parts.length} 个包，还缺 ${missing.length} 个`;
+      }
+      return result;
+    }
+  }
+
+  // ── 旧方案：分卷
   // 按基名分组，一组就是一套完整的部署包
   const groups = new Map();
   for (const name of entries) {
@@ -147,7 +209,7 @@ const inspectBundle = (dir) => {
   }
 
   if (groups.size === 0) {
-    result.message = '目录里没有 .7z.001 分卷';
+    result.message = '目录里没有 manifest.json，也没有 .7z.001 分卷';
     return result;
   }
 
@@ -331,19 +393,39 @@ const extractBundle = ({ firstVolume, targetDir, resources, onProgress }) =>
   });
 
 /**
+ * 在解压目录里找 ComfyUI 根。
+ *
+ * 9 个包解出来的结构固定是 <target>/ComfyUI/main.py + <target>/python_embeded，
+ * 但旧包可能多套一层 manke/。两种都试一遍。
+ */
+const findComfyUnder = (targetDir) => {
+  const candidates = [
+    targetDir,
+    path.join(targetDir, 'manke'),
+    path.join(targetDir, 'ComfyUI'),
+    path.join(targetDir, 'manke', 'ComfyUI'),
+  ];
+  // 有 main.py 的就是 ComfyUI 根
+  const byMain = candidates.find((p) => fs.existsSync(path.join(p, 'main.py')));
+  if (byMain) return byMain;
+  // 退一步：有 python_embeded 的也算（01 包解出来的位置）
+  return candidates.find((p) => fs.existsSync(path.join(p, 'python_embeded', 'python.exe'))) ?? null;
+};
+
+/**
  * 一键部署：检查 → 备空间 → 解压 → 返回 ComfyUI 根。
  *
  * 调用方拿到 comfyRoot 后自己写配置、起服务。这里只管把文件放到该去的地方。
  */
 const deployBundle = async ({ dir, targetDir, resources, onProgress }) => {
-  onProgress?.({ phase: 'inspect', percent: 0, message: '检查分卷…' });
+  onProgress?.({ phase: 'inspect', percent: 0, message: '检查部署包…' });
 
   const inspected = inspectBundle(dir);
   if (!inspected.ok) {
     return { ok: false, comfyRoot: null, message: inspected.message };
   }
 
-  // 空间检查：解压出来大约是分卷总量的 1.05 倍
+  // 空间检查：解压出来大约是包总量的 1.05 倍
   const need = inspected.totalBytes * 1.05;
   const free = freeSpaceOf(targetDir);
   if (free !== null && free < need) {
@@ -351,6 +433,62 @@ const deployBundle = async ({ dir, targetDir, resources, onProgress }) => {
       ok: false,
       comfyRoot: null,
       message: `目标盘空间不够：需要约 ${(need / 1024 ** 3).toFixed(0)} GB，可用 ${(free / 1024 ** 3).toFixed(0)} GB`,
+    };
+  }
+
+  // ── 新方案：9 个独立包，一个一个解
+  //
+  // 每个包解完立刻报进度。用户按提示删掉已解的包能省出空间，所以这边不能
+  // 像分卷那样只解第一个 —— 那是「一个档案切开」的思路。
+  if (inspected.kind === 'modules' && inspected.modules) {
+    const { present } = inspected.modules;
+    const sevenZip = find7z(resources);
+    if (!sevenZip) {
+      return { ok: false, comfyRoot: null, message: '没有找到 7z.exe' };
+    }
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    for (let i = 0; i < present.length; i += 1) {
+      const p = present[i];
+      onProgress?.({
+        phase: 'extract',
+        percent: Math.round((i / present.length) * 100),
+        message: `正在解 ${p.file}（${i + 1}/${present.length}）`,
+      });
+      const r = await extractBundle({
+        firstVolume: path.join(dir, p.file),
+        targetDir,
+        resources,
+        onProgress: (x) => {
+          // 把单包进度折算进总进度
+          const base = (i / present.length) * 100;
+          const span = 100 / present.length;
+          onProgress?.({
+            phase: 'extract',
+            percent: Math.round(base + (x.percent / 100) * span),
+            message: `${p.file}  ${x.line ?? ''}`,
+          });
+        },
+      });
+      if (!r.ok) {
+        return {
+          ok: false,
+          comfyRoot: null,
+          message: `${p.file} 解压失败：${r.message}`,
+        };
+      }
+    }
+
+    // 找解压出来的 ComfyUI 根
+    const found =
+      findComfyUnder(targetDir) ??
+      (fs.existsSync(path.join(targetDir, 'ComfyUI', 'main.py')) ? path.join(targetDir, 'ComfyUI') : null);
+    return {
+      ok: true,
+      comfyRoot: found ?? null,
+      message: found
+        ? `解压完成：${found}`
+        : '解压完成，但没有找到 ComfyUI\\main.py —— 部署包可能不完整。',
     };
   }
 
