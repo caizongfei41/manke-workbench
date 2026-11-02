@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -29,9 +30,23 @@ const run = promisify(execFile);
 const MAX_CLIPS = 200;
 const MAX_SUBTITLE_BYTES = 512 * 1024;
 
-const FFMPEG =
-  process.env.BEATDESIGN_FFMPEG?.trim() ??
-  'E:\\ComfyUI\\python_embeded\\Lib\\site-packages\\imageio_ffmpeg\\binaries\\ffmpeg-win-x86_64-v7.1.exe';
+// Never hardcode the ffmpeg path. Prefer the env var, then derive it from the
+// current ComfyUI root -- another machine may keep the bundle on D: or F:.
+const FFMPEG = (() => {
+  const fromEnv = process.env.BEATDESIGN_FFMPEG?.trim();
+  if (fromEnv) return fromEnv;
+
+  const comfyRoot = process.env.BEATDESIGN_COMFYUI_HOME?.trim() ?? '';
+  if (comfyRoot) {
+    const base = join(comfyRoot, 'python_embeded', 'Lib', 'site-packages', 'imageio_ffmpeg', 'binaries');
+    for (const name of ['ffmpeg-win-x86_64-v7.1.exe', 'ffmpeg-win-x86_64-v6.0.exe']) {
+      const p = join(base, name);
+      if (existsSync(p)) return p;
+    }
+  }
+  // Fall back to whatever ffmpeg is on PATH.
+  return 'ffmpeg';
+})();
 
 const localPathFor = async ({
   projectId,

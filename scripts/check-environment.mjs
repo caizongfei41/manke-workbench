@@ -95,12 +95,35 @@ const collectSources = (entries) => {
 };
 
 // ── 配置
-const configPath = join(ROOT, 'data', 'comfyui.config.json');
+//
+// 配置要读「用户数据目录」那份，不是安装目录里的那份。
+//
+// 主进程把用户配置写到 %APPDATA%\漫客工作台\data\comfyui.config.json，而安装
+// 目录下的 resources\data\comfyui.config.json 是打包时带上的只读副本。这里
+// 原来只读后者，结果自检永远看不到用户在控制台里设的路径，只能退回自动探测
+// ——于是出现「配置写的是 D 盘，自检却显示 E 盘（自动探测）」的矛盾。
+const configCandidates = [
+  // 桌面版主进程会把这个变量传进来
+  process.env.BEATDESIGN_DATA_DIR?.trim()
+    ? join(process.env.BEATDESIGN_DATA_DIR.trim(), 'comfyui.config.json')
+    : null,
+  // 标准用户数据位置
+  process.env.APPDATA ? join(process.env.APPDATA, '漫客工作台', 'data', 'comfyui.config.json') : null,
+  // 安装目录里的只读副本（最后兜底）
+  join(ROOT, 'data', 'comfyui.config.json'),
+].filter(Boolean);
+
+let configPath = configCandidates[configCandidates.length - 1];
 let config = {};
-try {
-  config = JSON.parse(readFileSync(configPath, 'utf8'));
-} catch {
-  // 缺失下面会单独报
+for (const candidate of configCandidates) {
+  if (!existsSync(candidate)) continue;
+  try {
+    config = JSON.parse(readFileSync(candidate, 'utf8'));
+    configPath = candidate;
+    break; // 第一个存在的就用它，顺序即优先级
+  } catch {
+    /* 坏了就看下一个 */
+  }
 }
 
 const baseUrl = String(config.baseUrl ?? 'http://127.0.0.1:8188').replace(/\/+$/, '');
@@ -156,8 +179,16 @@ const comfyRootSource = (() => {
       roots.push(join(d, 'ComfyUI'), join(d, 'manke', 'ComfyUI'), d);
     }
   } catch {
-    // 极少数受限环境下 PowerShell 叫不出来，退回最常见的三个盘
-    roots.push('E:\\ComfyUI', 'D:\\ComfyUI', 'C:\\ComfyUI');
+    // 极少数受限环境下 PowerShell 叫不出来，用 fs 直接探测存在的盘。
+    // 不要写死 C/D/E —— 用户可能装在 F: 或者只挂了一个盘。
+    for (let i = 67; i <= 90; i += 1) {
+      const root = `${String.fromCharCode(i)}:\\`;
+      try {
+        if (existsSync(root)) roots.push(join(root, 'ComfyUI'));
+      } catch {
+        /* 光驱或无权限跳过 */
+      }
+    }
   }
 
   for (const candidate of roots) {
@@ -242,24 +273,36 @@ if (!comfyRoot) {
     `指定的目录不存在：${comfyRoot}`,
     `来源：${comfyRootSource.source}。重新点「ComfyUI 位置」选一个存在的目录`
   );
-} else if (!existsSync(join(comfyRoot, 'python_embeded', 'python.exe'))) {
-  add(
-    'comfy-location',
-    'ComfyUI 位置',
-    'fail',
-    `${comfyRoot} 下没有 python_embeded\\python.exe`,
-    '这不是一个完整的 ComfyUI 目录，或者部署包还没解压'
-  );
-} else if (!existsSync(join(comfyRoot, 'ComfyUI'))) {
-  add(
-    'comfy-location',
-    'ComfyUI 位置',
-    'fail',
-    `${comfyRoot} 下没有 ComfyUI 子目录`,
-    '标准的 ComfyUI 结构是 <根>\\python_embeded + <根>\\ComfyUI'
-  );
 } else {
-  add('comfy-location', 'ComfyUI 位置', 'pass', `${comfyRoot}（来源：${comfyRootSource.source}）`);
+  // comfyRoot 可能是两种层级之一：
+  //   A. 部署包根：<root>\python_embeded + <root>\ComfyUI   （python 在 root 下）
+  //   B. ComfyUI 目录：<root>\main.py，python 在 root 的上一层
+  // 控制台保存的是 B（root 指向 ...\ComfyUI），所以两种都得认，否则自检
+  // 会对一个完全正常的部署报「没有 python_embeded\python.exe」。
+  const pyDirect = join(comfyRoot, 'python_embeded', 'python.exe');
+  const pyParent = join(dirname(comfyRoot), 'python_embeded', 'python.exe');
+  const hasMainPy = existsSync(join(comfyRoot, 'main.py'));
+  const nestedComfy = existsSync(join(comfyRoot, 'ComfyUI', 'main.py'));
+
+  if (!existsSync(pyDirect) && !existsSync(pyParent)) {
+    add(
+      'comfy-location',
+      'ComfyUI 位置',
+      'fail',
+      `${comfyRoot} 附近没有 python_embeded\\python.exe`,
+      '这不是一个完整的 ComfyUI 目录，或者部署包还没解压完'
+    );
+  } else if (!hasMainPy && !nestedComfy) {
+    add(
+      'comfy-location',
+      'ComfyUI 位置',
+      'fail',
+      `${comfyRoot} 附近没有 ComfyUI\\main.py`,
+      '标准结构是 <根>\\python_embeded + <根>\\ComfyUI\\main.py'
+    );
+  } else {
+    add('comfy-location', 'ComfyUI 位置', 'pass', `${comfyRoot}（来源：${comfyRootSource.source}）`);
+  }
 }
 
 if (isLocalComfy && config.pythonPath) {

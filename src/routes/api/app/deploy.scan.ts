@@ -26,6 +26,21 @@ import { createFileRoute } from '@tanstack/react-router';
  * case here, where the user downloads after launching the console.
  */
 const downloadDirs = () => {
+  // Enumerate the drive letters that actually exist on this machine.
+  // Hardcoded drives break as soon as the app runs on a different machine.
+  const existingDrives = (): string[] => {
+    const out: string[] = [];
+    for (let i = 67; i <= 90; i += 1) {
+      const root = String.fromCharCode(i) + ':\\\\';
+      try {
+        if (existsSync(root)) out.push(root);
+      } catch {
+        /* optical drives and unreadable volumes */
+      }
+    }
+    return out;
+  };
+
   const user = process.env.USERPROFILE ?? process.env.HOME ?? '';
   const home = process.env.HOME ?? user;
   const list = [
@@ -33,12 +48,13 @@ const downloadDirs = () => {
     join(user, 'Downloads'),
     join(user, 'Desktop', 'manke-big'),
     join(user, 'Desktop'),
-    'D:\\manke-big',
-    'D:\\Downloads',
-    'E:\\manke-big',
-    'E:\\Downloads',
-    'F:\\manke-big',
-    'G:\\manke-big',
+    // No hardcoded drives: on another machine they may not exist at all.
+    // Try common folder names on every real drive instead of guessing C/D/E.
+    ...existingDrives().flatMap((drive) => [
+      join(drive, 'manke-big'),
+      join(drive, 'manke-bundles'),
+      join(drive, 'Downloads'),
+    ]),
     // where the Quark client usually puts things
     join(user, 'Documents', 'Quark'),
     join(user, 'Quark'),

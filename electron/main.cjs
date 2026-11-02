@@ -132,57 +132,41 @@ const writeComfyConfig = (root, pythonPath) => {
  * 不假设盘符 —— 部署包可能解到任何位置。候选：配置记着的、应用旁边的
  * deploy/manke、所有固定磁盘下的常见目录名。
  */
+/**
+ * 找本机的 ComfyUI 根目录。
+ *
+ * 只认「配置里写的」和「安装目录附近」两处，**不扫全盘**。
+ *
+ * 之前这里枚举所有盘符找 ComfyUI\python_embeded\python.exe。这软件要发给别人
+ * 用，那台机器上任何位置的 ComfyUI（比如早就装过的 E:\ComfyUI）都会被自动
+ * 认领写进配置，用户在软件里新选的路径反而不生效 —— 实测正是如此。
+ * 用户没指定就返回空，让界面引导他部署或手选位置。
+ */
 const findComfyRoots = () => {
   const found = new Set();
   const configured = readComfyConfig().root;
-  if (configured && fs.existsSync(path.join(configured, 'python_embeded', 'python.exe'))) {
-    found.add(configured);
+
+  if (configured) {
+    // 配置说了在哪就只认它；两种布局都支持
+    const direct = path.join(configured, 'python_embeded', 'python.exe');
+    const parent = path.join(path.dirname(configured), 'python_embeded', 'python.exe');
+    const nested = path.join(configured, 'ComfyUI', 'main.py');
+    if (fs.existsSync(direct) || fs.existsSync(parent)) found.add(configured);
+    else if (fs.existsSync(nested)) found.add(path.join(configured, 'ComfyUI'));
+    if (found.size > 0) return [...found];
   }
 
+  // 没配置时只看安装目录附近：部署包解到程序旁边是唯一能安全猜测的位置
   const bases = [
     path.join(RESOURCES, 'deploy', 'manke'),
     path.join(path.dirname(RESOURCES), 'manke'),
     path.join(path.dirname(RESOURCES), 'ComfyUI'),
+    path.dirname(RESOURCES),
   ];
   for (const base of bases) {
     if (fs.existsSync(path.join(base, 'python_embeded', 'python.exe'))) found.add(base);
     if (fs.existsSync(path.join(base, 'ComfyUI', 'python_embeded', 'python.exe'))) {
       found.add(path.join(base, 'ComfyUI'));
-    }
-  }
-
-  let drives = ['C:\\', 'D:\\', 'E:\\'];
-  try {
-    const out = spawnSync(
-      'powershell',
-      [
-        '-NoProfile',
-        '-Command',
-        '(Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root) -join "|"',
-      ],
-      { encoding: 'utf8', windowsHide: true, timeout: 5000 }
-    );
-    if (out.stdout) {
-      drives = out.stdout
-        .split('|')
-        .map((s) => s.trim())
-        .filter(Boolean);
-    }
-  } catch {
-    /* 用默认的三个 */
-  }
-
-  for (const drive of drives) {
-    for (const name of ['ComfyUI', path.join('manke', 'ComfyUI'), path.join('AI', 'ComfyUI')]) {
-      const p = path.join(drive, name);
-      try {
-        if (fs.existsSync(path.join(p, 'python_embeded', 'python.exe'))) found.add(p);
-        if (fs.existsSync(path.join(p, 'ComfyUI', 'python_embeded', 'python.exe'))) {
-          found.add(path.join(p, 'ComfyUI'));
-        }
-      } catch {
-        /* 无权限跳过 */
-      }
     }
   }
   return [...found];
@@ -300,12 +284,36 @@ const ensureBundledNodes = (comfyDir) => {
   fs.mkdirSync(dest, { recursive: true });
   let copied = 0;
 
+  /**
+   * 目录里有没有真东西。
+   *
+   * 02 部署包解压会留下 custom_nodes/<包名>/.git 这种空壳目录。只判断「目录
+   * 存不存在」的话，这些空壳会被当成「用户已经装了节点」而跳过不补，结果
+   * Qwen-Image 这类依赖具体 .py 的节点注册不上，模板一跑就 missing_node_type。
+   */
+  const hasRealFiles = (dir) => {
+    try {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (e.name === '.git' || e.name === '__pycache__') continue;
+        if (e.isFile()) return true;
+        if (e.isDirectory() && hasRealFiles(path.join(dir, e.name))) return true;
+      }
+    } catch {
+      /* 读不了就当没有 */
+    }
+    return false;
+  };
+
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     const to = path.join(dest, entry.name);
-    if (fs.existsSync(to)) continue; // 已有就保留用户那份
+
+    // 磁盘上已有完整的一份就保留（用户可能自己 git pull 更新过）；
+    // 只有空壳才覆盖补全。
+    if (fs.existsSync(to) && hasRealFiles(to)) continue;
+
     try {
-      fs.cpSync(path.join(src, entry.name), to, { recursive: true });
+      fs.cpSync(path.join(src, entry.name), to, { recursive: true, force: true });
       copied += 1;
     } catch (e) {
       log(`  节点 ${entry.name} 拷贝失败: ${e.message}`);
@@ -840,7 +848,7 @@ ipcMain.handle('bundle:inspect', (_e, dir) => inspectBundle(dir));
 
 ipcMain.handle('bundle:pickDir', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
-    title: '选择部署包分卷所在目录（里面应有 .7z.001）',
+    title: '选择部署包所在目录（里面应有 manifest.json 和 9 个 .7z）',
     properties: ['openDirectory'],
   });
   if (result.canceled || !result.filePaths[0]) return { ok: false, canceled: true };
@@ -950,11 +958,34 @@ const runDeploy = async ({ dir, targetDir, resumed = false }) => {
 
   // 写配置
   store.update({ phase: 'configure', percent: 100, message: '写入配置…' });
+
+  // 部署包解出来的结构是「根目录下并列放 ComfyUI 和 python_embeded」：
+  //
+  //   D:\新建文件夹 (2)\
+  //   ├── ComfyUI\          main.py 在这里
+  //   ├── python_embeded\
+  //   └── run_nvidia_gpu.bat
+  //
+  // deployBundle 返回的 comfyRoot 指向 ComfyUI 子目录，python_embeded 却在
+  // 一层之外。之前直接在 comfyRoot 下找 python.exe，永远找不到，于是静默
+  // 跳过写配置 —— 用户看到「部署完成」，界面却毫无变化，ComfyUI 还指着旧
+  // 路径跑。两种布局都试：python 在 comfyRoot 下（旧包），或在父目录下（新包）。
   const root = result.comfyRoot;
-  const py = path.join(root, 'python_embeded', 'python.exe');
-  if (fs.existsSync(py)) {
+  const pyCandidates = [
+    path.join(root, 'python_embeded', 'python.exe'),
+    path.join(path.dirname(root), 'python_embeded', 'python.exe'),
+  ];
+  const py = pyCandidates.find((p) => fs.existsSync(p));
+
+  if (py) {
     writeComfyConfig(root, py);
-    log(`ComfyUI 已指向 ${root}`);
+    log(`ComfyUI 已指向 ${root}（python: ${py}）`);
+  } else {
+    // 找不到 python 就是部署不完整，必须让用户知道，不能悄悄失败
+    const msg = `解压出来了，但找不到 python_embeded\\python.exe（${root}）`;
+    log(msg);
+    store.fail(msg);
+    return { ok: false, comfyRoot: root, message: msg };
   }
 
   // 到这儿文件全部就位，部署本身已经成功。
@@ -963,6 +994,21 @@ const runDeploy = async ({ dir, targetDir, resumed = false }) => {
   // 如果把它算进部署状态，界面会在这三分钟里一直显示「部署中」，用户以为
   // 卡死了；中途关窗口还会让状态停在 start，下次打开误报「上次没做完」。
   store.finish();
+
+  // 先停掉可能还在跑的服务。
+  //
+  // 部署前用户多半已经有一个 ComfyUI 在 8188 上跑着（旧路径）。不停就直接
+  // 调 startComfyUI，端口检查会判定「已有实例，直接复用」，新配置永远用不上
+  // —— 用户看到部署完成、ComfyUI 显示在线，实际上跑的还是旧目录。
+  const stoppedOld = stopComfyUI();
+  if (stoppedOld && stoppedOld.ok && stoppedOld.message !== 'ComfyUI 未在运行') {
+    log(`部署完成：已停掉旧的 ComfyUI（${stoppedOld.message}），准备从新路径启动`);
+  }
+  // 等端口让开，否则紧接着的启动会被自己挡住
+  for (let i = 0; i < 20; i += 1) {
+    if (!(await isPortOpen(8188))) break;
+    await new Promise((r) => setTimeout(r, 500));
+  }
 
   // 顺手把 ComfyUI 起起来 —— 用户点完这个按钮就该能直接生成
   send({ phase: 'start', percent: 100, message: '启动 ComfyUI…' });

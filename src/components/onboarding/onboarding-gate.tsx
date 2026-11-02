@@ -544,7 +544,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
                         disabled={busy}
                         className="inline-flex h-9 shrink-0 items-center rounded-[8px] border border-ink/10 px-3 text-[11.5px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-40"
                       >
-                        {t('bundlePick')}
+                        {t('bundlePickDir')}
                       </button>
                     </div>
 

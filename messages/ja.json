@@ -1383,5 +1383,7 @@
   "services.saving": "保存中…",
   "product.shell.console": "コンソール",
   "services.saveFailed": "保存に失敗しました",
-  "Onboarding.bundleModules": "個のパッケージ"
+  "Onboarding.bundleBody": "9 個のパッケージと manifest.json を同じフォルダに置き、ここで確認して容量のあるドライブに解凍します。",
+  "Onboarding.bundlePickDir": "フォルダを選択",
+  "bundleModules": "個のパッケージ"
 }

@@ -338,7 +338,7 @@ function ServicesRouteComponent() {
         <div className="mt-4 rounded-[var(--beat-radius)] border border-ink/[0.07] bg-ink/[0.02] px-4 py-3">
           <label className="block">
             <span className="mb-1 block text-xs text-[var(--beat-text-3)]">
-              ComfyUI {m['services.comfyRoot']()}
+              {m['services.comfyRoot']()}
             </span>
             <div className="flex gap-2">
               <input

@@ -28,7 +28,6 @@ const WORKBENCH_PORT = 3020;
 const COMFYUI_PORT = 8188;
 const LLAMA_PORT = 8080;
 
-const DEFAULT_COMFYUI_ROOT = 'E:\\ComfyUI';
 
 let comfyChild: ChildProcess | null = null;
 let comfyStarting: Promise<void> | null = null;
@@ -46,8 +45,12 @@ export function comfyUiRoot(): string {
   const env = process.env.BEATDESIGN_COMFYUI_HOME?.trim();
   if (env) return env;
   const cwd = process.cwd();
+  // 不要写死任何盘符。
+  //
+  // 这里原来第一候选是 'E:\ComfyUI' —— 开发机上的路径。拿到别的电脑上，
+  // 那台机器如果刚好有个同名空目录，程序会认成 ComfyUI 根，然后所有路径
+  // 都指错地方。只从配置文件和相对位置找。
   const candidates = [
-    DEFAULT_COMFYUI_ROOT,
     resolve(cwd, '..', 'ComfyUI_XIAO-V1.0'),
     resolve(cwd, 'ComfyUI'),
   ];
@@ -59,13 +62,24 @@ export function comfyUiRoot(): string {
       return candidate;
     }
   }
-  return DEFAULT_COMFYUI_ROOT;
+  // 什么都没找到就返回空串，让调用方判断「还没配置」。
+  // 回退到一个写死的盘符是最糟的选择：换台电脑那个路径可能真有东西，
+  // 于是程序以为配置好了，实际指向一个不相干的目录。
+  return '';
 }
 
 export function comfyUiPython(): string {
   const root = comfyUiRoot();
+  // python_embeded 可能在 root 下，也可能在 root 的上一层。
+  //
+  // 部署包解出来的结构是「根目录下并列放 ComfyUI 和 python_embeded」：
+  //   D:\某目录\ComfyUI\        ← comfyUiRoot() 返回这里
+  //   D:\某目录\python_embeded\
+  // 只按 root 拼永远找不到，会掉到下面的配置回退分支 —— 能跑，但控制台
+  // 显示的路径和实际不符，用户会以为配错了。
   const candidates = [
     join(root, 'python_embeded', 'python.exe'),
+    resolve(root, '..', 'python_embeded', 'python.exe'),
     join(root, 'python', 'python.exe'),
   ];
   for (const candidate of candidates) {

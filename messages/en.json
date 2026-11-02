@@ -1383,5 +1383,7 @@
   "services.saving": "Saving…",
   "product.shell.console": "Console",
   "services.saveFailed": "Save failed",
-  "Onboarding.bundleModules": "packages"
+  "Onboarding.bundleBody": "Put all 9 packs and manifest.json in one folder, check them here, then extract to a drive with space.",
+  "Onboarding.bundlePickDir": "Choose folder",
+  "bundleModules": "packages"
 }

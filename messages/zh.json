@@ -1383,5 +1383,7 @@
   "services.saving": "保存中…",
   "product.shell.console": "服务控制台",
   "services.saveFailed": "保存失败",
-  "Onboarding.bundleModules": "个独立包"
+  "Onboarding.bundleBody": "把 9 个包和 manifest.json 放在同一个目录，这里检查齐不齐，然后解压到空间充足的盘。",
+  "Onboarding.bundlePickDir": "选择目录",
+  "bundleModules": "个独立包"
 }

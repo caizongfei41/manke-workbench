@@ -103,7 +103,11 @@ parts:
       - 'ComfyUI/custom_nodes/**'
       - 'ComfyUI/output/**'
       - 'ComfyUI/temp/**'
-      - 'ComfyUI/input/**'
+      # input 要带上。编辑类模板（图像编辑、三视图、放大）和翻唱模板都引用
+      # 固定的示例文件名，比如 352474e31ab5d0bf4e5da57a32b957f4.jpg、
+      # BD_sample_clip.mp4、古巨基那首歌。少了它们，模板一提交就报
+      # "Invalid image file"，用户会以为功能坏了。整个目录 66 MB，在 181 GB
+      # 里可以忽略，没必要为了省这点让模板全废掉。
       # 节点包（cosyvoice 等）会在 ComfyUI\ComfyUI\ 下建自己的 input/output，
       # 里面是它们跑测试留下的音频。运行时目录，不带。
       - 'ComfyUI/ComfyUI/**'
