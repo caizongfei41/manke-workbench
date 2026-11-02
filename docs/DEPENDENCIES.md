@@ -5,7 +5,7 @@
 - 模板：**22** 个
 - 核心之外的自定义节点类：**58** 个
 - 需要的自定义节点包：**13** 个
-- 模型 / 资源文件：**30** 个
+- 模型 / 资源文件：**29** 个
 
 ## 〇、从哪儿装（换机器部署必读）
 
@@ -26,7 +26,8 @@
 
 | 渠道 | 地址 | 提取码 | 覆盖 |
 | --- | --- | --- | --- |
-| 漫客工作台 · 一键部署包（211.1 GB，7 个包） | https://pan.quark.cn/s/8d1ed42563d4 | ~9d1f3bt6QP~:/ | 全部 / 7 个分卷 |
+| 漫客工作台 0.4.0 · 程序本体（单文件版 / 安装版） | https://pan.quark.cn/s/48f2de0199cc | ~c1433c0TC4~:/ | 程序本体（两个 exe）+ 安装说明 + 部署包校验清单 |
+| 漫客工作台 · 部署包（178.95 GB，9 个独立包） | https://pan.quark.cn/s/e9a51632e009 | ~f34c3bzCkm~:/ | 全部 / 9 个独立包 + manifest.json + 校验清单 |
 | ModelScope · MiniMax H3 官方仓 | https://modelscope.cn/models/MiniMaxAI/MiniMax_H3 | — | Minimax-h3/minimax_h3_ |
 | HuggingFace · H3 社区量化索引 | https://huggingface.co/models?search=MiniMax%20H3 | — | minimax_h3 |
 | HuggingFace · Qwen-Image GGUF 索引 | https://huggingface.co/models?search=qwen-image%20gguf | — | qwen-image |
@@ -91,34 +92,33 @@ node scripts/fetch-models.mjs --write       # 生成带路径的清单
 | 文件名 | 模板数 | 实际路径（相对 ComfyUI 根） | 大小 |
 | --- | --- | --- | --- |
 | `352474e31ab5d0bf4e5da57a32b957f4.jpg` | 7 | **未安装** | — |
-| `4x-UltraSharp.pth` | 2 | `models/upscale_models/4x-UltraSharp.pth` | 64 MB |
+| `4x-UltraSharp.pth` | 2 | **未安装** | — |
 | `91cc60179b7e9830e32d96bb89ba517a.jpg` | 1 | **未安装** | — |
-| `Flux.2-Klein\qwen_3_8b_fp8mixed.safetensors` | 3 | `models/text_encoders/Flux.2-Klein/qwen_3_8b_fp8mixed.safetensors` | 8.1 GB |
-| `Flux\Flux.2-Klein\flux-2-klein-base-9b-fp8.safetensors` | 3 | `models/diffusion_models/Flux/Flux.2-Klein/flux-2-klein-base-9b-fp8.safetensors` | 8.9 GB |
-| `Flux\flux2-vae.safetensors` | 3 | `models/vae/Flux/flux2-vae.safetensors` | 321 MB |
-| `H3_Combat_V2.safetensors` | 1 | `models/loras/H3_Combat_V2.safetensors` | 148 MB |
-| `MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 1 | `models/diffusion_models/MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 31.7 GB |
-| `MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors` | 2 | `models/diffusion_models/MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors` | 19.5 GB |
-| `MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors` | 2 | `models/diffusion_models/MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors` | 19.5 GB |
-| `MiniMax\Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 1 | `models/diffusion_models/MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 31.7 GB |
-| `Minimax H3真实电影质感V0.1.safetensors` | 1 | `models/loras/Minimax H3真实电影质感V0.1.safetensors` | 296 MB |
+| `Flux.2-Klein\qwen_3_8b_fp8mixed.safetensors` | 3 | **未安装** | — |
+| `Flux\Flux.2-Klein\flux-2-klein-base-9b-fp8.safetensors` | 3 | **未安装** | — |
+| `Flux\flux2-vae.safetensors` | 3 | **未安装** | — |
+| `H3_Combat_V2.safetensors` | 1 | **未安装** | — |
+| `MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 1 | **未安装** | — |
+| `MiniMax/minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors` | 2 | **未安装** | — |
+| `MiniMax/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors` | 2 | **未安装** | — |
+| `MiniMax\Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors` | 1 | **未安装** | — |
+| `Minimax H3真实电影质感V0.1.safetensors` | 1 | **未安装** | — |
 | `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` | 1 | **未安装** | — |
-| `YuE2\yue2_3b_bf16.safetensors` | 2 | `models/checkpoints/YuE2/yue2_3b_bf16.safetensors` | 7.3 GB |
-| `minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors` | 4 | `models/loras/minimax/minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors` | 350 MB |
-| `minimax_h3_audio_vae_fp32.safetensors` | 7 | `models/vae/minimax_h3_audio_vae_fp32.safetensors` | 577 MB |
-| `minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors` | 1 | `models/loras/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors` | 1.8 GB |
-| `minimax_h3_fl2va_pruned_w4a8_mixed.safetensors` | 1 | `models/diffusion_models/minimax_h3_fl2va_pruned_w4a8_mixed.safetensors` | 11.7 GB |
-| `minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors` | 2 | `models/loras/minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors` | 1.8 GB |
-| `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | 2 | `models/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors` | 19.5 GB |
-| `minimax_h3_video_vae_fp16.safetensors` | 5 | `models/vae/minimax_h3_video_vae_fp16.safetensors` | 4.9 GB |
-| `minimax_h3_video_vae_int8_convrot.safetensors` | 2 | `models/vae/minimax_h3_video_vae_int8_convrot.safetensors` | 2.6 GB |
-| `qwen-image-2.1-Q6_K.gguf` | 3 | `models/diffusion_models/qwen-image-2.1-Q6_K.gguf` | 5.5 GB |
-| `qwen-image-2.1-Q8_0.gguf` | 3 | `models/diffusion_models/qwen-image-2.1-Q8_0.gguf` | 7.1 GB |
-| `qwen-image-2.1-lightning-4step-int8_convrot.safetensors` | 2 | `models/loras/qwen-image-2.1-lightning-4step-int8_convrot.safetensors` | 6.8 GB |
-| `qwen3vl_32b_minimax_h3_int8_convrot.safetensors` | 6 | `models/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors` | 14.6 GB |
-| `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` | 1 | `models/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` | 14.6 GB |
-| `qwen3vl_8b_int8_convrot.safetensors` | 6 | `models/text_encoders/qwen3vl_8b_int8_convrot.safetensors` | 8.7 GB |
-| `qwen_image_2.1_vae_bf16.safetensors` | 6 | `models/vae/qwen_image_2.1_vae_bf16.safetensors` | 644 MB |
+| `YuE2\yue2_3b_bf16.safetensors` | 2 | **未安装** | — |
+| `minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors` | 4 | **未安装** | — |
+| `minimax_h3_audio_vae_fp32.safetensors` | 7 | **未安装** | — |
+| `minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors` | 1 | **未安装** | — |
+| `minimax_h3_fl2va_pruned_w4a8_mixed.safetensors` | 1 | **未安装** | — |
+| `minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors` | 2 | **未安装** | — |
+| `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | 2 | **未安装** | — |
+| `minimax_h3_video_vae_fp16.safetensors` | 5 | **未安装** | — |
+| `minimax_h3_video_vae_int8_convrot.safetensors` | 2 | **未安装** | — |
+| `qwen-image-2.1-Q6_K.gguf` | 3 | **未安装** | — |
+| `qwen-image-2.1-Q8_0.gguf` | 3 | **未安装** | — |
+| `qwen-image-2.1-lightning-4step-int8_convrot.safetensors` | 2 | **未安装** | — |
+| `qwen3vl_32b_minimax_h3_int8_convrot.safetensors` | 7 | **未安装** | — |
+| `qwen3vl_8b_int8_convrot.safetensors` | 6 | **未安装** | — |
+| `qwen_image_2.1_vae_bf16.safetensors` | 6 | **未安装** | — |
 | `古巨基 - 情深深雨濛濛.mp3` | 1 | **未安装** | — |
 
 ## 三、按模板拆分
@@ -252,5 +252,5 @@ node scripts/fetch-models.mjs --write       # 生成带路径的清单
 
 - 节点 8 个（自定义 8）
 - 依赖节点包：`(comfy_extras)`、`ComfyUI-AICG3D-Integrated`、`ComfyUI-AICG3D-PromptSplit`
-- 资源文件：`MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors`、`qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors`、`minimax_h3_video_vae_fp16.safetensors`、`minimax_h3_audio_vae_fp32.safetensors`、`minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors`
+- 资源文件：`MiniMax/Minimax-h3_Singularity_ref2va_v1.3_int8.safetensors`、`qwen3vl_32b_minimax_h3_int8_convrot.safetensors`、`minimax_h3_video_vae_fp16.safetensors`、`minimax_h3_audio_vae_fp32.safetensors`、`minimax\minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors`
 

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-26T03:22:42.313Z",
+  "generated": "2026-11-02T11:55:57.978Z",
   "templateCount": 22,
   "customNodeClasses": [
     "AICG3DPromptSegmentSplit",
@@ -392,13 +392,7 @@
         "小枫-aicg3d-h3-低显存长视频.json",
         "小枫-aicg3d-h3-长视频.json",
         "小枫-h3导演台-人脸修复.json",
-        "小枫-minimaxh3-动作迁移.json"
-      ]
-    },
-    {
-      "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
-      "basename": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
-      "templates": [
+        "小枫-minimaxh3-动作迁移.json",
         "小枫-无限分段生视频.json"
       ]
     },
