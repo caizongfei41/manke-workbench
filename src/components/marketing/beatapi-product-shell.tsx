@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 
+import { ComfyMonitorPill } from '@/components/app/comfy-monitor-pill';
 import { LanguageSwitcher } from '@/components/app/language-switcher';
 import { ThemeToggle } from '@/components/app/theme-toggle';
 import { normalizeLocale } from '@/config/locale';
@@ -156,6 +157,10 @@ export function BeatApiProductShell({
           <CapsuleNav active={active} items={navItems} />
 
           <div className="ml-auto flex items-center gap-2">
+            {/* ComfyUI connection status. Every page shares this header, so the
+                user sees why generation is unavailable no matter where they
+                are — it used to be on the studio page only. */}
+            <ComfyMonitorPill className="hidden md:inline-flex" />
             <div className="hidden md:block">
               <LanguageSwitcher />
             </div>

@@ -1076,6 +1076,31 @@ app.whenReady().then(async () => {
     return;
   }
   createTray();
+
+  // 开机顺手把 ComfyUI 拉起来。
+  //
+  // 以前只有「一键部署」流程里才会启动它，用户装好程序打开一看右上角
+  // 写着「ComfyUI 未连接」，得自己摸到控制台点按钮才知道怎么办 —— 大多数人
+  // 会以为软件坏了。
+  //
+  // 这里延后几秒再起，让窗口先出来，用户能立刻看到界面。启动失败不弹窗、
+  // 只记日志：没装 ComfyUI 的机器上这是正常情况，界面上会显示未连接。
+  setTimeout(() => {
+    void (async () => {
+      try {
+        const target = resolveComfy();
+        if (!target) {
+          log('自动启动 ComfyUI: 跳过（还没指定 ComfyUI 位置）');
+          return;
+        }
+        // 端口上已经有 ComfyUI 时不重复启动，restartOrphanedComfy 会处理孤儿
+        const r = await startComfyUI();
+        log(`自动启动 ComfyUI: ${r.message}`);
+      } catch (e) {
+        log(`自动启动 ComfyUI 失败: ${e.message}`);
+      }
+    })();
+  }, 3000);
 });
 
 app.on('window-all-closed', () => {
