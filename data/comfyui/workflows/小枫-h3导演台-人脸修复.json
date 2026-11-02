@@ -155,7 +155,7 @@
   "69": {
     "class_type": "MiniMaxH3DirectorFaceRefine",
     "inputs": {
-      "detector": "bbox\\face_yolov8n.pt",
+      "detector": "bbox\\face_yolov8m.pt",
       "confidence": 0.35,
       "crop_factor": 3,
       "select": "largest_face",
