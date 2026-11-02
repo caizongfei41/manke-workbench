@@ -41,6 +41,8 @@ let serverUrl = null;
 let serverStarted = false;
 let comfyProcess = null;
 let quitting = false;
+/** 隐藏到托盘时只提示一次，避免每次关窗口都弹气泡。 */
+let trayHintShown = false;
 
 // 诊断：确认主进程启动到哪一步
 
@@ -525,6 +527,29 @@ const createWindow = async () => {
     mainWindow.focus();
   });
 
+  // 点关闭按钮时隐藏窗口而不是销毁。
+  //
+  // 销毁再重建要重新加载整个界面和服务，慢两三秒；隐藏是瞬时的。代价是
+  // 进程留在托盘里 —— 这正是用户点「X」时期望的：程序还在，随时叫回来。
+  // 真正退出走托盘菜单的「退出」。
+  mainWindow.on('close', (event) => {
+    if (quitting) return; // 用户点的是「退出」，放行
+    event.preventDefault();
+    mainWindow.hide();
+    // 第一次隐藏时提示一次，不然用户以为程序被自己关了
+    if (!trayHintShown) {
+      trayHintShown = true;
+      try {
+        tray?.displayBalloon?.({
+          title: '漫客工作台还在运行',
+          content: '点托盘图标可以重新打开，右键有「退出」。',
+        });
+      } catch {
+        /* 部分系统不支持气泡提示 */
+      }
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -537,6 +562,28 @@ const createWindow = async () => {
   await mainWindow.loadURL(url);
 };
 
+/**
+ * 把主窗口叫回来。
+ *
+ * 三种情况都要覆盖：
+ *   · 窗口还在，只是被 hide 了 —— show + focus
+ *   · 窗口还在，但被最小化了 —— restore 之后再 show
+ *   · 窗口已经销毁 —— 重新建一个
+ *
+ * 之前托盘只绑了 double-click，而且直接调 mainWindow.show()：窗口销毁后
+ * 那个引用指向的是死对象，show() 什么也不做，用户就以为「点不开」。
+ */
+const showMainWindow = () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    return;
+  }
+  mainWindow = null;
+  void createWindow();
+};
+
 const createTray = () => {
   try {
     tray = new Tray(path.join(RESOURCES, 'icon.ico'));
@@ -545,10 +592,7 @@ const createTray = () => {
       Menu.buildFromTemplate([
         {
           label: '显示主窗口',
-          click: () => {
-            if (mainWindow) mainWindow.show();
-            else void createWindow();
-          },
+          click: () => showMainWindow(),
         },
         { type: 'separator' },
         { label: '启动 ComfyUI', click: () => void startComfyUI() },
@@ -563,7 +607,9 @@ const createTray = () => {
         },
       ])
     );
-    tray.on('double-click', () => mainWindow && mainWindow.show());
+    // 单击就响应。Windows 用户习惯点一下图标，双击是次要路径。
+    tray.on('click', () => showMainWindow());
+    tray.on('double-click', () => showMainWindow());
   } catch {
     /* 没图标就不建托盘 */
   }
