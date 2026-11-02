@@ -1376,5 +1376,6 @@
     "moduleExtractAll": "Extract all",
     "moduleChangeTarget": "Change drive",
     "moduleAllDone": "All parts extracted. Every archive can be deleted now."
-  }
+  },
+  "services.deploy.pickDir": "Browse"
 }

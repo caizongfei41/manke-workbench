@@ -1376,5 +1376,6 @@
     "moduleExtractAll": "すべて展開",
     "moduleChangeTarget": "ドライブを変更",
     "moduleAllDone": "すべて展開完了。圧縮ファイルは削除できます。"
-  }
+  },
+  "services.deploy.pickDir": "参照"
 }

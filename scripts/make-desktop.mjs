@@ -54,6 +54,21 @@ for (const name of ['server', 'public']) {
 }
 cpSync(join(OUT, 'nitro.json'), join(RES, 'nitro.json'));
 
+// 工作流模板。
+//
+// data/comfyui/workflows 下的 22 个 JSON 是工作台的核心资产 —— 创作台列的
+// 模板、环境自检核对的依赖清单都从这里读。之前只拷了 server/public，
+// 打包后的程序一个模板都没有，环境自检永远显示「工作流模板 0 个」。
+const DATA_SRC = join(ROOT, 'data');
+if (existsSync(DATA_SRC)) {
+  cpSync(DATA_SRC, join(RES, 'data'), { recursive: true });
+  const wfDir = join(RES, 'data', 'comfyui', 'workflows');
+  const wfCount = existsSync(wfDir) ? readdirSync(wfDir).filter((f) => f.endsWith('.json')).length : 0;
+  console.log(`  工作流模板: ${wfCount} 个`);
+} else {
+  console.log('  工作流模板: 缺少 data 目录');
+}
+
 // 部署包清单。
 //
 // 程序靠它知道有哪 9 个包、各多大、解到哪。清单在 dist-bundles 里生成，
@@ -74,6 +89,26 @@ if (manifestSrc) {
 } else {
   console.log('  部署包清单: 缺失（引导页不会显示分模块部署）');
 }
+
+// 运维脚本。
+//
+// 控制台的「一键部署」和「环境自检」不是纯 JS 实现的，它们 spawn 一个 .mjs
+// 去跑（scripts/deploy-bundle.mjs 负责解压、check-environment.mjs 检查节点包
+// 和模型）。主进程把 BEATDESIGN_ROOT 指向 resources，所以这两个脚本必须在这。
+// 漏打包的话控制台会显示 Missing .../scripts/xxx.mjs，那两块功能全灰。
+const SCRIPTS = join(RES, 'scripts');
+mkdirSync(SCRIPTS, { recursive: true });
+let scriptCount = 0;
+for (const name of ['deploy-bundle.mjs', 'check-environment.mjs']) {
+  const src = join(ROOT, 'scripts', name);
+  if (existsSync(src)) {
+    cpSync(src, join(SCRIPTS, name));
+    scriptCount += 1;
+  } else {
+    console.log(`  运维脚本缺失: scripts/${name}`);
+  }
+}
+console.log(`  运维脚本: ${scriptCount} 个`);
 
 // 建表 SQL：桌面程序首次启动时在用户数据目录执行。
 //

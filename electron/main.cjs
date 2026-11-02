@@ -299,6 +299,11 @@ const startServer = async () => {
 
   process.env.BEATDESIGN_DATA_DIR = DATA_DIR;
   process.env.BEATDESIGN_COMFYUI_HOME = readComfyConfig().root || '';
+  // 服务端有些旧 API（部署、环境自检、LLM 配置）会在 ROOT/scripts 下找 .mjs
+  // 脚本跑。默认 ROOT 是 process.cwd()，桌面版启动时的 cwd 是安装目录，那里
+  // 没有 scripts/ —— 于是控制台一直报 "Missing .../scripts/deploy-bundle.mjs"。
+  // 打包时 scripts/ 已经放进 resources，这里把 ROOT 指过去。
+  process.env.BEATDESIGN_ROOT = RESOURCES;
   process.env.PORT = String(port);
   process.env.NITRO_PORT = String(port);
   process.env.HOST = '127.0.0.1';

@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { homedir } from 'node:os';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
@@ -20,6 +21,7 @@ import { createFileRoute } from '@tanstack/react-router';
  * frontend polls GET for progress, which the script writes to a JSON file.
  */
 
+const desktopDir = () => join(homedir(), 'Desktop');
 const ROOT = () => process.env.BEATDESIGN_ROOT?.trim() || process.cwd();
 const SCRIPT = () => join(ROOT(), 'scripts', 'deploy-bundle.mjs');
 const PROGRESS = () => join(ROOT(), '.verify', 'deploy-progress.json');
@@ -57,7 +59,15 @@ const runInspect = (bundleDir: string, comfyRoot?: string) =>
     execFile(
       process.execPath,
       args,
-      { cwd: ROOT(), timeout: 60_000, maxBuffer: 8 * 1024 * 1024 },
+      {
+        cwd: ROOT(),
+        timeout: 60_000,
+        maxBuffer: 8 * 1024 * 1024,
+        // Same as environment.ts: process.execPath is the app exe, not node.
+        // Without this flag Electron treats the script as a GUI target and never
+        // runs it — the console then reports "Inspect produced no JSON".
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+      },
       (error, stdout) => {
         if (stdout && stdout.trim().startsWith('{')) {
           try {
@@ -74,7 +84,27 @@ const runInspect = (bundleDir: string, comfyRoot?: string) =>
 
 async function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
-  const bundleDir = url.searchParams.get('bundle') ?? join(ROOT(), 'deploy');
+
+  // In the desktop build ROOT points at resources, which never holds a user's
+  // downloaded archives. Guess where the cloud client puts them, so the field
+  // is usually already correct and the user can just hit inspect.
+  //
+  // If no known subfolder exists, fall back to the Downloads folder itself —
+  // the cloud client may dump all nine archives straight into it, and pointing
+  // at resources/deploy only makes the user think the download was lost.
+  const guessBundleDir = () => {
+    const downloads = join(homedir(), 'Downloads');
+    const candidates = [
+      join(downloads, 'manke-bundles'),
+      join(downloads, 'manke-bundle'),
+      join(desktopDir(), 'manke-bundles'),
+    ];
+    const hit = candidates.find((p) => existsSync(p));
+    if (hit) return hit;
+    return existsSync(downloads) ? downloads : join(ROOT(), 'deploy');
+  };
+
+  const bundleDir = url.searchParams.get('bundle') ?? guessBundleDir();
   const comfyRoot = url.searchParams.get('comfy') ?? undefined;
 
   const [inspect, progress] = await Promise.all([
@@ -144,6 +174,8 @@ async function POST({ request }: { request: Request }) {
     detached: true,
     stdio: ['ignore', logFd, logFd],
     windowsHide: true,
+    // the deploy script also relies on Electron running as node
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
   });
   child.unref();
 

@@ -92,6 +92,26 @@ export function DeployWizard() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /**
+   * Open the native folder picker and write the chosen path into a dir field.
+   *
+   * Typing a Windows path by hand is the single biggest source of mistakes in
+   * this panel — one wrong backslash and inspect reports "missing". The IPC is
+   * already there (bundle:pickDir / bundle:pickTarget), it just was not wired
+   * to the inputs. Both put the chosen path on `dir` and return `{ ok: false }`
+   * when the user cancels.
+   */
+  const pickDirInto = useCallback(async (setter: (v: string) => void, kind: 'from' | 'to') => {
+    try {
+      const api = window.mankeDesktop?.bundle;
+      const res = kind === 'from' ? await api?.pickDir?.() : await api?.pickTarget?.();
+      if (!res?.ok || !res.dir) return;
+      setter(res.dir);
+    } catch {
+      /* cancelled, or desktop API unavailable — keep the current value */
+    }
+  }, []);
+
+  /**
    * Look for already-downloaded volumes instead of asking the user to type a
    * path. People forget where the cloud client put a 211 GB download, and the
    * folder name is not always obvious.
@@ -339,23 +359,46 @@ export function DeployWizard() {
           <span className="mb-1 flex items-center gap-1 text-[12.5px] text-[var(--beat-text-2)]">
             <Package className="size-3.5" /> {m['services.deploy.bundleDir']()}
           </span>
-          <input
-            value={bundleDir}
-            onChange={(e) => setBundleDir(e.target.value)}
-            placeholder="D:\manke-deploy"
-            className="h-9 w-full rounded-[8px] border border-[var(--beat-border)] bg-[var(--beat-control)] px-2.5 text-[13px] text-[var(--beat-text-1)] outline-none"
-          />
+          <div className="flex gap-2">
+            <input
+              value={bundleDir}
+              onChange={(e) => setBundleDir(e.target.value)}
+              placeholder="D:\manke-deploy"
+              className="h-9 min-w-0 flex-1 rounded-[8px] border border-[var(--beat-border)] bg-[var(--beat-control)] px-2.5 text-[13px] text-[var(--beat-text-1)] outline-none"
+            />
+            {/* typing a path by hand is error prone — give a native picker */}
+            <button
+              type="button"
+              onClick={() => void pickDirInto(setBundleDir, 'from')}
+              disabled={!window.mankeDesktop?.bundle?.pickDir}
+              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-[8px] border border-[var(--beat-border)] px-3 text-[12px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-40"
+            >
+              <FolderOpen className="size-3.5" />
+              {m['services.deploy.pickDir']()}
+            </button>
+          </div>
         </label>
         <label className="block">
           <span className="mb-1 flex items-center gap-1 text-[12.5px] text-[var(--beat-text-2)]">
             <FolderOpen className="size-3.5" /> {m['services.deploy.installTo']()}
           </span>
-          <input
-            value={comfyDir}
-            onChange={(e) => setComfyDir(e.target.value)}
-            placeholder="D:\ComfyUI"
-            className="h-9 w-full rounded-[8px] border border-[var(--beat-border)] bg-[var(--beat-control)] px-2.5 text-[13px] text-[var(--beat-text-1)] outline-none"
-          />
+          <div className="flex gap-2">
+            <input
+              value={comfyDir}
+              onChange={(e) => setComfyDir(e.target.value)}
+              placeholder="D:\ComfyUI"
+              className="h-9 min-w-0 flex-1 rounded-[8px] border border-[var(--beat-border)] bg-[var(--beat-control)] px-2.5 text-[13px] text-[var(--beat-text-1)] outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => void pickDirInto(setComfyDir, 'to')}
+              disabled={!window.mankeDesktop?.bundle?.pickDir}
+              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-[8px] border border-[var(--beat-border)] px-3 text-[12px] text-[var(--beat-text-2)] transition hover:border-[var(--beat-accent)] disabled:opacity-40"
+            >
+              <FolderOpen className="size-3.5" />
+              {m['services.deploy.pickDir']()}
+            </button>
+          </div>
         </label>
       </div>
 

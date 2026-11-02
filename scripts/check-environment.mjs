@@ -184,18 +184,36 @@ const comfyRoot = comfyRootSource.root;
 const comfyDir = comfyRoot ? join(comfyRoot, 'ComfyUI') : null;
 
 // ── 1. 构建产物
-const serverEntry = join(ROOT, '.output', 'server', 'index.mjs');if (existsSync(serverEntry)) {
-  add('build', '构建产物', 'pass', '.output/server/index.mjs 存在');
+//
+// 两种运行形态要分开判断：
+//   · 源码开发：服务端在 <项目>/.output/server/index.mjs
+//   · 桌面版：主进程把 BEATDESIGN_ROOT 指到 resources，服务端在
+//     <resources>/server/index.mjs，依赖全打进 asar，根本没有 node_modules
+//
+// 之前只认 .output/，桌面版下这两项永远是红的，用户以为程序坏了。
+const isDesktop = existsSync(join(ROOT, 'server', 'index.mjs'));
+const serverEntry = isDesktop
+  ? join(ROOT, 'server', 'index.mjs')
+  : join(ROOT, '.output', 'server', 'index.mjs');
+if (existsSync(serverEntry)) {
+  add('build', '构建产物', 'pass', isDesktop ? 'server/index.mjs 存在（桌面版）' : '.output/server/index.mjs 存在');
 } else {
-  add('build', '构建产物', 'fail', '缺少 .output/server/index.mjs', '跑 pnpm build');
+  add('build', '构建产物', 'fail', '缺少服务端入口', isDesktop ? '重装工作台' : '跑 pnpm build');
 }
 
 // ── 2. 依赖
-const deps = join(ROOT, 'node_modules');
-if (existsSync(deps)) {
-  add('deps', 'Node 依赖', 'pass', 'node_modules 存在');
+//
+// 桌面版把依赖打进了 app.asar，磁盘上没有 node_modules 目录，这项对桌面版
+// 没有意义，直接判过并说明原因。
+if (isDesktop) {
+  add('deps', 'Node 依赖', 'pass', '已打进程序包（桌面版）');
 } else {
-  add('deps', 'Node 依赖', 'fail', '缺少 node_modules', '跑 pnpm install');
+  const deps = join(ROOT, 'node_modules');
+  if (existsSync(deps)) {
+    add('deps', 'Node 依赖', 'pass', 'node_modules 存在');
+  } else {
+    add('deps', 'Node 依赖', 'fail', '缺少 node_modules', '跑 pnpm install');
+  }
 }
 
 // ── 3. 配置

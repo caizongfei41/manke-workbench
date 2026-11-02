@@ -1376,5 +1376,6 @@
     "moduleExtractAll": "全部解完",
     "moduleChangeTarget": "换个目标盘",
     "moduleAllDone": "全部解压完成，现在可以删除所有压缩包了。"
-  }
+  },
+  "services.deploy.pickDir": "选择目录"
 }

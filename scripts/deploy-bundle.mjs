@@ -117,6 +117,64 @@ const inspectVolumes = (dir, base = ARCHIVE_BASE) => {
   };
 };
 
+/**
+ * 新版方案：9 个独立包，靠 manifest.json 认。
+ *
+ * 和旧分卷的区别是本质的 —— 分卷是一个档案切开，缺一卷就全废；这里是 9 个
+ * 互不依赖的压缩包，缺哪个只影响哪块功能。所以判定逻辑也不同：列出哪些包
+ * 在、哪些缺，而不是算编号连不连续。
+ */
+const inspectModules = (dir) => {
+  const manifestPath = join(dir, 'manifest.json');
+  if (!existsSync(manifestPath)) return null;
+
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(manifest?.parts) || manifest.parts.length === 0) return null;
+
+  let names;
+  try {
+    names = new Set(readdirSync(dir));
+  } catch {
+    names = new Set();
+  }
+
+  const present = [];
+  const missing = [];
+  let bytes = 0;
+
+  for (const part of [...manifest.parts].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
+    if (names.has(part.file)) {
+      let size = part.bytes ?? 0;
+      try {
+        size = statSync(join(dir, part.file)).size;
+      } catch {
+        /* 用 manifest 记录的大小 */
+      }
+      bytes += size;
+      present.push({ id: part.id, file: part.file, bytes: size, order: part.order, name: part.name });
+    } else {
+      missing.push({ id: part.id, file: part.file, bytes: part.bytes ?? 0, order: part.order, name: part.name });
+    }
+  }
+
+  return {
+    kind: 'modules',
+    manifest,
+    present,
+    missing,
+    count: present.length,
+    total: manifest.parts.length,
+    bytes,
+    totalBytes: manifest.totalBytes ?? 0,
+    complete: missing.length === 0,
+  };
+};
+
 /** 目录里是否有旧格式的分卷（提示用户换包用）。 */
 const detectLegacyBundles = (dir) => {
   const legacyIds = ['01-models', '02-nodes', '03-app', '04-comfyui'];
@@ -147,21 +205,39 @@ const freeSpaceAt = (path) => {
 
 const inspect = () => {
   const dir = bundleDir();
-  const volumes = inspectVolumes(dir);
+  const modules = inspectModules(dir);
   const legacy = detectLegacyBundles(dir);
   const target = extractTarget();
   const sevenZip = findSevenZip();
   const free = freeSpaceAt(target);
 
+  // 新版 9 包方案优先。
+  //
+  // 界面上那块「部署包状态」是按 volumes 的形状画的（count / bytes /
+  // complete / missing），为了不再改一遍前端，这里把 modules 的结果映射成
+  // 同样的形状。missing 用文件路径填，提示文字能直接显示缺哪个包。
+  const volumes = modules
+    ? {
+        base: 'manifest',
+        volumes: modules.present.map((p) => p.file),
+        count: modules.present.length,
+        bytes: modules.bytes,
+        complete: modules.complete,
+        missing: modules.missing.map((m) => m.file),
+      }
+    : inspectVolumes(dir);
+
   return {
     bundleDir: dir,
-    archiveBase: ARCHIVE_BASE,
+    archiveBase: modules ? 'manifest' : ARCHIVE_BASE,
     target,
     sevenZip,
     freeBytes: free,
     volumes,
+    // 新版 9 包方案。null 表示这个目录里没有 manifest.json，走旧分卷逻辑。
+    modules,
     legacyBundles: legacy,
-    // 解压后大约占多少：档案 211.1 GB 解开后 211 GB，按卷大小估
+    // 解压后大约占多少：解压后和压缩包差不多大（模型已经是压缩过的二进制）
     estimatedExtractBytes: volumes.bytes,
   };
 };
@@ -171,6 +247,32 @@ const printInspect = (r) => {
   console.log(`  解压到:     ${r.target}`);
   console.log(`  7-Zip:      ${r.sevenZip ?? '未找到'}`);
   console.log('');
+
+  // 新版 9 包方案：逐个列出在不在，缺哪个说得清楚
+  if (r.modules) {
+    const m = r.modules;
+    console.log(`  独立包: ${m.count} / ${m.total} 个 · ${human(m.bytes)} / ${human(m.totalBytes)}`);
+    console.log('');
+    for (const p of m.present) {
+      console.log(`  ✓ ${String(p.order).padStart(2)}. ${p.file.padEnd(24)} ${human(p.bytes).padStart(9)}  ${p.name ?? ''}`);
+    }
+    for (const p of m.missing) {
+      console.log(`  ✗ ${String(p.order).padStart(2)}. ${p.file.padEnd(24)} ${human(p.bytes).padStart(9)}  ${p.name ?? ''}`);
+    }
+    console.log('');
+    if (r.freeBytes !== null) {
+      const need = r.estimatedExtractBytes;
+      const enough = r.freeBytes > need * 1.05;
+      console.log(`  目标盘剩余 ${human(r.freeBytes)}，已下的包解压约需 ${human(need)} ${enough ? '✓' : '✗ 不够'}`);
+      console.log('');
+    }
+    if (m.complete) {
+      console.log('  可以部署：node scripts/deploy-bundle.mjs --deploy');
+    } else {
+      console.log(`  还缺 ${m.missing.length} 个包，补齐后可以部署`);
+    }
+    return;
+  }
 
   if (r.volumes.count === 0) {
     console.log(`  ✗ 没找到 ${r.archiveBase}.7z.001`);
@@ -251,6 +353,76 @@ const deploy = ({ dryRun }) => {
     writeProgress({ running: false, stage: 'failed', detail: msg, error: msg });
     return 1;
   }
+
+  // ── 新版：9 个独立包，逐个解
+  //
+  // 每解完一个就把进度记下来，并提示可以删掉那个 .7z —— 这样磁盘峰值只有
+  // 最大那个包的大小，而不是全部。中断了下次从缺的那个接着来。
+  if (r.modules) {
+    const { present, missing, total } = r.modules;
+    if (present.length === 0) {
+      const msg = '目录里一个包都没有';
+      console.error('  ' + msg);
+      writeProgress({ running: false, stage: 'failed', detail: msg, error: msg });
+      return 1;
+    }
+
+    console.log(`  按顺序解压 ${present.length} 个包到 ${r.target}`);
+    if (missing.length) {
+      console.log(`  还缺 ${missing.length} 个（${missing.map((m) => m.file).join('、')}），先解已有的`);
+    }
+    console.log('');
+
+    if (dryRun) {
+      for (const p of present) console.log(`  [dry-run] 会解 ${p.file}`);
+      return 0;
+    }
+
+    mkdirSync(r.target, { recursive: true });
+    let done = 0;
+
+    for (const p of present) {
+      const archive = join(r.bundleDir, p.file);
+      const pct = Math.round((done / present.length) * 100);
+      writeProgress({
+        running: true,
+        stage: 'extracting',
+        detail: `正在解 ${p.file}（${done + 1}/${present.length}）`,
+        percent: pct,
+      });
+      console.log(`  [${done + 1}/${present.length}] ${p.file}  ${human(p.bytes)}`);
+
+      try {
+        execFileSync(r.sevenZip, ['x', '-y', `-o${r.target}`, archive], {
+          cwd: r.target,
+          encoding: 'utf8',
+          maxBuffer: 64 * 1024 * 1024,
+        });
+      } catch (error) {
+        const msg = String(error.stdout ?? error).slice(0, 400);
+        console.error(`  解压 ${p.file} 失败: ${msg}`);
+        writeProgress({ running: false, stage: 'failed', detail: `${p.file} 解压失败`, error: msg });
+        return 1;
+      }
+
+      done += 1;
+      console.log(`        解完，磁盘上这个包可以删了：${p.file}`);
+    }
+
+    writeProgress({
+      running: false,
+      stage: 'done',
+      detail: `已解压 ${done} 个包`,
+      percent: 100,
+    });
+    console.log('');
+    console.log(`  完成 ${done} 个包 → ${r.target}`);
+    if (missing.length) {
+      console.log(`  还缺 ${missing.length} 个包没下，补齐后可以再跑一次`);
+    }
+    return 0;
+  }
+
   if (!r.volumes.complete) {
     const msg = r.volumes.count === 0 ? `没找到 ${ARCHIVE_BASE}.7z.001` : `分卷不全，缺第 ${r.volumes.missing.join(', ')} 卷`;
     console.error('  ' + msg);

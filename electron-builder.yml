@@ -37,6 +37,12 @@ extraResources:
   # 部署包清单：哪些包、多大、解哪个
   - from: build-resources/bundles
     to: bundles
+  # 运维脚本：控制台的「一键部署」和「环境自检」会 spawn 这两个 .mjs
+  - from: build-resources/scripts
+    to: scripts
+  # 工作流模板：创作台的 22 个模板 + 依赖清单
+  - from: build-resources/data
+    to: data
 
 # build-app 里没有 node_modules，别让 builder 去重建原生模块
 npmRebuild: false

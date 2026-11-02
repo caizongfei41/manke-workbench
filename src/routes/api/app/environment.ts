@@ -83,7 +83,20 @@ const runCheck = () =>
     execFile(
       process.execPath,
       [script, '--json'],
-      { cwd: root, timeout: TIMEOUT_MS, maxBuffer: 8 * 1024 * 1024 },
+      {
+        cwd: root,
+        timeout: TIMEOUT_MS,
+        maxBuffer: 8 * 1024 * 1024,
+        env: {
+          ...process.env,
+          // process.execPath is the app exe in the desktop build, not node.exe.
+          // Without this flag Electron treats the script as a GUI target: it opens
+          // a window, exits, and runs none of the script — the console then only
+          // sees "Check script produced no JSON output". It happens to work on a
+          // dev machine because the outer environment already exports this.
+          ELECTRON_RUN_AS_NODE: '1',
+        },
+      },
       (error, stdout) => {
         // The script signals its verdict through the exit code. A non-zero exit with
         // complete JSON on stdout still has to reach the UI — that JSON is exactly
