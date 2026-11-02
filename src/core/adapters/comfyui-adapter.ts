@@ -266,6 +266,25 @@ async function loadConfig(): Promise<ComfyUiConfig & {
   return { ...fileConfig, baseUrl, workflowDir };
 }
 
+/**
+ * 随程序分发的模板目录。
+ *
+ * 桌面版把 data/comfyui/workflows 打进了 resources，但 dataRoot 指向用户数据
+ * 目录（%APPDATA%），两者不是一回事 —— 只查 dataRoot 的话，界面里每选一个
+ * 模型都会报 "workflow template not found"。这里给出程序侧的兜底位置：主进程
+ * 通过 BEATDESIGN_ROOT 把 resources 传进来了。
+ *
+ * 顺序上用户目录优先，这样用户放进去的同名模板能覆盖内置版本。
+ */
+async function bundledWorkflowDir(): Promise<string | null> {
+  const root = process.env.BEATDESIGN_ROOT?.trim();
+  if (!root) return null;
+  const { existsSync } = await import('node:fs');
+  const { resolve: resolvePath } = await import('node:path');
+  const dir = resolvePath(root, 'data', DEFAULT_WORKFLOW_RELATIVE_DIR);
+  return existsSync(dir) ? dir : null;
+}
+
 async function readBoundedJson(response: Response): Promise<unknown> {
   const declaredLength = Number(response.headers.get('content-length'));
   if (Number.isFinite(declaredLength) && declaredLength > MAX_RESPONSE_BYTES) {
@@ -2152,14 +2171,27 @@ export class ComfyUiAdapter extends BaseAdapter {
         ? configuredWorkflow
         : resolve(await resolveDataRoot(), configuredWorkflow)
       : resolve(workflowDir, `${modelId}.json`);
-    let raw: string;
+    let raw: string | undefined;
     try {
       raw = await readFile(workflowPath, 'utf8');
     } catch {
-      throw new Error(
-        `ComfyUI workflow template not found for model "${modelId}". ` +
-          `Expected ${workflowPath}. Export your ComfyUI workflow as API format into the workflow directory.`
-      );
+      // 用户目录里没有就找程序自带的。桌面版把 22 个模板打在 resources 下，
+      // 只认用户目录的话每个模型都会报 "template not found"。
+      const bundled = await bundledWorkflowDir();
+      const fallback = bundled ? resolve(bundled, `${modelId}.json`) : null;
+      if (fallback) {
+        try {
+          raw = await readFile(fallback, 'utf8');
+        } catch {
+          /* 落到下面的报错 */
+        }
+      }
+      if (raw === undefined) {
+        throw new Error(
+          `ComfyUI workflow template not found for model "${modelId}". ` +
+            `Expected ${workflowPath}. Export your ComfyUI workflow as API format into the workflow directory.`
+        );
+      }
     }
     const parsed = JSON.parse(raw) as unknown;
     const record = asRecord(parsed);
