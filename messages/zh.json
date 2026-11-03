@@ -803,7 +803,8 @@
       "startDescription": "选择创作台或画布来创建这个项目。",
       "startStudio": "创作台",
       "startCanvas": "画布",
-      "defaultName": "未命名项目"
+      "defaultName": "未命名项目",
+      "backToProjects": "返回项目"
     }
   },
   "Common": {

@@ -803,7 +803,8 @@
       "startDescription": "Choose Studio or Canvas to create this project.",
       "startStudio": "Studio",
       "startCanvas": "Canvas",
-      "defaultName": "Untitled project"
+      "defaultName": "Untitled project",
+      "backToProjects": "Back to projects"
     }
   },
   "Common": {

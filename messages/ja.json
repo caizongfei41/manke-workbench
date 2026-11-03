@@ -803,7 +803,8 @@
       "startDescription": "StudioまたはCanvasを選択してプロジェクトを作成します。",
       "startStudio": "Studio",
       "startCanvas": "Canvas",
-      "defaultName": "無題のプロジェクト"
+      "defaultName": "無題のプロジェクト",
+      "backToProjects": "プロジェクトに戻る"
     }
   },
   "Common": {

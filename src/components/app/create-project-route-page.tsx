@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { AlertCircleIcon, Loader2Icon } from 'lucide-react';
+import { AlertCircleIcon, ArrowLeft, Loader2Icon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Link } from '@/core/i18n/navigation';
 import { appConfig } from '@/config';
 import { normalizeLocale } from '@/config/locale';
 import type { WorkspaceMode } from '@/config/workspace-modes';
@@ -38,6 +39,7 @@ function getCopy(locale: string) {
       { locale: messageLocale }
     ),
     retry: m['BeatAPI.project.retry']({}, { locale: messageLocale }),
+    backToProjects: m['BeatAPI.project.backToProjects']({}, { locale: messageLocale }),
     startTitle: m['BeatAPI.project.startTitle']({}, { locale: messageLocale }),
     startDescription: m['BeatAPI.project.startDescription'](
       {},
@@ -117,7 +119,18 @@ export function CreateProjectRoutePage({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--beat-bg)] px-6 py-16 text-[var(--beat-text-1)]">
+    <main className="relative flex min-h-screen items-center justify-center bg-[var(--beat-bg)] px-6 py-16 text-[var(--beat-text-1)]">
+      {/* Back out.
+          Opening /studio or /canvas directly only asks which project to
+          create -- there was no other exit, so a change of mind meant
+          closing the window. This gives a way back to the project list. */}
+      <Link
+        href="/projects"
+        className="absolute left-6 top-6 inline-flex h-9 items-center gap-1.5 rounded-full border border-ink/10 px-3 text-[12.5px] text-[var(--beat-text-2)] transition hover:border-ink/20 hover:text-[var(--beat-text-1)]"
+      >
+        <ArrowLeft className="size-3.5" />
+        {copy.backToProjects}
+      </Link>
       <section className="w-full max-w-[520px] rounded-[var(--beat-radius)] border border-ink/[0.13] bg-[image:var(--beat-card)] px-8 py-9 text-center shadow-[0_30px_100px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.035)]">
         {error ? (
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
