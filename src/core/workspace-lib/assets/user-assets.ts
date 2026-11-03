@@ -128,6 +128,28 @@ export const recordUserAsset = async ({
     createdAt: new Date(),
     updatedAt: new Date(),
   });
+
+  // 给项目补一张封面。
+  //
+  // 项目卡片的封面读的是 project.cover_asset_id，但这个字段一直是 null ——
+  // 只有「把素材加进项目」那条路径会写它，而生成结果落库走的是这里，所以
+  // 每个项目卡片都是空白占位图。这里补上：项目还没有封面、且这张是图片时，
+  // 用它当封面。之后再有新图不覆盖，免得封面随每次生成乱跳。
+  if (originProjectId && type === 'image') {
+    try {
+      const current = await db
+        .select({ coverAssetId: project.coverAssetId })
+        .from(project)
+        .where(eq(project.id, originProjectId))
+        .limit(1);
+      if (current.length > 0 && !current[0].coverAssetId) {
+        await syncProjectCoverAsset({ projectId: originProjectId, assetId: id });
+      }
+    } catch {
+      /* 封面是锦上添花，失败不该影响素材入库 */
+    }
+  }
+
   return id;
 };
 

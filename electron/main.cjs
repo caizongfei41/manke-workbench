@@ -21,7 +21,7 @@ const fs = require('node:fs');
 const { createServer } = require('node:net');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { ensureSchema, seedShowcase } = require('./db-bootstrap.cjs');
+const { ensureSchema, seedShowcase, backfillProjectCovers } = require('./db-bootstrap.cjs');
 const { inspectBundle, extractBundle, deployBundle, freeSpaceOf } = require('./bundle.cjs');
 const { createStore } = require('./deploy-state.cjs');
 const { inspectModules, extractModule } = require('./modules.cjs');
@@ -458,6 +458,11 @@ const startServer = async () => {
   }
   const seeded = seedShowcase(DATA_DIR, path.join(RESOURCES, 'public'));
   log(`展示素材: ${seeded.message}`);
+
+  // 历史项目的 cover_asset_id 一直是空的，项目卡片全是占位图。补一次就够：
+  // 只填空着的，已经有封面的不动。
+  const covers = backfillProjectCovers(DATA_DIR);
+  log(`项目封面: ${covers.message}`);
 
   // 节点包随程序分发，开机就补齐，不等用户点「启动 ComfyUI」。
   //

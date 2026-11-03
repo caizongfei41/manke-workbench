@@ -189,4 +189,75 @@ const seedShowcase = (dataDir, publicDir) => {
   return { ok: true, added, message: added > 0 ? `新增 ${added} 个展示素材` : '展示素材已就绪' };
 };
 
-module.exports = { ensureSchema, seedShowcase };
+/**
+ * 给还没有封面的项目补一张。
+ *
+ * 项目卡片的封面读 project.cover_asset_id，但直到最近才有人写这个字段 ——
+ * 之前所有项目的封面都是空白占位图。新建项目从今往后会自动设，可历史项目
+ * 得补一次，否则用户升级后看到的还是一排空卡片。
+ *
+ * 取每个项目最新的一张图片，只补空着的，不覆盖已有封面。
+ */
+const backfillProjectCovers = (dataDir) => {
+  const dbPath = path.join(dataDir, 'local.db');
+  if (!fs.existsSync(dbPath)) return { ok: false, patched: 0, message: '数据库不存在' };
+
+  let db;
+  try {
+    db = new DatabaseSync(dbPath);
+  } catch (e) {
+    return { ok: false, patched: 0, message: String(e && e.message) };
+  }
+
+  let patched = 0;
+  try {
+    const projects = db
+      .prepare(
+        `SELECT id FROM project
+         WHERE status = 'active' AND (cover_asset_id IS NULL OR cover_asset_id = '')`
+      )
+      .all();
+
+    const pick = db.prepare(
+      `SELECT a.id AS assetId
+       FROM asset a
+       WHERE a.type = 'image'
+         AND a.deleted_at IS NULL
+         AND a.public_url IS NOT NULL
+         AND (
+           a.origin_project_id = ?
+           OR a.object_key LIKE ?
+           OR EXISTS (
+             SELECT 1 FROM project_asset_membership m
+             WHERE m.asset_id = a.id AND m.project_id = ?
+           )
+         )
+       ORDER BY a.created_at DESC
+       LIMIT 1`
+    );
+
+    const update = db.prepare(
+      `UPDATE project SET cover_asset_id = ?, updated_at = ? WHERE id = ?`
+    );
+
+    for (const row of projects) {
+      const hit = pick.get(row.id, `${row.id}/%`, row.id);
+      if (hit && hit.assetId) {
+        update.run(hit.assetId, Date.now(), row.id);
+        patched += 1;
+      }
+    }
+  } catch (e) {
+    db.close();
+    return { ok: false, patched, message: String(e && e.message) };
+  }
+
+  db.close();
+  return {
+    ok: true,
+    patched,
+    message: patched > 0 ? `补了 ${patched} 个项目封面` : '项目封面已就绪',
+  };
+};
+
+module.exports = { ensureSchema, seedShowcase, backfillProjectCovers };

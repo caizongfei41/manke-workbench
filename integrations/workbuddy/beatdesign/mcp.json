@@ -3,7 +3,7 @@
     "beatdesign": {
       "type": "stdio",
       "command": "npx",
-      "args": ["--yes", "@beatapi/beatdesign-workbuddy@0.4.2"],
+      "args": ["--yes", "@beatapi/beatdesign-workbuddy@0.4.3"],
       "runtime": {
         "type": "node",
         "version": "22"
