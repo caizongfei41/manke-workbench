@@ -66,27 +66,63 @@ const movedAtOf = (dir: string): Date => {
 };
 
 /**
- * Remove entries past the retention window.
+ * Remove entries past the retention window and erase their DB rows.
  *
- * Runs on every read; returns how many were removed so the UI can say so.
+ * Runs on every read; returns how many were removed so the UI can report it.
+ * Deletion has to cover three places or the list keeps showing ghosts:
+ *   · files under trash/project-assets
+ *   · asset rows soft-deleted for that project
+ *   · the project row itself (status='deleted')
  */
-const sweepExpired = (now = Date.now()): number => {
-  const root = trashRoot();
-  if (!existsSync(root)) return 0;
+const sweepExpired = async (now = Date.now()): Promise<number> => {
   let removed = 0;
-  for (const entry of readdirSync(root, { withFileTypes: true })) {
-    if (!entry.isDirectory()) continue;
-    const full = join(root, entry.name);
-    const movedAt = movedAtOf(full);
-    if (now - movedAt.getTime() >= RETENTION_MS) {
-      try {
-        rmSync(full, { recursive: true, force: true });
-        removed += 1;
-      } catch {
-        /* file still open; the next sweep gets it */
+  const expiredIds: string[] = [];
+
+  // Files on disk
+  const root = trashRoot();
+  if (existsSync(root)) {
+    for (const entry of readdirSync(root, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const full = join(root, entry.name);
+      const movedAt = movedAtOf(full);
+      if (now - movedAt.getTime() >= RETENTION_MS) {
+        try {
+          rmSync(full, { recursive: true, force: true });
+          expiredIds.push(entry.name);
+          removed += 1;
+        } catch {
+          /* file still open; the next sweep gets it */
+        }
       }
     }
   }
+
+  // Rows past their retention. Projects with no files on disk only die here.
+  try {
+    const { getDb } = await import('@/core/workspace-lib/db-adapter');
+    const { project } = await import('@/config/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    const db = await getDb();
+    const rows = await db
+      .select({ id: project.id, deletedAt: project.deletedAt })
+      .from(project)
+      .where(eq(project.status, 'deleted'));
+
+    for (const row of rows) {
+      const at = row.deletedAt as Date | null;
+      if (!at || now - at.getTime() < RETENTION_MS) continue;
+      try {
+        await purgeProject(row.id);
+        if (!expiredIds.includes(row.id)) removed += 1;
+      } catch {
+        /* try again next read */
+      }
+    }
+  } catch {
+    /* no DB access: sweep disk only */
+  }
+
   return removed;
 };
 
@@ -133,8 +169,66 @@ function copyRecursive(from: string, to: string) {
  *   project.status 'deleted' -> 'active', clear deletedAt
  *   asset.deleted_at non-null -> null
  */
-async function restoreRecords(projectId: string) {
+/**
+ * Projects sitting in the trash according to the database.
+ *
+ * This is the source of truth for "what did the user delete". Reading only the
+ * trash directory misses projects that had no asset files: deleting one moves
+ * nothing to disk, so the trash looked empty even though the delete took.
+ */
+async function listDeletedProjects(): Promise<
+  { id: string; name: string; deletedAt: Date | null }[]
+> {
   const { getDb } = await import('@/core/workspace-lib/db-adapter');
+  const { project } = await import('@/config/db/schema');
+  const { eq } = await import('drizzle-orm');
+
+  const db = await getDb();
+  const rows = await db
+    .select({ id: project.id, name: project.name, deletedAt: project.deletedAt })
+    .from(project)
+    .where(eq(project.status, 'deleted'));
+
+  return rows.map((r: { id: string; name: string | null; deletedAt: Date | null }) => ({
+    id: r.id,
+    name: r.name ?? r.id,
+    deletedAt: r.deletedAt ?? null,
+  }));
+}
+
+/**
+ * Erase a project and its assets from the database.
+ *
+ * Called when a trash entry is deleted for good, and by the 7-day sweep. The
+ * files are already gone by then, so this is the last step.
+ */
+async function purgeProject(projectId: string) {
+  const { getDb } = await import('@/core/workspace-lib/db-adapter');
+  const { project, userAsset, projectAssetMembership } = await import('@/config/db/schema');
+  const { eq } = await import('drizzle-orm');
+
+  const db = await getDb();
+  await db.delete(projectAssetMembership).where(eq(projectAssetMembership.projectId, projectId));
+  await db.delete(userAsset).where(eq(userAsset.originProjectId, projectId));
+  await db.delete(project).where(eq(project.id, projectId));
+}
+
+/** Is this a project currently sitting in the trash per the database? */
+async function projectExistsAsDeleted(projectId: string): Promise<boolean> {
+  const { getDb } = await import('@/core/workspace-lib/db-adapter');
+  const { project } = await import('@/config/db/schema');
+  const { and, eq } = await import('drizzle-orm');
+
+  const db = await getDb();
+  const rows = await db
+    .select({ id: project.id })
+    .from(project)
+    .where(and(eq(project.id, projectId), eq(project.status, 'deleted')))
+    .limit(1);
+  return rows.length > 0;
+}
+
+async function restoreRecords(projectId: string) {  const { getDb } = await import('@/core/workspace-lib/db-adapter');
   const { project, userAsset } = await import('@/config/db/schema');
   const { eq, isNotNull, and } = await import('drizzle-orm');
 
@@ -158,35 +252,71 @@ export const Route = createFileRoute('/api/app/trash')({
     handlers: {
       /** List the trash, sweeping expired entries first. */
       GET: async () => {
-        const swept = sweepExpired();
-        const root = trashRoot();
+        const swept = await sweepExpired();
         const now = Date.now();
-        let entries: TrashEntry[] = [];
+        const entries: TrashEntry[] = [];
+        const seen = new Set<string>();
 
+        // 1. Projects with status='deleted' in the database.
+        //
+        // This is the real source of truth. Reading only the disk misses projects
+        // with no asset files: deleting one moves nothing into the trash, so the
+        // list looked empty even though the delete had taken effect.
         try {
-          entries = readdirSync(root, { withFileTypes: true })
-            .filter((entry) => entry.isDirectory())
-            .map((entry) => {
-              const full = join(root, entry.name);
-              const { bytes, files } = measure(full);
-              const movedAt = movedAtOf(full);
-              const age = now - movedAt.getTime();
-              const left = Math.max(0, RETENTION_MS - age);
-              return {
-                id: entry.name,
-                kind: 'project' as const,
-                name: entry.name,
-                bytes,
-                files,
-                deletedAt: movedAt.toISOString(),
-                expiresInDays: Math.ceil(left / (24 * 60 * 60 * 1000)),
-                expired: left === 0,
-              };
-            })
-            .sort((left, right) => right.deletedAt.localeCompare(left.deletedAt));
+          const dbEntries = await listDeletedProjects();
+          for (const p of dbEntries) {
+            const diskDir = join(trashRoot(), p.id);
+            const { bytes, files } = existsSync(diskDir) ? measure(diskDir) : { bytes: 0, files: 0 };
+            const deletedAt = p.deletedAt ?? new Date();
+            const left = Math.max(0, RETENTION_MS - (now - deletedAt.getTime()));
+            entries.push({
+              id: p.id,
+              kind: 'project',
+              name: p.name,
+              bytes,
+              files,
+              deletedAt: deletedAt.toISOString(),
+              expiresInDays: Math.ceil(left / (24 * 60 * 60 * 1000)),
+              expired: left === 0,
+            });
+            seen.add(p.id);
+          }
         } catch {
-          entries = [];
+          /* no DB access: report disk entries only */
         }
+
+        // 2. Directories on disk with no matching project row.
+        //
+        // Legacy deletes moved files without touching the database. Listing them
+        // keeps them findable and clearable.
+        try {
+          for (const entry of readdirSync(trashRoot(), { withFileTypes: true })) {
+            if (!entry.isDirectory()) continue;
+            // Directory names are <projectId> or <projectId>-<base36 stamp>
+            const baseId = entry.name.includes('-')
+              ? entry.name.replace(/-[0-9a-z]+$/, '')
+              : entry.name;
+            if (seen.has(entry.name) || seen.has(baseId)) continue;
+            const full = join(trashRoot(), entry.name);
+            const { bytes, files } = measure(full);
+            const movedAt = movedAtOf(full);
+            const left = Math.max(0, RETENTION_MS - (now - movedAt.getTime()));
+            entries.push({
+              id: entry.name,
+              kind: 'project',
+              name: entry.name,
+              bytes,
+              files,
+              deletedAt: movedAt.toISOString(),
+              expiresInDays: Math.ceil(left / (24 * 60 * 60 * 1000)),
+              expired: left === 0,
+            });
+          }
+        } catch {
+          /* missing directory just means empty */
+        }
+
+        entries.sort((left, right) => right.deletedAt.localeCompare(left.deletedAt));
 
         return Response.json({
           entries,
@@ -208,15 +338,30 @@ export const Route = createFileRoute('/api/app/trash')({
         }
 
         const dir = join(trashRoot(), id);
-        if (!existsSync(dir)) {
-          return Response.json({ ok: false, message: 'that entry is no longer in the trash' }, { status: 404 });
+
+        // A missing directory is normal: deleting a project with no assets
+        // creates nothing under trash/, so the entry lives only in the database.
+        // Restoring it just flips status back. Only when neither exists is it gone.
+        if (existsSync(dir)) {
+          // Move files back first, then touch the DB: doing it the other way round
+          // leaves records claiming "restored" while files sit in the trash.
+          const result = restoreDir(dir);
+          if (!result.ok) {
+            return Response.json(result, { status: 500 });
+          }
         }
 
-        // Move files back first, then touch the DB: doing it the other way round
-        // leaves records claiming "restored" while files sit in the trash.
-        const result = restoreDir(dir);
-        if (!result.ok) {
-          return Response.json(result, { status: 500 });
+        let knownProject = false;
+        try {
+          knownProject = await projectExistsAsDeleted(id);
+        } catch {
+          knownProject = false;
+        }
+        if (!existsSync(dir) && !knownProject) {
+          return Response.json(
+            { ok: false, message: 'that entry is no longer in the trash' },
+            { status: 404 }
+          );
         }
 
         try {
@@ -262,18 +407,34 @@ export const Route = createFileRoute('/api/app/trash')({
           return Response.json({ ok: false, message: 'missing or invalid id' }, { status: 400 });
         }
         const dir = join(trashRoot(), id);
-        if (!existsSync(dir)) {
-          return Response.json({ ok: false, message: 'that entry is no longer in the trash' }, { status: 404 });
+
+        // Remove the directory if present; otherwise the row is all there is (see purgeProject below)
+        if (existsSync(dir)) {
+          try {
+            rmSync(dir, { recursive: true, force: true });
+          } catch (error) {
+            return Response.json(
+              { ok: false, message: error instanceof Error ? error.message : String(error) },
+              { status: 500 }
+            );
+          }
         }
+
+        // Erase the project and its assets for good. 7-day expiry takes this path too.
+
         try {
-          rmSync(dir, { recursive: true, force: true });
-          return Response.json({ ok: true });
+          await purgeProject(id);
         } catch (error) {
           return Response.json(
-            { ok: false, message: error instanceof Error ? error.message : String(error) },
+            {
+              ok: false,
+              message: `files removed, but the database row survived: ${error instanceof Error ? error.message : String(error)}`,
+            },
             { status: 500 }
           );
         }
+
+        return Response.json({ ok: true });
       },
     },
   },
