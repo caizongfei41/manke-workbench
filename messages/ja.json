@@ -1418,5 +1418,7 @@
   "monitor.start": "ComfyUI を起動",
   "monitor.stop": "ComfyUI を停止",
   "monitor.notConfigured": "ComfyUI の場所が未設定です。先に「サービス」でフォルダを選んでください。",
-  "monitor.startFailed": "起動に失敗しました。詳細は「サービス」を確認してください。"
+  "monitor.startFailed": "起動に失敗しました。詳細は「サービス」を確認してください。",
+  "monitor.starting": "起動中…",
+  "monitor.startTooSlow": "起動がタイムアウトしました。「サービス」を確認してください。"
 }

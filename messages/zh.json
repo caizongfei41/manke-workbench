@@ -1418,5 +1418,7 @@
   "monitor.start": "启动 ComfyUI",
   "monitor.stop": "停止 ComfyUI",
   "monitor.notConfigured": "还没指定 ComfyUI 位置，先去「服务控制台」选目录",
-  "monitor.startFailed": "启动失败，详情见「服务控制台」"
+  "monitor.startFailed": "启动失败，详情见「服务控制台」",
+  "monitor.starting": "启动中…",
+  "monitor.startTooSlow": "启动超时，详情见「服务控制台」"
 }

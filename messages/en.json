@@ -1418,5 +1418,7 @@
   "monitor.start": "Start ComfyUI",
   "monitor.stop": "Stop ComfyUI",
   "monitor.notConfigured": "ComfyUI location is not set. Pick the folder in Services first.",
-  "monitor.startFailed": "Start failed. See the Services console for details."
+  "monitor.startFailed": "Start failed. See the Services console for details.",
+  "monitor.starting": "Starting…",
+  "monitor.startTooSlow": "Start timed out. See the Services console."
 }

@@ -23,14 +23,16 @@ import {
 
 const POLL_MS = 5000;
 
-/** How long to wait before re-checking after a start: models take time to load */
-const START_SETTLE_MS = 4000;
+/** How long to keep polling after a start before giving up (first load is slow) */
+const START_TIMEOUT_MS = 180_000;
 
 export function ComfyMonitorPill({ className }: { className?: string }) {
   const [monitor, setMonitor] = useState<ComfyMonitor | null>(null);
   const [toggling, setToggling] = useState(false);
   /** Shown when start/stop is refused, e.g. ComfyUI location not set. */
   const [notice, setNotice] = useState<string | null>(null);
+  /** True while a start request is in flight and the port is not up yet. */
+  const [starting, setStarting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cancelledRef = useRef(false);
 
@@ -95,11 +97,36 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
         return;
       }
 
-      // Stop is synchronous; start needs a moment or the check still reads offline
-      if (!reachable) {
-        await new Promise((resolve) => setTimeout(resolve, START_SETTLE_MS));
+      if (reachable) {
+        await fetchMonitor();
+        return;
       }
-      await fetchMonitor();
+
+      // Start is a background job on the server: the POST returns ok:true
+      // immediately while Python is still loading. A cold start takes 30-60s,
+      // and the old code gave up after 4s -- the badge snapped back to
+      // "not connected", which is indistinguishable from the click doing
+      // nothing, so people kept clicking. Poll until the port answers.
+      if (!cancelledRef.current) setStarting(true);
+      const deadline = Date.now() + START_TIMEOUT_MS;
+      while (Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        if (cancelledRef.current) return;
+        const res = await fetch('/api/app/comfyui/monitor').catch(() => null);
+        const json = (await res?.json().catch(() => null)) as ComfyMonitor | null;
+        if (cancelledRef.current) return;
+        if (json) {
+          setMonitor(json);
+          if (json.reachable) {
+            setStarting(false);
+            return;
+          }
+        }
+      }
+      if (!cancelledRef.current) {
+        setStarting(false);
+        setNotice(m['monitor.startTooSlow']());
+      }
     } catch {
       /* the next poll brings the real state back */
     } finally {
@@ -115,8 +142,10 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
     (monitor?.vramUsedGb ?? 0) / (monitor?.vramTotalGb ?? 1) > 0.9;
   const busy = (monitor?.running ?? 0) > 0 || (monitor?.pending ?? 0) > 0;
 
-  const label = pending
-    ? m['monitor.checking']()
+  const label = starting
+    ? m['monitor.starting']()
+    : pending
+      ? m['monitor.checking']()
     : monitor.reachable
       ? [
           busy

@@ -99,10 +99,11 @@ export function TrashPage({ locale }: { locale: string }) {
       if (data.ok) {
         setMessage(m['trash.restored']());
         await load();
-        // The project list comes from a cached route loader. Refreshing only
-        // this page left the Projects tab showing the pre-restore snapshot, so
-        // a restore looked like it had done nothing.
-        await router.invalidate();
+        // The project list lives in a route loader cache attached to
+        // /zh/projects. router.invalidate() with no target clears only the
+        // current route (/zh/trash), so the Projects tab kept its pre-restore
+        // snapshot and a restore looked like it had done nothing.
+        await router.invalidate({ sync: true });
       } else {
         setMessage(m['trash.restoreFailed']({ message: data.message ?? '' }));
       }
