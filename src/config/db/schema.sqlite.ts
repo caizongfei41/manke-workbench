@@ -81,6 +81,14 @@ export const userAsset = sqliteTable(
       .default(sqliteNowMs)
       .$onUpdate(() => new Date())
       .notNull(),
+    /**
+     * 软删除时间。null = 正常显示。
+     *
+     * 以前删项目时直接把 asset 行 DELETE 掉，文件虽然挪进了回收站，记录却
+     * 永久没了 —— 用户想恢复也拼不回来。现在改成打这个时间戳，回收站读它
+     * 排序和算 7 天到期。真正清理时才 DELETE。
+     */
+    deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
   },
   (table) => [
     index('asset_type_idx').on(table.type),

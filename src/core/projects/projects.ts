@@ -255,9 +255,12 @@ export const deleteProjects = async ({
         .where(eq(projectAssetMembership.projectId, projectId));
     }
 
-    // 3. asset 行。
-    //    按 origin_project_id 找是主路径，但历史数据里有些行没写这个字段，
-    //    所以再按 object_key 前缀（`<projectId>/…`）兜一次底。
+    // 3. asset 行：软删。
+    //
+    //    以前这里是 db.delete(userAsset)，文件虽然被 trashLocalProjectAssets
+    //    挪进了回收站，数据库记录却永久没了 —— 恢复时找不到对应行，等于没救。
+    //    现在只打 deletedAt 时间戳，回收站靠它列表、算 7 天到期，真正删除
+    //    留给 trash 的清理逻辑。
     const owned = await db
       .select({ id: userAsset.id, originProjectId: userAsset.originProjectId })
       .from(userAsset)
@@ -275,7 +278,10 @@ export const deleteProjects = async ({
 
     for (const assetId of doomed) {
       await db.delete(generationAssetLink).where(eq(generationAssetLink.assetId, assetId));
-      await db.delete(userAsset).where(eq(userAsset.id, assetId));
+      await db
+        .update(userAsset)
+        .set({ deletedAt: now, updatedAt: now })
+        .where(eq(userAsset.id, assetId));
     }
 
     // 4. 项目本身

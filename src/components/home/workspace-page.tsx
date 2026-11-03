@@ -311,14 +311,24 @@ export function WorkspacePage({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 self-start rounded-[var(--beat-radius-sm)] bg-[var(--beat-accent)] px-5 text-[15px] font-semibold text-[var(--beat-accent-ink)] shadow-[0_8px_28px_rgba(56,189,248,0.22)] transition hover:bg-[#4cc2ff] lg:self-auto"
-          >
-            <Plus className="size-4" />
-            {copy.newProject}
-          </button>
+          <div className="flex shrink-0 items-center gap-2 self-start lg:self-auto">
+            {/* Trash: deleted projects stay here for 7 days and stay recoverable. */}
+            <Link
+              href="/trash"
+              className="inline-flex h-11 items-center gap-2 rounded-[var(--beat-radius-sm)] border border-ink/10 px-4 text-[14px] font-medium text-[var(--beat-text-2)] transition hover:border-ink/20"
+            >
+              <Trash2 className="size-4" />
+              {m['trash.title']()}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[var(--beat-radius-sm)] bg-[var(--beat-accent)] px-5 text-[15px] font-semibold text-[var(--beat-accent-ink)] shadow-[0_8px_28px_rgba(56,189,248,0.22)] transition hover:bg-[#4cc2ff]"
+            >
+              <Plus className="size-4" />
+              {copy.newProject}
+            </button>
+          </div>
         </section>
 
         <section className="mt-12">

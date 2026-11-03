@@ -161,9 +161,13 @@ export function ProductPageShell({
                   </Link>
                   <Link
                     href={`/canvas/${projectId}`}
-                    aria-current={workspaceMode === 'canvas' ? 'page' : undefined}
+                    aria-current={workspaceMode === 'canvas' && !isDramaCanvas ? 'page' : undefined}
                     aria-label={t('header.canvas')}
-                    className={workspaceTabClassName(workspaceMode === 'canvas')}
+                    // Drama mode also lives under /canvas/, so keying purely on
+                    // workspaceMode lit up both the Canvas and AI Drama tabs at
+                    // once and made Canvas look like it had vanished. The
+                    // !isDramaCanvas keeps them mutually exclusive.
+                    className={workspaceTabClassName(workspaceMode === 'canvas' && !isDramaCanvas)}
                   >
                     <Workflow className="size-3.5" aria-hidden="true" />
                     <span className="hidden sm:inline">{t('header.canvas')}</span>
