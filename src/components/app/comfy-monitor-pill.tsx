@@ -29,6 +29,8 @@ const START_SETTLE_MS = 4000;
 export function ComfyMonitorPill({ className }: { className?: string }) {
   const [monitor, setMonitor] = useState<ComfyMonitor | null>(null);
   const [toggling, setToggling] = useState(false);
+  /** Shown when start/stop is refused, e.g. ComfyUI location not set. */
+  const [notice, setNotice] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cancelledRef = useRef(false);
 
@@ -61,9 +63,10 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
   const toggleService = useCallback(async () => {
     if (toggling) return;
     setToggling(true);
+    setNotice(null);
     const reachable = monitor?.reachable === true;
     try {
-      await fetch('/api/app/services', {
+      const response = await fetch('/api/app/services', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -74,6 +77,24 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
           action: reachable ? 'stop' : 'start',
         }),
       });
+
+      // A missing location returns 409. That error used to go only to the
+      // server log, so the UI showed nothing after a click on Start.
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { code?: string; detail?: string }
+          | null;
+        if (!cancelledRef.current) {
+          setNotice(
+            payload?.code === 'COMFYUI_NOT_CONFIGURED'
+              ? m['monitor.notConfigured']()
+              : m['monitor.startFailed']()
+          );
+        }
+        await fetchMonitor();
+        return;
+      }
+
       // Stop is synchronous; start needs a moment or the check still reads offline
       if (!reachable) {
         await new Promise((resolve) => setTimeout(resolve, START_SETTLE_MS));
@@ -127,7 +148,7 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
         .join('\n')}
       data-comfy-monitor={pending ? 'pending' : reachable ? 'live' : 'offline'}
       className={cn(
-        'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border pl-2.5 pr-1 text-[13px] tabular-nums transition',
+        'relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border pl-2.5 pr-1 text-[13px] tabular-nums transition',
         pending
           ? 'border-ink/[0.09] bg-ink/[0.035] text-[var(--beat-text-3)]'
           : reachable
@@ -160,6 +181,15 @@ export function ComfyMonitorPill({ className }: { className?: string }) {
           <Play className="size-3.5 fill-current" />
         )}
       </button>
+      {notice ? (
+        <span
+          role="status"
+          data-comfy-notice="true"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 whitespace-nowrap rounded-lg border border-ink/10 bg-[var(--beat-surface)] px-2.5 py-1.5 text-[12px] font-normal text-red-600 shadow-lg dark:text-red-300"
+        >
+          {notice}
+        </span>
+      ) : null}
     </div>
   );
 }

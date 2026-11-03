@@ -34,7 +34,28 @@ let comfyStarting: Promise<void> | null = null;
 let comfyLogStream: ReturnType<typeof createWriteStream> | null = null;
 
 function dataRoot(): string {
+  // BEATDESIGN_DATA_DIR 由 Electron 主进程注入，指向 %APPDATA%\漫客工作台\data。
+  // 只用 process.cwd() 在打包后的程序里会飘 —— 从快捷方式启动时 cwd 可能是
+  // 任意目录，读到的就又是另一个 data 文件夹。
+  const injected = process.env.BEATDESIGN_DATA_DIR?.trim();
+  if (injected) return resolve(injected);
   return resolve(process.cwd(), 'data');
+}
+
+/** Where the ComfyUI location the user picked is remembered. */
+function comfyConfigPath(): string {
+  return join(dataRoot(), 'comfyui.config.json');
+}
+
+/** Root and python recorded by setComfyUiRoot(), or null when unreadable. */
+function readComfyConfig(): { root?: string; pythonPath?: string } | null {
+  try {
+    const raw = readFileSync(comfyConfigPath(), 'utf8');
+    const parsed = JSON.parse(raw) as { root?: string; pythonPath?: string };
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 function logsDir(): string {
@@ -44,6 +65,21 @@ function logsDir(): string {
 export function comfyUiRoot(): string {
   const env = process.env.BEATDESIGN_COMFYUI_HOME?.trim();
   if (env) return env;
+
+  // 用户选过的目录存在 comfyui.config.json 里，最先看它。
+  //
+  // 这里原来只看两个相对路径，配置文件完全没读 —— 用户在服务控制台选好
+  // D:\manke-deploy\ComfyUI、配置也写进去了，函数还是返回空串，于是
+  // 「启动」按钮点了只报「还没指定 ComfyUI 位置」，看起来像没反应。
+  const config = readComfyConfig();
+  const saved = config?.root?.trim();
+  if (saved) {
+    const layoutA = existsSync(join(saved, 'ComfyUI', 'main.py'));
+    const layoutB = existsSync(join(saved, 'main.py'));
+    const layoutC = existsSync(join(saved, 'run_nvidia_gpu.bat'));
+    if (layoutA || layoutB || layoutC) return saved;
+  }
+
   const cwd = process.cwd();
   // 不要写死任何盘符。
   //

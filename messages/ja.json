@@ -1416,5 +1416,7 @@
   "home.showcase.remove": "ホームから外す",
   "startHere.galleryRemove": "この一枚を表示から外す",
   "monitor.start": "ComfyUI を起動",
-  "monitor.stop": "ComfyUI を停止"
+  "monitor.stop": "ComfyUI を停止",
+  "monitor.notConfigured": "ComfyUI の場所が未設定です。先に「サービス」でフォルダを選んでください。",
+  "monitor.startFailed": "起動に失敗しました。詳細は「サービス」を確認してください。"
 }

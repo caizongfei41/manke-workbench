@@ -1,6 +1,10 @@
+import { existsSync } from 'node:fs';
+
 import { createFileRoute } from '@tanstack/react-router';
 
 import {
+  comfyUiPython,
+  comfyUiRoot,
   getServicesStatus,
   readComfyUiLog,
   setComfyUiRoot,
@@ -37,6 +41,25 @@ async function POST({ request }: { request: Request }) {
 
     if (service === 'comfyui') {
       if (action === 'start') {
+        // Check the obvious failures up front instead of logging them.
+        //
+        // This was void startComfyUi().catch(console.error) followed by an
+        // unconditional ok:true: with no ComfyUI folder or python missing, the
+        // UI still said "starting" and nothing ever happened, so people kept
+        // clicking. A bad location is the only case that cannot start, so it
+        // is rejected here where the caller can show it.
+        const root = comfyUiRoot();
+        const python = comfyUiPython();
+        if (!root || !existsSync(python)) {
+          return Response.json(
+            {
+              ok: false,
+              code: 'COMFYUI_NOT_CONFIGURED',
+              detail: !root ? '' : python,
+            },
+            { status: 409 }
+          );
+        }
         void startComfyUi().catch((error) =>
           console.error('[services] comfyui start failed:', error)
         );

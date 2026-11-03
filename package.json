@@ -1,6 +1,6 @@
 {
   "name": "manke-workbench",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "private": false,
   "description": "本地 ComfyUI 图像、视频与音乐创作工作台",
   "license": "Apache-2.0",

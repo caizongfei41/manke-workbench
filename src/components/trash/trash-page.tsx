@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from '@tanstack/react-router';
 import { ChevronLeft, RotateCcw, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -45,6 +46,7 @@ const formatDate = (iso: string) => {
 export function TrashPage({ locale }: { locale: string }) {
   const [entries, setEntries] = useState<TrashEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<TrashEntry | null>(null);
@@ -97,6 +99,10 @@ export function TrashPage({ locale }: { locale: string }) {
       if (data.ok) {
         setMessage(m['trash.restored']());
         await load();
+        // The project list comes from a cached route loader. Refreshing only
+        // this page left the Projects tab showing the pre-restore snapshot, so
+        // a restore looked like it had done nothing.
+        await router.invalidate();
       } else {
         setMessage(m['trash.restoreFailed']({ message: data.message ?? '' }));
       }
