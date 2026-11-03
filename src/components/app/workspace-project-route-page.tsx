@@ -36,6 +36,15 @@ export function WorkspaceProjectRoutePage({
 }: {
   data: WorkspaceProjectRouteData;
 }) {
+  // Drama mode reuses /canvas/:id and is entered through ?kind=drama.
+  //
+  // The old check only looked at data.snapshot?.canvasKind === 'drama', which
+  // holds for projects created as drama but not for an existing canvas project:
+  // clicking the AI drama tab left canvasKind as 'canvas', so the page fell
+  // through to the plain canvas and the tab looked dead. Honour the URL.
+  const wantsDrama = data.search?.kind === 'drama';
+  const isDramaCanvas = data.snapshot?.canvasKind === 'drama' || wantsDrama;
+
   return (
     <Suspense
       fallback={
@@ -71,7 +80,7 @@ export function WorkspaceProjectRoutePage({
             projectId={data.project.id}
             projectName={data.project.name}
           />
-        ) : data.snapshot?.canvasKind === 'drama' ? (
+        ) : isDramaCanvas ? (
           <DramaCanvasRoute
             key={data.project.id}
             projectId={data.project.id}

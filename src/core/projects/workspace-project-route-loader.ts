@@ -41,5 +41,7 @@ export async function loadWorkspaceProjectRoute({
       mode: workspaceMode,
     }),
     workspaceMode,
+    // 短剧模式靠 ?kind=drama 标记，页面组件要用它决定开哪个画布。
+    search: { kind: search.kind },
   };
 }
