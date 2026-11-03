@@ -1411,5 +1411,7 @@
   "trash.cancel": "キャンセル",
   "projects.showcaseUnlock": "ホーム展示はロック中。クリックで解除すると削除できます。",
   "projects.showcaseLocked": "ホーム展示プロジェクト（ロック中）",
-  "projects.showcaseDelete": "ロック解除済み。クリックでホーム展示を削除します。"
+  "projects.showcaseDelete": "ロック解除済み。クリックでホーム展示を削除します。",
+  "home.showcase.remove": "ホームから外す",
+  "startHere.galleryRemove": "この一枚を表示から外す"
 }

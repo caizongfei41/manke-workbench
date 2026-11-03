@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { getDb } from '@/core/workspace-lib/db-adapter';
 import { projectAssetMembership, userAsset, project } from '@/config/db/schema';
 import { getProject } from '@/core/projects/projects';
-import { and, desc, eq, isNotNull, type SQL } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, type SQL } from 'drizzle-orm';
 
 /**
  * Recent assets, either for one project or across all of them.
@@ -45,13 +45,15 @@ async function GET({ request }: { request: Request }) {
   };
 
   const query = async (type: 'image' | 'video' | 'audio', withDuration: boolean) => {
+    const base: SQL[] = [
+      eq(userAsset.type, type),
+      isNotNull(userAsset.publicUrl),
+      // Trashed assets must not surface anywhere
+      isNull(userAsset.deletedAt),
+    ];
     const where: SQL | undefined = projectId
-      ? and(
-          eq(projectAssetMembership.projectId, projectId),
-          eq(userAsset.type, type),
-          isNotNull(userAsset.publicUrl)
-        )
-      : and(eq(userAsset.type, type), isNotNull(userAsset.publicUrl));
+      ? and(eq(projectAssetMembership.projectId, projectId), ...base)
+      : and(...base);
 
     const fields = withDuration ? { ...baseFields, durationMs: userAsset.durationMs } : baseFields;
 
@@ -85,7 +87,23 @@ async function GET({ request }: { request: Request }) {
     query('audio', true),
   ]);
 
-  return Response.json({ images, videos, audios });
+  // hidden lives inside the metadata JSON, so SQL cannot filter it -- drop
+  // those rows on the way out. This is what the studio's remove button stamps:
+  // the flag sits on the asset itself, so it works regardless of source project.
+  const visible = <T extends { metadata?: unknown }>(rows: T[]) =>
+    rows.filter((row) => {
+      const meta = row.metadata;
+      if (!meta || typeof meta !== 'object') return true;
+      const showcase = (meta as Record<string, unknown>).showcase;
+      if (!showcase || typeof showcase !== 'object') return true;
+      return (showcase as Record<string, unknown>).hidden !== true;
+    });
+
+  return Response.json({
+    images: visible(images),
+    videos: visible(videos),
+    audios: visible(audios),
+  });
 }
 
 export const Route = createFileRoute('/api/app/recent-assets')({

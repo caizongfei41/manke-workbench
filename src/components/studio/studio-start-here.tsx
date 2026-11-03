@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react';
 import { HintTip } from '@/components/app/hint-tip';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
+import { X } from 'lucide-react';
+import {
+  WORKSPACE_MUTATION_HEADER,
+  WORKSPACE_MUTATION_HEADER_VALUE,
+} from '@/lib/trusted-local-request';
 
 /** The four surfaces a new project can start in. */
 export type StartMode = 'image' | 'video' | 'audio' | 'analysis';
@@ -280,7 +285,7 @@ export function StudioStartHere({
             {galleryShots.map((shot) => (
               <div
                 key={shot.id}
-                className="beat-glass relative h-[92px] flex-1 overflow-hidden rounded-[14px] sm:h-[112px]"
+                className="beat-glass group relative h-[92px] flex-1 overflow-hidden rounded-[14px] sm:h-[112px]"
               >
                 <img
                   src={shot.url}
@@ -292,6 +297,34 @@ export function StudioStartHere({
                   }}
                   className="size-full object-cover"
                 />
+                {/* Remove this frame.
+                    This strip shows what the machine made; some of it is not
+                    what a creation entry point should advertise. Stamping it
+                    hidden keeps the asset but drops it from this strip. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // drop it locally first so the UI reacts immediately
+                    setGalleryShots((current) => current.filter((x) => x.id !== shot.id));
+                    void fetch(
+                      '/api/app/showcase?assetId=' + encodeURIComponent(shot.id),
+                      {
+                        method: 'DELETE',
+                        headers: {
+                          [WORKSPACE_MUTATION_HEADER]: WORKSPACE_MUTATION_HEADER_VALUE,
+                        },
+                      }
+                    ).catch(() => {
+                      /* it comes back on refresh; the user can retry */
+                    });
+                  }}
+                  aria-label={m['startHere.galleryRemove']()}
+                  title={m['startHere.galleryRemove']()}
+                  data-start-gallery-remove="true"
+                  className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-black/55 text-white/85 opacity-0 backdrop-blur transition hover:bg-red-500 hover:text-white group-hover:opacity-100 focus-visible:opacity-100"
+                >
+                  <X className="size-3.5" />
+                </button>
               </div>
             ))}
           </div>

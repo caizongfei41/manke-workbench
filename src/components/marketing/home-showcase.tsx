@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ImageIcon, Pause, Play, Sparkles } from 'lucide-react';
+import { EyeOff, ImageIcon, Pause, Play, Sparkles } from 'lucide-react';
 
 import { normalizeLocale } from '@/config/locale';
 import { Link } from '@/core/i18n/navigation';
@@ -9,6 +9,10 @@ import { SHOWCASE_PROJECT_NAME, rankShowcaseClip, rankShowcaseStill } from '@/co
 const isCuratedEntry = (asset: { projectName?: string | null }) =>
   asset.projectName === SHOWCASE_PROJECT_NAME;
 import { m } from '@/paraglide/messages.js';
+import {
+  WORKSPACE_MUTATION_HEADER,
+  WORKSPACE_MUTATION_HEADER_VALUE,
+} from '@/lib/trusted-local-request';
 
 /**
  * The showcase is fed by this machine's own library, not by stock photography.
@@ -45,6 +49,7 @@ const copy = (locale: string) => {
     play: m['home.showcase.play']({}, { locale: messageLocale }),
     untitled: m['home.showcase.untitled']({}, { locale: messageLocale }),
     manage: m['home.showcase.manage']({}, { locale: messageLocale }),
+    remove: m['home.showcase.remove']({}, { locale: messageLocale }),
   };
 };
 
@@ -158,6 +163,29 @@ export function HomeShowcase({ locale }: { locale: string }) {
   const text = copy(locale);
   const [images, setImages] = useState<Shot[]>([]);
   const [clips, setClips] = useState<Shot[]>([]);
+  /**
+   * Take one asset off the home carousel.
+   *
+   * Sets metadata.showcase.hidden instead of deleting anything: the user just
+   * does not want it on the front page, the file stays in the library.
+   */
+  const hideFromShowcase = useCallback(async (assetId: string) => {
+    try {
+      const res = await fetch(
+        '/api/app/showcase?assetId=' + encodeURIComponent(assetId),
+        {
+          method: 'DELETE',
+          headers: { [WORKSPACE_MUTATION_HEADER]: WORKSPACE_MUTATION_HEADER_VALUE },
+        }
+      );
+      if (!res.ok) return;
+      // hide it locally right away; no need to refetch
+      setBrokenIds((current) => ({ ...current, [assetId]: true }));
+    } catch {
+      /* network hiccup; the user can click again */
+    }
+  }, []);
+
   const [brokenIds, setBrokenIds] = useState<Record<string, true>>({});
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -422,6 +450,24 @@ export function HomeShowcase({ locale }: { locale: string }) {
                   );
                 })}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                {/* Remove the current frame.
+                    The carousel is fed by whatever this machine made recently.
+                    /showcase only lists the curated project, so assets from
+                    other projects had no way out -- this stamps them hidden. */}
+                {heroShot ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!heroShot) return;
+                      void hideFromShowcase(heroShot.id);
+                    }}
+                    aria-label={text.remove}
+                    title={text.remove}
+                    className="absolute right-4 top-4 z-40 grid size-9 place-items-center rounded-full border border-white/25 bg-black/55 text-white/85 opacity-0 backdrop-blur-md transition hover:bg-red-500 hover:text-white group-hover:opacity-100 focus-visible:opacity-100"
+                  >
+                    <EyeOff className="size-4" />
+                  </button>
+                ) : null}
                 <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-7">
                   <span
                     className="rounded-full border border-white/25 bg-black/55 px-3.5 py-1.5 text-[15px] font-medium text-white backdrop-blur-md"

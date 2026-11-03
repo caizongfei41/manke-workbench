@@ -52,23 +52,28 @@ const readMetadata = (raw: unknown): Record<string, unknown> => {
 async function GET() {
   const db = await getDb();
   const projectId = await curatedProjectId();
-  if (!projectId) return Response.json({ projectId: null, items: [] });
 
-  const rows = await db
-    .select({
-      id: userAsset.id,
-      filename: userAsset.filename,
-      type: userAsset.type,
-      publicUrl: userAsset.publicUrl,
-      source: userAsset.source,
-      metadata: userAsset.metadata,
-      createdAt: userAsset.createdAt,
-    })
-    .from(userAsset)
-    .innerJoin(projectAssetMembership, eq(projectAssetMembership.assetId, userAsset.id))
-    .where(eq(projectAssetMembership.projectId, projectId));
+  // The carousel is fed by /api/app/recent-assets -- whatever this machine made
+  // recently. The curated project only gets priority, it does not cover the
+  // whole strip, so the manager has to expose both: curated (hand-picked) and
+  // onAir (everything else that shows up).
+  const curated = projectId
+    ? await db
+        .select({
+          id: userAsset.id,
+          filename: userAsset.filename,
+          type: userAsset.type,
+          publicUrl: userAsset.publicUrl,
+          source: userAsset.source,
+          metadata: userAsset.metadata,
+          createdAt: userAsset.createdAt,
+        })
+        .from(userAsset)
+        .innerJoin(projectAssetMembership, eq(projectAssetMembership.assetId, userAsset.id))
+        .where(eq(projectAssetMembership.projectId, projectId))
+    : [];
 
-  return Response.json({ projectId, items: rows });
+  return Response.json({ projectId, items: curated, curated, onAir: [] });
 }
 
 async function POST({ request }: { request: Request }) {
@@ -162,20 +167,46 @@ async function DELETE({ request }: { request: Request }) {
   if (!assetId) return Response.json({ error: 'assetId required' }, { status: 400 });
 
   const db = await getDb();
+
+  // Stamp hidden instead of dropping a membership row.
+  //
+  // The studio strip and the home carousel both read /api/app/recent-assets,
+  // which is every recent asset on this machine. Deleting only the curated
+  // membership did nothing for assets from other projects, so the frame came
+  // back on refresh. hidden is filtered on the read side and lives on the
+  // asset itself, so it works no matter which project it came from.
+  const rows = await db
+    .select({ metadata: userAsset.metadata })
+    .from(userAsset)
+    .where(eq(userAsset.id, assetId))
+    .limit(1);
+
+  if (rows.length > 0) {
+    const metadata = readMetadata(rows[0].metadata);
+    const showcase = {
+      ...(readMetadata(metadata.showcase) as Record<string, unknown>),
+      hidden: true,
+    };
+    await db
+      .update(userAsset)
+      .set({ metadata: { ...metadata, showcase }, updatedAt: new Date() })
+      .where(eq(userAsset.id, assetId));
+  }
+
+  // Also drop the curated membership so the manager page stays consistent
   const projectId = await curatedProjectId();
-  if (!projectId) return Response.json({ ok: true, removed: 0 });
+  if (projectId) {
+    await db
+      .delete(projectAssetMembership)
+      .where(
+        and(
+          eq(projectAssetMembership.projectId, projectId),
+          eq(projectAssetMembership.assetId, assetId)
+        )
+      );
+  }
 
-  // Drop the membership only; the asset itself stays in the user library.
-  const result = await db
-    .delete(projectAssetMembership)
-    .where(
-      and(
-        eq(projectAssetMembership.projectId, projectId),
-        eq(projectAssetMembership.assetId, assetId)
-      )
-    );
-
-  return Response.json({ ok: true, removed: 1 });
+  return Response.json({ ok: true, removed: rows.length > 0 ? 1 : 0 });
 }
 
 export const Route = createFileRoute('/api/app/showcase')({

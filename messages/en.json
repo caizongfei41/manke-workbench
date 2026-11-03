@@ -1411,5 +1411,7 @@
   "trash.cancel": "Cancel",
   "projects.showcaseUnlock": "Home showcase is locked. Click to unlock deletion.",
   "projects.showcaseLocked": "Home showcase project — locked",
-  "projects.showcaseDelete": "Unlocked. Click to delete the showcase project."
+  "projects.showcaseDelete": "Unlocked. Click to delete the showcase project.",
+  "home.showcase.remove": "Remove from home page",
+  "startHere.galleryRemove": "Remove this from the showcase"
 }
