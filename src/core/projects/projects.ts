@@ -30,6 +30,17 @@ const trimProjectName = (value: string | null | undefined) => {
   return trimmed && trimmed.length > 0 ? trimmed : DEFAULT_PROJECT_NAME;
 };
 
+/**
+ * 最近一次建项目的记录，用来挡住重复提交。
+ *
+ * 前端已经把按钮锁住了，但那只管一个标签页。双击、两个窗口、或者哪天后端
+ * 被别的调用方直接打，都会各建一个项目 —— 实测就出现过点一次「画布」result
+ * 出两个项目的情况。这里按「同样的名字 + 两秒内」判重，直接返回上一个，
+ * 不再新建。
+ */
+let lastCreate: { name: string; mode: WorkspaceMode; at: number; id: string } | null = null;
+const DUPLICATE_WINDOW_MS = 2000;
+
 export const createProject = async ({
   name,
   initialSnapshot,
@@ -40,17 +51,41 @@ export const createProject = async ({
   workspaceMode?: WorkspaceMode;
 }) => {
   const db = await getDb();
-  const id = randomUUID();
   const now = new Date();
+  const trimmedName = trimProjectName(name);
+  const mode = resolveWorkspaceMode(workspaceMode);
+
+  // 两秒内同名同模式 → 认为是同一次点击的重放
+  if (
+    lastCreate &&
+    lastCreate.name === trimmedName &&
+    lastCreate.mode === mode &&
+    Date.now() - lastCreate.at < DUPLICATE_WINDOW_MS
+  ) {
+    const existing = await db
+      .select()
+      .from(project)
+      .where(eq(project.id, lastCreate.id))
+      .limit(1);
+    if (existing.length > 0) {
+      return {
+        id: lastCreate.id,
+        name: trimmedName,
+        snapshot: initialSnapshot ?? createEmptyProjectSnapshot(),
+      };
+    }
+  }
+
+  const id = randomUUID();
   const document = initialSnapshot ?? createEmptyProjectSnapshot();
 
   await db.insert(project).values({
     id,
-    name: trimProjectName(name),
+    name: trimmedName,
     coverAssetId: null,
     status: 'active',
     currentStateVersion: 1,
-    lastWorkspaceMode: resolveWorkspaceMode(workspaceMode),
+    lastWorkspaceMode: mode,
     lastOpenedAt: now,
     createdAt: now,
     updatedAt: now,
@@ -63,9 +98,11 @@ export const createProject = async ({
     updatedAt: now,
   });
 
+  lastCreate = { name: trimmedName, mode, at: Date.now(), id };
+
   return {
     id,
-    name: trimProjectName(name),
+    name: trimmedName,
     snapshot: document,
   };
 };

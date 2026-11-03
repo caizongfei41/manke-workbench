@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AlertCircleIcon, ArrowLeft, Loader2Icon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -65,12 +65,22 @@ export function CreateProjectRoutePage({
   const copy = getCopy(locale);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Stop duplicate submits.
+   *
+   * The creating state alone is not enough: setState is async, so a double
+   * click inside one frame sees creating === false twice and fires two POSTs
+   * -- which is how one "canvas" click produced two projects. A ref is a
+   * synchronous gate, so the second click is dropped outright.
+   */
+  const creatingRef = useRef(false);
 
   async function createProject(
     workspaceMode: WorkspaceMode,
     canvasKind?: 'basic' | 'drama'
   ) {
-    if (creating) return;
+    if (creatingRef.current) return;
+    creatingRef.current = true;
     setCreating(true);
     setError(null);
 
@@ -114,6 +124,10 @@ export function CreateProjectRoutePage({
       setError(
         createError instanceof Error ? createError.message : copy.errorTitle
       );
+      // Release the gate on failure so the user can retry. The success path
+      // stays locked: navigation follows immediately, and that gap is exactly
+      // where a second click would slip through.
+      creatingRef.current = false;
       setCreating(false);
     }
   }
