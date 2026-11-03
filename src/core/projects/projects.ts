@@ -281,16 +281,13 @@ export const deleteProjects = async ({
       console.error('[projects] move assets to trash failed:', projectId, error);
     }
 
-    // 2. 关联表
-    const memberships = await db
-      .select({ id: projectAssetMembership.id })
-      .from(projectAssetMembership)
-      .where(eq(projectAssetMembership.projectId, projectId));
-    if (memberships.length > 0) {
-      await db
-        .delete(projectAssetMembership)
-        .where(eq(projectAssetMembership.projectId, projectId));
-    }
+    // 2. 关联表：保留。
+    //
+    //    以前这里 db.delete(projectAssetMembership)，关联记录永久消失。资产
+    //    行是软删的、文件也还在回收站，可恢复时拼不回「哪个素材属于哪个项目」
+    //    —— 项目回来了，画布却是空的，素材栏里也找不到东西。
+    //    关联本身不带时间戳，所以靠 asset.deletedAt 表达「暂时不可见」，
+    //    恢复时把两者的标记一起清掉即可。
 
     // 3. asset 行：软删。
     //

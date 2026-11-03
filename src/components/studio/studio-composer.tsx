@@ -575,7 +575,11 @@ export function StudioComposer({
                 : labels.imagePromptPlaceholder
             }
             disabled={isBusy}
-            className="h-[80px] min-h-[80px] w-full resize-none bg-transparent py-2 pl-[52px] pr-3 text-[14px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-ink/35 sm:h-[92px] sm:min-h-[92px] sm:pl-[56px] sm:pr-16 sm:text-[15px]"
+            // Leave room on the right for the AI-expand control.
+            // It sits absolutely top-right and spans the language toggle plus
+            // the expand label, roughly 150px. With only pr-3 / sm:pr-16 a long
+            // prompt ran straight under it and the two visually overlapped.
+            className="h-[80px] min-h-[80px] w-full resize-none bg-transparent py-2 pl-[52px] pr-[150px] text-[14px] leading-6 text-[var(--beat-text-1)] outline-none placeholder:text-ink/35 sm:h-[92px] sm:min-h-[92px] sm:pl-[56px] sm:pr-[160px] sm:text-[15px]"
           />
         </div>
 

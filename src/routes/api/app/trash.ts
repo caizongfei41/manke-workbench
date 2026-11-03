@@ -228,9 +228,10 @@ async function projectExistsAsDeleted(projectId: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-async function restoreRecords(projectId: string) {  const { getDb } = await import('@/core/workspace-lib/db-adapter');
-  const { project, userAsset } = await import('@/config/db/schema');
-  const { eq, isNotNull, and } = await import('drizzle-orm');
+async function restoreRecords(projectId: string) {
+  const { getDb } = await import('@/core/workspace-lib/db-adapter');
+  const { project, userAsset, projectAssetMembership } = await import('@/config/db/schema');
+  const { eq, isNotNull, and, inArray } = await import('drizzle-orm');
 
   const db = await getDb();
   const now = new Date();
@@ -240,11 +241,32 @@ async function restoreRecords(projectId: string) {  const { getDb } = await impo
     .set({ status: 'active', deletedAt: null, updatedAt: now })
     .where(eq(project.id, projectId));
 
-  // only assets that belong to this project and were actually soft-deleted
+  // Both paths must be cleared:
+  //   1) assets whose origin_project_id points here
+  //   2) assets linked only through the membership table (older rows can
+  //      carry a null originProjectId)
+  // Doing only (1) misses the second group, so the restored project comes back
+  // with an empty asset strip.
   await db
     .update(userAsset)
     .set({ deletedAt: null, updatedAt: now })
     .where(and(eq(userAsset.originProjectId, projectId), isNotNull(userAsset.deletedAt)));
+
+  try {
+    const linked = await db
+      .select({ assetId: projectAssetMembership.assetId })
+      .from(projectAssetMembership)
+      .where(eq(projectAssetMembership.projectId, projectId));
+    const ids = linked.map((row: { assetId: string }) => row.assetId);
+    if (ids.length > 0) {
+      await db
+        .update(userAsset)
+        .set({ deletedAt: null, updatedAt: now })
+        .where(and(inArray(userAsset.id, ids), isNotNull(userAsset.deletedAt)));
+    }
+  } catch {
+    /* membership unreadable: the project still restores */
+  }
 }
 
 export const Route = createFileRoute('/api/app/trash')({

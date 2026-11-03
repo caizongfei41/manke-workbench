@@ -1414,5 +1414,7 @@
   "projects.showcaseLocked": "Home showcase project — locked",
   "projects.showcaseDelete": "Unlocked. Click to delete the showcase project.",
   "home.showcase.remove": "Remove from home page",
-  "startHere.galleryRemove": "Remove this from the showcase"
+  "startHere.galleryRemove": "Remove this from the showcase",
+  "monitor.start": "Start ComfyUI",
+  "monitor.stop": "Stop ComfyUI"
 }

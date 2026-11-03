@@ -1414,5 +1414,7 @@
   "projects.showcaseLocked": "首页展示项目，已锁定",
   "projects.showcaseDelete": "已解锁，点击删除首页展示项目",
   "home.showcase.remove": "从首页撤下这张",
-  "startHere.galleryRemove": "从展示里移除这一张"
+  "startHere.galleryRemove": "从展示里移除这一张",
+  "monitor.start": "启动 ComfyUI",
+  "monitor.stop": "停止 ComfyUI"
 }
