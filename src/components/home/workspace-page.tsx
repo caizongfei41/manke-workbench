@@ -2,6 +2,7 @@ import {
   Clapperboard,
   FolderClock,
   Layers,
+  Lock,
   PanelsTopLeft,
   Pencil,
   Plus,
@@ -27,6 +28,7 @@ import { buildLocalizedProjectDetailPath } from '@/core/projects/project-entry';
 import { useWorkspaceProjects } from '@/core/workspace-hooks/use-workspace-projects';
 import type { WorkspaceProjectCardItem } from '@/core/workspace-lib/app/workspace-client-api';
 import { m } from '@/paraglide/messages.js';
+import { SHOWCASE_PROJECT_NAME } from '@/core/showcase/curation';
 
 function getHistoryCopy(locale: string) {
   const messageLocale = normalizeLocale(locale);
@@ -122,6 +124,17 @@ function projectName(name: string, untitled: string) {
     return trimmed;
   }
   return untitled;
+}
+
+/**
+ * Is this the seeded "home showcase" project?
+ *
+ * Deleting it empties the front page, and seedShowcase re-creates it on the
+ * next launch -- so the delete looks like it silently failed. That project
+ * gets a lock; everything else deletes normally.
+ */
+function isShowcaseProject(name: string | null | undefined) {
+  return String(name ?? '').trim() === SHOWCASE_PROJECT_NAME;
 }
 
 function CreateProjectDialog({
@@ -251,6 +264,8 @@ export function WorkspacePage({
   const [projectSort, setProjectSort] = useState<'recent' | 'name'>('recent');
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
 
+  /** Lock on the showcase project. Default: locked, so delete stays hidden. */
+  const [unlockedShowcase, setUnlockedShowcase] = useState(false);
   const [deleteTarget, setDeleteTarget] =
     useState<WorkspaceProjectCardItem | null>(null);
 
@@ -471,14 +486,48 @@ export function WorkspacePage({
                         <Pencil className="size-3.5" />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => void removeProject(project)}
-                      aria-label={copy.deleteProject}
-                      className="absolute right-3 top-3 grid size-8 place-items-center rounded-full border border-ink/10 bg-black/60 text-ink/60 opacity-0 backdrop-blur transition hover:bg-red-500 hover:text-white group-hover:opacity-100 focus-visible:opacity-100"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
+                    {(() => {
+                        // The showcase project is seeded: deleting it empties
+                        // the front page and seedShowcase puts it back on next
+                        // launch. Lock it by default; unlocking reveals delete.
+                      const locked = isShowcaseProject(project.name);
+                      const unlocked = unlockedShowcase;
+                      if (locked && !unlocked) {
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => setUnlockedShowcase(true)}
+                            aria-label={m['projects.showcaseUnlock']()}
+                            title={m['projects.showcaseLocked']()}
+                            data-showcase-lock="locked"
+                            className="absolute right-3 top-3 grid size-8 place-items-center rounded-full border border-ink/10 bg-[var(--beat-surface)]/90 text-[var(--beat-text-3)] opacity-0 backdrop-blur transition hover:text-ink group-hover:opacity-100 focus-visible:opacity-100"
+                          >
+                            <Lock className="size-3.5" />
+                          </button>
+                        );
+                      }
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (locked) setUnlockedShowcase(false);
+                            void removeProject(project);
+                          }}
+                          aria-label={
+                            locked ? m['projects.showcaseDelete']() : copy.deleteProject
+                          }
+                          title={locked ? m['projects.showcaseDelete']() : undefined}
+                          data-showcase-lock={locked ? 'unlocked' : undefined}
+                          className={`absolute right-3 top-3 grid size-8 place-items-center rounded-full border backdrop-blur transition hover:bg-red-500 hover:text-white group-hover:opacity-100 focus-visible:opacity-100 ${
+                            locked
+                              ? 'border-red-400/60 bg-red-500/20 text-red-500'
+                              : 'border-ink/10 bg-black/60 text-ink/60 opacity-0'
+                          }`}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      );
+                    })()}
                   </article>
                 );
               })}

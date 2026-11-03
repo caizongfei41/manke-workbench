@@ -1408,5 +1408,8 @@
   "trash.autoSwept": "期限切れの {count} 件を自動削除しました",
   "trash.loading": "読み込み中…",
   "trash.open": "ゴミ箱を開く",
-  "trash.cancel": "キャンセル"
+  "trash.cancel": "キャンセル",
+  "projects.showcaseUnlock": "ホーム展示はロック中。クリックで解除すると削除できます。",
+  "projects.showcaseLocked": "ホーム展示プロジェクト（ロック中）",
+  "projects.showcaseDelete": "ロック解除済み。クリックでホーム展示を削除します。"
 }

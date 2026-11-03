@@ -1408,5 +1408,8 @@
   "trash.autoSwept": "已自动清理 {count} 项过期内容",
   "trash.loading": "正在读取…",
   "trash.open": "打开回收站",
-  "trash.cancel": "取消"
+  "trash.cancel": "取消",
+  "projects.showcaseUnlock": "首页展示已锁定，点击解锁后才能删除",
+  "projects.showcaseLocked": "首页展示项目，已锁定",
+  "projects.showcaseDelete": "已解锁，点击删除首页展示项目"
 }

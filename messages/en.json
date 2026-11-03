@@ -1408,5 +1408,8 @@
   "trash.autoSwept": "Auto-removed {count} expired items",
   "trash.loading": "Loading…",
   "trash.open": "Open trash",
-  "trash.cancel": "Cancel"
+  "trash.cancel": "Cancel",
+  "projects.showcaseUnlock": "Home showcase is locked. Click to unlock deletion.",
+  "projects.showcaseLocked": "Home showcase project — locked",
+  "projects.showcaseDelete": "Unlocked. Click to delete the showcase project."
 }
